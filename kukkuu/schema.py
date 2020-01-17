@@ -6,6 +6,16 @@ import users.schema
 import venues.schema
 
 
+class Mutation(
+    children.schema.Mutation,
+    users.schema.Mutation,
+    events.schema.Mutation,
+    venues.schema.Mutation,
+    graphene.ObjectType,
+):
+    pass
+
+
 class Query(
     children.schema.Query,
     users.schema.Query,
@@ -13,10 +23,6 @@ class Query(
     venues.schema.Query,
     graphene.ObjectType,
 ):
-    pass
-
-
-class Mutation(children.schema.Mutation, users.schema.Mutation, graphene.ObjectType):
     pass
 
 

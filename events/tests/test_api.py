@@ -131,6 +131,36 @@ query Occurrence($id: ID!) {
 }
 """
 
+ADD_EVENT_MUTATION = """
+mutation AddEvent($input: AddEventMutationInput!) {
+  addEvent(input: $input) {
+    event {
+      translations{
+        languageCode
+        name
+        description
+        shortDescription
+      }
+      duration
+    }
+  }
+}
+"""
+
+ADD_EVENT_VARIABLES = {
+    "input": {
+        "translations": [
+            {
+                "name": "Event test",
+                "shortDescription": "Short desc",
+                "description": "desc",
+                "languageCode": "fi",
+            }
+        ],
+        "duration": 1000,
+    }
+}
+
 
 def test_events_query_unauthenticated(api_client):
     executed = api_client.execute(EVENTS_QUERY)
@@ -189,4 +219,21 @@ def test_occurrence_query_normal_user(snapshot, user_api_client):
     variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
 
+    snapshot.assert_match(executed)
+
+
+def test_add_event_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(ADD_EVENT_MUTATION, variables=ADD_EVENT_VARIABLES)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        ADD_EVENT_MUTATION, variables=ADD_EVENT_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_event_staff_user(snapshot, staff_api_client):
+    executed = staff_api_client.execute(
+        ADD_EVENT_MUTATION, variables=ADD_EVENT_VARIABLES
+    )
     snapshot.assert_match(executed)

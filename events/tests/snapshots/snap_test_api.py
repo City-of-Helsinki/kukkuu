@@ -135,3 +135,21 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
         }
     }
 }
+
+snapshots["test_add_event_staff_user 1"] = {
+    "data": {
+        "addEvent": {
+            "event": {
+                "duration": 1000,
+                "translations": [
+                    {
+                        "description": "desc",
+                        "languageCode": "FI",
+                        "name": "Event test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
