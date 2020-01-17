@@ -86,8 +86,43 @@ query Venue($id: ID!) {
     }
   }
 }
-
 """
+
+ADD_VENUE_MUTATION = """
+mutation AddVenue($input: AddVenueMutationInput!) {
+  addVenue(input: $input) {
+    venue {
+      translations{
+        languageCode
+        name
+        description
+        address
+        accessibilityInfo
+        arrivalInstructions
+        additionalInfo
+        wwwUrl
+      }
+    }
+  }
+}
+"""
+
+ADD_VENUE_VARIABLES = {
+    "input": {
+        "translations": [
+            {
+                "name": "Venue name",
+                "description": "Venue description",
+                "languageCode": "fi",
+                "address": "Address",
+                "accessibilityInfo": "Accessibility info",
+                "arrivalInstructions": "Arrival instruction",
+                "additionalInfo": "Additional info",
+                "wwwUrl": "www.url.com",
+            }
+        ],
+    }
+}
 
 
 def test_venues_query_unauthenticated(api_client):
@@ -119,4 +154,21 @@ def test_venue_query_normal_user(snapshot, user_api_client):
     variables = {"id": to_global_id("VenueNode", venue.id)}
     executed = user_api_client.execute(VENUE_QUERY, variables=variables)
 
+    snapshot.assert_match(executed)
+
+
+def test_add_venue_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_venue_staff_user(snapshot, staff_api_client):
+    executed = staff_api_client.execute(
+        ADD_VENUE_MUTATION, variables=ADD_VENUE_VARIABLES
+    )
     snapshot.assert_match(executed)

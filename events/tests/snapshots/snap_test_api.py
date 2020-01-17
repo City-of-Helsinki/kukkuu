@@ -164,3 +164,37 @@ Family around year off. Sense person the probably.""",
         }
     }
 }
+
+snapshots["test_add_event_staff_user 1"] = {
+    "data": {
+        "addEvent": {
+            "event": {
+                "capacityPerOccurrence": 30,
+                "duration": 1000,
+                "image": "",
+                "participantsPerInvite": "FAMILY",
+                "publishedAt": "1986-12-12T16:40:48+00:00",
+                "translations": [
+                    {
+                        "description": "desc",
+                        "languageCode": "FI",
+                        "name": "Event test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_add_occurrence_staff_user 1"] = {
+    "data": {
+        "addOccurrence": {
+            "occurrence": {
+                "event": {"id": "RXZlbnROb2RlOjg="},
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"id": "VmVudWVOb2RlOjU="},
+            }
+        }
+    }
+}

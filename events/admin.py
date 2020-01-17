@@ -4,6 +4,11 @@ from parler.admin import TranslatableAdmin
 from .models import Event, Occurrence
 
 
+class OccurrencesInline(admin.StackedInline):
+    model = Occurrence
+    extra = 1
+
+
 @admin.register(Event)
 class EventAdmin(TranslatableAdmin):
     list_display = (
@@ -17,6 +22,9 @@ class EventAdmin(TranslatableAdmin):
     )
     list_display_links = ("id", "name")
     exclude = ("id", "created_at", "updated_at")
+    inlines = [
+        OccurrencesInline,
+    ]
 
 
 @admin.register(Occurrence)

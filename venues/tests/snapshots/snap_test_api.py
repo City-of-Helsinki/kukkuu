@@ -105,3 +105,24 @@ Family around year off. Sense person the probably.""",
         }
     }
 }
+
+snapshots["test_add_venue_staff_user 1"] = {
+    "data": {
+        "addVenue": {
+            "venue": {
+                "translations": [
+                    {
+                        "accessibilityInfo": "Accessibility info",
+                        "additionalInfo": "Additional info",
+                        "address": "Address",
+                        "arrivalInstructions": "Arrival instruction",
+                        "description": "Venue description",
+                        "languageCode": "FI",
+                        "name": "Venue name",
+                        "wwwUrl": "www.url.com",
+                    }
+                ]
+            }
+        }
+    }
+}

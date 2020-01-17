@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
-from common.models import TimestampedModel
+from common.models import TimestampedModel, TranslatableModel
 
 
 class Venue(TimestampedModel, TranslatableModel):
