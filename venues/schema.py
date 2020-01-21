@@ -40,6 +40,7 @@ class VenueTranslationsInput(graphene.InputObjectType):
 
 
 class VenueInput(graphene.InputObjectType):
+    id = graphene.GlobalID()
     translations = graphene.List(VenueTranslationsInput)
     seat_count = graphene.Int()
 

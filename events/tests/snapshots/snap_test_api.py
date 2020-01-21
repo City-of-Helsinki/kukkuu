@@ -153,3 +153,15 @@ snapshots["test_add_event_staff_user 1"] = {
         }
     }
 }
+
+snapshots["test_add_occurrence_staff_user 1"] = {
+    "data": {
+        "addOccurrence": {
+            "occurrence": {
+                "event": {"id": "RXZlbnROb2RlOjg="},
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"id": "VmVudWVOb2RlOjU="},
+            }
+        }
+    }
+}

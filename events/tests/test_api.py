@@ -3,6 +3,7 @@ from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
 from events.factories import EventFactory, OccurrenceFactory
+from venues.factories import VenueFactory
 
 
 @pytest.fixture(autouse=True)
@@ -161,6 +162,31 @@ ADD_EVENT_VARIABLES = {
     }
 }
 
+ADD_OCCURRENCE_MUTATION = """
+mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
+  addOccurrence(input: $input) {
+    occurrence{
+      event{
+        id,
+      }
+      venue {
+        id
+      }
+        time
+    }
+  }
+}
+
+"""
+
+ADD_OCCURRENCE_VARIABLES = {
+    "input": {
+        "event": {"id": ""},
+        "venue": {"id": ""},
+        "time": "1986-12-12T16:40:48+00:00",
+    }
+}
+
 
 def test_events_query_unauthenticated(api_client):
     executed = api_client.execute(EVENTS_QUERY)
@@ -235,5 +261,32 @@ def test_add_event_permission_denied(api_client, user_api_client):
 def test_add_event_staff_user(snapshot, staff_api_client):
     executed = staff_api_client.execute(
         ADD_EVENT_MUTATION, variables=ADD_EVENT_VARIABLES
+    )
+    snapshot.assert_match(executed)
+
+
+def test_add_occurrence_permission_denied(api_client, user_api_client):
+    executed = api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_occurrence_staff_user(snapshot, staff_api_client):
+    event = EventFactory()
+    venue = VenueFactory()
+    ADD_OCCURRENCE_VARIABLES["input"]["event"]["id"] = to_global_id(
+        "EventNode", event.id
+    )
+    ADD_OCCURRENCE_VARIABLES["input"]["venue"]["id"] = to_global_id(
+        "VenueNode", venue.id
+    )
+    executed = staff_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
     )
     snapshot.assert_match(executed)
