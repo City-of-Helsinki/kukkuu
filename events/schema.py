@@ -9,7 +9,6 @@ from graphql_relay import from_global_id
 from events.models import Event, Occurrence
 from kukkuu.exceptions import KukkuuGraphQLError
 from venues.models import Venue
-from venues.schema import VenueInput, VenueNode
 
 EventTranslation = apps.get_model("events", "EventTranslation")
 
@@ -38,8 +37,9 @@ class EventNode(DjangoObjectType):
 
 
 class OccurrenceNode(DjangoObjectType):
-    venue = graphene.Field(VenueNode)
-    event = graphene.Field(EventNode)
+    venue_id = graphene.GlobalID()
+    event_id = graphene.GlobalID()
+    time = graphene.DateTime()
 
     @classmethod
     @login_required
@@ -64,12 +64,12 @@ class EventTranslationsInput(graphene.InputObjectType):
     language_code = graphene.String()
 
 
-class EventInput(graphene.InputObjectType):
-    id = graphene.GlobalID()
-    translations = graphene.List(EventTranslationsInput)
-    duration = graphene.Int()
-    participants_per_invite = graphene.String()
-    capacity_per_occurrence = graphene.Int()
+# class EventInput(graphene.InputObjectType):
+#     id = graphene.GlobalID()
+#     translations = graphene.List(EventTranslationsInput)
+#     duration = graphene.Int()
+#     participants_per_invite = graphene.String()
+#     capacity_per_occurrence = graphene.Int()
 
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
@@ -95,8 +95,8 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         time = graphene.DateTime()
-        event = EventInput()
-        venue = VenueInput()
+        event_id = graphene.GlobalID(required=True)
+        venue_id = graphene.GlobalID(required=True)
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -105,17 +105,17 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         # TODO: Validate data
-        event_data = kwargs.pop("event")
-        venue_data = kwargs.pop("venue")
+        event_id = from_global_id(kwargs["event_id"])[1]
         try:
-            event_id = from_global_id(event_data.pop("id"))[1]
             event = Event.objects.get(pk=event_id)
+            kwargs["event_id"] = event_id
         except Event.DoesNotExist as e:
             raise KukkuuGraphQLError(e)
 
+        venue_id = from_global_id(kwargs["venue_id"])[1]
         try:
-            venue_id = from_global_id(venue_data.pop("id"))[1]
             venue = Venue.objects.get(pk=venue_id)
+            kwargs["venue_id"] = venue_id
         except Venue.DoesNotExist as e:
             raise KukkuuGraphQLError(e)
 

@@ -210,11 +210,7 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
 """
 
 ADD_OCCURRENCE_VARIABLES = {
-    "input": {
-        "event": {"id": ""},
-        "venue": {"id": ""},
-        "time": "1986-12-12T16:40:48+00:00",
-    }
+    "input": {"eventId": "", "venueId": "", "time": "1986-12-12T16:40:48+00:00"}
 }
 
 
@@ -310,12 +306,8 @@ def test_add_occurrence_permission_denied(api_client, user_api_client):
 def test_add_occurrence_staff_user(snapshot, staff_api_client):
     event = EventFactory()
     venue = VenueFactory()
-    ADD_OCCURRENCE_VARIABLES["input"]["event"]["id"] = to_global_id(
-        "EventNode", event.id
-    )
-    ADD_OCCURRENCE_VARIABLES["input"]["venue"]["id"] = to_global_id(
-        "VenueNode", venue.id
-    )
+    ADD_OCCURRENCE_VARIABLES["input"]["eventId"] = to_global_id("EventNode", event.id)
+    ADD_OCCURRENCE_VARIABLES["input"]["venueId"] = to_global_id("VenueNode", venue.id)
     executed = staff_api_client.execute(
         ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
     )
