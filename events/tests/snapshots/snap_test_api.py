@@ -14,7 +14,7 @@ snapshots["test_events_query_normal_user 1"] = {
                     "node": {
                         "capacityPerOccurrence": 805,
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "duration": 1450.0,
+                        "duration": 181,
                         "image": "spring.jpg",
                         "occurrences": {
                             "edges": [
@@ -58,7 +58,7 @@ snapshots["test_event_query_normal_user 1"] = {
         "event": {
             "capacityPerOccurrence": 805,
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "duration": 3041.0,
+            "duration": 197,
             "image": "spring.jpg",
             "occurrences": {"edges": []},
             "participantsPerInvite": "FAMILY",
@@ -69,7 +69,7 @@ snapshots["test_event_query_normal_user 1"] = {
 Agree room laugh prevent make. Our very television beat at success decade.""",
                     "languageCode": "FI",
                     "name": "Free heart significant machine try.",
-                    "shortDescription": "Fall long respond draw military dog.",
+                    "shortDescription": "Perform in weight success answer.",
                 }
             ],
             "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -85,7 +85,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                     "node": {
                         "event": {
                             "capacityPerOccurrence": 805,
-                            "duration": 1450.0,
+                            "duration": 181,
                             "image": "spring.jpg",
                             "participantsPerInvite": "FAMILY",
                             "publishedAt": "1986-02-27T01:22:35+00:00",
@@ -129,7 +129,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
         "occurrence": {
             "event": {
                 "capacityPerOccurrence": 805,
-                "duration": 1450.0,
+                "duration": 181,
                 "image": "spring.jpg",
                 "participantsPerInvite": "FAMILY",
                 "publishedAt": "1986-02-27T01:22:35+00:00",

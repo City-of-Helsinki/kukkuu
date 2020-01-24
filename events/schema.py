@@ -32,9 +32,6 @@ class EventNode(DjangoObjectType):
     def get_node(cls, info, id):
         return super().get_node(info, id)
 
-    def resolve_duration(self, info):
-        return self.duration.total_seconds()
-
 
 class OccurrenceNode(DjangoObjectType):
     venue = graphene.Field(VenueNode)

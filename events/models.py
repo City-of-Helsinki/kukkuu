@@ -27,7 +27,9 @@ class Event(TimestampedModel, TranslatableModel):
         choices=PARTICIPANT_AMOUNT_CHOICES,
         verbose_name=_("participants per invite"),
     )
-    duration = models.DurationField(verbose_name=_("duration"), blank=True, null=True)
+    duration = models.PositiveSmallIntegerField(
+        verbose_name=_("duration"), blank=True, null=True
+    )
     capacity_per_occurrence = models.PositiveSmallIntegerField(
         verbose_name=_("capacity per occurrence")
     )

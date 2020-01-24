@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import factory
 import pytz
 
@@ -9,7 +7,7 @@ from venues.factories import VenueFactory
 
 class EventFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("text", max_nb_chars=64)
-    duration = factory.Faker("time_delta", end_datetime=timedelta(minutes=60))
+    duration = factory.Faker("random_int", max=300)
     short_description = factory.Faker("text", max_nb_chars=64)
     description = factory.Faker("text")
     image = factory.Faker("file_name", extension="jpg")

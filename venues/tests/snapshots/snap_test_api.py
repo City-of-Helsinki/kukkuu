@@ -18,7 +18,7 @@ snapshots["test_venues_query_normal_user 1"] = {
                                     "node": {
                                         "event": {
                                             "capacityPerOccurrence": 805,
-                                            "duration": 1450.0,
+                                            "duration": 181,
                                             "image": "spring.jpg",
                                             "participantsPerInvite": "FAMILY",
                                             "publishedAt": "1986-02-27T01:22:35+00:00",
@@ -68,7 +68,7 @@ snapshots["test_venue_query_normal_user 1"] = {
                         "node": {
                             "event": {
                                 "capacityPerOccurrence": 805,
-                                "duration": 1450.0,
+                                "duration": 181,
                                 "image": "spring.jpg",
                                 "participantsPerInvite": "FAMILY",
                                 "publishedAt": "1986-02-27T01:22:35+00:00",
