@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name="event", name="duration",),
         migrations.AddField(
             model_name="event",
-            name="int_duration",
+            name="duration",
             field=models.PositiveSmallIntegerField(
                 blank=True, null=True, verbose_name="duration"
             ),
