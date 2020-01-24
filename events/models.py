@@ -28,7 +28,7 @@ class Event(TimestampedModel, TranslatableModel):
         verbose_name=_("participants per invite"),
     )
     duration = models.PositiveSmallIntegerField(
-        verbose_name=_("duration"), blank=True, null=True
+        verbose_name=_("duration"), blank=True, null=True, help_text=_("In minutes")
     )
     capacity_per_occurrence = models.PositiveSmallIntegerField(
         verbose_name=_("capacity per occurrence")

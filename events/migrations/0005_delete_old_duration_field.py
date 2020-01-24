@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             model_name="event",
             name="duration",
             field=models.PositiveSmallIntegerField(
-                blank=True, null=True, verbose_name="duration"
+                blank=True, null=True, verbose_name="duration", help_text="In minutes"
             ),
         ),
     ]
