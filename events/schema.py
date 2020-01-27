@@ -61,15 +61,7 @@ class EventTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     short_description = graphene.String()
     description = graphene.String()
-    language_code = graphene.String()
-
-
-# class EventInput(graphene.InputObjectType):
-#     id = graphene.GlobalID()
-#     translations = graphene.List(EventTranslationsInput)
-#     duration = graphene.Int()
-#     participants_per_invite = graphene.String()
-#     capacity_per_occurrence = graphene.Int()
+    language_code = graphene.String(required=True)
 
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
@@ -94,7 +86,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
 
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
-        time = graphene.DateTime()
+        time = graphene.DateTime(required=True)
         event_id = graphene.GlobalID(required=True)
         venue_id = graphene.GlobalID(required=True)
 

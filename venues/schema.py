@@ -36,7 +36,7 @@ class VenueNode(DjangoObjectType):
 class VenueTranslationsInput(graphene.InputObjectType):
     name = graphene.String(required=True)
     description = graphene.String()
-    language_code = graphene.String()
+    language_code = graphene.String(required=True)
     address = graphene.String()
     accessibility_info = graphene.String()
     arrival_instructions = graphene.String()

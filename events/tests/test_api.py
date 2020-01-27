@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 from graphql_relay import to_global_id
 
@@ -306,9 +308,10 @@ def test_add_occurrence_permission_denied(api_client, user_api_client):
 def test_add_occurrence_staff_user(snapshot, staff_api_client):
     event = EventFactory()
     venue = VenueFactory()
-    ADD_OCCURRENCE_VARIABLES["input"]["eventId"] = to_global_id("EventNode", event.id)
-    ADD_OCCURRENCE_VARIABLES["input"]["venueId"] = to_global_id("VenueNode", venue.id)
+    occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
+    occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
     executed = staff_api_client.execute(
-        ADD_OCCURRENCE_MUTATION, variables=ADD_OCCURRENCE_VARIABLES
+        ADD_OCCURRENCE_MUTATION, variables=occurrence_variables
     )
     snapshot.assert_match(executed)
