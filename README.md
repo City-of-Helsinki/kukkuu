@@ -76,7 +76,7 @@ We follow the basic config, without any modifications. Basic `black` commands:
 Or you can use [`pre-commit`](https://pre-commit.com/) to quickly format your code before committing.
 
 
-1. Install `pre-commit` (there are many ways to do but let's use pip as an example:
+1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
     * `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
     * `pre-commit install`
