@@ -4,7 +4,7 @@ from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_file_upload.scalars import Upload
-from graphql_jwt.decorators import login_required, staff_member_required
+from graphql_jwt.decorators import staff_member_required
 from graphql_relay import from_global_id
 
 from common.utils import update_object, update_object_with_translations
@@ -27,13 +27,10 @@ class EventNode(DjangoObjectType):
         interfaces = (relay.Node,)
 
     @classmethod
-    @login_required
-    # TODO: For now only logged in users can see events
     def get_queryset(cls, queryset, info):
         return queryset.order_by("-created_at")
 
     @classmethod
-    @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
 
@@ -44,13 +41,10 @@ class OccurrenceNode(DjangoObjectType):
     time = graphene.DateTime()
 
     @classmethod
-    @login_required
-    # TODO: For now only logged in users can see occurrences
     def get_queryset(cls, queryset, info):
         return queryset.order_by("-created_at")
 
     @classmethod
-    @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
 

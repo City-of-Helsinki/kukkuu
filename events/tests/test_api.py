@@ -304,10 +304,10 @@ mutation DeleteOccurrence($input: DeleteOccurrenceMutationInput!) {
 """
 
 
-def test_events_query_unauthenticated(api_client):
+def test_events_query_unauthenticated(api_client, event, snapshot):
     executed = api_client.execute(EVENTS_QUERY)
 
-    assert_permission_denied(executed)
+    snapshot.assert_match(executed)
 
 
 def test_events_query_normal_user(snapshot, user_api_client, event):
@@ -316,11 +316,11 @@ def test_events_query_normal_user(snapshot, user_api_client, event):
     snapshot.assert_match(executed)
 
 
-def test_event_query_unauthenticated(api_client, event):
+def test_event_query_unauthenticated(api_client, event, snapshot):
     variables = {"id": to_global_id("EventNode", event.id)}
     executed = api_client.execute(EVENT_QUERY, variables=variables)
 
-    assert_permission_denied(executed)
+    snapshot.assert_match(executed)
 
 
 def test_event_query_normal_user(snapshot, user_api_client, event):
@@ -330,10 +330,10 @@ def test_event_query_normal_user(snapshot, user_api_client, event):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_query_unauthenticated(api_client):
+def test_occurrences_query_unauthenticated(api_client, occurrence, snapshot):
     executed = api_client.execute(OCCURRENCES_QUERY)
 
-    assert_permission_denied(executed)
+    snapshot.assert_match(executed)
 
 
 def test_occurrences_query_normal_user(snapshot, user_api_client, occurrence):
@@ -342,11 +342,11 @@ def test_occurrences_query_normal_user(snapshot, user_api_client, occurrence):
     snapshot.assert_match(executed)
 
 
-def test_occurrence_query_unauthenticated(api_client, occurrence):
+def test_occurrence_query_unauthenticated(api_client, occurrence, snapshot):
     variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
     executed = api_client.execute(OCCURRENCE_QUERY, variables=variables)
 
-    assert_permission_denied(executed)
+    snapshot.assert_match(executed)
 
 
 def test_occurrence_query_normal_user(snapshot, user_api_client, occurrence):

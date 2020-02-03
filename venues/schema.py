@@ -3,7 +3,7 @@ from django.apps import apps
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
-from graphql_jwt.decorators import login_required, staff_member_required
+from graphql_jwt.decorators import staff_member_required
 from graphql_relay import from_global_id
 
 from common.utils import update_object_with_translations
@@ -25,13 +25,10 @@ class VenueNode(DjangoObjectType):
         interfaces = (relay.Node,)
 
     @classmethod
-    @login_required
-    # TODO: For now only logged in users can see venues
     def get_queryset(cls, queryset, info):
         return queryset.order_by("-created_at")
 
     @classmethod
-    @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
 
