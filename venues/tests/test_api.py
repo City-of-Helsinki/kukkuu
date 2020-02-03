@@ -130,7 +130,6 @@ UPDATE_VENUE_MUTATION = """
 mutation updateVenue($input: UpdateVenueMutationInput!) {
   updateVenue(input: $input) {
     venue {
-      id
       translations{
         languageCode
         name

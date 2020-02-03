@@ -201,7 +201,6 @@ snapshots["test_update_event_staff_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
-                "id": "RXZlbnROb2RlOjEz",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
                 "translations": [

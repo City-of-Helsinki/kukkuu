@@ -199,7 +199,6 @@ UPDATE_EVENT_MUTATION = """
 mutation UpdateEvent($input: UpdateEventMutationInput!) {
   updateEvent(input: $input) {
     event {
-      id,
       translations{
         name
         shortDescription

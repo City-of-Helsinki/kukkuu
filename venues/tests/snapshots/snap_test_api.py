@@ -81,7 +81,6 @@ snapshots["test_update_venue_staff_user 1"] = {
     "data": {
         "updateVenue": {
             "venue": {
-                "id": "VmVudWVOb2RlOjY=",
                 "translations": [
                     {
                         "accessibilityInfo": "Accessibility info",
@@ -93,7 +92,7 @@ snapshots["test_update_venue_staff_user 1"] = {
                         "name": "Venue name",
                         "wwwUrl": "www.url.com",
                     }
-                ],
+                ]
             }
         }
     }
