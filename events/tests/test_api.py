@@ -188,10 +188,8 @@ ADD_EVENT_VARIABLES = {
             }
         ],
         "duration": 1000,
-        # "image": None,
         "participantsPerInvite": "family",
         "capacityPerOccurrence": 30,
-        "publishedAt": "1986-12-12T16:40:48+00:00",
     }
 }
 
@@ -237,6 +235,19 @@ UPDATE_EVENT_VARIABLES = {
         "capacityPerOccurrence": 30,
     }
 }
+
+PUBLISH_EVENT_MUTATION = """
+mutation PublishEvent($input: PublishEventMutationInput!) {
+  publishEvent(input: $input) {
+    event {
+      id
+      publishedAt
+    }
+  }
+}
+"""
+
+PUBLISH_EVENT_VARIABLES = {"input": {"id": ""}}
 
 DELETE_EVENT_MUTATION = """
 mutation DeleteEvent($input: DeleteEventMutationInput!) {
@@ -509,3 +520,18 @@ def test_update_event_translations(staff_api_client, event):
     new_translation["languageCode"] = "foo"
     staff_api_client.execute(UPDATE_EVENT_MUTATION, variables=event_variables)
     assert not event.has_translation(new_translation["languageCode"])
+
+
+def test_staff_publish_event(snapshot, staff_api_client, event):
+    assert not event.is_published()
+    event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
+    executed = staff_api_client.execute(
+        PUBLISH_EVENT_MUTATION, variables=event_variables
+    )
+    snapshot.assert_match(executed)
+
+    executed = staff_api_client.execute(
+        PUBLISH_EVENT_MUTATION, variables=event_variables
+    )
+    assert "Event is already published" in str(executed["errors"])

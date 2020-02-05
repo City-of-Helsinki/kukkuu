@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import pytz
+from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from parler.models import TranslatedFields
@@ -43,6 +47,14 @@ class Event(TimestampedModel, TranslatableModel):
 
     def __str__(self):
         return self.safe_translation_getter("name", super().__str__())
+
+    def publish(self):
+        self.published_at = datetime.now(pytz.timezone(settings.TIME_ZONE))
+
+        self.save()
+
+    def is_published(self):
+        return bool(self.published_at)
 
 
 class Occurrence(TimestampedModel):

@@ -18,7 +18,7 @@ snapshots["test_events_query_normal_user 1"] = {
                         "image": "spring.jpg",
                         "occurrences": {"edges": []},
                         "participantsPerInvite": "FAMILY",
-                        "publishedAt": "1986-02-27T01:22:35+00:00",
+                        "publishedAt": None,
                         "translations": [
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
@@ -45,7 +45,7 @@ snapshots["test_event_query_normal_user 1"] = {
             "image": "spring.jpg",
             "occurrences": {"edges": []},
             "participantsPerInvite": "FAMILY",
-            "publishedAt": "1986-02-27T01:22:35+00:00",
+            "publishedAt": None,
             "translations": [
                 {
                     "description": """Serious listen police shake. Page box child care any concern.
@@ -71,7 +71,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                             "duration": 181,
                             "image": "spring.jpg",
                             "participantsPerInvite": "FAMILY",
-                            "publishedAt": "1986-02-27T01:22:35+00:00",
+                            "publishedAt": None,
                             "translations": [
                                 {
                                     "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -95,7 +95,7 @@ South Zacharyborough, CO 33337""",
 Family around year off. Sense person the probably.""",
                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                     "languageCode": "FI",
-                                    "name": "Subject town range.",
+                                    "name": "Able process base sing according.",
                                     "wwwUrl": "http://brooks.org/",
                                 }
                             ]
@@ -115,7 +115,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
                 "duration": 181,
                 "image": "spring.jpg",
                 "participantsPerInvite": "FAMILY",
-                "publishedAt": "1986-02-27T01:22:35+00:00",
+                "publishedAt": None,
                 "translations": [
                     {
                         "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -139,7 +139,7 @@ South Zacharyborough, CO 33337""",
 Family around year off. Sense person the probably.""",
                         "description": "Later evening southern would according strong. Analysis season project executive entire.",
                         "languageCode": "FI",
-                        "name": "Subject town range.",
+                        "name": "Able process base sing according.",
                         "wwwUrl": "http://brooks.org/",
                     }
                 ]
@@ -156,7 +156,7 @@ snapshots["test_add_event_staff_user 1"] = {
                 "duration": 1000,
                 "image": "",
                 "participantsPerInvite": "FAMILY",
-                "publishedAt": "1986-12-12T16:40:48+00:00",
+                "publishedAt": None,
                 "translations": [
                     {
                         "description": "desc",
@@ -219,6 +219,17 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "shortDescription": "Perform in weight success answer.",
                     },
                 ],
+            }
+        }
+    }
+}
+
+snapshots["test_staff_publish_event 1"] = {
+    "data": {
+        "publishEvent": {
+            "event": {
+                "id": "RXZlbnROb2RlOjE1",
+                "publishedAt": "2020-12-12T02:00:00+02:00",
             }
         }
     }

@@ -21,7 +21,7 @@ snapshots["test_venues_query_normal_user 1"] = {
                                             "duration": 181,
                                             "image": "spring.jpg",
                                             "participantsPerInvite": "FAMILY",
-                                            "publishedAt": "1986-02-27T01:22:35+00:00",
+                                            "publishedAt": None,
                                             "translations": [
                                                 {
                                                     "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -48,7 +48,7 @@ South Zacharyborough, CO 33337""",
 Family around year off. Sense person the probably.""",
                                 "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                 "languageCode": "FI",
-                                "name": "Subject town range.",
+                                "name": "Able process base sing according.",
                                 "wwwUrl": "http://brooks.org/",
                             }
                         ],
@@ -71,7 +71,7 @@ snapshots["test_venue_query_normal_user 1"] = {
                                 "duration": 181,
                                 "image": "spring.jpg",
                                 "participantsPerInvite": "FAMILY",
-                                "publishedAt": "1986-02-27T01:22:35+00:00",
+                                "publishedAt": None,
                                 "translations": [
                                     {
                                         "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
@@ -98,7 +98,7 @@ South Zacharyborough, CO 33337""",
 Family around year off. Sense person the probably.""",
                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                     "languageCode": "FI",
-                    "name": "Subject town range.",
+                    "name": "Able process base sing according.",
                     "wwwUrl": "http://brooks.org/",
                 }
             ],

@@ -21,7 +21,7 @@ class EventAdmin(TranslatableAdmin):
         "updated_at",
     )
     list_display_links = ("id", "name")
-    exclude = ("id", "created_at", "updated_at")
+    exclude = ("id", "created_at", "updated_at", "published_at")
     inlines = [
         OccurrencesInline,
     ]
