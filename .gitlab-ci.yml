@@ -40,6 +40,3 @@ staging:
     K8S_SECRET_MAIL_MAILGUN_API: "https://api.eu.mailgun.net/v3"
     K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
     K8S_SECRET_DEFAULT_FROM_EMAIL: "no-reply@hel.ninja"
-    K8S_SECRET_DEFAULT_FILE_STORAGE: "storages.backends.gcloud.GoogleCloudStorage"
-    K8S_SECRET_GS_BUCKET_NAME: "$STORAGE_BUCKET_STAGING_NAME"
-    K8S_FILE_SECRET_GOOGLE_APPLICATION_CREDENTIALS: "$STORAGE_BUCKET_STAGING_CREDENTIALS"
