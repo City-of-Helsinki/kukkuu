@@ -83,7 +83,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
         "occurrence": {
             "enrolments": {"edges": []},
             "event": {
-                "capacityPerOccurrence": 805,
+                "capacityPerOccurrence": 50,
                 "duration": 197,
                 "image": "http://testserver/media/spring.jpg",
                 "participantsPerInvite": "FAMILY",
@@ -98,7 +98,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ],
             },
-            "remainingCapacity": 805,
+            "remainingCapacity": 50,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -113,7 +113,7 @@ Family around year off. Sense person the probably.""",
                         "description": "Later evening southern would according strong. Analysis season project executive entire.",
                         "languageCode": "FI",
                         "name": "Able process base sing according.",
-                        "wwwUrl": "http://brooks.org/",
+                        "wwwUrl": "http://www.smith-woods.com/",
                     }
                 ]
             },
@@ -137,7 +137,7 @@ snapshots["test_enrol_occurrence 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Alice"},
+                "child": {"firstName": "Robert"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
                 "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
@@ -172,7 +172,7 @@ snapshots["test_occurrence_available_capacity 1"] = {
         "occurrence": {
             "enrolments": {"edges": []},
             "event": {
-                "capacityPerOccurrence": 805,
+                "capacityPerOccurrence": 50,
                 "duration": 197,
                 "image": "http://testserver/media/spring.jpg",
                 "participantsPerInvite": "FAMILY",
@@ -187,7 +187,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                     }
                 ],
             },
-            "remainingCapacity": 802,
+            "remainingCapacity": 47,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -202,7 +202,7 @@ Family around year off. Sense person the probably.""",
                         "description": "Later evening southern would according strong. Analysis season project executive entire.",
                         "languageCode": "EN",
                         "name": "Able process base sing according.",
-                        "wwwUrl": "http://brooks.org/",
+                        "wwwUrl": "http://www.smith-woods.com/",
                     }
                 ]
             },
@@ -213,9 +213,9 @@ Family around year off. Sense person the probably.""",
 snapshots["test_enrolment_visibility 1"] = {
     "data": {
         "occurrence": {
-            "enrolments": {"edges": [{"node": {"child": {"firstName": "Richard"}}}]},
+            "enrolments": {"edges": [{"node": {"child": {"firstName": "James"}}}]},
             "event": {
-                "capacityPerOccurrence": 359,
+                "capacityPerOccurrence": 22,
                 "duration": 255,
                 "image": "http://testserver/media/parent.jpg",
                 "participantsPerInvite": "FAMILY",
@@ -230,7 +230,7 @@ Watch condition like lay still bar later. Daughter order stay sign discover.""",
                     }
                 ],
             },
-            "remainingCapacity": 355,
+            "remainingCapacity": 18,
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -245,7 +245,7 @@ Patriciashire, WV 03644""",
 Final central situation past ready join enjoy. Huge get this success commercial recently from. Name likely behind mission network who.""",
                         "languageCode": "EN",
                         "name": "Home memory respond improve office table.",
-                        "wwwUrl": "http://www.smith-woods.com/",
+                        "wwwUrl": "http://www.fischer-wolf.com/",
                     }
                 ]
             },
@@ -259,7 +259,7 @@ snapshots["test_events_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "capacityPerOccurrence": 805,
+                        "capacityPerOccurrence": 50,
                         "createdAt": "2020-12-12T00:00:00+00:00",
                         "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
@@ -271,7 +271,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             "edges": [
                                 {
                                     "node": {
-                                        "remainingCapacity": 805,
+                                        "remainingCapacity": 50,
                                         "time": "1986-02-27T01:22:35+00:00",
                                         "venue": {
                                             "translations": [
@@ -310,7 +310,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
 snapshots["test_event_query_normal_user 1"] = {
     "data": {
         "event": {
-            "capacityPerOccurrence": 805,
+            "capacityPerOccurrence": 50,
             "createdAt": "2020-12-12T00:00:00+00:00",
             "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
@@ -322,7 +322,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 "edges": [
                     {
                         "node": {
-                            "remainingCapacity": 805,
+                            "remainingCapacity": 50,
                             "time": "1986-02-27T01:22:35+00:00",
                             "venue": {
                                 "translations": [
@@ -362,7 +362,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                 {
                     "node": {
                         "event": {
-                            "capacityPerOccurrence": 805,
+                            "capacityPerOccurrence": 50,
                             "duration": 197,
                             "image": "http://testserver/media/spring.jpg",
                             "participantsPerInvite": "FAMILY",
@@ -377,7 +377,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 }
                             ],
                         },
-                        "remainingCapacity": 805,
+                        "remainingCapacity": 50,
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
@@ -392,7 +392,7 @@ Family around year off. Sense person the probably.""",
                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                     "languageCode": "FI",
                                     "name": "Able process base sing according.",
-                                    "wwwUrl": "http://brooks.org/",
+                                    "wwwUrl": "http://www.smith-woods.com/",
                                 }
                             ]
                         },
@@ -420,7 +420,7 @@ snapshots["test_events_query_staff_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "capacityPerOccurrence": 805,
+                        "capacityPerOccurrence": 50,
                         "createdAt": "2020-12-12T00:00:00+00:00",
                         "description": """Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
@@ -432,7 +432,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                             "edges": [
                                 {
                                     "node": {
-                                        "remainingCapacity": 805,
+                                        "remainingCapacity": 50,
                                         "time": "2009-07-12T04:07:58+00:00",
                                         "venue": {
                                             "translations": [
@@ -465,7 +465,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 },
                 {
                     "node": {
-                        "capacityPerOccurrence": 457,
+                        "capacityPerOccurrence": 28,
                         "createdAt": "2020-12-12T00:00:00+00:00",
                         "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
 If his their best. Election stay every something base.""",
@@ -477,15 +477,15 @@ If his their best. Election stay every something base.""",
                             "edges": [
                                 {
                                     "node": {
-                                        "remainingCapacity": 457,
-                                        "time": "2019-11-11T17:08:21+00:00",
+                                        "remainingCapacity": 28,
+                                        "time": "1975-04-27T11:57:31+00:00",
                                         "venue": {
                                             "translations": [
                                                 {
-                                                    "description": """Along hear follow sometimes. Special far magazine. Know say former conference carry factor front Mr.
-Conference thing much like test.""",
+                                                    "description": """Work early property your stage receive. Determine sort under car.
+Check word style also attention word. Throw three girl capital no situation. Explain page practice sing every.""",
                                                     "languageCode": "FI",
-                                                    "name": "Hand human value base pattern democratic focus.",
+                                                    "name": "Including believe eye dog education spend.",
                                                 }
                                             ]
                                         },
@@ -521,7 +521,7 @@ snapshots["test_occurrences_query_staff_user 1"] = {
                 {
                     "node": {
                         "event": {
-                            "capacityPerOccurrence": 805,
+                            "capacityPerOccurrence": 50,
                             "duration": 197,
                             "image": "http://testserver/media/spring.jpg",
                             "participantsPerInvite": "FAMILY",
@@ -536,7 +536,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                 }
                             ],
                         },
-                        "remainingCapacity": 805,
+                        "remainingCapacity": 50,
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
@@ -551,7 +551,7 @@ Family around year off. Sense person the probably.""",
                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                     "languageCode": "FI",
                                     "name": "Able process base sing according.",
-                                    "wwwUrl": "http://brooks.org/",
+                                    "wwwUrl": "http://www.smith-woods.com/",
                                 }
                             ]
                         },
@@ -560,37 +560,38 @@ Family around year off. Sense person the probably.""",
                 {
                     "node": {
                         "event": {
-                            "capacityPerOccurrence": 700,
-                            "duration": 112,
-                            "image": "http://testserver/media/send.jpg",
+                            "capacityPerOccurrence": 2,
+                            "duration": 194,
+                            "image": "http://testserver/media/whom.jpg",
                             "participantsPerInvite": "CHILD_AND_GUARDIAN",
                             "publishedAt": None,
                             "translations": [
                                 {
-                                    "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                                    "description": "No society evidence answer need benefit ready. Notice rule huge realize at rather. Place against moment tax group.",
                                     "languageCode": "FI",
-                                    "name": "Up always sport return. Light a point charge stand store.",
-                                    "shortDescription": "East site chance of.",
+                                    "name": "Nearly gun two born land military first.",
+                                    "shortDescription": "Natural direction traditional whether serious.",
                                 }
                             ],
                         },
-                        "remainingCapacity": 700,
+                        "remainingCapacity": 2,
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
                                 {
-                                    "accessibilityInfo": """Court possible free anyone floor office eight do. Somebody determine sort under car medical.
-Word style also attention word join pay discuss. Performance part prevent explain.""",
-                                    "additionalInfo": """Offer organization model remember. Morning culture late oil sell.
-Tv news management letter. Animal list adult draw staff her.""",
-                                    "address": """663 Keith Ford Apt. 290
-Pruitthaven, DE 69289""",
-                                    "arrivalInstructions": """Large benefit occur eat discuss quickly buy. Decade address have turn serve me every traditional. Sound describe risk newspaper reflect four.
-Six feel real fast.""",
-                                    "description": "Run hand human value base. Include and individual effort indeed discuss challenge school. Book significant minute rest two special.",
+                                    "accessibilityInfo": """Manager movie owner long own personal into. Toward race five least.
+I task moment want write her. Pm large benefit occur eat discuss quickly.""",
+                                    "additionalInfo": "Account heart feeling before modern consumer discussion. Put close term where up. Order trip a into hold project month.",
+                                    "address": """869 Reed Crescent Suite 449
+Jenniferhaven, AL 47756""",
+                                    "arrivalInstructions": """Six feel real fast.
+Key crime trial investment difference. Let join might player example environment.
+Offer organization model remember. Morning culture late oil sell.""",
+                                    "description": """Conference thing much like test.
+Tonight including believe eye. Range bit college question animal. Treatment suggest ask choice modern particular specific. Free anyone floor office.""",
                                     "languageCode": "FI",
-                                    "name": "Huge realize at rather that place against moment.",
-                                    "wwwUrl": "https://brown-calhoun.org/",
+                                    "name": "Minute rest two special far magazine.",
+                                    "wwwUrl": "https://www.johnson.net/",
                                 }
                             ]
                         },
@@ -605,9 +606,9 @@ snapshots["test_occurrences_filter_by_venue 1"] = {
     "data": {
         "occurrences": {
             "edges": [
-                {"node": {"time": "1989-08-24T14:55:15+00:00"}},
-                {"node": {"time": "1990-07-20T12:20:16+00:00"}},
-                {"node": {"time": "2017-10-23T18:50:24+00:00"}},
+                {"node": {"time": "1970-01-05T18:13:40+00:00"}},
+                {"node": {"time": "1990-03-28T12:56:55+00:00"}},
+                {"node": {"time": "1999-02-16T07:12:13+00:00"}},
             ]
         }
     }

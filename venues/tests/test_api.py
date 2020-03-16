@@ -23,6 +23,7 @@ query Venues {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
         translations {
           name
@@ -70,6 +71,7 @@ query Venue($id: ID!) {
     accessibilityInfo
     arrivalInstructions
     additionalInfo
+    wcAndFacilities
     wwwUrl
     translations{
         name
@@ -78,6 +80,7 @@ query Venue($id: ID!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
         languageCode
     }
@@ -118,6 +121,7 @@ mutation AddVenue($input: AddVenueMutationInput!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
       }
     }
@@ -136,6 +140,7 @@ ADD_VENUE_VARIABLES = {
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",
                 "additionalInfo": "Additional info",
+                "wcAndFacilities": "WC & Facilities",
                 "wwwUrl": "www.url.com",
             }
         ],
@@ -154,6 +159,7 @@ mutation updateVenue($input: UpdateVenueMutationInput!) {
         accessibilityInfo
         arrivalInstructions
         additionalInfo
+        wcAndFacilities
         wwwUrl
       }
     }
@@ -173,6 +179,7 @@ UPDATE_VENUE_VARIABLES = {
                 "accessibilityInfo": "Accessibility info",
                 "arrivalInstructions": "Arrival instruction",
                 "additionalInfo": "Additional info",
+                "wcAndFacilities": "WC & Facilities",
                 "wwwUrl": "www.url.com",
             }
         ],

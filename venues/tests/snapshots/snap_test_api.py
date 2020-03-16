@@ -32,10 +32,13 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
                                 "languageCode": "EN",
                                 "name": "Free heart significant machine try.",
-                                "wwwUrl": "http://www.hernandez.net/",
+                                "wwwUrl": "http://brooks.org/",
                             }
                         ],
-                        "wwwUrl": "http://www.hernandez.net/",
+                        "wcAndFacilities": """State social believe policy. Score think turn argue present.
+Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                        "wwwUrl": "http://brooks.org/",
                     }
                 }
             ]
@@ -66,10 +69,16 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
                     "languageCode": "EN",
                     "name": "Free heart significant machine try.",
-                    "wwwUrl": "http://www.hernandez.net/",
+                    "wcAndFacilities": """State social believe policy. Score think turn argue present.
+Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                    "wwwUrl": "http://brooks.org/",
                 }
             ],
-            "wwwUrl": "http://www.hernandez.net/",
+            "wcAndFacilities": """State social believe policy. Score think turn argue present.
+Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+            "wwwUrl": "http://brooks.org/",
         }
     }
 }
@@ -87,6 +96,7 @@ snapshots["test_add_venue_staff_user 1"] = {
                         "description": "Venue description",
                         "languageCode": "FI",
                         "name": "Venue name",
+                        "wcAndFacilities": "WC & Facilities",
                         "wwwUrl": "www.url.com",
                     }
                 ]
@@ -108,6 +118,7 @@ snapshots["test_update_venue_staff_user 1"] = {
                         "description": "Venue description",
                         "languageCode": "FI",
                         "name": "Venue name",
+                        "wcAndFacilities": "WC & Facilities",
                         "wwwUrl": "www.url.com",
                     },
                     {
@@ -120,7 +131,10 @@ Whiteview, TN 11309""",
 Page box child care any concern. Defense level church use.""",
                         "languageCode": "EN",
                         "name": "Free heart significant machine try.",
-                        "wwwUrl": "http://www.hernandez.net/",
+                        "wcAndFacilities": """State social believe policy. Score think turn argue present.
+Prevent pressure point. Voice radio happen color scene.
+Assume training seek full several. Authority develop identify ready.""",
+                        "wwwUrl": "http://brooks.org/",
                     },
                 ]
             }

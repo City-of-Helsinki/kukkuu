@@ -19,6 +19,9 @@ class Venue(TimestampedModel, TranslatableModel):
             verbose_name=_("arrival instructions"), blank=True
         ),
         additional_info=models.TextField(verbose_name=_("additional info"), blank=True),
+        wc_and_facilities=models.TextField(
+            verbose_name=_("WC & facilities"), blank=True
+        ),
         www_url=models.URLField(verbose_name=_("url"), blank=True),
     )
 

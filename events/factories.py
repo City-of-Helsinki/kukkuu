@@ -15,7 +15,7 @@ class EventFactory(factory.django.DjangoModelFactory):
     participants_per_invite = factory.Faker(
         "random_element", elements=[x[0] for x in Event.PARTICIPANT_AMOUNT_CHOICES]
     )
-    capacity_per_occurrence = factory.Faker("random_int", max=1000)
+    capacity_per_occurrence = factory.Faker("random_int", max=50)
 
     class Meta:
         model = Event

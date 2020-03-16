@@ -31,6 +31,7 @@ class VenueNode(DjangoObjectType):
     accessibility_info = graphene.String()
     arrival_instructions = graphene.String()
     additional_info = graphene.String()
+    wc_and_facilities = graphene.String()
     www_url = graphene.String()
 
     class Meta:
@@ -68,6 +69,7 @@ class VenueTranslationsInput(graphene.InputObjectType):
     arrival_instructions = graphene.String()
     additional_info = graphene.String()
     www_url = graphene.String()
+    wc_and_facilities = graphene.String()
 
 
 class AddVenueMutation(graphene.relay.ClientIDMutation):
