@@ -1,5 +1,7 @@
 import graphene
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField
@@ -8,11 +10,20 @@ from graphql_jwt.decorators import login_required
 
 from common.schema import LanguageEnum
 from common.utils import update_object
-from kukkuu.exceptions import ObjectDoesNotExistError
+from kukkuu.exceptions import InvalidEmailFormatError, ObjectDoesNotExistError
 
 from .models import Guardian
 
 User = get_user_model()
+
+
+def validate_guardian_data(guardian_data):
+    if "email" in guardian_data:
+        try:
+            EmailValidator()(guardian_data["email"])
+        except ValidationError:
+            raise InvalidEmailFormatError("Invalid email format")
+    return guardian_data
 
 
 class GuardianNode(DjangoObjectType):
@@ -59,6 +70,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        validate_guardian_data(kwargs)
         update_object(guardian, kwargs)
 
         guardian.email = guardian.get_email_in_use()

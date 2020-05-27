@@ -18,6 +18,7 @@ from kukkuu.consts import (
     EVENT_ALREADY_PUBLISHED_ERROR,
     GENERAL_ERROR,
     INELIGIBLE_OCCURRENCE_ENROLMENT,
+    INVALID_EMAIL_FORMAT_ERROR,
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
@@ -32,6 +33,7 @@ from kukkuu.exceptions import (
     DataValidationError,
     EventAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
+    InvalidEmailFormatError,
     KukkuuGraphQLError,
     MaxNumberOfChildrenPerGuardianError,
     MissingDefaultTranslationError,
@@ -49,6 +51,7 @@ error_codes_shared = {
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
     QueryTooDeepError: QUERY_TOO_DEEP_ERROR,
+    InvalidEmailFormatError: INVALID_EMAIL_FORMAT_ERROR,
 }
 
 error_codes_kukkuu = {

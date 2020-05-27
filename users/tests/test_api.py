@@ -6,6 +6,8 @@ from children.tests.test_api import (
     assert_permission_denied,
 )
 from common.tests.conftest import create_api_client_with_user
+from common.tests.utils import assert_match_error_code
+from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR
 from users.factories import GuardianFactory
 from users.models import Guardian
 
@@ -206,8 +208,16 @@ def test_update_my_profile_mutation(snapshot, user_api_client):
     assert_guardian_matches_data(guardian, UPDATE_MY_PROFILE_VARIABLES["input"])
 
 
-@pytest.mark.parametrize("guardian_email", ["guardian_updated@example.com", ""])
-def test_update_my_profile_mutation_email(snapshot, guardian_email):
+@pytest.mark.parametrize(
+    "guardian_email, is_valid",
+    [
+        ("guardian_updated@example.com", True),
+        ("INVALID_EMAIL", False),
+        ("", False),
+        (None, False),
+    ],
+)
+def test_update_my_profile_mutation_email(snapshot, guardian_email, is_valid):
     guardian = GuardianFactory(
         email="guardian_original@example.com", user__email="user@example.com"
     )
@@ -226,9 +236,13 @@ mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
         variables={"input": {"email": guardian_email}},
     )
 
-    snapshot.assert_match(executed)
     guardian.refresh_from_db()
-    assert guardian.email == guardian_email
+    if is_valid:
+        snapshot.assert_match(executed)
+        assert guardian.email == guardian_email
+    else:
+        assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
+        assert guardian.email == "guardian_original@example.com"
 
 
 def test_my_admin_profile_unauthenticated(api_client):
