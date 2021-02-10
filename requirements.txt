@@ -24,7 +24,7 @@ cffi==1.14.0
     # via cryptography
 chardet==3.0.4
     # via requests
-cryptography==3.2
+cryptography==3.3.2
     # via azure-storage-common
 django-anymail==7.0.0
     # via django-ilmoitin
