@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import UserManager as OriginalUserManager
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -23,8 +23,13 @@ class UserQuerySet(models.QuerySet):
         return self.filter(guardian=None)
 
 
+# This is needed when using a custom User queryset
+class UserManager(OriginalUserManager.from_queryset(UserQuerySet)):
+    pass
+
+
 class User(AbstractUser):
-    objects = BaseUserManager.from_queryset(UserQuerySet)()
+    objects = UserManager()
 
     class Meta:
         verbose_name = _("user")
