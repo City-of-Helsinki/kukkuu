@@ -1,6 +1,22 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.9.0] - 11 Feb 2021
+### Added
+- Add new permission system
+- Multiple minor admin UI enhancements
+- Add notification importer that imports email notifications' texts from Google Spreadsheets
+
+### Changed
+- Do not delete past enrolments when child is deleted
+- Forbid unenrolling from occurrences in the past
+- Delete children when their only guardian is deleted
+- Migrate periodic tasks to K8s cronjobs
+
+### Fixed
+- Fix UserManager
+- Fix notifications' dummy contexts
+
 ## [1.8.0] - 17 Dec 2020
 ### Added
 - Add event group functionality
@@ -144,7 +160,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.5.1...v1.6.0
