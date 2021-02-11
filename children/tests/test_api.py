@@ -9,6 +9,7 @@ from django.utils.timezone import localtime, now
 from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
+from guardian.shortcuts import assign_perm
 from languages.models import Language
 from projects.factories import ProjectFactory
 
@@ -785,7 +786,7 @@ def test_get_available_events(
     assert len(executed["data"]["child"]["availableEvents"]["edges"]) == 1
     snapshot.assert_match(executed)
 
-    guardian_api_client.user.projects.add(project)
+    assign_perm("admin", guardian_api_client.user, project)
     executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
 
     # having admin rights on the project should not affect available events
@@ -844,7 +845,7 @@ def test_get_past_events(
     executed = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
     snapshot.assert_match(executed)
 
-    guardian_api_client.user.projects.add(project)
+    assign_perm("admin", guardian_api_client.user, project)
     executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
 
     # having admin rights on the project should not affect past events
@@ -1070,7 +1071,7 @@ def test_available_events_and_event_groups(
 
     snapshot.assert_match(executed)
 
-    guardian_api_client.user.projects.add(project)
+    assign_perm("admin", guardian_api_client.user, project)
     executed2 = guardian_api_client.execute(
         CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
     )

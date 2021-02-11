@@ -3,12 +3,14 @@ from datetime import timedelta
 
 import factory.random
 import pytest
+import responses
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
+from guardian.shortcuts import assign_perm
 from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import Project
@@ -31,6 +33,12 @@ def setup_test_environment(settings):
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
 
 
 @pytest.fixture
@@ -90,7 +98,15 @@ def guardian_api_client():
 @pytest.fixture()
 def project_user_api_client(project):
     user = UserFactory()
-    user.projects.set([project])
+    assign_perm("admin", user, project)
+    return create_api_client_with_user(user)
+
+
+@pytest.fixture()
+def publisher_api_client(project):
+    user = UserFactory()
+    assign_perm("admin", user, project)
+    assign_perm("publish", user, project)
     return create_api_client_with_user(user)
 
 
@@ -141,14 +157,14 @@ def event_group():
 @pytest.fixture()
 def wrong_project_api_client(another_project):
     user = UserFactory()
-    user.projects.set([another_project])
+    assign_perm("admin", user, another_project)
     return create_api_client_with_user(user)
 
 
 @pytest.fixture
 def two_project_user_api_client(project, another_project):
     user = UserFactory()
-    user.projects.set([project, another_project])
+    assign_perm("admin", user, [project, another_project])
     return create_api_client_with_user(user)
 
 

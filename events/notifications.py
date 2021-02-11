@@ -1,9 +1,11 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
 from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
+from common.utils import get_global_id
 from events.consts import NotificationType
 from events.factories import (
     EnrolmentFactory,
@@ -11,7 +13,12 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.utils import get_event_ui_url
+from events.utils import (
+    get_event_group_ui_url,
+    get_event_ui_url,
+    get_occurrence_enrol_ui_url,
+    get_occurrence_ui_url,
+)
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
@@ -36,45 +43,46 @@ child = ChildWithGuardianFactory.build(relationship__guardian=guardian, project=
 occurrence = OccurrenceFactory.build(event=event, venue=venue)
 enrolment = EnrolmentFactory.build(occurrence=occurrence, child=child)
 
+common_event_context = {
+    "event": event,
+    "child": child,
+    "guardian": guardian,
+    "event_url": get_event_ui_url(event, child, guardian.language),
+    "localtime": timezone.template_localtime,
+    "get_global_id": get_global_id,
+}
+
+common_occurrence_context = {
+    "occurrence": occurrence,
+    "occurrence_url": get_occurrence_ui_url(occurrence, child, guardian.language),
+    "occurrence_enrol_url": get_occurrence_enrol_ui_url(
+        occurrence, child, guardian.language
+    ),
+    **common_event_context,
+}
+
 dummy_context.update(
     {
-        NotificationType.EVENT_PUBLISHED: {
-            "guardian": guardian,
-            "event": event,
-            "child": child,
-            "event_url": get_event_ui_url(event, child, guardian.language),
-        },
-        NotificationType.OCCURRENCE_ENROLMENT: {
-            "guardian": guardian,
-            "occurrence": occurrence,
-            "child": child,
-        },
-        NotificationType.OCCURRENCE_UNENROLMENT: {
-            "guardian": guardian,
-            "occurrence": occurrence,
-            "child": child,
-        },
-        NotificationType.OCCURRENCE_CANCELLED: {
-            "guardian": guardian,
-            "occurrence": occurrence,
-            "child": child,
-        },
+        NotificationType.EVENT_PUBLISHED: {**common_event_context},
+        NotificationType.OCCURRENCE_ENROLMENT: {**common_occurrence_context},
+        NotificationType.OCCURRENCE_UNENROLMENT: {**common_occurrence_context},
+        NotificationType.OCCURRENCE_CANCELLED: {**common_occurrence_context},
         NotificationType.OCCURRENCE_REMINDER: {
-            "guardian": guardian,
-            "occurrence": occurrence,
-            "child": child,
             "enrolment": enrolment,
+            **common_occurrence_context,
         },
         NotificationType.EVENT_GROUP_PUBLISHED: {
             "guardian": guardian,
+            "event_group": event_group,
+            "event_group_url": get_event_group_ui_url(event, child, guardian.language),
             "events": [
                 {
                     "obj": event,
-                    "occurrence": occurrence,
-                    "child": child,
-                    "enrolment": enrolment,
+                    "event_url": get_event_ui_url(event, child, guardian.language),
                 }
             ],
+            "localtime": timezone.template_localtime,
+            "get_global_id": get_global_id,
         },
     }
 )

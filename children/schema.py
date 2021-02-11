@@ -192,7 +192,6 @@ def validate_child_data(child_data):
             postal_code_validator(child_data["postal_code"])
         except ValidationError as e:
             raise DataValidationError(e.message)
-    # TODO temporarily hard-coded until further specs are figured out
     if "birthdate" in child_data:
         birth_year = child_data["birthdate"].year
         if (

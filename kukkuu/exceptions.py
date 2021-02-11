@@ -74,3 +74,7 @@ class OccurrenceIsNotFullError(KukkuuGraphQLError):
 
 class MessageAlreadySentError(KukkuuGraphQLError):
     """Message already sent"""
+
+
+class PastEnrolmentError(KukkuuGraphQLError):
+    """Cannot unenrol because the enrolment is in the past"""

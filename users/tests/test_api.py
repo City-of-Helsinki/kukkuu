@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pytest
+from guardian.shortcuts import assign_perm
 from projects.factories import ProjectFactory
 
 from children.factories import RelationshipFactory
@@ -146,6 +147,9 @@ query MyAdminProfle{
       edges {
         node {
           name
+          myPermissions {
+            publish
+          }
         }
       }
     }
@@ -305,9 +309,15 @@ def test_my_admin_profile_normal_user(user_api_client):
 
 
 def test_my_admin_profile_project_admin(snapshot, user_api_client):
-    project = ProjectFactory(year=2021, name="my only project")
-    project.users.add(user_api_client.user)
-    ProjectFactory(year=2022, name="someone else's project")
+    project_1 = ProjectFactory(
+        year=2021, name="my project where I don't have publish permission"
+    )
+    project_2 = ProjectFactory(
+        year=2022, name="my project where I have publish permission"
+    )
+    assign_perm("admin", user_api_client.user, [project_1, project_2])
+    assign_perm("publish", user_api_client.user, project_2)
+    ProjectFactory(year=2030, name="someone else's project")
 
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
 

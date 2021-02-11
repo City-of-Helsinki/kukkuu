@@ -33,6 +33,7 @@ from kukkuu.consts import (
     MISSING_DEFAULT_TRANSLATION_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
+    PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
 )
 from kukkuu.exceptions import QueryTooDeepError
@@ -468,6 +469,8 @@ mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
 
 """
 
+UNENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
+
 SET_ENROLMENT_ATTENDANCE_MUTATION = """
 mutation SetEnrolmentAttendance($input: SetEnrolmentAttendanceMutationInput!) {
   setEnrolmentAttendance(input: $input) {
@@ -744,18 +747,38 @@ def test_upload_image_to_event(project_user_api_client, snapshot, project):
     assert event.image
 
 
-def test_project_user_publish_event(
-    snapshot, project_user_api_client, unpublished_event
-):
+def test_publish_event_no_publish_permission(project_user_api_client):
+    event = EventFactory()
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_MUTATION, variables=variables
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_publish_event_not_own_project(publisher_api_client, another_project):
+    event = EventFactory(project=another_project)
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     assert not unpublished_event.is_published()
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
     snapshot.assert_match(executed)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_MUTATION, variables=event_variables
     )
 
@@ -882,6 +905,22 @@ def test_unenrol_occurrence(
     assert child.occurrences.count() == 0
     assert child_with_random_guardian.occurrences.count() == 1
     snapshot.assert_match(executed)
+
+
+def test_cannot_unenrol_from_occurrence_in_past(
+    guardian_api_client, child_with_user_guardian, past
+):
+    enrolment = EnrolmentFactory(occurrence__time=past, child=child_with_user_guardian)
+
+    variables = deepcopy(UNENROL_OCCURRENCE_VARIABLES)
+    variables["input"]["occurrenceId"] = get_global_id(enrolment.occurrence)
+    variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, PAST_ENROLMENT_ERROR)
 
 
 def test_maximum_enrolment(
@@ -1495,7 +1534,11 @@ def test_events_and_event_groups_query_project_user(snapshot, project_user_api_c
 
 
 def test_events_and_event_groups_query_project_filtering(
-    snapshot, project_user_api_client, project, another_project
+    snapshot,
+    project_user_api_client,
+    two_project_user_api_client,
+    project,
+    another_project,
 ):
     EventGroupFactory(name="The project's EventGroup", project=project)
     EventFactory(name="The project's Event", project=project)
@@ -1507,14 +1550,10 @@ def test_events_and_event_groups_query_project_filtering(
         executed, name="No filter, no permission to see another project"
     )
 
-    project_user_api_client.user.projects.add(another_project)
-    executed = project_user_api_client.execute(
-        EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
-        name="No filter, permission to see both projects",
-    )
-    snapshot.assert_match(executed)
+    executed = two_project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
+    snapshot.assert_match(executed, name="No filter, permission to see both projects")
 
-    executed = project_user_api_client.execute(
+    executed = two_project_user_api_client.execute(
         EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
         variables={"projectId": get_global_id(project)},
     )
@@ -1691,49 +1730,53 @@ mutation PublishEventGroup($input: PublishEventGroupMutationInput!) {
 PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
 
 
-def test_publish_event_group_permission_denied(
-    user_api_client, project_user_api_client, another_project
-):
+def test_publish_event_group_no_publish_permission(project_user_api_client):
+    event = EventFactory(event_group=EventGroupFactory())
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event.event_group)
+
+    executed = project_user_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_publish_event_group_not_own_project(publisher_api_client, another_project):
     event = EventFactory(
         project=another_project, event_group=EventGroupFactory(project=another_project)
     )
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = user_api_client.execute(
-        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
-    )
-
-    assert_permission_denied(executed)
-
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
-def test_publish_event_group_events_not_ready(snapshot, project_user_api_client):
+def test_publish_event_group_events_not_ready(publisher_api_client):
     event = EventFactory(event_group=EventGroupFactory())
     EventFactory(event_group=event.event_group, ready_for_event_group_publishing=False)
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
     assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
 
 
-def test_publish_event_group(snapshot, project_user_api_client):
+def test_publish_event_group(snapshot, publisher_api_client):
     event = EventFactory(
         event_group=EventGroupFactory(), ready_for_event_group_publishing=True
     )
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event.event_group)
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 
@@ -1743,7 +1786,7 @@ def test_publish_event_group(snapshot, project_user_api_client):
     assert event.event_group.published_at
     assert event.published_at
 
-    executed = project_user_api_client.execute(
+    executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
 

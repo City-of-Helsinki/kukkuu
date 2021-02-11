@@ -329,34 +329,6 @@ snapshots["test_events_and_event_groups_query_normal_user 1"] = {
     }
 }
 
-snapshots["test_events_and_event_groups_query_project_filtering 1"] = {
-    "data": {
-        "eventsAndEventGroups": {
-            "edges": [
-                {"node": {"__typename": "EventNode", "name": "The project's Event"}},
-                {
-                    "node": {
-                        "__typename": "EventNode",
-                        "name": "Another project's Event",
-                    }
-                },
-                {
-                    "node": {
-                        "__typename": "EventGroupNode",
-                        "name": "The project's EventGroup",
-                    }
-                },
-                {
-                    "node": {
-                        "__typename": "EventGroupNode",
-                        "name": "Another project's EventGroup",
-                    }
-                },
-            ]
-        }
-    }
-}
-
 snapshots[
     "test_events_and_event_groups_query_project_filtering First project in filter, permission to see both projects"
 ] = {
@@ -386,6 +358,36 @@ snapshots[
                     "node": {
                         "__typename": "EventGroupNode",
                         "name": "The project's EventGroup",
+                    }
+                },
+            ]
+        }
+    }
+}
+
+snapshots[
+    "test_events_and_event_groups_query_project_filtering No filter, permission to see both projects"
+] = {
+    "data": {
+        "eventsAndEventGroups": {
+            "edges": [
+                {"node": {"__typename": "EventNode", "name": "The project's Event"}},
+                {
+                    "node": {
+                        "__typename": "EventNode",
+                        "name": "Another project's Event",
+                    }
+                },
+                {
+                    "node": {
+                        "__typename": "EventGroupNode",
+                        "name": "The project's EventGroup",
+                    }
+                },
+                {
+                    "node": {
+                        "__typename": "EventGroupNode",
+                        "name": "Another project's EventGroup",
                     }
                 },
             ]
@@ -977,7 +979,7 @@ Page box child care any concern. Defense level church use.""",
     }
 }
 
-snapshots["test_project_user_publish_event 1"] = {
+snapshots["test_publish_event 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 

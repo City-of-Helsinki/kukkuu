@@ -13,6 +13,7 @@ class RelationshipInline(admin.TabularInline):
     extra = 0
     fields = ("guardian", "type", "created_at")
     readonly_fields = ("created_at",)
+    raw_id_fields = ("guardian",)
 
     def has_change_permission(self, request, obj=None):
         return False
@@ -20,7 +21,7 @@ class RelationshipInline(admin.TabularInline):
 
 class EnrolmentInline(admin.TabularInline):
     model = Enrolment
-    extra = 1
+    extra = 0
     readonly_fields = ("created_at",)
 
 
@@ -45,21 +46,34 @@ class ChildAdmin(admin.ModelAdmin):
         "last_name",
         "birthdate",
         "postal_code",
-        "get_project_year",
+        "get_guardian",
         "created_at",
         "updated_at",
     )
-    list_select_related = ("project",)
-    fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
-    search_fields = ("first_name", "last_name")
+    fields = ("first_name", "last_name", "birthdate", "postal_code")
+    search_fields = (
+        "first_name",
+        "last_name",
+        "birthdate",
+        "guardians__first_name",
+        "guardians__last_name",
+        "guardians__email",
+    )
     inlines = (
         RelationshipInline,
         EnrolmentInline,
         LanguagesSpokenAtHomeInline,
         SubscriptionInline,
     )
+    list_filter = ("project",)
 
-    def get_project_year(self, obj):
-        return obj.project.year
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("guardians")
 
-    get_project_year.short_description = _("project")
+    def get_guardian(self, obj):
+        try:
+            return obj.guardians.all()[0]
+        except IndexError:
+            return None
+
+    get_guardian.short_description = _("guardian")

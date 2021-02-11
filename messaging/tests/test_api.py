@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 from django.core import mail
 from django.utils.timezone import now
+from guardian.shortcuts import assign_perm
 from messaging.factories import MessageFactory
 from messaging.models import Message
 
@@ -59,7 +60,7 @@ def test_cannot_do_messages_query_unauthorized(user_api_client, message):
 def test_messages_query_project_filter(
     snapshot, project_user_api_client, message, project, another_project
 ):
-    project_user_api_client.user.projects.add(another_project)
+    assign_perm("admin", project_user_api_client.user, another_project)
 
     executed = project_user_api_client.execute(
         MESSAGES_QUERY, variables={"project_id": get_global_id(project)}

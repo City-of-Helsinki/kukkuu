@@ -28,6 +28,7 @@ from kukkuu.consts import (
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
     OCCURRENCE_IS_NOT_FULL_ERROR,
+    PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
     QUERY_TOO_DEEP_ERROR,
@@ -49,6 +50,7 @@ from kukkuu.exceptions import (
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     OccurrenceIsNotFullError,
+    PastEnrolmentError,
     PastOccurrenceError,
     QueryTooDeepError,
 )
@@ -77,6 +79,7 @@ error_codes_kukkuu = {
     OccurrenceIsNotFullError: OCCURRENCE_IS_NOT_FULL_ERROR,
     MessageAlreadySentError: MESSAGE_ALREADY_SENT_ERROR,
     EventGroupNotReadyForPublishingError: EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
+    PastEnrolmentError: PAST_ENROLMENT_ERROR,
 }
 
 sentry_ignored_errors = (

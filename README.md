@@ -51,6 +51,13 @@ Add default languages (optional)
 
 **NOTE:** A few of the default languages may not have a properly translated name in all languages.
 
+### Notification import
+
+The emails notifications that Kukkuu sends can be imported from a Google Sheets spreadsheet. To do that, first configure setting `KUKKUU_NOTIFICATIONS_SHEET_ID`, and then either
+
+1) run `python manage.py import_notifications` to import and update all the notifications, or
+2) use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
+
 ### Cron jobs
 `cron` is required for sending reminder notifications, and for sending emails queued (optional).
 

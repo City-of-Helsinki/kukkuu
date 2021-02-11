@@ -96,7 +96,22 @@ snapshots["test_guardians_query_project_user 1"] = {
 snapshots["test_my_admin_profile_project_admin 1"] = {
     "data": {
         "myAdminProfile": {
-            "projects": {"edges": [{"node": {"name": "my only project"}}]}
+            "projects": {
+                "edges": [
+                    {
+                        "node": {
+                            "myPermissions": {"publish": False},
+                            "name": "my project where I don't have publish permission",
+                        }
+                    },
+                    {
+                        "node": {
+                            "myPermissions": {"publish": True},
+                            "name": "my project where I have publish permission",
+                        }
+                    },
+                ]
+            }
         }
     }
 }

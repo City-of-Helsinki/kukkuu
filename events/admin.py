@@ -11,9 +11,41 @@ from subscriptions.models import FreeSpotNotificationSubscription
 from .models import Enrolment, Event, EventGroup, Occurrence
 
 
+class BaseBooleanListFilter(admin.SimpleListFilter):
+    def lookups(self, request, model_admin):
+        return ("1", _("Yes")), ("0", _("No"))
+
+
+class IsPublishedFilter(BaseBooleanListFilter):
+    title = _("published")
+    parameter_name = "is_published"
+    lookup_kwarg = "published_at__isnull"
+
+    def queryset(self, request, queryset):
+        if self.value() == "0":
+            return queryset.filter(**{self.lookup_kwarg: True})
+        if self.value() == "1":
+            return queryset.filter(**{self.lookup_kwarg: False})
+
+
+class OccurrenceIsPublishedFilter(IsPublishedFilter):
+    lookup_kwarg = "event__published_at__isnull"
+
+
+class OccurrenceIsUpcomingFilter(BaseBooleanListFilter):
+    title = _("upcoming")
+    parameter_name = "is_upcoming"
+
+    def queryset(self, request, queryset):
+        if self.value() == "0":
+            return queryset.in_past()
+        if self.value() == "1":
+            return queryset.upcoming()
+
+
 class OccurrencesInline(admin.StackedInline):
     model = Occurrence
-    extra = 1
+    extra = 0
 
 
 @admin.register(Event)
@@ -23,15 +55,14 @@ class EventAdmin(TranslatableAdmin):
         "name",
         "capacity_per_occurrence",
         "participants_per_invite",
-        "is_published",
-        "get_project_year",
+        "published_at",
+        "project",
         "created_at",
         "updated_at",
         "event_group",
         "ready_for_event_group_publishing",
     )
     list_display_links = ("id", "name")
-    list_select_related = ("project",)
     fields = (
         "project",
         "name",
@@ -51,6 +82,11 @@ class EventAdmin(TranslatableAdmin):
     ]
     actions = ["publish"]
     readonly_fields = ("published_at",)
+    list_filter = (
+        "project",
+        ("event_group", admin.RelatedOnlyFieldListFilter),
+        IsPublishedFilter,
+    )
 
     def publish(self, request, queryset):
         for obj in queryset:
@@ -59,10 +95,17 @@ class EventAdmin(TranslatableAdmin):
 
     publish.short_description = _("Publish selected events")
 
-    def get_project_year(self, obj):
-        return obj.project.year
-
-    get_project_year.short_description = _("project")
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "translations",
+                "event_group__translations",
+                "project__translations",
+                "event_group__project",
+            )
+        )
 
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
@@ -76,6 +119,7 @@ class EnrolmentsInline(admin.TabularInline):
     extra = 0
     readonly_fields = ("created_at", "updated_at")
     formset = EnrolmentsInlineFormSet
+    raw_id_fields = ("child",)
 
 
 class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
@@ -83,6 +127,7 @@ class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
     extra = 0
     fields = ("child", "created_at")
     readonly_fields = ("created_at",)
+    raw_id_fields = ("child",)
 
 
 @admin.register(Occurrence)
@@ -99,6 +144,14 @@ class OccurrenceAdmin(admin.ModelAdmin):
     )
     fields = ("time", "event", "venue", "occurrence_language", "capacity_override")
     inlines = [EnrolmentsInline, FreeSpotNotificationSubscriptionInline]
+    list_filter = (
+        "event__project",
+        ("event", admin.RelatedOnlyFieldListFilter),
+        ("venue", admin.RelatedOnlyFieldListFilter),
+        OccurrenceIsPublishedFilter,
+        OccurrenceIsUpcomingFilter,
+    )
+    ordering = ("-time",)
 
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
@@ -108,6 +161,18 @@ class OccurrenceAdmin(admin.ModelAdmin):
 
     get_enrolments.short_description = _("enrolments")
     get_free_spot_notification_subscriptions.short_description = _("subscriptions")
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related(
+                "event__translations",
+                "venue__translations",
+                "enrolments",
+                "free_spot_notification_subscriptions",
+            )
+        )
 
 
 class EventGroupForm(TranslatableModelForm):
@@ -151,6 +216,7 @@ class EventGroupAdmin(TranslatableAdmin):
     readonly_fields = ("published_at",)
     form = EventGroupForm
     actions = ("publish",)
+    list_filter = ("project", IsPublishedFilter)
 
     def get_event_count(self, obj):
         return obj.events.count()
@@ -172,3 +238,10 @@ class EventGroupAdmin(TranslatableAdmin):
                 self.message_user(request, e.message, level=messages.ERROR)
         if success_count:
             self.message_user(request, _("%s successfully published.") % success_count)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .prefetch_related("translations", "project__translations", "events")
+        )

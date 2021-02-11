@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 
+from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
 from users.models import Guardian
 
@@ -48,3 +49,24 @@ def test_guardian_email_populating():
     guardian.save()
     guardian.refresh_from_db()
     assert guardian.email == "user@example.com"
+
+
+@pytest.mark.parametrize("test_queryset", (False, True))
+@pytest.mark.django_db
+def test_children_deleted_when_guardian_deleted(test_queryset):
+    child = ChildWithGuardianFactory()
+    guardian = child.guardians.first()
+    child_having_also_another_guardian = ChildFactory()
+    child_having_also_another_guardian.guardians.set([guardian, GuardianFactory()])
+    outsider = ChildWithGuardianFactory()
+
+    if test_queryset:
+        Guardian.objects.filter(id=guardian.id).delete()
+    else:
+        guardian.delete()
+
+    with pytest.raises(Child.DoesNotExist):
+        child.refresh_from_db()
+
+    child_having_also_another_guardian.refresh_from_db()
+    outsider.refresh_from_db()

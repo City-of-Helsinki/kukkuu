@@ -79,5 +79,5 @@ def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
 
 
 project_user_required = user_passes_test(
-    lambda u: u.is_authenticated and u.projects.exists()
+    lambda u: u.is_authenticated and u.administered_projects
 )

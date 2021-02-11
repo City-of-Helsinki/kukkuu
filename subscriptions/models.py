@@ -13,7 +13,8 @@ from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(child__guardians__user=user) | Q(child__project__users=user)
+            Q(child__guardians__user=user)
+            | Q(child__project__in=user.administered_projects)
         ).distinct()
 
     def send_notification(self):

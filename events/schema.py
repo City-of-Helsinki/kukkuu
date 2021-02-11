@@ -2,9 +2,9 @@ import logging
 
 import graphene
 from django.apps import apps
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, relay
@@ -35,6 +35,7 @@ from kukkuu.exceptions import (
     IneligibleOccurrenceEnrolment,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
+    PastEnrolmentError,
     PastOccurrenceError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
@@ -58,6 +59,13 @@ def validate_enrolment(child, occurrence):
         raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
         raise PastOccurrenceError("Cannot join occurrence in the past")
+
+
+def validate_enrolment_deletion(enrolment):
+    if not enrolment.is_upcoming():
+        raise PastEnrolmentError(
+            "Cannot unenrol from an occurrence that is in the past."
+        )
 
 
 class EventParticipantsPerInvite(graphene.Enum):
@@ -278,10 +286,7 @@ class EnrolmentNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        user = info.context.user
-        return queryset.filter(
-            Q(child__guardians__user=info.context.user) | Q(child__project__users=user)
-        ).distinct()
+        return queryset.user_can_view(info.context.user)
 
 
 class EventTranslationsInput(graphene.InputObjectType):
@@ -439,6 +444,8 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
         except Enrolment.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        validate_enrolment_deletion(enrolment)
+
         occurrence = enrolment.occurrence
         enrolment.delete_and_send_notification()
 
@@ -582,13 +589,17 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
+        user = info.context.user
+
+        if not event.can_user_publish(user):
+            raise PermissionDenied("No permission to publish the event.")
 
         if event.is_published():
             raise EventAlreadyPublishedError("Event is already published")
 
         event.publish()
 
-        logger.info(f"user {info.context.user.uuid} published event {event}")
+        logger.info(f"user {user.uuid} published event {event}")
 
         return PublishEventMutation(event=event)
 
@@ -682,6 +693,10 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+        user = info.context.user
+
+        if not event_group.can_user_publish(user):
+            raise PermissionDenied("No permission to publish the event group.")
 
         if event_group.is_published():
             raise EventGroupAlreadyPublishedError("Event group is already published")
@@ -695,9 +710,7 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
             else:
                 raise
 
-        logger.info(
-            f"user {info.context.user.uuid} published event group {event_group}"
-        )
+        logger.info(f"user {user.uuid} published event group {event_group}")
 
         return PublishEventGroupMutation(event_group=event_group)
 

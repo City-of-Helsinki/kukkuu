@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
@@ -7,7 +8,11 @@ from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 
 from children.factories import ChildWithGuardianFactory
 from events.factories import EventFactory, OccurrenceFactory
-from events.utils import get_event_ui_url, get_occurrence_ui_url
+from events.utils import (
+    get_event_ui_url,
+    get_occurrence_enrol_ui_url,
+    get_occurrence_ui_url,
+)
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
@@ -31,8 +36,14 @@ dummy_context.update(
             "child": child,
             "event_url": get_event_ui_url(event, child, guardian.language),
             "occurrence": occurrence,
-            "occurrence_url": get_occurrence_ui_url(event, child, guardian.language),
+            "occurrence_url": get_occurrence_ui_url(
+                occurrence, child, guardian.language
+            ),
+            "occurrence_enrol_url": get_occurrence_enrol_ui_url(
+                occurrence, child, guardian.language
+            ),
             "subscription": subscription,
+            "localtime": timezone.template_localtime,
         },
     }
 )

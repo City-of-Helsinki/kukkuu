@@ -1,5 +1,5 @@
 from django.core.validators import RegexValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from languages.models import Language
@@ -10,13 +10,20 @@ from users.models import Guardian
 
 class ChildQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(Q(guardians__user=user) | Q(project__users=user)).distinct()
+        return self.filter(
+            Q(guardians__user=user) | Q(project__in=user.administered_projects)
+        ).distinct()
 
     def user_can_update(self, user):
         return self.filter(guardians__user=user)
 
     def user_can_delete(self, user):
         return self.filter(guardians__user=user)
+
+    @transaction.atomic()
+    def delete(self):
+        for child in self:
+            child.delete()
 
 
 postal_code_validator = RegexValidator(
@@ -62,14 +69,19 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.birthdate})"
 
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        self.enrolments.upcoming().delete()
+        return super().delete(*args, **kwargs)
+
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project_id).exists()
+        return user.can_administer_project(self.project)
 
 
 class RelationshipQuerySet(models.QuerySet):
     def user_can_view(self, user):
         return self.filter(
-            Q(guardian__user=user) | Q(child__project__users=user)
+            Q(guardian__user=user) | Q(child__project__in=user.administered_projects)
         ).distinct()
 
 

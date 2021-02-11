@@ -15,3 +15,5 @@ psycopg2
 sentry-sdk
 Pillow
 pycountry
+django-guardian
+requests

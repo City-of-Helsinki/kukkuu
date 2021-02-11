@@ -40,4 +40,4 @@ class Venue(TimestampedModel, TranslatableModel):
         return f"{name} ({self.pk}) ({self.project.year})"
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project_id).exists()
+        return user.can_administer_project(self.project)

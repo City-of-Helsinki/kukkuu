@@ -7,6 +7,7 @@ from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
+from projects.schema import ProjectNode
 
 from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import update_object
@@ -54,10 +55,16 @@ class GuardianNode(DjangoObjectType):
 
 
 class AdminNode(DjangoObjectType):
+    projects = DjangoConnectionField(ProjectNode)
+
     class Meta:
         model = User
         interfaces = (relay.Node,)
         fields = ("projects",)
+
+    @staticmethod
+    def resolve_projects(parent, info, **kwargs):
+        return parent.administered_projects
 
 
 class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):

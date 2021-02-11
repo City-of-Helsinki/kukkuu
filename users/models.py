@@ -1,23 +1,66 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.contrib.auth.models import UserManager as OriginalUserManager
+from django.db import models, transaction
 from django.db.models import Q
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
+from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
 from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 
 
+class UserQuerySet(models.QuerySet):
+    def possible_admins(self):
+        # This filtering isn't perfect because
+        #   1) it is possible there are a few normal users without a Guardian object
+        #   2) this prevents using the same user account for Kukkuu UI and Kukkuu admin
+        #      which was convenient in dev/testing, and might be a valid case in
+        #      production as well in the future
+        # but for now this should be easily good enough.
+        return self.filter(guardian=None)
+
+
+# This is needed when using a custom User queryset
+class UserManager(OriginalUserManager.from_queryset(UserQuerySet)):
+    pass
+
+
 class User(AbstractUser):
+    objects = UserManager()
+
     class Meta:
         verbose_name = _("user")
         verbose_name_plural = _("users")
 
+    def __str__(self):
+        return super().__str__() or self.username
+
+    @cached_property
+    def administered_projects(self):
+        from projects.models import Project  # noqa
+
+        return list(get_objects_for_user(self, "admin", Project))
+
+    def can_administer_project(self, project):
+        return project in self.administered_projects
+
+    def can_publish_in_project(self, project):
+        return self.has_perm("publish", project)
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(Q(user=user) | Q(children__project__users=user)).distinct()
+        return self.filter(
+            Q(user=user) | Q(children__project__in=user.administered_projects)
+        ).distinct()
+
+    @transaction.atomic()
+    def delete(self):
+        for child in self:
+            child.delete()
 
 
 class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
@@ -51,9 +94,16 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         verbose_name_plural = _("guardians")
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} ({self.email})"
 
     def save(self, *args, **kwargs):
         if not self.email:
             self.email = self.user.email
         super().save(*args, **kwargs)
+
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        for child in self.children.all():
+            if child.guardians.count() == 1:
+                child.delete()
+        return super().delete(*args, **kwargs)

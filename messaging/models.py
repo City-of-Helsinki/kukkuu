@@ -23,7 +23,7 @@ class AlreadySentError(Exception):
 
 class MessageQuerySet(TranslatableQuerySet):
     def user_can_view(self, user):
-        return self.filter(project__users=user)
+        return self.filter(project__in=user.administered_projects)
 
 
 class Message(TimestampedModel, TranslatableModel):
@@ -192,4 +192,4 @@ class Message(TimestampedModel, TranslatableModel):
             )
 
     def can_user_administer(self, user):
-        return user.projects.filter(pk=self.project.pk).exists()
+        return user.can_administer_project(self.project)
