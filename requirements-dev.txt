@@ -62,8 +62,10 @@ mccabe==0.6.1
     # via flake8
 more-itertools==7.2.0
     # via pytest
-packaging==19.2
-    # via pytest
+packaging==20.9
+    # via
+    #   -c requirements.txt
+    #   pytest
 parso==0.5.1
     # via jedi
 pathspec==0.6.0
@@ -86,8 +88,10 @@ pyflakes==2.1.1
     # via flake8
 pygments==2.4.2
     # via ipython
-pyparsing==2.4.2
-    # via packaging
+pyparsing==2.4.7
+    # via
+    #   -c requirements.txt
+    #   packaging
 pytest-cov==2.8.1
     # via -r requirements-dev.in
 pytest-django==3.5.1
@@ -113,7 +117,6 @@ six==1.12.0
     # via
     #   -c requirements.txt
     #   freezegun
-    #   packaging
     #   prompt-toolkit
     #   python-dateutil
     #   responses

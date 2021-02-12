@@ -15,7 +15,9 @@ azure-storage-blob==2.1.0
 azure-storage-common==2.1.0
     # via azure-storage-blob
 cachetools==4.0.0
-    # via google-auth
+    # via
+    #   django-helusers
+    #   google-auth
 certifi==2019.9.11
     # via
     #   requests
@@ -26,6 +28,8 @@ chardet==3.0.4
     # via requests
 cryptography==3.3.2
     # via azure-storage-common
+deprecation==2.1.0
+    # via django-helusers
 django-anymail==7.0.0
     # via django-ilmoitin
 django-cleanup==4.0.0
@@ -40,7 +44,7 @@ django-graphql-jwt==0.2.2
     # via -r requirements.in
 django-guardian==2.3.0
     # via -r requirements.in
-django-helusers==0.5.6
+django-helusers==0.6.0
     # via -r requirements.in
 django-ilmoitin==0.6.0
     # via -r requirements.in
@@ -64,12 +68,7 @@ django==2.2.13
     #   django-ilmoitin
     #   django-mailer
     #   django-storages
-    #   drf-oidc-auth
     #   graphene-django
-djangorestframework==3.10.3
-    # via drf-oidc-auth
-drf-oidc-auth==0.9
-    # via django-helusers
 ecdsa==0.13.3
     # via python-jose
 factory-boy==2.12.0
@@ -77,9 +76,7 @@ factory-boy==2.12.0
 faker==2.0.4
     # via factory-boy
 future==0.17.1
-    # via
-    #   pyjwkest
-    #   python-jose
+    # via python-jose
 google-api-core==1.16.0
     # via google-cloud-core
 google-auth==1.11.2
@@ -118,6 +115,8 @@ lockfile==0.12.2
     # via django-mailer
 markupsafe==1.1.1
     # via jinja2
+packaging==20.9
+    # via deprecation
 pillow==7.1.0
     # via -r requirements.in
 promise==2.2.1
@@ -141,12 +140,10 @@ pycountry==20.7.3
     # via -r requirements.in
 pycparser==2.20
     # via cffi
-pycryptodomex==3.9.0
-    # via pyjwkest
-pyjwkest==1.4.2
-    # via drf-oidc-auth
 pyjwt==1.7.1
     # via django-graphql-jwt
+pyparsing==2.4.7
+    # via packaging
 python-dateutil==2.8.1
     # via
     #   azure-storage-common
@@ -164,7 +161,6 @@ requests==2.22.0
     #   django-anymail
     #   django-helusers
     #   google-api-core
-    #   pyjwkest
 rsa==4.0
     # via
     #   google-auth
@@ -192,7 +188,6 @@ six==1.12.0
     #   graphql-relay
     #   promise
     #   protobuf
-    #   pyjwkest
     #   python-dateutil
     #   python-jose
     #   singledispatch

@@ -1,9 +1,9 @@
-from helusers.oidc import ApiTokenAuthentication
+from helusers.oidc import RequestJWTAuthentication
 
 
-class GraphQLApiTokenAuthentication(ApiTokenAuthentication):
+class GraphQLApiTokenAuthentication(RequestJWTAuthentication):
     """
-    Custom wrapper for the helusers.oidc.ApiTokenAuthentication backend.
+    Custom wrapper for the helusers.oidc.RequestJWTAuthentication backend.
     Needed to make it work with graphql_jwt.middleware.JSONWebTokenMiddleware,
     which in turn calls django.contrib.auth.middleware.AuthenticationMiddleware.
     Authenticate function should:
@@ -12,8 +12,5 @@ class GraphQLApiTokenAuthentication(ApiTokenAuthentication):
     """
 
     def authenticate(self, request, **kwargs):
-        user_auth_tuple = super().authenticate(request)
-        if not user_auth_tuple:
-            return None
-        user, auth = user_auth_tuple
-        return user
+        user_authorization = super().authenticate(request)
+        return user_authorization.user if user_authorization else None
