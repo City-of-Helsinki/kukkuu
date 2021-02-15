@@ -32,6 +32,7 @@ from kukkuu.consts import (
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
     QUERY_TOO_DEEP_ERROR,
+    SINGLE_EVENTS_DISALLOWED_ERROR,
 )
 from kukkuu.exceptions import (
     AlreadySubscribedError,
@@ -53,6 +54,7 @@ from kukkuu.exceptions import (
     PastEnrolmentError,
     PastOccurrenceError,
     QueryTooDeepError,
+    SingleEventsDisallowedError,
 )
 
 error_codes_shared = {
@@ -80,6 +82,7 @@ error_codes_kukkuu = {
     MessageAlreadySentError: MESSAGE_ALREADY_SENT_ERROR,
     EventGroupNotReadyForPublishingError: EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     PastEnrolmentError: PAST_ENROLMENT_ERROR,
+    SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
 }
 
 sentry_ignored_errors = (

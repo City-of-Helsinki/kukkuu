@@ -11,6 +11,7 @@ from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
 from projects.factories import ProjectFactory
+from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -35,6 +36,7 @@ from kukkuu.consts import (
     OCCURRENCE_IS_FULL_ERROR,
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
+    SINGLE_EVENTS_DISALLOWED_ERROR,
 )
 from kukkuu.exceptions import QueryTooDeepError
 from kukkuu.schema import schema
@@ -1839,3 +1841,15 @@ def test_event_group_events_filtering_by_available_for_child_id(
         EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
     )
     snapshot.assert_match(executed)
+
+
+def test_add_single_event_when_single_events_disallowed(
+    project_user_api_client, project
+):
+    Project.objects.filter(id=project.id).update(single_events_allowed=False)
+
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, SINGLE_EVENTS_DISALLOWED_ERROR)

@@ -21,6 +21,7 @@ query Projects {
           languageCode
           name
         }
+        singleEventsAllowed
       }
     }
   }
@@ -37,6 +38,7 @@ query Project($id: ID!) {
       languageCode
       name
     }
+    singleEventsAllowed
   }
 }
 """

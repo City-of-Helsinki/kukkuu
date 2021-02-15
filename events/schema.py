@@ -37,6 +37,7 @@ from kukkuu.exceptions import (
     OccurrenceIsFullError,
     PastEnrolmentError,
     PastOccurrenceError,
+    SingleEventsDisallowedError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from venues.models import Venue
@@ -314,13 +315,18 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        kwargs["project_id"] = get_obj_if_user_can_administer(
+        project = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
-        ).pk
+        )
+        kwargs["project_id"] = project.pk
         if "event_group_id" in kwargs and kwargs["event_group_id"]:
             kwargs["event_group_id"] = get_obj_if_user_can_administer(
                 info, kwargs.get("event_group_id"), EventGroup
             ).pk
+        elif not project.single_events_allowed:
+            raise SingleEventsDisallowedError(
+                f"Single events are disallowed in project {project}."
+            )
         event = Event.objects.create_translatable_object(**kwargs)
 
         logger.info(

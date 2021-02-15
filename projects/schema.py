@@ -34,7 +34,14 @@ class ProjectNode(DjangoObjectType):
     class Meta:
         model = Project
         interfaces = (relay.Node,)
-        fields = ("id", "year", "translations", "name", "my_permissions")
+        fields = (
+            "id",
+            "year",
+            "translations",
+            "name",
+            "my_permissions",
+            "single_events_allowed",
+        )
 
     @classmethod
     @login_required

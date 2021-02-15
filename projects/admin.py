@@ -38,8 +38,8 @@ class GroupSelectForm(forms.Form):
 @admin.register(Project)
 class ProjectAdmin(TranslatableAdmin, GuardedModelAdmin):
     change_form_template = "project_change_form.html"
-    list_display = ("year", "name")
-    fields = ("year", "name")
+    list_display = ("year", "name", "single_events_allowed")
+    fields = ("year", "name", "single_events_allowed")
 
     def get_obj_perms_base_context(self, request, obj):
         context = super().get_obj_perms_base_context(request, obj)

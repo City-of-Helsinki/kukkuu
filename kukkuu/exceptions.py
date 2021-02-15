@@ -78,3 +78,7 @@ class MessageAlreadySentError(KukkuuGraphQLError):
 
 class PastEnrolmentError(KukkuuGraphQLError):
     """Cannot unenrol because the enrolment is in the past"""
+
+
+class SingleEventsDisallowedError(KukkuuGraphQLError):
+    """Cannot create an event outside event groups"""
