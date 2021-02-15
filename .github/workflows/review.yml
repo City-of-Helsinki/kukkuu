@@ -15,6 +15,10 @@ env:
   DATABASE_PASSWORD: testing-password
   ADD_DEFAULT_LANGUAGES: 1
   APP_MIGRATE_COMMAND: /app/.prod/on_deploy.sh
+  K8S_REQUEST_CPU: 50m
+  K8S_REQUEST_RAM: 250Mi
+  K8S_LIMIT_CPU: 100m
+  K8S_LIMIT_RAM: 350Mi
 
 jobs:
   build:
