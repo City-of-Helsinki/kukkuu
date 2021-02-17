@@ -50,6 +50,11 @@ class User(AbstractUser):
     def can_publish_in_project(self, project):
         return self.has_perm("publish", project)
 
+    def can_manage_event_groups_in_project(self, project):
+        return self.has_perm("manage_event_groups", project) or self.has_perm(
+            "projects.manage_event_groups"
+        )
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):

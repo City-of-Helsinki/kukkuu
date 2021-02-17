@@ -110,6 +110,19 @@ def publisher_api_client(project):
     return create_api_client_with_user(user)
 
 
+@pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
+def event_group_manager_api_client(request, project):
+    user = UserFactory()
+    assign_perm("admin", user, project)
+
+    if request.param:
+        assign_perm("manage_event_groups", user, project)
+    else:
+        assign_perm("projects.manage_event_groups", user)
+
+    return create_api_client_with_user(user)
+
+
 @pytest.fixture
 def child_with_random_guardian(project):
     return ChildWithGuardianFactory(project=project)
