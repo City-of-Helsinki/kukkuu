@@ -6,6 +6,18 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots["test_project_query_normal_user 1"] = {
+    "data": {
+        "project": {
+            "id": "UHJvamVjdE5vZGU6MQ==",
+            "name": "Testiprojekti",
+            "singleEventsAllowed": True,
+            "translations": [{"languageCode": "FI", "name": "Testiprojekti"}],
+            "year": 2020,
+        }
+    }
+}
+
 snapshots["test_projects_query_normal_user 1"] = {
     "data": {
         "projects": {
@@ -14,6 +26,7 @@ snapshots["test_projects_query_normal_user 1"] = {
                     "node": {
                         "id": "UHJvamVjdE5vZGU6MQ==",
                         "name": "Testiprojekti",
+                        "singleEventsAllowed": True,
                         "translations": [
                             {"languageCode": "FI", "name": "Testiprojekti"}
                         ],
@@ -21,17 +34,6 @@ snapshots["test_projects_query_normal_user 1"] = {
                     }
                 }
             ]
-        }
-    }
-}
-
-snapshots["test_project_query_normal_user 1"] = {
-    "data": {
-        "project": {
-            "id": "UHJvamVjdE5vZGU6MQ==",
-            "name": "Testiprojekti",
-            "translations": [{"languageCode": "FI", "name": "Testiprojekti"}],
-            "year": 2020,
         }
     }
 }
