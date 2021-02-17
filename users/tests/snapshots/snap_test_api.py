@@ -102,7 +102,7 @@ snapshots["test_my_admin_profile_project_admin[has_also_model_perm] 1"] = {
                         "node": {
                             "myPermissions": {
                                 "manageEventGroups": True,
-                                "publish": False,
+                                "publish": True,
                             },
                             "name": "Helsingin kaupunginorkesteri",
                         }
@@ -111,7 +111,7 @@ snapshots["test_my_admin_profile_project_admin[has_also_model_perm] 1"] = {
                         "node": {
                             "myPermissions": {
                                 "manageEventGroups": True,
-                                "publish": False,
+                                "publish": True,
                             },
                             "name": "project where base admin object perm but no other object perms",
                         }
@@ -129,7 +129,7 @@ snapshots["test_my_admin_profile_project_admin[has_also_model_perm] 1"] = {
                         "node": {
                             "myPermissions": {
                                 "manageEventGroups": True,
-                                "publish": False,
+                                "publish": True,
                             },
                             "name": "project where no object perms",
                         }

@@ -102,11 +102,16 @@ def project_user_api_client(project):
     return create_api_client_with_user(user)
 
 
-@pytest.fixture()
-def publisher_api_client(project):
+@pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
+def publisher_api_client(request, project):
     user = UserFactory()
     assign_perm("admin", user, project)
-    assign_perm("publish", user, project)
+
+    if request.param:
+        assign_perm("publish", user, project)
+    else:
+        assign_perm("projects.publish", user)
+
     return create_api_client_with_user(user)
 
 

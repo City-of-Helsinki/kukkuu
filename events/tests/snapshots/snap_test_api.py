@@ -1005,11 +1005,28 @@ Page box child care any concern. Defense level church use.""",
     }
 }
 
-snapshots["test_publish_event 1"] = {
+snapshots["test_publish_event[model_perm] 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 
-snapshots["test_publish_event_group 1"] = {
+snapshots["test_publish_event[object_perm] 1"] = {
+    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
+}
+
+snapshots["test_publish_event_group[model_perm] 1"] = {
+    "data": {
+        "publishEventGroup": {
+            "eventGroup": {
+                "events": {
+                    "edges": [{"node": {"publishedAt": "2020-12-12T00:00:00+00:00"}}]
+                },
+                "publishedAt": "2020-12-12T00:00:00+00:00",
+            }
+        }
+    }
+}
+
+snapshots["test_publish_event_group[object_perm] 1"] = {
     "data": {
         "publishEventGroup": {
             "eventGroup": {
