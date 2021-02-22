@@ -149,6 +149,7 @@ query MyAdminProfle{
           name
           myPermissions {
             publish
+            manageEventGroups
           }
         }
       }
@@ -308,16 +309,28 @@ def test_my_admin_profile_normal_user(user_api_client):
     assert executed["data"]["myAdminProfile"]["projects"]["edges"] == []
 
 
-def test_my_admin_profile_project_admin(snapshot, user_api_client):
+@pytest.mark.parametrize(
+    "has_also_model_perms", (False, True), ids=("no_model_perm", "has_also_model_perm")
+)
+def test_my_admin_profile_project_admin(
+    snapshot, user_api_client, has_also_model_perms
+):
     project_1 = ProjectFactory(
-        year=2021, name="my project where I don't have publish permission"
+        year=2021, name="project where base admin object perm but no other object perms"
     )
     project_2 = ProjectFactory(
-        year=2022, name="my project where I have publish permission"
+        year=2022, name="project where base admin object perm and other object perms"
     )
     assign_perm("admin", user_api_client.user, [project_1, project_2])
     assign_perm("publish", user_api_client.user, project_2)
-    ProjectFactory(year=2030, name="someone else's project")
+    assign_perm("manage_event_groups", user_api_client.user, project_2)
+
+    if has_also_model_perms:
+        assign_perm("projects.admin", user_api_client.user)
+        assign_perm("projects.publish", user_api_client.user)
+        assign_perm("projects.manage_event_groups", user_api_client.user)
+
+    ProjectFactory(year=2030, name="project where no object perms")
 
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
 

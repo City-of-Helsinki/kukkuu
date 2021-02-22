@@ -1602,22 +1602,29 @@ ADD_EVENT_GROUP_VARIABLES = {
 }
 
 
-def test_add_event_group_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(
-        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-    executed = user_api_client.execute(
-        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-
-def test_add_event_group(snapshot, project_user_api_client, project):
+def test_add_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, project
+):
     variables = deepcopy(ADD_EVENT_GROUP_VARIABLES)
     variables["input"]["projectId"] = get_global_id(project)
+
+    executed = api_client.execute(ADD_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(ADD_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
     executed = project_user_api_client.execute(
+        ADD_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_event_group(snapshot, event_group_manager_api_client, project):
+    variables = deepcopy(ADD_EVENT_GROUP_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+
+    executed = event_group_manager_api_client.execute(
         ADD_EVENT_GROUP_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
@@ -1663,22 +1670,28 @@ UPDATE_EVENT_GROUP_VARIABLES = {
 }
 
 
-def test_update_event_group_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(
-        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-    executed = user_api_client.execute(
-        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-
-def test_update_event_group(snapshot, project_user_api_client, event_group):
+def test_update_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, event_group
+):
     variables = deepcopy(UPDATE_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event_group)
+
+    executed = api_client.execute(UPDATE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(UPDATE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
     executed = project_user_api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_update_event_group(snapshot, event_group_manager_api_client, event_group):
+    variables = deepcopy(UPDATE_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event_group)
+    executed = event_group_manager_api_client.execute(
         UPDATE_EVENT_GROUP_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
@@ -1693,7 +1706,9 @@ mutation DeleteEventGroup($input: DeleteEventGroupMutationInput!) {
 """
 
 
-def test_delete_event_group_permission_denied(api_client, user_api_client, event_group):
+def test_delete_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, event_group
+):
     variables = {"input": {"id": get_global_id(event_group)}}
     executed = api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
     assert_permission_denied(executed)
@@ -1701,9 +1716,14 @@ def test_delete_event_group_permission_denied(api_client, user_api_client, event
     executed = user_api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
     assert_permission_denied(executed)
 
-
-def test_delete_event_group(snapshot, project_user_api_client, event_group):
     executed = project_user_api_client.execute(
+        DELETE_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_delete_event_group(snapshot, event_group_manager_api_client, event_group):
+    executed = event_group_manager_api_client.execute(
         DELETE_EVENT_GROUP_MUTATION,
         variables={"input": {"id": get_global_id(event_group)}},
     )

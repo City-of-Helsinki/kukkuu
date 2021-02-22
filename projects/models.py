@@ -20,7 +20,8 @@ class Project(TranslatableModel):
         ordering = ["year"]
         permissions = (
             ("admin", _("Base admin permission")),
-            ("publish", _("Can publish")),
+            ("publish", _("Can publish events and event groups")),
+            ("manage_event_groups", _("Can create, update and delete event groups")),
         )
 
     @classmethod

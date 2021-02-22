@@ -6,7 +6,29 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots["test_add_event_group 1"] = {
+snapshots["test_add_event_group[model_perm] 1"] = {
+    "data": {
+        "addEventGroup": {
+            "eventGroup": {
+                "image": "",
+                "imageAltText": "Image alt text",
+                "project": {"year": 2020},
+                "publishedAt": None,
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event group test",
+                        "shortDescription": "Short desc",
+                    }
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_add_event_group[object_perm] 1"] = {
     "data": {
         "addEventGroup": {
             "eventGroup": {
@@ -81,7 +103,11 @@ snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     }
 }
 
-snapshots["test_delete_event_group 1"] = {
+snapshots["test_delete_event_group[model_perm] 1"] = {
+    "data": {"deleteEventGroup": {"__typename": "DeleteEventGroupMutationPayload"}}
+}
+
+snapshots["test_delete_event_group[object_perm] 1"] = {
     "data": {"deleteEventGroup": {"__typename": "DeleteEventGroupMutationPayload"}}
 }
 
@@ -979,11 +1005,28 @@ Page box child care any concern. Defense level church use.""",
     }
 }
 
-snapshots["test_publish_event 1"] = {
+snapshots["test_publish_event[model_perm] 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 
-snapshots["test_publish_event_group 1"] = {
+snapshots["test_publish_event[object_perm] 1"] = {
+    "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
+}
+
+snapshots["test_publish_event_group[model_perm] 1"] = {
+    "data": {
+        "publishEventGroup": {
+            "eventGroup": {
+                "events": {
+                    "edges": [{"node": {"publishedAt": "2020-12-12T00:00:00+00:00"}}]
+                },
+                "publishedAt": "2020-12-12T00:00:00+00:00",
+            }
+        }
+    }
+}
+
+snapshots["test_publish_event_group[object_perm] 1"] = {
     "data": {
         "publishEventGroup": {
             "eventGroup": {
@@ -1039,7 +1082,33 @@ snapshots["test_unenrol_occurrence 1"] = {
     }
 }
 
-snapshots["test_update_event_group 1"] = {
+snapshots["test_update_event_group[model_perm] 1"] = {
+    "data": {
+        "updateEventGroup": {
+            "eventGroup": {
+                "image": "spring.jpg",
+                "translations": [
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "FI",
+                        "name": "Event group test in suomi",
+                        "shortDescription": "Short desc",
+                    },
+                    {
+                        "description": "desc",
+                        "imageAltText": "Image alt text",
+                        "languageCode": "SV",
+                        "name": "Event group test in swedish",
+                        "shortDescription": "Short desc",
+                    },
+                ],
+            }
+        }
+    }
+}
+
+snapshots["test_update_event_group[object_perm] 1"] = {
     "data": {
         "updateEventGroup": {
             "eventGroup": {

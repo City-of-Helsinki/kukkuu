@@ -93,21 +93,74 @@ snapshots["test_guardians_query_project_user 1"] = {
     }
 }
 
-snapshots["test_my_admin_profile_project_admin 1"] = {
+snapshots["test_my_admin_profile_project_admin[has_also_model_perm] 1"] = {
     "data": {
         "myAdminProfile": {
             "projects": {
                 "edges": [
                     {
                         "node": {
-                            "myPermissions": {"publish": False},
-                            "name": "my project where I don't have publish permission",
+                            "myPermissions": {
+                                "manageEventGroups": True,
+                                "publish": True,
+                            },
+                            "name": "Helsingin kaupunginorkesteri",
                         }
                     },
                     {
                         "node": {
-                            "myPermissions": {"publish": True},
-                            "name": "my project where I have publish permission",
+                            "myPermissions": {
+                                "manageEventGroups": True,
+                                "publish": True,
+                            },
+                            "name": "project where base admin object perm but no other object perms",
+                        }
+                    },
+                    {
+                        "node": {
+                            "myPermissions": {
+                                "manageEventGroups": True,
+                                "publish": True,
+                            },
+                            "name": "project where base admin object perm and other object perms",
+                        }
+                    },
+                    {
+                        "node": {
+                            "myPermissions": {
+                                "manageEventGroups": True,
+                                "publish": True,
+                            },
+                            "name": "project where no object perms",
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+
+snapshots["test_my_admin_profile_project_admin[no_model_perm] 1"] = {
+    "data": {
+        "myAdminProfile": {
+            "projects": {
+                "edges": [
+                    {
+                        "node": {
+                            "myPermissions": {
+                                "manageEventGroups": False,
+                                "publish": False,
+                            },
+                            "name": "project where base admin object perm but no other object perms",
+                        }
+                    },
+                    {
+                        "node": {
+                            "myPermissions": {
+                                "manageEventGroups": True,
+                                "publish": True,
+                            },
+                            "name": "project where base admin object perm and other object perms",
                         }
                     },
                 ]

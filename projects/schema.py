@@ -12,11 +12,17 @@ ProjectTranslation = apps.get_model("projects", "ProjectTranslation")
 
 class ProjectPermissionsType(ObjectType):
     publish = graphene.Boolean()
+    manage_event_groups = graphene.Boolean()
 
     @staticmethod
     def resolve_publish(parent, info):
         project, user = parent
         return user.can_publish_in_project(project)
+
+    @staticmethod
+    def resolve_manage_event_groups(parent, info):
+        project, user = parent
+        return user.can_manage_event_groups_in_project(project)
 
 
 class ProjectTranslationType(DjangoObjectType):
