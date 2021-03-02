@@ -46,11 +46,12 @@ class ChildAdmin(admin.ModelAdmin):
         "last_name",
         "birthdate",
         "postal_code",
+        "get_project",
         "get_guardian",
         "created_at",
         "updated_at",
     )
-    fields = ("first_name", "last_name", "birthdate", "postal_code")
+    fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
     search_fields = (
         "first_name",
         "last_name",
@@ -68,7 +69,12 @@ class ChildAdmin(admin.ModelAdmin):
     list_filter = ("project",)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("guardians")
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("project")
+            .prefetch_related("guardians")
+        )
 
     def get_guardian(self, obj):
         try:
@@ -77,3 +83,8 @@ class ChildAdmin(admin.ModelAdmin):
             return None
 
     get_guardian.short_description = _("guardian")
+
+    def get_project(self, obj):
+        return obj.project.year
+
+    get_project.short_description = _("project")
