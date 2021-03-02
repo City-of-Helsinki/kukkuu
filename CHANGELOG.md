@@ -1,6 +1,11 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.10.1] - 2 Mar 2021
+### Fixed
+- Fix GHA production config
+- Fix handling of a child's project in admin UI
+
 ## [1.10.0] - 2 Mar 2021
 ### Added
 - Add "single events allowed" flag to Project model
@@ -173,7 +178,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.7.0...v1.8.0
