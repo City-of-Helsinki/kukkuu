@@ -1,6 +1,19 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.10.0] - 2 Mar 2021
+### Added
+- Add "single events allowed" flag to Project model
+- Add permission for managing event groups
+- Allow granting publish permission to all projects
+- Add GHA production config
+
+### Changed
+- Do not log readiness and healthz endpoints
+
+### Fixed
+- Temporary auth fix required by the latest Tunnistamo
+
 ## [1.9.0] - 11 Feb 2021
 ### Added
 - Add new permission system
@@ -160,7 +173,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...v1.7.0
