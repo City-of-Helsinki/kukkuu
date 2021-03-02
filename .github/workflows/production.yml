@@ -1,9 +1,6 @@
 name: Build & Production
 on:
   push:
-    tags:
-      - 'release-*'
-
 
 env:
   CONTAINER_REGISTRY: ghcr.io
@@ -83,7 +80,7 @@ jobs:
           name: send-mail-cronjob
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
-          kubeconfig_raw: ${{ env.KUBECONFIG_RAW_STABLE }}
+          kubeconfig_raw: ${{ env.KUBECONFIG_RAW }}
           target_namespace: ${{ secrets.K8S_NAMESPACE_STABLE }}
           schedule: "* * * * *" # every min
           secret_name: "project-kukkuu-secret"
@@ -97,7 +94,7 @@ jobs:
           name: retry-deferred-cronjob
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
-          kubeconfig_raw: ${{ env.KUBECONFIG_RAW_STABLE }}
+          kubeconfig_raw: ${{ env.KUBECONFIG_RAW }}
           target_namespace: ${{ secrets.K8S_NAMESPACE_STABLE }}
           schedule: "*/20 * * * *" # every 20 mins
           secret_name: "project-kukkuu-secret"
@@ -111,7 +108,7 @@ jobs:
           name: send-reminder-notifications-cronjob
           image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
           image_tag:  ${{ github.sha }}
-          kubeconfig_raw: ${{ env.KUBECONFIG_RAW_STABLE }}
+          kubeconfig_raw: ${{ env.KUBECONFIG_RAW }}
           target_namespace: ${{ secrets.K8S_NAMESPACE_STABLE }}
           schedule: "0 12 * * *" # daily at noon UTC
           secret_name: "project-kukkuu-secret"
