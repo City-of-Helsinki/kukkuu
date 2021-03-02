@@ -37,6 +37,7 @@ from kukkuu.exceptions import (
     OccurrenceIsFullError,
     PastEnrolmentError,
     PastOccurrenceError,
+    SingleEventsDisallowedError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from venues.models import Venue
@@ -314,13 +315,18 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        kwargs["project_id"] = get_obj_if_user_can_administer(
+        project = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
-        ).pk
+        )
+        kwargs["project_id"] = project.pk
         if "event_group_id" in kwargs and kwargs["event_group_id"]:
             kwargs["event_group_id"] = get_obj_if_user_can_administer(
                 info, kwargs.get("event_group_id"), EventGroup
             ).pk
+        elif not project.single_events_allowed:
+            raise SingleEventsDisallowedError(
+                f"Single events are disallowed in project {project}."
+            )
         event = Event.objects.create_translatable_object(**kwargs)
 
         logger.info(
@@ -624,14 +630,19 @@ class AddEventGroupMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        kwargs["project_id"] = get_obj_if_user_can_administer(
+        user = info.context.user
+
+        project = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
-        ).pk
+        )
+        if not user.can_manage_event_groups_in_project(project):
+            raise PermissionDenied()
+
+        kwargs["project_id"] = project.pk
         event_group = EventGroup.objects.create_translatable_object(**kwargs)
 
         logger.info(
-            f"user {info.context.user.uuid} added event group {event_group} "
-            f"with data {kwargs}"
+            f"user {user.uuid} added event group {event_group} " f"with data {kwargs}"
         )
 
         return AddEventGroupMutation(event_group=event_group)
@@ -650,18 +661,22 @@ class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_group = get_obj_if_user_can_administer(info, kwargs.pop("id"), EventGroup)
+        user = info.context.user
+        project = event_group.project
+
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
-            kwargs["project_id"] = get_obj_if_user_can_administer(
-                info, project_global_id, Project
-            ).pk
+            project = get_obj_if_user_can_administer(info, project_global_id, Project)
+            kwargs["project_id"] = project.pk
 
-        event_group = get_obj_if_user_can_administer(info, kwargs.pop("id"), EventGroup)
+        if not user.can_manage_event_groups_in_project(project):
+            raise PermissionDenied()
+
         update_object_with_translations(event_group, kwargs)
 
         logger.info(
-            f"user {info.context.user.uuid} updated event group {event_group} "
-            f"with data {kwargs}"
+            f"user {user.uuid} updated event group {event_group} " f"with data {kwargs}"
         )
 
         return UpdateEventGroupMutation(event_group=event_group)
@@ -676,9 +691,14 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
+        user = info.context.user
+
+        if not user.can_manage_event_groups_in_project(event_group.project):
+            raise PermissionDenied()
+
         event_group.delete()
 
-        logger.info(f"user {info.context.user.uuid} deleted event group {event_group}")
+        logger.info(f"user {user.uuid} deleted event group {event_group}")
 
         return DeleteEventGroupMutation()
 

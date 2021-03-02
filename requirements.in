@@ -8,6 +8,7 @@ django-parler
 django-cleanup
 django-filter
 django-storages[google, azure]
+drf-oidc-auth==0.10.0
 factory-boy
 graphene-django
 graphene-file-upload

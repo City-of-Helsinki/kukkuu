@@ -8,6 +8,11 @@ class Project(TranslatableModel):
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255)
     )
+    single_events_allowed = models.BooleanField(
+        verbose_name=_("single events allowed"),
+        help_text=_("Whether it is allowed to create events outside event groups."),
+        default=True,
+    )
 
     class Meta:
         verbose_name = _("project")
@@ -15,7 +20,8 @@ class Project(TranslatableModel):
         ordering = ["year"]
         permissions = (
             ("admin", _("Base admin permission")),
-            ("publish", _("Can publish")),
+            ("publish", _("Can publish events and event groups")),
+            ("manage_event_groups", _("Can create, update and delete event groups")),
         )
 
     @classmethod

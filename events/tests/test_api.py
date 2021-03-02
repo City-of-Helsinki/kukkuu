@@ -11,6 +11,7 @@ from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
 from projects.factories import ProjectFactory
+from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -35,6 +36,7 @@ from kukkuu.consts import (
     OCCURRENCE_IS_FULL_ERROR,
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
+    SINGLE_EVENTS_DISALLOWED_ERROR,
 )
 from kukkuu.exceptions import QueryTooDeepError
 from kukkuu.schema import schema
@@ -1600,22 +1602,29 @@ ADD_EVENT_GROUP_VARIABLES = {
 }
 
 
-def test_add_event_group_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(
-        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-    executed = user_api_client.execute(
-        ADD_EVENT_GROUP_MUTATION, variables=ADD_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-
-def test_add_event_group(snapshot, project_user_api_client, project):
+def test_add_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, project
+):
     variables = deepcopy(ADD_EVENT_GROUP_VARIABLES)
     variables["input"]["projectId"] = get_global_id(project)
+
+    executed = api_client.execute(ADD_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(ADD_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
     executed = project_user_api_client.execute(
+        ADD_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_add_event_group(snapshot, event_group_manager_api_client, project):
+    variables = deepcopy(ADD_EVENT_GROUP_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+
+    executed = event_group_manager_api_client.execute(
         ADD_EVENT_GROUP_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
@@ -1661,22 +1670,28 @@ UPDATE_EVENT_GROUP_VARIABLES = {
 }
 
 
-def test_update_event_group_permission_denied(api_client, user_api_client):
-    executed = api_client.execute(
-        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-    executed = user_api_client.execute(
-        UPDATE_EVENT_GROUP_MUTATION, variables=UPDATE_EVENT_GROUP_VARIABLES
-    )
-    assert_permission_denied(executed)
-
-
-def test_update_event_group(snapshot, project_user_api_client, event_group):
+def test_update_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, event_group
+):
     variables = deepcopy(UPDATE_EVENT_GROUP_VARIABLES)
     variables["input"]["id"] = get_global_id(event_group)
+
+    executed = api_client.execute(UPDATE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+    executed = user_api_client.execute(UPDATE_EVENT_GROUP_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
     executed = project_user_api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_update_event_group(snapshot, event_group_manager_api_client, event_group):
+    variables = deepcopy(UPDATE_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event_group)
+    executed = event_group_manager_api_client.execute(
         UPDATE_EVENT_GROUP_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
@@ -1691,7 +1706,9 @@ mutation DeleteEventGroup($input: DeleteEventGroupMutationInput!) {
 """
 
 
-def test_delete_event_group_permission_denied(api_client, user_api_client, event_group):
+def test_delete_event_group_permission_denied(
+    api_client, user_api_client, project_user_api_client, event_group
+):
     variables = {"input": {"id": get_global_id(event_group)}}
     executed = api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
     assert_permission_denied(executed)
@@ -1699,9 +1716,14 @@ def test_delete_event_group_permission_denied(api_client, user_api_client, event
     executed = user_api_client.execute(DELETE_EVENT_GROUP_MUTATION, variables=variables)
     assert_permission_denied(executed)
 
-
-def test_delete_event_group(snapshot, project_user_api_client, event_group):
     executed = project_user_api_client.execute(
+        DELETE_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+
+def test_delete_event_group(snapshot, event_group_manager_api_client, event_group):
+    executed = event_group_manager_api_client.execute(
         DELETE_EVENT_GROUP_MUTATION,
         variables={"input": {"id": get_global_id(event_group)}},
     )
@@ -1839,3 +1861,15 @@ def test_event_group_events_filtering_by_available_for_child_id(
         EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
     )
     snapshot.assert_match(executed)
+
+
+def test_add_single_event_when_single_events_disallowed(
+    project_user_api_client, project
+):
+    Project.objects.filter(id=project.id).update(single_events_allowed=False)
+
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, SINGLE_EVENTS_DISALLOWED_ERROR)

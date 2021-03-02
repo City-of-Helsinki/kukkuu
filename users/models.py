@@ -48,7 +48,12 @@ class User(AbstractUser):
         return project in self.administered_projects
 
     def can_publish_in_project(self, project):
-        return self.has_perm("publish", project)
+        return self.has_perm("publish", project) or self.has_perm("projects.publish")
+
+    def can_manage_event_groups_in_project(self, project):
+        return self.has_perm("manage_event_groups", project) or self.has_perm(
+            "projects.manage_event_groups"
+        )
 
 
 class GuardianQuerySet(models.QuerySet):
