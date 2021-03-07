@@ -56,6 +56,11 @@ env = environ.Env(
     KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY=(int, 30),
     KUKKUU_REMINDER_DAYS_IN_ADVANCE=(int, 7),
     KUKKUU_NOTIFICATIONS_SHEET_ID=(str, ""),
+    # don't bother to use multiple threads when there are fewer than this mails to be
+    # sent
+    KUKKUU_THREADED_SEND_MAIL_THRESHOLD=(int, 40),
+    # these default values are determined using the Stetson-Harrison method
+    KUKKUU_THREADED_SEND_MAIL_THREAD_COUNT=(int, 24),
 )
 
 if os.path.exists(env_file):
@@ -239,6 +244,10 @@ KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
 )
 KUKKUU_REMINDER_DAYS_IN_ADVANCE = env("KUKKUU_REMINDER_DAYS_IN_ADVANCE")
 KUKKUU_NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
+KUKKUU_THREADED_SEND_MAIL_THRESHOLD = env("KUKKUU_THREADED_SEND_MAIL_THRESHOLD")
+KUKKUU_THREADED_SEND_MAIL_THREAD_COUNT = env("KUKKUU_THREADED_SEND_MAIL_THREAD_COUNT")
+
+MAILER_USE_FILE_LOCK = False
 
 LOGGING = {
     "version": 1,

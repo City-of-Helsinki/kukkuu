@@ -44,7 +44,7 @@ django-helusers==0.5.6
     # via -r requirements.in
 django-ilmoitin==0.6.0
     # via -r requirements.in
-django-mailer==2.0
+django-mailer==2.1
     # via django-ilmoitin
 django-parler==2.1
     # via

@@ -216,6 +216,9 @@ class Event(TimestampedModel, TranslatableModel):
         return user.can_publish_in_project(self.project)
 
     def publish(self, send_notifications=True):
+        import time
+
+        start_time = time.perf_counter()
         self.published_at = timezone.now()
         self.save()
 
@@ -225,6 +228,9 @@ class Event(TimestampedModel, TranslatableModel):
                 NotificationType.EVENT_PUBLISHED,
                 self.project.children.prefetch_related("guardians"),
             )
+
+        stop_time = time.perf_counter()
+        print(f"publishing took {stop_time - start_time:0.4f} seconds")
 
     def is_published(self):
         return bool(self.published_at)

@@ -49,9 +49,17 @@ jobs:
         env:
           ENVIRONMENT_URL: https://${{ env.K8S_NAMESPACE }}.${{ env.BASE_DOMAIN }}
           K8S_SECRET_ALLOWED_HOSTS: "*"
-          K8S_SECRET_DEBUG: 1
+          K8S_SECRET_DEBUG: 0
+          K8S_SECRET_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY_REVIEW }}
           K8S_SECRET_TOKEN_AUTH_AUTHSERVER_URL: "https://tunnistamo.${{ env.BASE_DOMAIN }}/openid"
           K8S_SECRET_CORS_ORIGIN_ALLOW_ALL: 1
           K8S_SECRET_KUKKUU_UI_BASE_URL: "https://kukkuu-ui.${{ env.BASE_DOMAIN }}"
           K8S_SECRET_ADD_DEFAULT_LANGUAGES: 1
           K8S_SECRET_KUKKUU_NOTIFICATIONS_SHEET_ID: ${{ secrets.KUKKUU_NOTIFICATIONS_SHEET_ID }}
+          K8S_SECRET_MAIL_MAILGUN_KEY: ${{ secrets.SECRET_MAILGUN_API_KEY }}
+          K8S_SECRET_MAIL_MAILGUN_DOMAIN: "mail.hel.ninja"
+          K8S_SECRET_MAIL_MAILGUN_API: "https://api.eu.mailgun.net/v3"
+          K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
+          K8S_SECRET_DEFAULT_FROM_EMAIL: "Kulttuurin kummilapset <noreply@mail.hel.ninja>"
+          K8S_SECRET_ILMOITIN_TRANSLATED_FROM_EMAIL: "fi=Kulttuurin kummilapset <noreply@mail.hel.ninja>,en=Culture Kids <noreply@mail.hel.ninja>,sv=Kulturens fadderbarn <noreply@mail.hel.ninja>"
+          K8S_SECRET_ILMOITIN_QUEUE_NOTIFICATIONS: 1
