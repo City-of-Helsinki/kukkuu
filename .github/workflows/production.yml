@@ -55,12 +55,12 @@ jobs:
           K8S_SECRET_TOKEN_AUTH_REQUIRE_SCOPE_PREFIX: 0
           K8S_SECRET_TOKEN_AUTH_AUTHSERVER_URL: "https://api.hel.fi/sso/openid"
           K8S_SECRET_ILMOITIN_QUEUE_NOTIFICATIONS: 1
-          K8S_SECRET_MAIL_MAILGUN_KEY: ${{ secrets.SECRET_MAILGUN_API_KEY }}
-          K8S_SECRET_MAIL_MAILGUN_DOMAIN: "mail.hel.ninja"
+          K8S_SECRET_MAIL_MAILGUN_KEY: ${{ secrets.GH_STABLE_MAILGUN_API_KEY }}
+          K8S_SECRET_MAIL_MAILGUN_DOMAIN: "hel.fi"
           K8S_SECRET_MAIL_MAILGUN_API: "https://api.eu.mailgun.net/v3"
           K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
-          K8S_SECRET_DEFAULT_FROM_EMAIL: "Kulttuurin kummilapset <noreply@mail.hel.ninja>"
-          K8S_SECRET_ILMOITIN_TRANSLATED_FROM_EMAIL: "fi=Kulttuurin kummilapset <noreply@mail.hel.ninja>,en=Culture Kids <noreply@mail.hel.ninja>,sv=Kulturens fadderbarn <noreply@mail.hel.ninja>"
+          K8S_SECRET_DEFAULT_FROM_EMAIL: "Kulttuurin kummilapset <noreply@hel.fi>"
+          K8S_SECRET_ILMOITIN_TRANSLATED_FROM_EMAIL: "fi=Kulttuurin kummilapset <noreply@hel.fi>,en=Culture Kids <noreply@hel.fi>,sv=Kulturens fadderbarn <noreply@hel.fi>"
           K8S_SECRET_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
           K8S_SECRET_AZURE_ACCOUNT_NAME: ${{ secrets.AZURE_ACCOUNT_NAME }}
           K8S_SECRET_AZURE_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY }}
