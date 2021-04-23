@@ -1,6 +1,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.10.3] - 23 Mar 2021
+### Changed
+- Increase production cpu limit
+
+## [1.10.2] - 10 Mar 2021
+### Fixed
+- Fix Mailgun API credentials
+
 ## [1.10.1] - 2 Mar 2021
 ### Fixed
 - Fix GHA production config
@@ -178,9 +186,11 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.1...HEAD
-[1.10.1]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.10.0...v1.10.1
-[1.10.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...v1.10.0
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...HEAD
+[1.10.3]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.2...release-1.10.3
+[1.10.2]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.1...release-1.10.2
+[1.10.1]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.0...release-1.10.1
+[1.10.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.9.0...release-1.10.0
 [1.9.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/City-of-Helsinki/kukkuu/compare/v1.6.0...v1.7.0
