@@ -82,11 +82,11 @@ class EventGroup(TimestampedModel, TranslatableModel):
             for event in unpublished_events:
                 event.publish(send_notifications=False)
 
-        send_event_group_notifications_to_guardians(
-            self,
-            NotificationType.EVENT_GROUP_PUBLISHED,
-            self.project.children.prefetch_related("guardians"),
-        )
+            send_event_group_notifications_to_guardians(
+                self,
+                NotificationType.EVENT_GROUP_PUBLISHED,
+                self.project.children.prefetch_related("guardians"),
+            )
 
     def is_published(self):
         return bool(self.published_at)
@@ -215,6 +215,7 @@ class Event(TimestampedModel, TranslatableModel):
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
 
+    @transaction.atomic
     def publish(self, send_notifications=True):
         self.published_at = timezone.now()
         self.save()

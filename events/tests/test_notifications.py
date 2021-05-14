@@ -40,7 +40,7 @@ def notification_template_event_published_fi():
         body_text="""
         Event FI: {{ event.name }}
         Guardian FI: {{ guardian }}
-        Event URL: {{ event_url }}
+        Event URL: {{ event_url }}
 """,
     )
 

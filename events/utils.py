@@ -34,12 +34,12 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
                         occurrence, child, guardian.language
                     )
 
-                    send_notification(
-                        guardian.email,
-                        notification_type,
-                        context=context,
-                        language=guardian.language,
-                    )
+                send_notification(
+                    guardian.email,
+                    notification_type,
+                    context=context,
+                    language=guardian.language,
+                )
 
 
 def send_event_group_notifications_to_guardians(
