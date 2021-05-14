@@ -4,6 +4,7 @@ from datetime import datetime
 from django.conf import settings
 from django.utils import timezone
 from django_ilmoitin.utils import send_notification
+from parler.utils.context import switch_language
 
 from common.utils import get_global_id
 
@@ -14,30 +15,31 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
 
     for child in children:
         for guardian in child.guardians.all():
-            context = {
-                "event": event,
-                "child": child,
-                "guardian": guardian,
-                "event_url": get_event_ui_url(event, child, guardian.language),
-                "localtime": timezone.template_localtime,
-                "get_global_id": get_global_id,
-                **kwargs,
-            }
-            occurrence = kwargs.get("occurrence")
-            if occurrence:
-                context["occurrence_url"] = get_occurrence_ui_url(
-                    occurrence, child, guardian.language
-                )
-                context["occurrence_enrol_url"] = get_occurrence_enrol_ui_url(
-                    occurrence, child, guardian.language
-                )
+            with switch_language(event, guardian.language):
+                context = {
+                    "event": event,
+                    "child": child,
+                    "guardian": guardian,
+                    "event_url": get_event_ui_url(event, child, guardian.language),
+                    "localtime": timezone.template_localtime,
+                    "get_global_id": get_global_id,
+                    **kwargs,
+                }
+                occurrence = kwargs.get("occurrence")
+                if occurrence:
+                    context["occurrence_url"] = get_occurrence_ui_url(
+                        occurrence, child, guardian.language
+                    )
+                    context["occurrence_enrol_url"] = get_occurrence_enrol_ui_url(
+                        occurrence, child, guardian.language
+                    )
 
-            send_notification(
-                guardian.email,
-                notification_type,
-                context=context,
-                language=guardian.language,
-            )
+                    send_notification(
+                        guardian.email,
+                        notification_type,
+                        context=context,
+                        language=guardian.language,
+                    )
 
 
 def send_event_group_notifications_to_guardians(
@@ -48,31 +50,34 @@ def send_event_group_notifications_to_guardians(
 
     for child in children:
         for guardian in child.guardians.all():
-            context = {
-                "event_group": event_group,
-                "child": child,
-                "guardian": guardian,
-                "event_group_url": get_event_group_ui_url(
-                    event_group, child, guardian.language
-                ),
-                "localtime": timezone.template_localtime,
-                "get_global_id": get_global_id,
-                "events": [
-                    {
-                        "obj": event,
-                        "event_url": get_event_ui_url(event, child, guardian.language),
-                    }
-                    for event in event_group.events.all()
-                ],
-                **kwargs,
-            }
+            with switch_language(event_group, guardian.language):
+                context = {
+                    "event_group": event_group,
+                    "child": child,
+                    "guardian": guardian,
+                    "event_group_url": get_event_group_ui_url(
+                        event_group, child, guardian.language
+                    ),
+                    "localtime": timezone.template_localtime,
+                    "get_global_id": get_global_id,
+                    "events": [
+                        {
+                            "obj": event,
+                            "event_url": get_event_ui_url(
+                                event, child, guardian.language
+                            ),
+                        }
+                        for event in event_group.events.language(guardian.language)
+                    ],
+                    **kwargs,
+                }
 
-            send_notification(
-                guardian.email,
-                notification_type,
-                context=context,
-                language=guardian.language,
-            )
+                send_notification(
+                    guardian.email,
+                    notification_type,
+                    context=context,
+                    language=guardian.language,
+                )
 
 
 def convert_to_localtime_tz(value):
