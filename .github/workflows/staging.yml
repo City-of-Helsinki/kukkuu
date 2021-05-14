@@ -86,7 +86,7 @@ jobs:
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_mail}"
-          max_duration: 900 # 15min
+          max_duration: 3600 # 1h
 
       - name: Deploy retry deferred mails cronjob
         uses: City-of-Helsinki/setup-cronjob-action@main
@@ -100,7 +100,7 @@ jobs:
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py retry_deferred}"
-          max_duration: 900 # 15min
+          max_duration: 3600 # 1h
 
       - name: Deploy send reminder notifications cronjob
         uses: City-of-Helsinki/setup-cronjob-action@main
