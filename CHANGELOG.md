@@ -1,6 +1,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.10.4] - 26 May 2021
+### Changed
+- Send event/event group publish notifications in an atomic transaction
+- Increase email sending cronjobs' timeouts to 1h
+
+### Fixed
+- Fix a notification context language issue which caused some parts of notifications being sometimes in wrong language
+
 ## [1.10.3] - 23 Mar 2021
 ### Changed
 - Increase production cpu limit
@@ -186,7 +194,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.4...HEAD
+[1.10.4]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...release-1.10.4
 [1.10.3]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.2...release-1.10.3
 [1.10.2]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.1...release-1.10.2
 [1.10.1]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.0...release-1.10.1
