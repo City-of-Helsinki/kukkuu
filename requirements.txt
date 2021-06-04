@@ -52,7 +52,7 @@ django-parler==2.1
     #   django-ilmoitin
 django-storages[azure,google]==1.9.1
     # via -r requirements.in
-django==2.2.13
+django==2.2.21
     # via
     #   -r requirements.in
     #   django-anymail
