@@ -120,7 +120,7 @@ lockfile==0.12.2
     # via django-mailer
 markupsafe==1.1.1
     # via jinja2
-pillow==7.1.0
+pillow==8.2.0
     # via -r requirements.in
 promise==2.2.1
     # via
