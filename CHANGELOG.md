@@ -1,6 +1,12 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.10.5] - 10 Jun 2021
+### Changed
+- Send free text email messages in an atomic transaction
+- Default to sending queued emails
+- Increase production CPU and RAM limits
+
 ## [1.10.4] - 26 May 2021
 ### Changed
 - Send event/event group publish notifications in an atomic transaction
@@ -194,7 +200,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.4...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.5...HEAD
+[1.10.5]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.4...release-1.10.5
 [1.10.4]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...release-1.10.4
 [1.10.3]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.2...release-1.10.3
 [1.10.2]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.1...release-1.10.2
