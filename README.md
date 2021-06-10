@@ -72,7 +72,7 @@ Example crontab for sending reminder notifications every day at 12am:
 
 #### Queued email sending
 
-By default email sending won't be queued. To enable queued emails, configure setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `True`, and set `send_mail` and `retry_deferred` to be executed periodically.
+By default email sending is queued, which means that you need to set `send_mail` and `retry_deferred` to be executed periodically to get emails actually sent.
 
 Example crontab for queued emails (includes reminder notification sending as well):
    
@@ -81,6 +81,8 @@ Example crontab for queued emails (includes reminder notification sending as wel
     0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
     0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
     # An empty line is required at the end of this file for a valid cron file.
+
+It is also possible to get emails sent right away without any cronjobs by setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `False`, which can be convenient in development. **CAUTION** do not use this in production!
 
 ### Daily running, Debugging
 

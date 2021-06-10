@@ -1,7 +1,7 @@
 from functools import reduce
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.utils import Message as MailerMessage
@@ -99,29 +99,34 @@ class Message(TimestampedModel, TranslatableModel):
 
         self.sent_at = timezone.now()
         self.recipient_count = len(guardians)
-        self.save(update_fields=("sent_at", "recipient_count"))
 
-        for guardian in guardians:
-            with switch_language(self, guardian.language):
+        with transaction.atomic():
+            self.save(update_fields=("sent_at", "recipient_count"))
 
-                # hopefully this functionality that uses django-ilmoitin's internals
-                # is only temporarily here, and will be removed when either
-                # 1) we need to use a notification template and thus will use ilmoitin's
-                #    regular send_notification(), or
-                # 2) support for sending a mail without a notification template will be
-                #    added to ilmoitin and we can use that
-                if guardian.language in getattr(
-                    settings, "ILMOITIN_TRANSLATED_FROM_EMAIL", {}
-                ):
-                    from_email = settings.ILMOITIN_TRANSLATED_FROM_EMAIL[
-                        guardian.language
-                    ]
-                else:
-                    from_email = settings.DEFAULT_FROM_EMAIL
+            for guardian in guardians:
+                with switch_language(self, guardian.language):
 
-                send_mail(
-                    self.subject, self.body_text, guardian.email, from_email=from_email,
-                )
+                    # hopefully this functionality that uses django-ilmoitin's internals
+                    # is only temporarily here, and will be removed when either
+                    # 1) we need to use a notification template and thus will use
+                    #    ilmoitin's regular send_notification(), or
+                    # 2) support for sending a mail without a notification template will
+                    #    be added to ilmoitin and we can use that
+                    if guardian.language in getattr(
+                        settings, "ILMOITIN_TRANSLATED_FROM_EMAIL", {}
+                    ):
+                        from_email = settings.ILMOITIN_TRANSLATED_FROM_EMAIL[
+                            guardian.language
+                        ]
+                    else:
+                        from_email = settings.DEFAULT_FROM_EMAIL
+
+                    send_mail(
+                        self.subject,
+                        self.body_text,
+                        guardian.email,
+                        from_email=from_email,
+                    )
 
         if not getattr(settings, "ILMOITIN_QUEUE_NOTIFICATIONS", False):
             MailerMessage.objects.retry_deferred()
