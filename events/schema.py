@@ -94,6 +94,26 @@ class EventNode(DjangoObjectType):
         model = Event
         interfaces = (relay.Node,)
         filterset_class = EventFilter
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "image",
+            "image_alt_text",
+            "participants_per_invite",
+            "duration",
+            "capacity_per_occurrence",
+            "published_at",
+            "project",
+            "event_group",
+            "ready_for_event_group_publishing",
+            "translations",
+            "occurrences",
+            "messages",
+            "name",
+            "description",
+            "short_description",
+        )
 
     @classmethod
     @login_required
