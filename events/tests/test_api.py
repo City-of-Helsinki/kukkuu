@@ -37,6 +37,7 @@ from kukkuu.consts import (
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
+    TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import QueryTooDeepError
 from kukkuu.schema import schema
@@ -821,6 +822,26 @@ def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     )
 
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
+
+
+@pytest.mark.parametrize("url_missing", (True, False))
+def test_publish_ticketmaster_event(snapshot, publisher_api_client, url_missing):
+    occurrence = OccurrenceFactory(
+        ticket_system_url="" if url_missing else "https://example.com",
+        event__ticket_system=Event.TICKETMASTER,
+    )
+    OccurrenceFactory(ticket_system_url="https://example.com", event=occurrence.event)
+
+    event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    event_variables["input"]["id"] = get_global_id(occurrence.event)
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_MUTATION, variables=event_variables
+    )
+
+    if url_missing:
+        assert_match_error_code(executed, TICKET_SYSTEM_URL_MISSING_ERROR)
+    else:
+        snapshot.assert_match(executed)
 
 
 def test_event_filter_by_project(

@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.utils.timezone import now
 from projects.models import Project
 
 from children.factories import ChildFactory
@@ -38,10 +39,16 @@ def test_enrolment_creation(occurrence, project):
 
 
 @pytest.mark.django_db
-def test_occurrence_clean_ticket_system_url():
-    occurrence = OccurrenceFactory.build(event__ticket_system=Event.TICKETMASTER)
+@pytest.mark.parametrize("event_published", [False, True])
+def test_occurrence_clean_ticket_system_url(event_published):
+    occurrence = OccurrenceFactory.build(
+        event__ticket_system=Event.TICKETMASTER,
+        event__published_at=now() if event_published else None,
+    )
 
-    with pytest.raises(ValidationError) as ei:
+    if event_published:
+        with pytest.raises(ValidationError) as ei:
+            occurrence.clean()
+        assert ei.value.code == "TICKET_SYSTEM_URL_MISSING_ERROR"
+    else:
         occurrence.clean()
-
-    assert ei.value.code == "TICKET_SYSTEM_URL_REQUIRED"

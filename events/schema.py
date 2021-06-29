@@ -707,7 +707,14 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
         if event.is_published():
             raise EventAlreadyPublishedError("Event is already published")
 
-        event.publish()
+        try:
+            event.publish()
+        except ValidationError as e:
+            kukkuu_error = get_kukkuu_error_by_code(e.code)
+            if kukkuu_error:
+                raise kukkuu_error(e.message)
+            else:
+                raise
 
         logger.info(f"user {user.uuid} published event {event}")
 
