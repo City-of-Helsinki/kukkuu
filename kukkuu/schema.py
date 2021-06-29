@@ -8,6 +8,7 @@ import children.schema
 import events.schema
 import users.schema
 import venues.schema
+from events.schema import InternalEventTicketSystem, TicketmasterEventTicketSystem
 
 
 class Mutation(
@@ -35,4 +36,8 @@ class Query(
     pass
 
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+schema = graphene.Schema(
+    query=Query,
+    mutation=Mutation,
+    types=[TicketmasterEventTicketSystem, InternalEventTicketSystem],
+)

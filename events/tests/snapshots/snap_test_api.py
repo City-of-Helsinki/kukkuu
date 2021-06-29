@@ -62,6 +62,7 @@ snapshots["test_add_event_project_user 1"] = {
                 "project": {"year": 2020},
                 "publishedAt": None,
                 "readyForEventGroupPublishing": False,
+                "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
                         "description": "desc",
@@ -324,6 +325,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
             "project": {"year": 2020},
             "publishedAt": "2020-12-12T00:00:00+00:00",
             "shortDescription": "Perform in weight success answer.",
+            "ticketSystem": {"type": "INTERNAL"},
             "translations": [
                 {
                     "description": """Serious listen police shake. Page box child care any concern.
@@ -476,6 +478,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
                         "shortDescription": "Perform in weight success answer.",
+                        "ticketSystem": {"type": "INTERNAL"},
                         "translations": [
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
@@ -532,6 +535,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
                         "shortDescription": "Perform in weight success answer.",
+                        "ticketSystem": {"type": "INTERNAL"},
                         "translations": [
                             {
                                 "description": """Serious listen police shake. Page box child care any concern.
@@ -579,6 +583,7 @@ If his their best. Election stay every something base.""",
                         "project": {"year": 2020},
                         "publishedAt": None,
                         "shortDescription": "Later evening southern would according strong.",
+                        "ticketSystem": {"type": "INTERNAL"},
                         "translations": [
                             {
                                 "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
@@ -1051,6 +1056,7 @@ snapshots["test_required_translation 1"] = {
                 "project": {"year": 2020},
                 "publishedAt": None,
                 "readyForEventGroupPublishing": False,
+                "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
                         "description": "desc",
@@ -1145,6 +1151,7 @@ snapshots["test_update_event_project_user 1"] = {
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
                 "readyForEventGroupPublishing": True,
+                "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
                         "description": "desc",
@@ -1177,6 +1184,7 @@ snapshots["test_update_event_ready_for_event_group_publishing 1"] = {
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                 "readyForEventGroupPublishing": True,
+                "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
                         "description": """Serious listen police shake. Page box child care any concern.
