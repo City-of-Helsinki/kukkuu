@@ -136,6 +136,13 @@ class Event(TimestampedModel, TranslatableModel):
         (FAMILY, _("Family")),
     )
 
+    INTERNAL = "internal"
+    TICKETMASTER = "ticketmaster"
+    TICKET_SYSTEM_CHOICES = (
+        (INTERNAL, _("Internal")),
+        (TICKETMASTER, _("Ticketmaster")),
+    )
+
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         short_description=models.TextField(
@@ -178,6 +185,12 @@ class Event(TimestampedModel, TranslatableModel):
     )
     ready_for_event_group_publishing = models.BooleanField(
         verbose_name=_("ready for event group publishing"), default=False
+    )
+    ticket_system = models.CharField(
+        max_length=32,
+        choices=TICKET_SYSTEM_CHOICES,
+        verbose_name=_("ticket system"),
+        default=INTERNAL,
     )
 
     objects = EventQueryset.as_manager()
