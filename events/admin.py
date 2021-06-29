@@ -141,10 +141,18 @@ class OccurrenceAdmin(admin.ModelAdmin):
         "get_enrolments",
         "get_free_spot_notification_subscriptions",
         "occurrence_language",
+        "ticket_system_url",
         "created_at",
         "updated_at",
     )
-    fields = ("time", "event", "venue", "occurrence_language", "capacity_override")
+    fields = (
+        "time",
+        "event",
+        "venue",
+        "occurrence_language",
+        "capacity_override",
+        "ticket_system_url",
+    )
     inlines = [EnrolmentsInline, FreeSpotNotificationSubscriptionInline]
     list_filter = (
         "event__project",
