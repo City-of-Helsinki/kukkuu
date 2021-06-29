@@ -233,6 +233,9 @@ class Event(TimestampedModel, TranslatableModel):
         self.published_at = timezone.now()
         self.save()
 
+        for occurrence in self.occurrences.all():
+            occurrence.clean()
+
         if send_notifications:
             send_event_notifications_to_guardians(
                 self,
@@ -320,15 +323,11 @@ class Occurrence(TimestampedModel):
             and not self.ticket_system_url
         ):
             raise ValidationError(
-                {
-                    "ticket_system_url": ValidationError(
-                        _(
-                            "Ticket system URL is required for occurrences of a "
-                            "Ticketmaster event."
-                        ),
-                        code="TICKET_SYSTEM_URL_REQUIRED",
-                    ),
-                }
+                _(
+                    "Ticket system URL is required for all occurrences of a "
+                    "published Ticketmaster event."
+                ),
+                code="TICKET_SYSTEM_URL_REQUIRED",
             )
 
     def save(self, *args, **kwargs):

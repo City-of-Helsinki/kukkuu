@@ -146,6 +146,7 @@ snapshots["test_enrolment_visibility 1"] = {
             },
             "occurrenceLanguage": "FI",
             "remainingCapacity": 1,
+            "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -307,6 +308,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "node": {
                             "enrolmentCount": 0,
                             "remainingCapacity": 50,
+                            "ticketSystem": {"type": "INTERNAL"},
                             "time": "2005-09-07T17:47:05+00:00",
                             "venue": {
                                 "translations": [
@@ -460,6 +462,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                     "node": {
                                         "enrolmentCount": 0,
                                         "remainingCapacity": 50,
+                                        "ticketSystem": {"type": "INTERNAL"},
                                         "time": "2005-09-07T17:47:05+00:00",
                                         "venue": {
                                             "translations": [
@@ -517,6 +520,7 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                                     "node": {
                                         "enrolmentCount": 0,
                                         "remainingCapacity": 50,
+                                        "ticketSystem": {"type": "INTERNAL"},
                                         "time": "1978-11-27T17:53:39+00:00",
                                         "venue": {
                                             "translations": [
@@ -565,6 +569,7 @@ If his their best. Election stay every something base.""",
                                     "node": {
                                         "enrolmentCount": 0,
                                         "remainingCapacity": 28,
+                                        "ticketSystem": {"type": "INTERNAL"},
                                         "time": "2012-05-15T10:30:47+00:00",
                                         "venue": {
                                             "translations": [
@@ -624,6 +629,7 @@ snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
             },
             "occurrenceLanguage": "FI",
             "remainingCapacity": 40,
+            "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -766,6 +772,7 @@ snapshots["test_occurrence_query_normal_user 1"] = {
             },
             "occurrenceLanguage": "FI",
             "remainingCapacity": 43,
+            "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
@@ -783,6 +790,14 @@ Page box child care any concern. Defense level church use.""",
                     }
                 ]
             },
+        }
+    }
+}
+
+snapshots["test_occurrence_ticket_system 1"] = {
+    "data": {
+        "occurrence": {
+            "ticketSystem": {"type": "TICKETMASTER", "url": "https://example.com"}
         }
     }
 }
@@ -900,6 +915,7 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                             ],
                         },
                         "remainingCapacity": 43,
+                        "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
@@ -947,6 +963,7 @@ snapshots["test_occurrences_query_project_user 1"] = {
                             ],
                         },
                         "remainingCapacity": 43,
+                        "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
@@ -986,6 +1003,7 @@ Conference thing much like test.""",
                             ],
                         },
                         "remainingCapacity": 26,
+                        "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T06:00:00+00:00",
                         "venue": {
                             "translations": [
