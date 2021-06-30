@@ -75,6 +75,9 @@ query Events {
         publishedAt
         createdAt
         updatedAt
+        ticketSystem {
+          type
+        }
         occurrences {
           edges {
             node {
@@ -122,6 +125,9 @@ query Event($id:ID!) {
     createdAt
     updatedAt
     duration
+    ticketSystem {
+      type
+    }
     occurrences{
       edges{
         node{
@@ -275,6 +281,9 @@ mutation AddEvent($input: AddEventMutationInput!) {
       capacityPerOccurrence
       publishedAt
       readyForEventGroupPublishing
+      ticketSystem {
+        type
+      }
     }
   }
 }
@@ -314,6 +323,9 @@ mutation UpdateEvent($input: UpdateEventMutationInput!) {
       participantsPerInvite
       capacityPerOccurrence
       duration
+      ticketSystem {
+        type
+      }
       occurrences{
         edges{
           node{

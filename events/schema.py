@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.utils import timezone
 from django.utils.translation import get_language
-from graphene import Connection, relay
+from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
@@ -75,6 +75,44 @@ class EventParticipantsPerInvite(graphene.Enum):
     FAMILY = "family"
 
 
+class TicketSystem(graphene.Enum):
+    INTERNAL = "internal"
+    TICKETMASTER = "ticketmaster"
+
+
+class EventTicketSystem(graphene.Interface):
+    # workaround needed because we have field named "type"
+    type_ = TicketSystem(required=True, name="type")
+
+    def resolve_type_(self, info, **kwargs):
+        return self.ticket_system
+
+    @classmethod
+    def resolve_type(cls, instance, info):
+        if instance.ticket_system == Event.INTERNAL:
+            return InternalEventTicketSystem
+        elif instance.ticket_system == Event.TICKETMASTER:
+            return TicketmasterEventTicketSystem
+        else:
+            raise Exception(f'Invalid ticket system "{instance.ticket_system}".')
+
+
+class TicketmasterEventTicketSystem(ObjectType):
+    child_password = graphene.String(child_id=graphene.ID(required=True), required=True)
+
+    class Meta:
+        interfaces = (EventTicketSystem,)
+
+    def resolve_child_password(self, info, **kwargs):
+        # TODO
+        return "70p53cr37"
+
+
+class InternalEventTicketSystem(ObjectType):
+    class Meta:
+        interfaces = (EventTicketSystem,)
+
+
 class EventTranslationType(DjangoObjectType):
     language_code = LanguageEnum(required=True)
 
@@ -89,11 +127,33 @@ class EventNode(DjangoObjectType):
     short_description = graphene.String()
     image_alt_text = graphene.String()
     participants_per_invite = EventParticipantsPerInvite(required=True)
+    ticket_system = graphene.Field(EventTicketSystem)
 
     class Meta:
         model = Event
         interfaces = (relay.Node,)
         filterset_class = EventFilter
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "image",
+            "image_alt_text",
+            "participants_per_invite",
+            "duration",
+            "capacity_per_occurrence",
+            "published_at",
+            "project",
+            "event_group",
+            "ready_for_event_group_publishing",
+            "translations",
+            "occurrences",
+            "messages",
+            "name",
+            "description",
+            "short_description",
+            "ticket_system",
+        )
 
     @classmethod
     @login_required
@@ -128,6 +188,10 @@ class EventNode(DjangoObjectType):
 
     def resolve_translations(self, info, **kwargs):
         return self.translations.order_by("language_code")
+
+    def resolve_ticket_system(self, info, **kwargs):
+        # Event object is needed for resolving EventTicketSystem fields
+        return self
 
 
 class EventConnection(Connection):
