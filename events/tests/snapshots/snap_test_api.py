@@ -92,6 +92,10 @@ snapshots["test_add_occurrence_project_user 1"] = {
     }
 }
 
+snapshots["test_add_ticketmaster_event 1"] = {
+    "data": {"addEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
+}
+
 snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     "data": {
         "enrolOccurrence": {
@@ -1166,37 +1170,8 @@ snapshots["test_update_event_group[object_perm] 1"] = {
     }
 }
 
-snapshots["test_update_event_project_user 1"] = {
-    "data": {
-        "updateEvent": {
-            "event": {
-                "capacityPerOccurrence": 30,
-                "duration": 1000,
-                "image": "http://testserver/media/spring.jpg",
-                "imageAltText": "Image alt text",
-                "occurrences": {"edges": []},
-                "participantsPerInvite": "FAMILY",
-                "readyForEventGroupPublishing": True,
-                "ticketSystem": {"type": "INTERNAL"},
-                "translations": [
-                    {
-                        "description": "desc",
-                        "imageAltText": "Image alt text",
-                        "languageCode": "FI",
-                        "name": "Event test in suomi",
-                        "shortDescription": "Short desc",
-                    },
-                    {
-                        "description": "desc",
-                        "imageAltText": "Image alt text",
-                        "languageCode": "SV",
-                        "name": "Event test in swedish",
-                        "shortDescription": "Short desc",
-                    },
-                ],
-            }
-        }
-    }
+snapshots["test_update_event_project_user[False] 1"] = {
+    "data": {"updateEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
 }
 
 snapshots["test_update_event_ready_for_event_group_publishing 1"] = {

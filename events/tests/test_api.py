@@ -24,6 +24,7 @@ from events.factories import (
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.consts import (
+    API_USAGE_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
@@ -314,6 +315,18 @@ mutation AddEvent($input: AddEventMutationInput!) {
 }
 """
 
+ADD_TICKETMASTER_EVENT_MUTATION = """
+mutation AddTicketmasterEvent($input: AddEventMutationInput!) {
+  addEvent(input: $input) {
+    event {
+      ticketSystem {
+        type
+      }
+    }
+  }
+}
+"""
+
 ADD_EVENT_VARIABLES = {
     "input": {
         "translations": [
@@ -359,6 +372,18 @@ mutation UpdateEvent($input: UpdateEventMutationInput!) {
         }
       }
       readyForEventGroupPublishing
+    }
+  }
+}
+"""
+
+UPDATE_TICKETMASTER_EVENT_MUTATION = """
+mutation UpdateTicketmasterEvent($input: UpdateEventMutationInput!) {
+  updateEvent(input: $input) {
+    event {
+      ticketSystem {
+        type
+      }
     }
   }
 }
@@ -619,6 +644,18 @@ def test_add_event_project_user(
     snapshot.assert_match(executed)
 
 
+def test_add_ticketmaster_event(snapshot, project_user_api_client, project):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["ticketSystem"] = {"type": "TICKETMASTER"}
+
+    executed = project_user_api_client.execute(
+        ADD_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_add_occurrence_permission_denied(unauthorized_user_api_client, event, venue):
     occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
     occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
@@ -723,6 +760,23 @@ def test_update_event_ready_for_event_group_publishing(
         UPDATE_EVENT_MUTATION, variables=variables
     )
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("published", (False, True))
+def test_update_ticketmaster_event(snapshot, project_user_api_client, published):
+    event = EventFactory(published_at=now() if published else None)
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+    variables["input"]["ticketSystem"] = {"type": "TICKETMASTER"}
+
+    executed = project_user_api_client.execute(
+        UPDATE_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+
+    if not published:
+        snapshot.assert_match(executed)
+    else:
+        assert_match_error_code(executed, API_USAGE_ERROR)
 
 
 def test_delete_event_permission_denied(api_client, user_api_client):

@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 import graphene
 from django.apps import apps
@@ -28,6 +29,7 @@ from common.utils import (
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.exceptions import (
+    ApiUsageError,
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
@@ -402,6 +404,12 @@ class EventTranslationsInput(graphene.InputObjectType):
     language_code = LanguageEnum(required=True)
 
 
+class EventTicketSystemInput(graphene.InputObjectType):
+    type = TicketSystem(
+        required=True, description="Can be changed only if the event is unpublished."
+    )
+
+
 class AddEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         translations = graphene.List(EventTranslationsInput)
@@ -412,6 +420,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         project_id = graphene.GlobalID()
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
+        ticket_system = EventTicketSystemInput()
 
     event = graphene.Field(EventNode)
 
@@ -419,6 +428,8 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        original_kwargs = deepcopy(kwargs)
+
         project = get_obj_if_user_can_administer(
             info, kwargs.pop("project_id"), Project
         )
@@ -431,10 +442,16 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
             raise SingleEventsDisallowedError(
                 f"Single events are disallowed in project {project}."
             )
+
+        ticket_system_type = kwargs.pop("ticket_system", {}).get("type")
+        if ticket_system_type:
+            kwargs["ticket_system"] = ticket_system_type
+
         event = Event.objects.create_translatable_object(**kwargs)
 
         logger.info(
-            f"user {info.context.user.uuid} added event {event} with data {kwargs}"
+            f"user {info.context.user.uuid} added event {event} "
+            f"with data {original_kwargs}"
         )
 
         return AddEventMutation(event=event)
@@ -451,6 +468,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         project_id = graphene.GlobalID(required=False)
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
+        ticket_system = EventTicketSystemInput()
 
     event = graphene.Field(EventNode)
 
@@ -458,6 +476,8 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        original_kwargs = deepcopy(kwargs)
+
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
             kwargs["project_id"] = get_obj_if_user_can_administer(
@@ -470,10 +490,20 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
             ).pk
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
+
+        ticket_system_type = kwargs.pop("ticket_system", {}).get("type")
+        if ticket_system_type:
+            if event.published_at and ticket_system_type != event.ticket_system:
+                raise ApiUsageError(
+                    "Cannot change ticket system because the event is published."
+                )
+            kwargs["ticket_system"] = ticket_system_type
+
         update_object_with_translations(event, kwargs)
 
         logger.info(
-            f"user {info.context.user.uuid} updated event {event} with data {kwargs}"
+            f"user {info.context.user.uuid} updated event {event} "
+            f"with data {original_kwargs}"
         )
 
         return UpdateEventMutation(event=event)
