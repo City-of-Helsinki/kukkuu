@@ -29,7 +29,6 @@ from common.utils import (
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.exceptions import (
-    ApiUsageError,
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
@@ -494,7 +493,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         ticket_system_type = kwargs.pop("ticket_system", {}).get("type")
         if ticket_system_type:
             if event.published_at and ticket_system_type != event.ticket_system:
-                raise ApiUsageError(
+                raise DataValidationError(
                     "Cannot change ticket system because the event is published."
                 )
             kwargs["ticket_system"] = ticket_system_type
@@ -627,6 +626,10 @@ class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
         return SetEnrolmentAttendanceMutation(enrolment=enrolment)
 
 
+class OccurrenceTicketSystemInput(graphene.InputObjectType):
+    url = graphene.String()
+
+
 class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         time = graphene.DateTime(required=True)
@@ -634,6 +637,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         venue_id = graphene.GlobalID()
         occurrence_language = LanguageEnum()
         capacity_override = graphene.Int()
+        ticket_system = OccurrenceTicketSystemInput()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -641,12 +645,18 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        original_kwargs = deepcopy(kwargs)
+
         kwargs["event_id"] = get_obj_if_user_can_administer(
             info, kwargs["event_id"], Event
         ).pk
         kwargs["venue_id"] = get_obj_if_user_can_administer(
             info, kwargs["venue_id"], Venue
         ).pk
+
+        ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
+        if ticket_system_url is not None:
+            kwargs["ticket_system_url"] = ticket_system_url
 
         occurrence = Occurrence.objects.create(**kwargs)
 
@@ -655,7 +665,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
 
         logger.info(
             f"user {info.context.user.uuid} added occurrence {occurrence} with data "
-            f"{kwargs}"
+            f"{original_kwargs}"
         )
 
         return AddOccurrenceMutation(occurrence=occurrence)
@@ -669,6 +679,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         venue_id = graphene.GlobalID(required=False)
         occurrence_language = LanguageEnum()
         capacity_override = graphene.Int()
+        ticket_system = OccurrenceTicketSystemInput()
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -676,6 +687,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        original_kwargs = deepcopy(kwargs)
         occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
 
         if kwargs.get("event_id"):
@@ -688,11 +700,24 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
                 info, kwargs["venue_id"], Venue
             ).pk
 
+        ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
+        if ticket_system_url is not None:
+            kwargs["ticket_system_url"] = ticket_system_url
+
         update_object(occurrence, kwargs)
+
+        try:
+            occurrence.clean()
+        except ValidationError as e:
+            kukkuu_error = get_kukkuu_error_by_code(e.code)
+            if kukkuu_error:
+                raise kukkuu_error(e.message)
+            else:
+                raise
 
         logger.info(
             f"user {info.context.user.uuid} updated occurrence {occurrence} "
-            f"of event {occurrence.event} with data {kwargs}"
+            f"of event {occurrence.event} with data {original_kwargs}"
         )
 
         return UpdateOccurrenceMutation(occurrence=occurrence)

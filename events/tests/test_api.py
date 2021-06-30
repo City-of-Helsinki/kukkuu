@@ -24,7 +24,6 @@ from events.factories import (
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.consts import (
-    API_USAGE_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
@@ -448,6 +447,12 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
       occurrenceLanguage
       capacity
       capacityOverride
+      ticketSystem {
+        type
+        ... on TicketmasterOccurrenceTicketSystem {
+          url
+        }
+      }
     }
   }
 }
@@ -474,6 +479,12 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
       remainingCapacity
       capacity
       capacityOverride
+      ticketSystem {
+        type
+        ... on TicketmasterOccurrenceTicketSystem {
+          url
+        }
+      }
     }
   }
 }
@@ -677,6 +688,20 @@ def test_add_occurrence_project_user(snapshot, project_user_api_client, event, v
     snapshot.assert_match(executed)
 
 
+def test_add_occurrence_ticket_system_url(snapshot, project_user_api_client, venue):
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["ticketSystem"] = {"url": "https://example.com"}
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+
 def test_update_occurrence_permission_denied(api_client, user_api_client):
     executed = api_client.execute(
         UPDATE_OCCURRENCE_MUTATION, variables=UPDATE_OCCURRENCE_VARIABLES
@@ -702,6 +727,34 @@ def test_update_occurrence_project_user(snapshot, project_user_api_client, occur
         UPDATE_OCCURRENCE_MUTATION, variables=occurrence_variables
     )
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("nullify_url", (False, True))
+@pytest.mark.parametrize("published", (False, True))
+def test_update_occurrence_ticket_system_url(
+    snapshot, project_user_api_client, nullify_url, published
+):
+    occurrence = OccurrenceFactory(
+        event__ticket_system=Event.TICKETMASTER,
+        event__published_at=now() if published else None,
+        ticket_system_url="https://original.example.com",
+    )
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"]["ticketSystem"] = (
+        {"url": "https://updated.example.com"} if not nullify_url else {"url": ""}
+    )
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    if nullify_url and published:
+        assert_match_error_code(executed, TICKET_SYSTEM_URL_MISSING_ERROR)
+    else:
+        snapshot.assert_match(executed)
 
 
 def test_delete_occurrence_permission_denied(api_client, user_api_client):
@@ -776,7 +829,7 @@ def test_update_ticketmaster_event(snapshot, project_user_api_client, published)
     if not published:
         snapshot.assert_match(executed)
     else:
-        assert_match_error_code(executed, API_USAGE_ERROR)
+        assert_match_error_code(executed, DATA_VALIDATION_ERROR)
 
 
 def test_delete_event_permission_denied(api_client, user_api_client):
