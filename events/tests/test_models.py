@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from projects.models import Project
 
 from children.factories import ChildFactory
@@ -34,3 +35,13 @@ def test_enrolment_creation(occurrence, project):
     assert occurrence.children.count() == 1
     assert child.occurrences.count() == 1
     assert Enrolment.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_occurrence_clean_ticket_system_url():
+    occurrence = OccurrenceFactory.build(event__ticket_system=Event.TICKETMASTER)
+
+    with pytest.raises(ValidationError) as ei:
+        occurrence.clean()
+
+    assert ei.value.code == "TICKET_SYSTEM_URL_REQUIRED"

@@ -8,7 +8,12 @@ import children.schema
 import events.schema
 import users.schema
 import venues.schema
-from events.schema import InternalEventTicketSystem, TicketmasterEventTicketSystem
+from events.schema import (
+    InternalEventTicketSystem,
+    InternalOccurrenceTicketSystem,
+    TicketmasterEventTicketSystem,
+    TicketmasterOccurrenceTicketSystem,
+)
 
 
 class Mutation(
@@ -39,5 +44,10 @@ class Query(
 schema = graphene.Schema(
     query=Query,
     mutation=Mutation,
-    types=[TicketmasterEventTicketSystem, InternalEventTicketSystem],
+    types=[
+        TicketmasterEventTicketSystem,
+        InternalEventTicketSystem,
+        TicketmasterOccurrenceTicketSystem,
+        InternalOccurrenceTicketSystem,
+    ],
 )

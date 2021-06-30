@@ -233,6 +233,9 @@ class Event(TimestampedModel, TranslatableModel):
         self.published_at = timezone.now()
         self.save()
 
+        for occurrence in self.occurrences.all():
+            occurrence.clean()
+
         if send_notifications:
             send_event_notifications_to_guardians(
                 self,
@@ -303,6 +306,7 @@ class Occurrence(TimestampedModel):
             "the value coming from the event."
         ),
     )
+    ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
 
     objects = OccurrenceQueryset.as_manager()
 
@@ -312,6 +316,19 @@ class Occurrence(TimestampedModel):
 
     def __str__(self):
         return f"{self.time} ({self.pk})"
+
+    def clean(self):
+        if (
+            self.event.ticket_system == Event.TICKETMASTER
+            and not self.ticket_system_url
+        ):
+            raise ValidationError(
+                _(
+                    "Ticket system URL is required for all occurrences of a "
+                    "published Ticketmaster event."
+                ),
+                code="TICKET_SYSTEM_URL_REQUIRED",
+            )
 
     def save(self, *args, **kwargs):
         created = self.pk is None

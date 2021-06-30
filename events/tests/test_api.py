@@ -91,6 +91,12 @@ query Events {
                   languageCode
                 }
               }
+              ticketSystem {
+                type
+                ... on TicketmasterOccurrenceTicketSystem {
+                  url
+                }
+              }
             }
           }
         }
@@ -139,6 +145,12 @@ query Event($id:ID!) {
               name
               description
               languageCode
+            }
+          }
+          ticketSystem {
+            type
+            ... on TicketmasterOccurrenceTicketSystem {
+              url
             }
           }
         }
@@ -191,6 +203,12 @@ query Occurrences {
             additionalInfo
             wwwUrl
             languageCode
+          }
+        }
+        ticketSystem {
+          type
+          ... on TicketmasterOccurrenceTicketSystem {
+            url
           }
         }
       }
@@ -254,6 +272,12 @@ query Occurrence($id: ID!) {
         additionalInfo
         wwwUrl
         languageCode
+      }
+    }
+    ticketSystem {
+      type
+      ... on TicketmasterOccurrenceTicketSystem {
+        url
       }
     }
   }
@@ -1885,3 +1909,31 @@ def test_add_single_event_when_single_events_disallowed(
     executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
 
     assert_match_error_code(executed, SINGLE_EVENTS_DISALLOWED_ERROR)
+
+
+OCCURRENCE_TICKET_SYSTEM_QUERY = """
+query Occurrence($id: ID!) {
+  occurrence(id: $id) {
+    ticketSystem {
+      type
+      ... on TicketmasterOccurrenceTicketSystem {
+        url
+      }
+    }
+  }
+}
+"""
+
+
+def test_occurrence_ticket_system(snapshot, guardian_api_client):
+    occurrence = OccurrenceFactory(
+        ticket_system_url="https://example.com",
+        event__ticket_system=Event.TICKETMASTER,
+        event__published_at=now(),
+    )
+
+    executed = guardian_api_client.execute(
+        OCCURRENCE_TICKET_SYSTEM_QUERY, variables={"id": get_global_id(occurrence)}
+    )
+
+    snapshot.assert_match(executed)

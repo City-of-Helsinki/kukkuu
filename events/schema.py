@@ -272,6 +272,40 @@ class EventGroupConnection(Connection):
         node = EventGroupNode
 
 
+class OccurrenceTicketSystem(graphene.Interface):
+    # workaround needed because we have field named "type"
+    type_ = TicketSystem(required=True, name="type")
+
+    def resolve_type_(self, info, **kwargs):
+        return self.event.ticket_system
+
+    @classmethod
+    def resolve_type(cls, instance, info):
+        ticket_system = instance.event.ticket_system
+
+        if ticket_system == Event.INTERNAL:
+            return InternalOccurrenceTicketSystem
+        elif ticket_system == Event.TICKETMASTER:
+            return TicketmasterOccurrenceTicketSystem
+        else:
+            raise Exception(f'Invalid ticket system "{ticket_system}".')
+
+
+class TicketmasterOccurrenceTicketSystem(ObjectType):
+    url = graphene.String(required=True)
+
+    class Meta:
+        interfaces = (OccurrenceTicketSystem,)
+
+    def resolve_url(self, info, **kwargs):
+        return self.ticket_system_url
+
+
+class InternalOccurrenceTicketSystem(ObjectType):
+    class Meta:
+        interfaces = (OccurrenceTicketSystem,)
+
+
 class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
     occurrence_language = LanguageEnum(required=True)
@@ -280,6 +314,7 @@ class OccurrenceNode(DjangoObjectType):
     child_has_free_spot_notification_subscription = graphene.Boolean(
         child_id=graphene.ID()
     )
+    ticket_system = graphene.Field(OccurrenceTicketSystem)
 
     @classmethod
     @login_required
@@ -319,6 +354,10 @@ class OccurrenceNode(DjangoObjectType):
         except Child.DoesNotExist:
             return None
 
+    def resolve_ticket_system(self, info, **kwargs):
+        # Occurrence object is needed for resolving OccurrenceTicketSystem fields
+        return self
+
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
@@ -339,6 +378,7 @@ class OccurrenceNode(DjangoObjectType):
             "enrolment_count",
             "free_spot_notification_subscriptions",
             "child_has_free_spot_notification_subscription",
+            "ticket_system",
         )
 
 
