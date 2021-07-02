@@ -91,9 +91,15 @@ class EventAdmin(TranslatableAdmin):
     )
 
     def publish(self, request, queryset):
+        success_count = 0
         for obj in queryset:
-            obj.publish()
-        self.message_user(request, _("%s successfully published.") % queryset.count())
+            try:
+                obj.publish()
+                success_count += 1
+            except ValidationError as e:
+                self.message_user(request, e.message, level=messages.ERROR)
+        if success_count:
+            self.message_user(request, _("%s successfully published.") % success_count)
 
     publish.short_description = _("Publish selected events")
 

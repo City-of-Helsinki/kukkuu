@@ -33,6 +33,7 @@ from kukkuu.consts import (
     PERMISSION_DENIED_ERROR,
     QUERY_TOO_DEEP_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
+    TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import (
     AlreadySubscribedError,
@@ -55,6 +56,7 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
     QueryTooDeepError,
     SingleEventsDisallowedError,
+    TicketSystemUrlMissingError,
 )
 
 error_codes_shared = {
@@ -83,6 +85,7 @@ error_codes_kukkuu = {
     EventGroupNotReadyForPublishingError: EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     PastEnrolmentError: PAST_ENROLMENT_ERROR,
     SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
+    TicketSystemUrlMissingError: TICKET_SYSTEM_URL_MISSING_ERROR,
 }
 
 sentry_ignored_errors = (

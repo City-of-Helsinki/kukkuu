@@ -82,3 +82,8 @@ class PastEnrolmentError(KukkuuGraphQLError):
 
 class SingleEventsDisallowedError(KukkuuGraphQLError):
     """Cannot create an event outside event groups"""
+
+
+class TicketSystemUrlMissingError(KukkuuGraphQLError):
+    """Some occurrence of a published external ticket system event is missing ticket
+    system URL"""

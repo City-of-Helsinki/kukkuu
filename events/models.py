@@ -16,7 +16,10 @@ from events.utils import (
     send_event_group_notifications_to_guardians,
     send_event_notifications_to_guardians,
 )
-from kukkuu.consts import EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR
+from kukkuu.consts import (
+    EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
+    TICKET_SYSTEM_URL_MISSING_ERROR,
+)
 from venues.models import Venue
 
 
@@ -230,6 +233,9 @@ class Event(TimestampedModel, TranslatableModel):
 
     @transaction.atomic
     def publish(self, send_notifications=True):
+        for occurrence in self.occurrences.all():
+            occurrence.clean()
+
         self.published_at = timezone.now()
         self.save()
 
@@ -319,7 +325,8 @@ class Occurrence(TimestampedModel):
 
     def clean(self):
         if (
-            self.event.ticket_system == Event.TICKETMASTER
+            self.event.published_at
+            and self.event.ticket_system == Event.TICKETMASTER
             and not self.ticket_system_url
         ):
             raise ValidationError(
@@ -327,7 +334,7 @@ class Occurrence(TimestampedModel):
                     "Ticket system URL is required for all occurrences of a "
                     "published Ticketmaster event."
                 ),
-                code="TICKET_SYSTEM_URL_REQUIRED",
+                code=TICKET_SYSTEM_URL_MISSING_ERROR,
             )
 
     def save(self, *args, **kwargs):
