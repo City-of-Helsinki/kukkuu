@@ -364,6 +364,28 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
+snapshots["test_event_ticket_system_password_assignation 1"] = {
+    "data": {
+        "event": {
+            "ticketSystem": {
+                "childPassword": "the correct password",
+                "type": "TICKETMASTER",
+            }
+        }
+    }
+}
+
+snapshots["test_event_ticket_system_password_assignation 2"] = {
+    "data": {
+        "event": {
+            "ticketSystem": {
+                "childPassword": "the correct password",
+                "type": "TICKETMASTER",
+            }
+        }
+    }
+}
+
 snapshots["test_events_and_event_groups_query_normal_user 1"] = {
     "data": {
         "eventsAndEventGroups": {

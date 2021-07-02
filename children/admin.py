@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from languages.models import Language
 from subscriptions.models import FreeSpotNotificationSubscription
 
-from events.models import Enrolment
+from events.models import Enrolment, TicketSystemPassword
 
 from .models import Child, Relationship
 
@@ -38,6 +38,21 @@ class SubscriptionInline(admin.TabularInline):
     readonly_fields = ("created_at",)
 
 
+class TicketSystemPasswordInline(admin.TabularInline):
+    model = TicketSystemPassword
+    extra = 0
+    fields = ("event", "value", "assigned_at")
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Child)
 class ChildAdmin(admin.ModelAdmin):
     list_display = (
@@ -65,6 +80,7 @@ class ChildAdmin(admin.ModelAdmin):
         EnrolmentInline,
         LanguagesSpokenAtHomeInline,
         SubscriptionInline,
+        TicketSystemPasswordInline,
     )
     list_filter = ("project",)
 

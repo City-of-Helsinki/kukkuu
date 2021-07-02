@@ -2,7 +2,8 @@ import factory
 import pytz
 from projects.models import Project
 
-from events.models import Enrolment, Event, EventGroup, Occurrence
+from children.factories import ChildFactory
+from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from venues.factories import VenueFactory
 
 
@@ -50,3 +51,12 @@ class EnrolmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Enrolment
+
+
+class TicketSystemPasswordFactory(factory.django.DjangoModelFactory):
+    value = factory.Faker("password")
+    event = factory.SubFactory(EventFactory)
+    child = factory.SubFactory(ChildFactory)
+
+    class Meta:
+        model = TicketSystemPassword

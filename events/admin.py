@@ -8,7 +8,7 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 from subscriptions.models import FreeSpotNotificationSubscription
 
-from .models import Enrolment, Event, EventGroup, Occurrence
+from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 
 
 class BaseBooleanListFilter(admin.SimpleListFilter):
@@ -260,4 +260,57 @@ class EventGroupAdmin(TranslatableAdmin):
             super()
             .get_queryset(request)
             .prefetch_related("translations", "project__translations", "events")
+        )
+
+
+class PasswordAssignedListFilter(BaseBooleanListFilter):
+    title = _("assigned")
+    parameter_name = "assigned"
+
+    def queryset(self, request, queryset):
+        if self.value() == "0":
+            return queryset.filter(child=None)
+        if self.value() == "1":
+            return queryset.exclude(child=None)
+
+
+@admin.register(TicketSystemPassword)
+class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
+    fields = (
+        "value",
+        "event",
+        "child",
+        "assigned_at",
+    )
+    list_display = (
+        "value",
+        "event",
+        "child",
+        "get_guardian",
+        "created_at",
+        "assigned_at",
+    )
+    list_filter = ("event", PasswordAssignedListFilter)
+    search_fields = (
+        "child__first_name",
+        "child__last_name",
+        "child__guardians__first_name",
+        "child__guardians__last_name",
+        "child__guardians__email",
+    )
+
+    def get_guardian(self, obj):
+        try:
+            return obj.child.guardians.all()[0]
+        except (AttributeError, IndexError):
+            return None
+
+    get_guardian.short_description = _("guardian")
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("child")
+            .prefetch_related("child__guardians")
         )

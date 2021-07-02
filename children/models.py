@@ -77,6 +77,16 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
 
+    def get_or_assign_ticketmaster_password(self, event):
+        from events.models import TicketSystemPassword
+
+        try:
+            self.ticket_system_passwords.get(event=event).value
+        except TicketSystemPassword.DoesNotExist:
+            return TicketSystemPassword.objects.assign_to_child(
+                event=event, child=self
+            ).value
+
 
 class RelationshipQuerySet(models.QuerySet):
     def user_can_view(self, user):

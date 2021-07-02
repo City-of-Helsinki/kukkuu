@@ -1,9 +1,10 @@
+import logging
 from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import F, Q
+from django.db.models import F, Q, UniqueConstraint
 from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -22,6 +23,8 @@ from kukkuu.consts import (
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from venues.models import Venue
+
+logger = logging.getLogger(__name__)
 
 
 class EventGroupQueryset(TranslatableQuerySet):
@@ -266,6 +269,12 @@ class Event(TimestampedModel, TranslatableModel):
 
     def is_published(self):
         return bool(self.published_at)
+
+    def get_or_assign_ticket_system_password(self, child):
+        try:
+            return self.ticket_system_passwords.get(child=child).value
+        except TicketSystemPassword.DoesNotExist:
+            return TicketSystemPassword.objects.assign(self, child).value
 
 
 class OccurrenceQueryset(models.QuerySet):
@@ -529,3 +538,83 @@ class Enrolment(TimestampedModel):
 
     def is_upcoming(self):
         return self.occurrence.time >= timezone.now()
+
+
+class NoFreePasswordsError(Exception):
+    pass
+
+
+class PasswordAlreadyAssignedError(Exception):
+    pass
+
+
+class TicketSystemPasswordQueryset(models.QuerySet):
+    def free(self):
+        return self.filter(child=None)
+
+    @transaction.atomic
+    def assign(self, event, child):
+        obj = (
+            self.select_for_update(skip_locked=True).filter(event=event).free().first()
+        )
+        if not obj:
+            logger.error(
+                f"No free ticket system passwords left to event {event}, "
+                f"one was requested for child {child.pk}."
+            )
+            raise NoFreePasswordsError(
+                f"No free ticket system passwords left to event {event}."
+            )
+
+        obj.assign(event, child)
+
+        return obj
+
+
+class TicketSystemPassword(models.Model):
+    created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
+    assigned_at = models.DateTimeField(
+        verbose_name=_("assigned at"), blank=True, null=True
+    )
+    value = models.CharField(max_length=64, verbose_name=_("value"))
+    event = models.ForeignKey(
+        Event,
+        verbose_name=_("event"),
+        related_name="ticket_system_passwords",
+        on_delete=models.CASCADE,
+    )
+    child = models.ForeignKey(
+        Child,
+        verbose_name=_("child"),
+        related_name="ticket_system_passwords",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    objects = TicketSystemPasswordQueryset.as_manager()
+
+    class Meta:
+        verbose_name = _("ticket system password")
+        verbose_name_plural = _("ticket system passwords")
+        ordering = ("id",)
+        constraints = (
+            UniqueConstraint(
+                fields=["value", "event"], name="unique_password_value_event"
+            ),
+            UniqueConstraint(
+                fields=["event", "child"], name="unique_password_event_child"
+            ),
+        )
+
+    def assign(self, event, child):
+        if self.child:
+            raise PasswordAlreadyAssignedError("The password is already assigned.")
+
+        self.assigned_at = now()
+        self.child = child
+        self.save()
+
+        logger.info(
+            f'Ticket system password "{self.value}" assigned to {child.pk} to {event}.'
+        )
