@@ -85,11 +85,32 @@ snapshots["test_add_occurrence_project_user 1"] = {
                 "capacityOverride": None,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "FI",
+                "ticketSystem": {"type": "INTERNAL"},
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
         }
     }
+}
+
+snapshots["test_add_occurrence_ticket_system_url 1"] = {
+    "data": {
+        "addOccurrence": {
+            "occurrence": {
+                "capacity": 43,
+                "capacityOverride": None,
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "FI",
+                "ticketSystem": {"type": "TICKETMASTER", "url": "https://example.com"},
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_add_ticketmaster_event 1"] = {
+    "data": {"addEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
 }
 
 snapshots["test_child_enrol_occurence_from_different_project 1"] = {
@@ -1236,9 +1257,74 @@ snapshots["test_update_occurrence_project_user 1"] = {
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "SV",
                 "remainingCapacity": 5,
+                "ticketSystem": {"type": "INTERNAL"},
                 "time": "1986-12-12T16:40:48+00:00",
                 "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
             }
         }
     }
+}
+
+snapshots["test_update_occurrence_ticket_system_url[False-False] 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
+                "enrolmentCount": 0,
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
+                "remainingCapacity": 5,
+                "ticketSystem": {
+                    "type": "TICKETMASTER",
+                    "url": "https://updated.example.com",
+                },
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_update_occurrence_ticket_system_url[False-True] 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
+                "enrolmentCount": 0,
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
+                "remainingCapacity": 5,
+                "ticketSystem": {"type": "TICKETMASTER", "url": ""},
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_update_occurrence_ticket_system_url[True-False] 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
+                "enrolmentCount": 0,
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
+                "remainingCapacity": 5,
+                "ticketSystem": {
+                    "type": "TICKETMASTER",
+                    "url": "https://updated.example.com",
+                },
+                "time": "1986-12-12T16:40:48+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_update_ticketmaster_event[False] 1"] = {
+    "data": {"updateEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
 }
