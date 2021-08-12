@@ -1247,6 +1247,33 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
+snapshots["test_update_internal_ticket_system_event_capacity_required 1"] = {
+    "data": {
+        "updateEvent": {
+            "event": {
+                "capacityPerOccurrence": 5,
+                "duration": 197,
+                "image": "http://testserver/media/spring.jpg",
+                "imageAltText": "",
+                "occurrences": {"edges": []},
+                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                "readyForEventGroupPublishing": True,
+                "ticketSystem": {"type": "INTERNAL"},
+                "translations": [
+                    {
+                        "description": """Serious listen police shake. Page box child care any concern.
+Agree room laugh prevent make. Our very television beat at success decade.""",
+                        "imageAltText": "",
+                        "languageCode": "FI",
+                        "name": "Free heart significant machine try.",
+                        "shortDescription": "Perform in weight success answer.",
+                    }
+                ],
+            }
+        }
+    }
+}
+
 snapshots["test_update_occurrence_project_user 1"] = {
     "data": {
         "updateOccurrence": {

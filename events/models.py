@@ -17,6 +17,7 @@ from events.utils import (
     send_event_notifications_to_guardians,
 )
 from kukkuu.consts import (
+    DATA_VALIDATION_ERROR,
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
@@ -166,7 +167,7 @@ class Event(TimestampedModel, TranslatableModel):
         verbose_name=_("duration"), blank=True, null=True, help_text=_("In minutes")
     )
     capacity_per_occurrence = models.PositiveSmallIntegerField(
-        verbose_name=_("capacity per occurrence")
+        verbose_name=_("capacity per occurrence"), null=True, blank=True
     )
     published_at = models.DateTimeField(
         blank=True, null=True, verbose_name=_("published at")
@@ -207,6 +208,19 @@ class Event(TimestampedModel, TranslatableModel):
         published_text = _("published") if self.published_at else _("unpublished")
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
+    def clean(self):
+        if (
+            self.ticket_system == Event.INTERNAL
+            and self.capacity_per_occurrence is None
+        ):
+            raise ValidationError(
+                _(
+                    "Capacity per occurrence is required when ticket system is "
+                    "internal."
+                ),
+                code=DATA_VALIDATION_ERROR,
+            )
+
     def save(self, *args, **kwargs):
         try:
             old_capacity_per_occurrence = Event.objects.get(
@@ -221,6 +235,7 @@ class Event(TimestampedModel, TranslatableModel):
         # can be potentially changed if capacity per occurrence has been increased.
         if (
             old_capacity_per_occurrence is not None
+            and self.capacity_per_occurrence is not None
             and self.capacity_per_occurrence > old_capacity_per_occurrence
         ):
             self.occurrences.send_free_spot_notifications_if_needed()
