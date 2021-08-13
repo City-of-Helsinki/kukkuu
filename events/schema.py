@@ -414,7 +414,9 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         translations = graphene.List(EventTranslationsInput)
         duration = graphene.Int()
         participants_per_invite = EventParticipantsPerInvite(required=True)
-        capacity_per_occurrence = graphene.Int(required=True)
+        capacity_per_occurrence = graphene.Int(
+            description="Required for internal ticket system events."
+        )
         image = Upload()
         project_id = graphene.GlobalID()
         event_group_id = graphene.GlobalID(required=False)
@@ -447,6 +449,11 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
             kwargs["ticket_system"] = ticket_system_type
 
         event = Event.objects.create_translatable_object(**kwargs)
+
+        try:
+            event.clean()
+        except ValidationError as e:
+            raise DataValidationError(str(e))
 
         logger.info(
             f"user {info.context.user.uuid} added event {event} "
@@ -499,6 +506,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
             kwargs["ticket_system"] = ticket_system_type
 
         update_object_with_translations(event, kwargs)
+
+        try:
+            event.clean()
+        except ValidationError as e:
+            raise DataValidationError(str(e))
 
         logger.info(
             f"user {info.context.user.uuid} updated event {event} "
