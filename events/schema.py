@@ -27,13 +27,14 @@ from common.utils import (
     update_object_with_translations,
 )
 from events.filters import EventFilter, OccurrenceFilter
-from events.models import Enrolment, Event, EventGroup, Occurrence
+from events.models import Enrolment, Event, EventGroup, NoFreePasswordsError, Occurrence
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
     EventGroupAlreadyPublishedError,
     IneligibleOccurrenceEnrolment,
+    NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     PastEnrolmentError,
@@ -105,8 +106,17 @@ class TicketmasterEventTicketSystem(ObjectType):
         interfaces = (EventTicketSystem,)
 
     def resolve_child_password(self, info, **kwargs):
-        # TODO
-        return "70p53cr37"
+        try:
+            child = Child.objects.user_can_view(info.context.user).get(
+                id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+            )
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+
+        try:
+            return self.get_or_assign_ticket_system_password(child)
+        except NoFreePasswordsError as e:
+            raise NoFreeTicketSystemPasswordsError(e)
 
 
 class InternalEventTicketSystem(ObjectType):

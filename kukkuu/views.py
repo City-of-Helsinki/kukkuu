@@ -25,6 +25,7 @@ from kukkuu.consts import (
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     MESSAGE_ALREADY_SENT_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
+    NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
     OCCURRENCE_IS_NOT_FULL_ERROR,
@@ -49,6 +50,7 @@ from kukkuu.exceptions import (
     MaxNumberOfChildrenPerGuardianError,
     MessageAlreadySentError,
     MissingDefaultTranslationError,
+    NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
     OccurrenceIsNotFullError,
@@ -86,6 +88,7 @@ error_codes_kukkuu = {
     PastEnrolmentError: PAST_ENROLMENT_ERROR,
     SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
     TicketSystemUrlMissingError: TICKET_SYSTEM_URL_MISSING_ERROR,
+    NoFreeTicketSystemPasswordsError: NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
 }
 
 sentry_ignored_errors = (

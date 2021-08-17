@@ -87,3 +87,7 @@ class SingleEventsDisallowedError(KukkuuGraphQLError):
 class TicketSystemUrlMissingError(KukkuuGraphQLError):
     """Some occurrence of a published external ticket system event is missing ticket
     system URL"""
+
+
+class NoFreeTicketSystemPasswordsError(KukkuuGraphQLError):
+    """A free ticket system password is needed but there isn't any."""
