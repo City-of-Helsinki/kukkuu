@@ -58,6 +58,12 @@ def validate_enrolment(child, occurrence):
         )
     if child.occurrences.filter(event=occurrence.event).exists():
         raise ChildAlreadyJoinedEventError("Child already joined this event")
+    if occurrence.event.event_group and child.occurrences.filter(
+        event__event_group=occurrence.event.event_group
+    ):
+        raise ChildAlreadyJoinedEventError(
+            "Child already joined an event of this event group"
+        )
     if occurrence.enrolments.count() >= occurrence.get_capacity():
         raise OccurrenceIsFullError("Maximum enrolments created")
     if occurrence.time < timezone.now():
