@@ -1042,6 +1042,9 @@ def test_enrol_occurrence(
     )
     assert_permission_denied(non_authen_executed)
 
+    # old enrollment to another event that should not matter
+    EnrolmentFactory(child=child_with_user_guardian)
+
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
@@ -1068,6 +1071,51 @@ def test_already_enroled_occurrence(
     enrolment_variables["input"]["childId"] = to_global_id(
         "ChildNode", child_with_user_guardian.id
     )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert_match_error_code(executed, CHILD_ALREADY_JOINED_EVENT_ERROR)
+
+
+def test_already_enrolled_same_event(
+    guardian_api_client, occurrence, child_with_user_guardian
+):
+    another_occurrence = OccurrenceFactory(
+        event=occurrence.event, time=datetime.now() + timedelta(days=1)
+    )
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=another_occurrence)
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = get_global_id(occurrence)
+    enrolment_variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert_match_error_code(executed, CHILD_ALREADY_JOINED_EVENT_ERROR)
+
+
+def test_already_enrolled_same_event_group(
+    guardian_api_client, child_with_user_guardian
+):
+    event_group = EventGroupFactory()
+    event_1 = EventFactory(event_group=event_group)
+    event_2 = EventFactory(event_group=event_group)
+    occurrence_1 = OccurrenceFactory(
+        event=event_1, time=datetime.now() + timedelta(days=1)
+    )
+    occurrence_2 = OccurrenceFactory(
+        event=event_2, time=datetime.now() + timedelta(days=2)
+    )
+
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrence_1)
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = get_global_id(occurrence_2)
+    enrolment_variables["input"]["childId"] = get_global_id(child_with_user_guardian)
 
     executed = guardian_api_client.execute(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
