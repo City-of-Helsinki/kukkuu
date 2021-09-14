@@ -1,6 +1,11 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.11.0] - 13 Sep 2021
+### Added
+- Add initial external ticket system event support
+- Validate that one cannot enrol to multiple events of the same event group
+
 ## [1.10.5] - 10 Jun 2021
 ### Changed
 - Send free text email messages in an atomic transaction
@@ -200,7 +205,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.5...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.0...HEAD
+[1.11.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.5...release-1.11.0
 [1.10.5]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.4...release-1.10.5
 [1.10.4]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...release-1.10.4
 [1.10.3]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.2...release-1.10.3
