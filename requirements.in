@@ -12,7 +12,7 @@ drf-oidc-auth==0.10.0
 factory-boy
 graphene-django
 graphene-file-upload
-psycopg2
+psycopg2-binary==2.8.6
 sentry-sdk
 Pillow
 pycountry
