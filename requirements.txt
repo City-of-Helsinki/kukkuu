@@ -38,6 +38,7 @@ django==2.2.24
     #   django-ilmoitin
     #   django-mailer
     #   django-storages
+    #   djangorestframework
     #   drf-oidc-auth
     #   graphene-django
 django-anymail==7.0.0
@@ -66,7 +67,7 @@ django-parler==2.1
     #   django-ilmoitin
 django-storages[azure,google]==1.9.1
     # via -r requirements.in
-djangorestframework==3.10.3
+djangorestframework==3.11.2
     # via drf-oidc-auth
 drf-oidc-auth==0.10.0
     # via
