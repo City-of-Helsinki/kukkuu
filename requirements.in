@@ -12,7 +12,11 @@ drf-oidc-auth==0.10.0
 factory-boy
 graphene-django
 graphene-file-upload
-psycopg2
+# Django 2.2 needs psycopg2 2.8. Mac needs the binary.
+# The psycopg2-binary should be replacesd 
+# with psycopg2 when possible 
+# https://www.psycopg.org/docs/install.html#psycopg-vs-psycopg-binary
+psycopg2-binary < 2.9 
 sentry-sdk
 Pillow
 pycountry
