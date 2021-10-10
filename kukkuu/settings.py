@@ -3,7 +3,7 @@ import subprocess
 
 import environ
 import sentry_sdk
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
 checkout_dir = environ.Path(__file__) - 2
@@ -135,7 +135,7 @@ USE_TZ = True
 ENABLE_GRAPHIQL = env("ENABLE_GRAPHIQL")
 
 INSTALLED_APPS = [
-    "helusers",
+    "helusers.apps.HelusersConfig",
     "helusers.apps.HelusersAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -202,6 +202,8 @@ AUTHENTICATION_BACKENDS = [
     "kukkuu.oidc.GraphQLApiTokenAuthentication",
     "guardian.backends.ObjectPermissionBackend",
 ]
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 ANONYMOUS_USER_NAME = None  # we don't need django-guardian's AnonymousUser
 

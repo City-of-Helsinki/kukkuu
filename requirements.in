@@ -8,15 +8,13 @@ django-parler
 django-cleanup
 django-filter
 django-storages[google, azure]
-drf-oidc-auth==0.10.0
+drf-oidc-auth
 factory-boy
+# temporarily pin Faker to keep the snapshots the same
+Faker==5.4.1
 graphene-django
 graphene-file-upload
-# Django 2.2 needs psycopg2 2.8. Mac needs the binary.
-# The psycopg2-binary should be replacesd 
-# with psycopg2 when possible 
-# https://www.psycopg.org/docs/install.html#psycopg-vs-psycopg-binary
-psycopg2-binary < 2.9 
+psycopg2
 sentry-sdk
 Pillow
 pycountry

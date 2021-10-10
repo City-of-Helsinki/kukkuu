@@ -4,7 +4,7 @@ from django.contrib.auth.models import UserManager as OriginalUserManager
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
 from languages.models import Language

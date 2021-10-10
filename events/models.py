@@ -7,7 +7,7 @@ from django.db import models, transaction
 from django.db.models import F, Q, UniqueConstraint
 from django.utils import timezone
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
 from children.models import Child
@@ -467,7 +467,7 @@ class Enrolment(TimestampedModel):
         on_delete=models.CASCADE,
         verbose_name=_("occurrence"),
     )
-    attended = models.NullBooleanField(verbose_name=_("attended"))
+    attended = models.BooleanField(verbose_name=_("attended"), null=True, blank=True)
     reminder_sent_at = models.DateTimeField(
         verbose_name=_("reminder sent at"), null=True, blank=True
     )

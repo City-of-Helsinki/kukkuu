@@ -6,8 +6,8 @@ from django_ilmoitin.models import NotificationTemplate
 from common.tests.utils import create_notification_template_in_language
 from events.notifications import NotificationType
 
-from ..notification_importer import NotificationImporter
 from .utils import serialize_notifications
+from ..notification_importer import NotificationImporter
 
 LANGUAGES = ("fi", "sv", "en")
 

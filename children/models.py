@@ -1,7 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel

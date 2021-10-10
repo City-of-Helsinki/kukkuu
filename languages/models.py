@@ -4,7 +4,7 @@ import pycountry
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
 from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
 from common.models import TranslatableQuerySet
