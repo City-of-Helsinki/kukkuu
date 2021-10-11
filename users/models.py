@@ -7,9 +7,9 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
-from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from languages.models import Language
 
 
 class UserQuerySet(models.QuerySet):

@@ -1,9 +1,9 @@
 import pytest
-from subscriptions.notifications import NotificationType
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.conftest import *  # noqa
 from common.tests.utils import create_notification_template_in_language
+from subscriptions.notifications import NotificationType
 
 
 @pytest.fixture

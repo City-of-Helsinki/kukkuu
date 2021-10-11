@@ -7,10 +7,10 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from guardian.admin import GuardedModelAdmin
-from languages.models import Language
-from projects.models import Project
 
 from children.models import Relationship
+from languages.models import Language
+from projects.models import Project
 from users.models import Guardian
 
 

@@ -46,7 +46,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"verbose_name": "enrolment", "verbose_name_plural": "enrolments",},
+            options={
+                "verbose_name": "enrolment",
+                "verbose_name_plural": "enrolments",
+            },
         ),
         migrations.AddField(
             model_name="occurrence",

@@ -8,12 +8,12 @@ from django_ilmoitin.utils import Message as MailerMessage
 from django_ilmoitin.utils import send_all, send_mail
 from parler.models import TranslatedFields
 from parler.utils.context import switch_language
-from projects.models import Project
-from subscriptions.models import FreeSpotNotificationSubscription
 
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.models import Enrolment, Event, Occurrence
+from projects.models import Project
+from subscriptions.models import FreeSpotNotificationSubscription
 from users.models import Guardian
 
 
@@ -71,7 +71,10 @@ class Message(TimestampedModel, TranslatableModel):
         on_delete=models.CASCADE,
     )
     occurrences = models.ManyToManyField(
-        Occurrence, verbose_name=_("occurrences"), related_name="messages", blank=True,
+        Occurrence,
+        verbose_name=_("occurrences"),
+        related_name="messages",
+        blank=True,
     )
 
     objects = MessageQuerySet.as_manager()

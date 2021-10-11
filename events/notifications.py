@@ -2,7 +2,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
-from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.utils import get_global_id
@@ -19,6 +18,7 @@ from events.utils import (
     get_occurrence_enrol_ui_url,
     get_occurrence_ui_url,
 )
+from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 

@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "Sends notifications about approaching occurrences to enrolled children."
 
     def handle(self, *args, **options):
-        self.stdout.write(f"Sending reminder notifications...")
+        self.stdout.write("Sending reminder notifications...")
 
         count = Enrolment.objects.send_reminder_notifications()
 

@@ -10,8 +10,6 @@ from django.utils.timezone import now
 from django.utils.translation import activate
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
-from projects.factories import ProjectFactory
-from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -44,6 +42,8 @@ from kukkuu.consts import (
 from kukkuu.exceptions import QueryTooDeepError
 from kukkuu.schema import schema
 from kukkuu.views import DepthAnalysisBackend
+from projects.factories import ProjectFactory
+from projects.models import Project
 from venues.factories import VenueFactory
 
 
@@ -1649,7 +1649,9 @@ def test_set_enrolment_attendance(
 
 
 def test_set_enrolment_attendance_another_project_child(
-    project_user_api_client, occurrence, another_project,
+    project_user_api_client,
+    occurrence,
+    another_project,
 ):
     another_project_child = ChildWithGuardianFactory(project=another_project)
     enrolment = EnrolmentFactory(
@@ -2216,7 +2218,8 @@ def test_event_ticket_system_password_assignation(snapshot, guardian_api_client)
     variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
 
     executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY, variables=variables,
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
     )
 
     snapshot.assert_match(executed)
@@ -2224,7 +2227,8 @@ def test_event_ticket_system_password_assignation(snapshot, guardian_api_client)
 
     # second query should yield the same results
     executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY, variables=variables,
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
     )
 
     snapshot.assert_match(executed)
@@ -2245,7 +2249,8 @@ def test_event_ticket_system_password_assignation_no_free_passwords(
     variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
 
     executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY, variables=variables,
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
     )
 
     assert_match_error_code(executed, NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR)
@@ -2263,7 +2268,8 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
 
     # try to assign a password to someone else's child
     executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY, variables=variables,
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
@@ -2275,7 +2281,8 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
 
     # try to read an assigned password of someone else's child
     executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY, variables=variables,
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)

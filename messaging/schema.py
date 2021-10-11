@@ -7,7 +7,6 @@ from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from projects.models import Project
 
 from common.schema import LanguageEnum
 from common.utils import (
@@ -17,6 +16,7 @@ from common.utils import (
 )
 from events.models import Event, Occurrence
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
+from projects.models import Project
 
 from .models import AlreadySentError, Message
 

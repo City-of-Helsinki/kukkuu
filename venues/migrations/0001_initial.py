@@ -37,6 +37,9 @@ class Migration(migrations.Migration):
                 ),
                 ("seat_count", models.PositiveIntegerField(verbose_name="seat count")),
             ],
-            options={"verbose_name": "venue", "verbose_name_plural": "venues",},
+            options={
+                "verbose_name": "venue",
+                "verbose_name_plural": "venues",
+            },
         ),
     ]

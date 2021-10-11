@@ -1,9 +1,9 @@
 import factory
 import pytz
-from projects.models import Project
 
 from children.factories import ChildFactory
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from projects.models import Project
 from venues.factories import VenueFactory
 
 

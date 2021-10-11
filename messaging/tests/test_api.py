@@ -4,14 +4,14 @@ import pytest
 from django.core import mail
 from django.utils.timezone import now
 from guardian.shortcuts import assign_perm
-from messaging.factories import MessageFactory
-from messaging.models import Message
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
 from events.factories import EventFactory, OccurrenceFactory
 from kukkuu.consts import MESSAGE_ALREADY_SENT_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
+from messaging.factories import MessageFactory
+from messaging.models import Message
 
 MESSAGES_QUERY = """
 query Messages {
@@ -303,7 +303,8 @@ def test_update_message(snapshot, project_user_api_client, event_selection):
 @pytest.mark.django_db
 def test_cannot_update_message_unauthorized(message, wrong_project_api_client):
     executed = wrong_project_api_client.execute(
-        UPDATE_MESSAGE_MUTATION, variables=get_update_message_variables(message),
+        UPDATE_MESSAGE_MUTATION,
+        variables=get_update_message_variables(message),
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)

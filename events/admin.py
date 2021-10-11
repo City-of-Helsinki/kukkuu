@@ -6,6 +6,7 @@ from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
+
 from subscriptions.models import FreeSpotNotificationSubscription
 
 from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword

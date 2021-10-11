@@ -1,8 +1,8 @@
 import graphene
 from django.conf import settings
-from languages.models import Language
 
 from common.utils import get_obj_from_global_id
+from languages.models import Language
 
 LanguageEnum = graphene.Enum(
     "Language", [(l[0].upper(), l[0]) for l in settings.LANGUAGES]

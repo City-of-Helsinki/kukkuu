@@ -1,7 +1,7 @@
 import factory
-from projects.models import Project
 
 from children.models import Child, Relationship
+from projects.models import Project
 from users.factories import GuardianFactory
 
 

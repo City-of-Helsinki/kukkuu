@@ -2,12 +2,12 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
-from subscriptions.consts import NotificationType
 
 from children.models import Child
 from events.models import Occurrence
 from events.utils import send_event_notifications_to_guardians
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
+from subscriptions.consts import NotificationType
 
 
 class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):

@@ -9,13 +9,13 @@ from graphene import relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql_jwt.decorators import login_required
-from projects.models import Project
 
 from common.utils import (
     get_obj_if_user_can_administer,
     project_user_required,
     update_object_with_translations,
 )
+from projects.models import Project
 from users.schema import LanguageEnum
 from venues.models import Venue
 

@@ -1,6 +1,6 @@
 import factory
-from projects.models import Project
 
+from projects.models import Project
 from venues.models import Venue
 
 

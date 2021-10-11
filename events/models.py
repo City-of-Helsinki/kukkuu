@@ -78,7 +78,7 @@ class EventGroup(TimestampedModel, TranslatableModel):
         unpublished_events = self.events.unpublished()
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
             raise ValidationError(
-                f"All events are not ready for event group publishing.",
+                "All events are not ready for event group publishing.",
                 code=EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
             )
 

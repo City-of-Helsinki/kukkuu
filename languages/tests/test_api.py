@@ -1,7 +1,7 @@
 import pytest
-from languages.models import Language
 
 from common.utils import get_global_id
+from languages.models import Language
 
 
 @pytest.fixture(autouse=True)

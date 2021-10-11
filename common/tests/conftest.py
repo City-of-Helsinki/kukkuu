@@ -11,14 +11,14 @@ from django.utils import timezone, translation
 from freezegun import freeze_time
 from graphene.test import Client
 from guardian.shortcuts import assign_perm
-from languages.models import Language
-from projects.factories import ProjectFactory
-from projects.models import Project
 
 from children.factories import ChildWithGuardianFactory
 from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
+from languages.models import Language
+from projects.factories import ProjectFactory
+from projects.models import Project
 from users.factories import GuardianFactory, UserFactory
 from venues.factories import VenueFactory
 
@@ -65,7 +65,9 @@ def project():
     project = Project.objects.get_or_create(year=2020)[0]
     project.translations.all().delete()
     ProjectTranslation.objects.create(
-        master_id=project.pk, language_code="fi", name="Testiprojekti",
+        master_id=project.pk,
+        language_code="fi",
+        name="Testiprojekti",
     )
     return project
 

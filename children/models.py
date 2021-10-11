@@ -2,9 +2,9 @@ from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from languages.models import Language
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from languages.models import Language
 from users.models import Guardian
 
 
@@ -38,7 +38,9 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     last_name = models.CharField(verbose_name=_("last name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
     postal_code = models.CharField(
-        verbose_name=_("postal code"), max_length=5, validators=[postal_code_validator],
+        verbose_name=_("postal code"),
+        max_length=5,
+        validators=[postal_code_validator],
     )
     guardians = models.ManyToManyField(
         Guardian,

@@ -10,8 +10,6 @@ django-filter
 django-storages[google, azure]
 drf-oidc-auth
 factory-boy
-# temporarily pin Faker to keep the snapshots the same
-Faker==5.4.1
 graphene-django
 graphene-file-upload
 psycopg2

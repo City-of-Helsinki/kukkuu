@@ -3,6 +3,7 @@ from django.apps import apps
 from django.db.models import Count, Prefetch
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
+
 from languages.models import Language
 
 LanguageTranslation = apps.get_model("languages", "LanguageTranslation")

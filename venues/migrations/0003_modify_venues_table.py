@@ -10,7 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(model_name="venue", name="seat_count",),
+        migrations.RemoveField(
+            model_name="venue",
+            name="seat_count",
+        ),
         migrations.AddField(
             model_name="venuetranslation",
             name="accessibility_info",

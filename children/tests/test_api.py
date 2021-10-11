@@ -10,8 +10,6 @@ from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
 from guardian.shortcuts import assign_perm
-from languages.models import Language
-from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -30,6 +28,8 @@ from kukkuu.consts import (
     MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
 )
+from languages.models import Language
+from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 from users.models import Guardian
 
@@ -264,7 +264,8 @@ def test_submit_children_and_guardian_children_limit(user_api_client, settings):
     ]
 
     executed = user_api_client.execute(
-        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables,
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
+        variables=variables,
     )
 
     assert_match_error_code(executed, MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR)
@@ -880,14 +881,16 @@ def test_children_cursor_and_offset_pagination_cannot_be_combined(
     }
 
     executed = project_user_api_client.execute(
-        CHILDREN_PAGINATION_QUERY, variables=variables,
+        CHILDREN_PAGINATION_QUERY,
+        variables=variables,
     )
 
     assert_match_error_code(executed, API_USAGE_ERROR)
 
 
 @pytest.mark.parametrize(
-    "limit, offset", ((None, 2), (2, None), (2, 2), (10, None), (None, 5)),
+    "limit, offset",
+    ((None, 2), (2, None), (2, 2), (10, None), (None, 5)),
 )
 def test_children_offset_pagination(
     snapshot, project_user_api_client, project, limit, offset
@@ -897,7 +900,8 @@ def test_children_offset_pagination(
     variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
 
     executed = project_user_api_client.execute(
-        CHILDREN_PAGINATION_QUERY, variables=variables,
+        CHILDREN_PAGINATION_QUERY,
+        variables=variables,
     )
 
     snapshot.assert_match(executed)
@@ -1006,7 +1010,9 @@ def test_available_events_and_event_groups(
     )  # enrolled event
     OccurrenceFactory(event__published_at=now(), time=past)  # event in past
     OccurrenceFactory(
-        time=future, event__published_at=now(), event__project=another_project,
+        time=future,
+        event__published_at=now(),
+        event__project=another_project,
     )  # event from another project
     EventGroupFactory(published_at=now())  # empty event group
     EventFactory(

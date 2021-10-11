@@ -83,10 +83,8 @@ ecdsa==0.17.0
     # via python-jose
 factory-boy==3.2.0
     # via -r requirements.in
-faker==5.4.1
-    # via
-    #   -r requirements.in
-    #   factory-boy
+faker==9.3.1
+    # via factory-boy
 google-api-core==2.1.0
     # via
     #   google-cloud-core

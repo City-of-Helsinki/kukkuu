@@ -7,7 +7,6 @@ from django.core.management import call_command
 from django.utils.timezone import now
 from freezegun import freeze_time
 from graphql_relay import to_global_id
-from projects.factories import ProjectFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import (
@@ -28,6 +27,7 @@ from events.tests.test_api import (
     PUBLISH_EVENT_VARIABLES,
     UNENROL_OCCURRENCE_MUTATION,
 )
+from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 
 
@@ -191,7 +191,8 @@ def test_unenrol_occurrence_notification(
     notification_template_occurrence_unenrolment_fi,
 ):
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user, project=project,
+        relationship__guardian__user=guardian_api_client.user,
+        project=project,
     )
     EnrolmentFactory(occurrence=occurrence, child=child)
     unenrolment_variables = {
@@ -253,7 +254,9 @@ def test_occurrence_cancelled_notification(
 
 @pytest.mark.django_db
 def test_occurrence_reminder_notification(
-    snapshot, notification_template_occurrence_reminder_fi, project,
+    snapshot,
+    notification_template_occurrence_reminder_fi,
+    project,
 ):
     actual_now = now()
 
