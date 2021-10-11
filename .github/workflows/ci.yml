@@ -18,7 +18,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:10
+        image: postgres:11
         ports:
           - 5432:5432
         options: >-
@@ -35,10 +35,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.7
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.9'
 
       - name: Cache pip packages
         uses: actions/cache@v2
@@ -70,10 +70,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.7
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.9'
 
       - name: Cache pip packages
         uses: actions/cache@v2
