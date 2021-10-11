@@ -493,8 +493,12 @@ class Enrolment(TimestampedModel):
             super().save(*args, **kwargs)
 
             if created:
+                event_group = self.occurrence.event.event_group
+                events = (
+                    event_group.events.all() if event_group else [self.occurrence.event]
+                )
                 self.child.free_spot_notification_subscriptions.filter(
-                    occurrence__event=self.occurrence.event
+                    occurrence__event__in=events
                 ).delete()
 
         if created:
