@@ -1083,7 +1083,7 @@ def test_already_enrolled_same_event(
     guardian_api_client, occurrence, child_with_user_guardian
 ):
     another_occurrence = OccurrenceFactory(
-        event=occurrence.event, time=datetime.now() + timedelta(days=1)
+        event=occurrence.event, time=timezone.now() + timedelta(days=1)
     )
     EnrolmentFactory(child=child_with_user_guardian, occurrence=another_occurrence)
 
@@ -1105,10 +1105,10 @@ def test_already_enrolled_same_event_group(
     event_1 = EventFactory(event_group=event_group)
     event_2 = EventFactory(event_group=event_group)
     occurrence_1 = OccurrenceFactory(
-        event=event_1, time=datetime.now() + timedelta(days=1)
+        event=event_1, time=timezone.now() + timedelta(days=1)
     )
     occurrence_2 = OccurrenceFactory(
-        event=event_2, time=datetime.now() + timedelta(days=2)
+        event=event_2, time=timezone.now() + timedelta(days=2)
     )
 
     EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrence_1)
