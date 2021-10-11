@@ -7,29 +7,29 @@ from snapshottest import Snapshot
 snapshots = Snapshot()
 
 snapshots["test_signup_notification 1"] = [
-    """kukkuu@example.com|['mperez@cox.com']|SIGNUP-notifikaation aihe|
+    """kukkuu@example.com|['michellewalker@example.net']|SIGNUP-notifikaation aihe|
 SIGNUP-notifikaation sisältö tekstimuodossa.
 Lapset: [<Child: Matti Mainio (2020-01-01)>, <Child: Jussi Juonio (2020-02-02)>]
-Huoltaja: Gulle Guardian (mperez@cox.com)"""
+Huoltaja: Gulle Guardian (michellewalker@example.net)"""
 ]
 
 snapshots["test_signup_notification_language[EN] 1"] = [
-    """kukkuu@example.com|['mperez@cox.com']|SIGNUP notification subject|
+    """kukkuu@example.com|['michellewalker@example.net']|SIGNUP notification subject|
 SIGNUP notification body text.
 Children: [<Child: Matti Mainio (2020-01-01)>, <Child: Jussi Juonio (2020-02-02)>]
-Guardian: Gulle Guardian (mperez@cox.com)"""
+Guardian: Gulle Guardian (michellewalker@example.net)"""
 ]
 
 snapshots["test_signup_notification_language[FI] 1"] = [
-    """kukkuu@example.com|['mperez@cox.com']|SIGNUP-notifikaation aihe|
+    """kukkuu@example.com|['michellewalker@example.net']|SIGNUP-notifikaation aihe|
 SIGNUP-notifikaation sisältö tekstimuodossa.
 Lapset: [<Child: Matti Mainio (2020-01-01)>, <Child: Jussi Juonio (2020-02-02)>]
-Huoltaja: Gulle Guardian (mperez@cox.com)"""
+Huoltaja: Gulle Guardian (michellewalker@example.net)"""
 ]
 
 snapshots["test_signup_notification_language[SV] 1"] = [
-    """kukkuu@example.com|['mperez@cox.com']|SIGNUP-notifikaation aihe|
+    """kukkuu@example.com|['michellewalker@example.net']|SIGNUP-notifikaation aihe|
 SIGNUP-notifikaation sisältö tekstimuodossa.
 Lapset: [<Child: Matti Mainio (2020-01-01)>, <Child: Jussi Juonio (2020-02-02)>]
-Huoltaja: Gulle Guardian (mperez@cox.com)"""
+Huoltaja: Gulle Guardian (michellewalker@example.net)"""
 ]
