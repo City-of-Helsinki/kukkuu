@@ -1,7 +1,7 @@
 from collections import Iterable
 
 
-def assert_subscriptions(child, subscriptions):
+def assert_child_has_subscriptions(child, subscriptions):
     if not isinstance(subscriptions, Iterable):
         subscriptions = {subscriptions} if subscriptions else {}
     subscription_ids = {s.pk for s in child.free_spot_notification_subscriptions.all()}

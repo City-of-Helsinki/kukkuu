@@ -4,7 +4,7 @@ import pytest
 from django.core import mail
 from django.utils.timezone import now
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from subscriptions.tests.utils import assert_subscriptions
+from subscriptions.tests.utils import assert_child_has_subscriptions
 
 from common.tests.utils import assert_mails_match_snapshot
 from events.factories import EnrolmentFactory, OccurrenceFactory
@@ -42,7 +42,7 @@ def test_free_spot_notification_occurrence_capacity_changes(
 
     assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
-    assert_subscriptions(child, other_subscription)
+    assert_child_has_subscriptions(child, other_subscription)
 
 
 @pytest.mark.django_db
@@ -76,7 +76,7 @@ def test_free_spot_notification_event_capacity_changes(
 
     assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
-    assert_subscriptions(child, other_subscription)
+    assert_child_has_subscriptions(child, other_subscription)
 
 
 @pytest.mark.django_db
@@ -103,4 +103,4 @@ def test_free_spot_notification_someone_unenrols(
 
     assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
-    assert_subscriptions(child, other_subscription)
+    assert_child_has_subscriptions(child, other_subscription)
