@@ -1,6 +1,10 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.11.1] - 13 Oct 2021
+### Fixed
+- Fix free spot subscription handling in event group
+
 ## [1.11.0] - 13 Sep 2021
 ### Added
 - Add initial external ticket system event support
@@ -205,7 +209,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.1...HEAD
+[1.11.1]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.0...release-1.11.1
 [1.11.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.5...release-1.11.0
 [1.10.5]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.4...release-1.10.5
 [1.10.4]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.3...release-1.10.4
