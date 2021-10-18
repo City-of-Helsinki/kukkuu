@@ -180,15 +180,16 @@ class SentryGraphQLView(FileUploadGraphQLView):
         result = super().execute_graphql_request(request, data, query, *args, **kwargs)
         # If 'invalid' is set, it's a bad request
         if result and result.errors and not result.invalid:
-            errors = [
+            errors_to_sentry = [
                 e
                 for e in result.errors
                 if not isinstance(
-                    getattr(e, "original_error", None), KukkuuGraphQLError
+                    getattr(e, "original_error", None),
+                    (KukkuuGraphQLError,) + sentry_ignored_errors,
                 )
             ]
-            if errors:
-                self._capture_sentry_exceptions(result.errors, query)
+            if errors_to_sentry:
+                self._capture_sentry_exceptions(errors_to_sentry, query)
         return result
 
     def _capture_sentry_exceptions(self, errors, query):
