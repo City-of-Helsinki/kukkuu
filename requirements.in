@@ -1,14 +1,12 @@
 Django
 django-cors-headers
 django-environ
-django-graphql-jwt
 django-helusers
 django-ilmoitin
 django-parler
 django-cleanup
 django-filter
 django-storages[google, azure]
-drf-oidc-auth
 factory-boy
 graphene-django
 graphene-file-upload

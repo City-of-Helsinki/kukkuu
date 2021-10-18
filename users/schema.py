@@ -6,10 +6,9 @@ from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
-from graphql_jwt.decorators import login_required
 
 from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
-from common.utils import update_object
+from common.utils import login_required, update_object
 from kukkuu.exceptions import InvalidEmailFormatError, ObjectDoesNotExistError
 from projects.schema import ProjectNode
 

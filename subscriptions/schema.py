@@ -4,11 +4,10 @@ import graphene
 from django.core.exceptions import ValidationError
 from graphene import relay
 from graphene_django import DjangoObjectType
-from graphql_jwt.decorators import login_required
 
 from children.models import Child
 from children.schema import ChildNode
-from common.utils import get_node_id_from_global_id
+from common.utils import get_node_id_from_global_id, login_required
 from events.models import Occurrence
 from events.schema import OccurrenceNode
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR

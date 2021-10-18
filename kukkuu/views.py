@@ -9,7 +9,6 @@ from graphql.language.ast import (
     InlineFragment,
     OperationDefinition,
 )
-from graphql_jwt.exceptions import PermissionDenied as JwtPermissionDenied
 
 from kukkuu.consts import (
     ALREADY_SUBSCRIBED_ERROR,
@@ -64,7 +63,6 @@ from kukkuu.exceptions import (
 error_codes_shared = {
     Exception: GENERAL_ERROR,
     ObjectDoesNotExistError: OBJECT_DOES_NOT_EXIST_ERROR,
-    JwtPermissionDenied: PERMISSION_DENIED_ERROR,
     PermissionDenied: PERMISSION_DENIED_ERROR,
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
@@ -93,7 +91,6 @@ error_codes_kukkuu = {
 
 sentry_ignored_errors = (
     ObjectDoesNotExist,
-    JwtPermissionDenied,
     PermissionDenied,
 )
 

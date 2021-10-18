@@ -2,9 +2,9 @@ import graphene
 from django.apps import apps
 from graphene import ObjectType, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
-from graphql_jwt.decorators import login_required
 
 from common.schema import LanguageEnum
+from common.utils import login_required
 from projects.models import Project
 
 ProjectTranslation = apps.get_model("projects", "ProjectTranslation")

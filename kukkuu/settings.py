@@ -174,6 +174,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "kukkuu.middleware.JWTAuthentication",
 ]
 
 TEMPLATES = [
@@ -199,7 +200,6 @@ AUTH_USER_MODEL = "users.User"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "kukkuu.oidc.GraphQLApiTokenAuthentication",
     "guardian.backends.ObjectPermissionBackend",
 ]
 
@@ -226,7 +226,7 @@ PARLER_ENABLE_CACHING = False
 
 GRAPHENE = {
     "SCHEMA": "kukkuu.schema.schema",
-    "MIDDLEWARE": ["graphql_jwt.middleware.JSONWebTokenMiddleware"],
+    "MIDDLEWARE": ["kukkuu.graphene.JWTMiddleware"],
 }
 
 GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
