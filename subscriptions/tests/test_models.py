@@ -2,8 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.utils.timezone import now
-from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from subscriptions.tests.utils import assert_child_has_subscriptions
 
 from events.factories import (
     EnrolmentFactory,
@@ -11,6 +9,8 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
+from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from subscriptions.tests.utils import assert_child_has_subscriptions
 
 
 @pytest.mark.django_db
@@ -19,7 +19,10 @@ def test_enrolling_deletes_same_event_free_spot_subscriptions(
 ):
     event = EventFactory(published_at=now())
     occurrence, occurrence_2 = OccurrenceFactory.create_batch(
-        2, time=now() + timedelta(days=14), event=event, capacity_override=1,
+        2,
+        time=now() + timedelta(days=14),
+        event=event,
+        capacity_override=1,
     )
     EnrolmentFactory(occurrence=occurrence)
     FreeSpotNotificationSubscriptionFactory(

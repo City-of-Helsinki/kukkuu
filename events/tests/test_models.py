@@ -2,9 +2,9 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
-from projects.models import Project
 
 from children.factories import ChildFactory
+from projects.models import Project
 from venues.models import Venue
 
 from ..factories import EventFactory, OccurrenceFactory

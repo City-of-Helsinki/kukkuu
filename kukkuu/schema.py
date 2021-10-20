@@ -1,11 +1,11 @@
 import graphene
+
+import children.schema
+import events.schema
 import languages.schema
 import messaging.schema
 import projects.schema
 import subscriptions.schema
-
-import children.schema
-import events.schema
 import users.schema
 import venues.schema
 from events.schema import (

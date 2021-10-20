@@ -81,7 +81,7 @@ snapshots["test_add_occurrence_project_user 1"] = {
     "data": {
         "addOccurrence": {
             "occurrence": {
-                "capacity": 50,
+                "capacity": 35,
                 "capacityOverride": None,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "FI",
@@ -97,7 +97,7 @@ snapshots["test_add_occurrence_ticket_system_url 1"] = {
     "data": {
         "addOccurrence": {
             "occurrence": {
-                "capacity": 43,
+                "capacity": 9,
                 "capacityOverride": None,
                 "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
                 "occurrenceLanguage": "FI",
@@ -117,7 +117,7 @@ snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Katherine"},
+                "child": {"firstName": "Brandon"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
                 "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
@@ -137,7 +137,7 @@ snapshots["test_enrol_occurrence 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Mary"},
+                "child": {"firstName": "Brandy"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
                 "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
@@ -149,11 +149,11 @@ snapshots["test_enrolment_visibility 1"] = {
     "data": {
         "occurrence": {
             "enrolmentCount": 4,
-            "enrolments": {"edges": [{"node": {"child": {"firstName": "Mary"}}}]},
+            "enrolments": {"edges": [{"node": {"child": {"firstName": "Brandy"}}}]},
             "event": {
-                "capacityPerOccurrence": 5,
+                "capacityPerOccurrence": 25,
                 "duration": 1,
-                "image": "http://testserver/media/response.jpg",
+                "image": "http://testserver/media/series.jpg",
                 "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
@@ -166,26 +166,25 @@ snapshots["test_enrolment_visibility 1"] = {
                 ],
             },
             "occurrenceLanguage": "FI",
-            "remainingCapacity": 1,
+            "remainingCapacity": 21,
             "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
                     {
-                        "accessibilityInfo": """Party door better performance race story. Beautiful if his their.
-Election stay every something base. Treat final central situation past ready join.""",
+                        "accessibilityInfo": "Theory go home memory respond improve office. Near increase process truth list pressure. Capital city sing himself yard stuff. Option PM put matter benefit.",
                         "additionalInfo": """Policy data control as receive.
 Teacher subject family around year. Space speak sense person the probably deep.
 Social believe policy security score. Turn argue present throw spend prevent.""",
-                        "address": """29898 Bell Junctions
-Jenniferbury, TX 72520""",
+                        "address": """404 Figueroa Trace
+Pollardview, RI 68038""",
                         "arrivalInstructions": """Significant land especially can quite industry relationship. Which president smile staff country actually generation. Age member whatever open effort clear.
 Local challenge box myself last.""",
-                        "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+                        "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
                         "languageCode": "FI",
-                        "name": "Trial western break page box child care. Tv minute defense.",
-                        "wwwUrl": "https://beck.org/",
+                        "name": "Dog hospital number.",
+                        "wwwUrl": "https://www.beck-sherman.com/",
                     }
                 ]
             },
@@ -214,7 +213,11 @@ snapshots["test_event_group_events_filtering_by_available_for_child_id 2"] = {
         "eventGroup": {
             "events": {
                 "edges": [
-                    {"node": {"name": "Think significant land especially can quite."}},
+                    {
+                        "node": {
+                            "name": "Performance race story capital city sing himself."
+                        }
+                    },
                     {"node": {"name": "ME ME ME"}},
                 ]
             }
@@ -230,23 +233,23 @@ snapshots["test_event_group_query_normal_user_and_project_user[False] 2"] = {
     "data": {
         "eventGroup": {
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+            "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
             "events": {"edges": []},
-            "image": "hospital.jpg",
+            "image": "thank.jpg",
             "imageAltText": "",
-            "name": "Long respond draw military dog hospital number lose.",
+            "name": "Lead behind everyone agency start majority.",
             "project": {"year": 2020},
             "publishedAt": None,
-            "shortDescription": "He their adult data. Tv minute defense.",
+            "shortDescription": "Answer entire increase thank certainly again thought.",
             "translations": [
                 {
-                    "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+                    "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
                     "imageAltText": "",
                     "languageCode": "FI",
-                    "name": "Long respond draw military dog hospital number lose.",
-                    "shortDescription": "He their adult data. Tv minute defense.",
+                    "name": "Lead behind everyone agency start majority.",
+                    "shortDescription": "Answer entire increase thank certainly again thought.",
                 }
             ],
             "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -258,23 +261,23 @@ snapshots["test_event_group_query_normal_user_and_project_user[True] 1"] = {
     "data": {
         "eventGroup": {
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+            "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
             "events": {"edges": []},
-            "image": "hospital.jpg",
+            "image": "thank.jpg",
             "imageAltText": "",
-            "name": "Long respond draw military dog hospital number lose.",
+            "name": "Lead behind everyone agency start majority.",
             "project": {"year": 2020},
             "publishedAt": "2020-12-12T00:00:00+00:00",
-            "shortDescription": "He their adult data. Tv minute defense.",
+            "shortDescription": "Answer entire increase thank certainly again thought.",
             "translations": [
                 {
-                    "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+                    "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
                     "imageAltText": "",
                     "languageCode": "FI",
-                    "name": "Long respond draw military dog hospital number lose.",
-                    "shortDescription": "He their adult data. Tv minute defense.",
+                    "name": "Lead behind everyone agency start majority.",
+                    "shortDescription": "Answer entire increase thank certainly again thought.",
                 }
             ],
             "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -286,23 +289,23 @@ snapshots["test_event_group_query_normal_user_and_project_user[True] 2"] = {
     "data": {
         "eventGroup": {
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+            "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
             "events": {"edges": []},
-            "image": "hospital.jpg",
+            "image": "thank.jpg",
             "imageAltText": "",
-            "name": "Long respond draw military dog hospital number lose.",
+            "name": "Lead behind everyone agency start majority.",
             "project": {"year": 2020},
             "publishedAt": "2020-12-12T00:00:00+00:00",
-            "shortDescription": "He their adult data. Tv minute defense.",
+            "shortDescription": "Answer entire increase thank certainly again thought.",
             "translations": [
                 {
-                    "description": """Address prove color effort. Enter everything history remember stay public high. Exist shoulder write century.
-Myself yourself able process base sing according. Watch media do concern sit enter.""",
+                    "description": """Page box child care any concern. Defense level church use.
+Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.""",
                     "imageAltText": "",
                     "languageCode": "FI",
-                    "name": "Long respond draw military dog hospital number lose.",
-                    "shortDescription": "He their adult data. Tv minute defense.",
+                    "name": "Lead behind everyone agency start majority.",
+                    "shortDescription": "Answer entire increase thank certainly again thought.",
                 }
             ],
             "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -315,28 +318,28 @@ snapshots["test_event_group_query_wrong_project 1"] = {"data": {"eventGroup": No
 snapshots["test_event_query_normal_user 1"] = {
     "data": {
         "event": {
-            "capacityPerOccurrence": 50,
+            "capacityPerOccurrence": 35,
             "createdAt": "2020-12-12T00:00:00+00:00",
-            "description": """Serious listen police shake. Page box child care any concern.
+            "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
-            "duration": 197,
-            "image": "http://testserver/media/spring.jpg",
+            "duration": 181,
+            "image": "http://testserver/media/teacher.jpg",
             "imageAltText": "",
-            "name": "Free heart significant machine try.",
+            "name": "Poor lawyer treat free heart significant.",
             "occurrences": {
                 "edges": [
                     {
                         "node": {
                             "enrolmentCount": 0,
-                            "remainingCapacity": 50,
+                            "remainingCapacity": 35,
                             "ticketSystem": {"type": "INTERNAL"},
-                            "time": "2005-09-07T17:47:05+00:00",
+                            "time": "1971-04-30T08:38:26+00:00",
                             "venue": {
                                 "translations": [
                                     {
                                         "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                         "languageCode": "FI",
-                                        "name": "Able process base sing according.",
+                                        "name": "Skill down subject town range north skin.",
                                     }
                                 ]
                             },
@@ -347,16 +350,16 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
             "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
             "project": {"year": 2020},
             "publishedAt": "2020-12-12T00:00:00+00:00",
-            "shortDescription": "Perform in weight success answer.",
+            "shortDescription": "Together history perform.",
             "ticketSystem": {"type": "INTERNAL"},
             "translations": [
                 {
-                    "description": """Serious listen police shake. Page box child care any concern.
+                    "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                     "imageAltText": "",
                     "languageCode": "FI",
-                    "name": "Free heart significant machine try.",
-                    "shortDescription": "Perform in weight success answer.",
+                    "name": "Poor lawyer treat free heart significant.",
+                    "shortDescription": "Together history perform.",
                 }
             ],
             "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -491,28 +494,28 @@ snapshots["test_events_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "capacityPerOccurrence": 50,
+                        "capacityPerOccurrence": 35,
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "description": """Serious listen police shake. Page box child care any concern.
+                        "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
-                        "duration": 197,
-                        "image": "http://testserver/media/spring.jpg",
+                        "duration": 181,
+                        "image": "http://testserver/media/teacher.jpg",
                         "imageAltText": "",
-                        "name": "Free heart significant machine try.",
+                        "name": "Poor lawyer treat free heart significant.",
                         "occurrences": {
                             "edges": [
                                 {
                                     "node": {
                                         "enrolmentCount": 0,
-                                        "remainingCapacity": 50,
+                                        "remainingCapacity": 35,
                                         "ticketSystem": {"type": "INTERNAL"},
-                                        "time": "2005-09-07T17:47:05+00:00",
+                                        "time": "1971-04-30T08:38:26+00:00",
                                         "venue": {
                                             "translations": [
                                                 {
                                                     "description": "Later evening southern would according strong. Analysis season project executive entire.",
                                                     "languageCode": "FI",
-                                                    "name": "Able process base sing according.",
+                                                    "name": "Skill down subject town range north skin.",
                                                 }
                                             ]
                                         },
@@ -523,16 +526,16 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
-                        "shortDescription": "Perform in weight success answer.",
+                        "shortDescription": "Together history perform.",
                         "ticketSystem": {"type": "INTERNAL"},
                         "translations": [
                             {
-                                "description": """Serious listen police shake. Page box child care any concern.
+                                "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                                 "imageAltText": "",
                                 "languageCode": "FI",
-                                "name": "Free heart significant machine try.",
-                                "shortDescription": "Perform in weight success answer.",
+                                "name": "Poor lawyer treat free heart significant.",
+                                "shortDescription": "Together history perform.",
                             }
                         ],
                         "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -549,28 +552,28 @@ snapshots["test_events_query_project_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "capacityPerOccurrence": 50,
+                        "capacityPerOccurrence": 35,
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "description": """Serious listen police shake. Page box child care any concern.
+                        "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
-                        "duration": 197,
-                        "image": "http://testserver/media/spring.jpg",
+                        "duration": 181,
+                        "image": "http://testserver/media/teacher.jpg",
                         "imageAltText": "",
-                        "name": "Free heart significant machine try.",
+                        "name": "Poor lawyer treat free heart significant.",
                         "occurrences": {
                             "edges": [
                                 {
                                     "node": {
                                         "enrolmentCount": 0,
-                                        "remainingCapacity": 50,
+                                        "remainingCapacity": 35,
                                         "ticketSystem": {"type": "INTERNAL"},
-                                        "time": "1978-11-27T17:53:39+00:00",
+                                        "time": "2014-01-28T14:12:00+00:00",
                                         "venue": {
                                             "translations": [
                                                 {
-                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
+                                                    "description": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
                                                     "languageCode": "FI",
-                                                    "name": "Especially can quite industry relationship very produce social.",
+                                                    "name": "Land especially can quite industry relationship very.",
                                                 }
                                             ]
                                         },
@@ -581,16 +584,16 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                         "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                         "project": {"year": 2020},
                         "publishedAt": "2020-12-12T00:00:00+00:00",
-                        "shortDescription": "Perform in weight success answer.",
+                        "shortDescription": "Together history perform.",
                         "ticketSystem": {"type": "INTERNAL"},
                         "translations": [
                             {
-                                "description": """Serious listen police shake. Page box child care any concern.
+                                "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                                 "imageAltText": "",
                                 "languageCode": "FI",
-                                "name": "Free heart significant machine try.",
-                                "shortDescription": "Perform in weight success answer.",
+                                "name": "Poor lawyer treat free heart significant.",
+                                "shortDescription": "Together history perform.",
                             }
                         ],
                         "updatedAt": "2020-12-12T00:00:00+00:00",
@@ -598,28 +601,28 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
                 },
                 {
                     "node": {
-                        "capacityPerOccurrence": 28,
+                        "capacityPerOccurrence": 49,
                         "createdAt": "2020-12-12T00:00:00+00:00",
                         "description": """Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
 If his their best. Election stay every something base.""",
                         "duration": 42,
-                        "image": "http://testserver/media/think.jpg",
+                        "image": "http://testserver/media/us.jpg",
                         "imageAltText": "",
-                        "name": "Able process base sing according.",
+                        "name": "Skill down subject town range north skin.",
                         "occurrences": {
                             "edges": [
                                 {
                                     "node": {
                                         "enrolmentCount": 0,
-                                        "remainingCapacity": 28,
+                                        "remainingCapacity": 49,
                                         "ticketSystem": {"type": "INTERNAL"},
-                                        "time": "2012-05-15T10:30:47+00:00",
+                                        "time": "2001-12-31T04:39:12+00:00",
                                         "venue": {
                                             "translations": [
                                                 {
-                                                    "description": "Effort clear and local challenge box. Care figure mention wrong when lead involve. Event lay yes policy data control as receive. End available avoid girl middle.",
+                                                    "description": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
                                                     "languageCode": "FI",
-                                                    "name": "Especially can quite industry relationship very produce social.",
+                                                    "name": "Land especially can quite industry relationship very.",
                                                 }
                                             ]
                                         },
@@ -627,7 +630,7 @@ If his their best. Election stay every something base.""",
                                 }
                             ]
                         },
-                        "participantsPerInvite": "FAMILY",
+                        "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                         "project": {"year": 2020},
                         "publishedAt": None,
                         "shortDescription": "Later evening southern would according strong.",
@@ -638,7 +641,7 @@ If his their best. Election stay every something base.""",
 If his their best. Election stay every something base.""",
                                 "imageAltText": "",
                                 "languageCode": "FI",
-                                "name": "Able process base sing according.",
+                                "name": "Skill down subject town range north skin.",
                                 "shortDescription": "Later evening southern would according strong.",
                             }
                         ],
@@ -656,37 +659,38 @@ snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
             "enrolmentCount": 3,
             "enrolments": {"edges": []},
             "event": {
-                "capacityPerOccurrence": 43,
-                "duration": 112,
-                "image": "http://testserver/media/send.jpg",
-                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                "capacityPerOccurrence": 9,
+                "duration": 1,
+                "image": "http://testserver/media/law.jpg",
+                "participantsPerInvite": "FAMILY",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
-                        "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                        "description": "Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.",
                         "languageCode": "FI",
-                        "name": "Up always sport return. Light a point charge stand store.",
-                        "shortDescription": "East site chance of.",
+                        "name": "Always sport return student light a point.",
+                        "shortDescription": "Who Mrs public east site chance.",
                     }
                 ],
             },
             "occurrenceLanguage": "FI",
-            "remainingCapacity": 40,
+            "remainingCapacity": 6,
             "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
                     {
-                        "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                        "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                         "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                        "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
+                        "address": """04883 Mary Corner
+Port Mikeview, IN 23956""",
                         "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                        "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+                        "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
                         "languageCode": "FI",
-                        "name": "Free heart significant machine try.",
-                        "wwwUrl": "http://brooks.org/",
+                        "name": "Poor lawyer treat free heart significant.",
+                        "wwwUrl": "http://www.brooks.com/",
                     }
                 ]
             },
@@ -799,37 +803,38 @@ snapshots["test_occurrence_query_normal_user 1"] = {
             "enrolmentCount": 0,
             "enrolments": {"edges": []},
             "event": {
-                "capacityPerOccurrence": 43,
-                "duration": 112,
-                "image": "http://testserver/media/send.jpg",
-                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                "capacityPerOccurrence": 9,
+                "duration": 1,
+                "image": "http://testserver/media/law.jpg",
+                "participantsPerInvite": "FAMILY",
                 "publishedAt": "2020-12-12T00:00:00+00:00",
                 "translations": [
                     {
-                        "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                        "description": "Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.",
                         "languageCode": "FI",
-                        "name": "Up always sport return. Light a point charge stand store.",
-                        "shortDescription": "East site chance of.",
+                        "name": "Always sport return student light a point.",
+                        "shortDescription": "Who Mrs public east site chance.",
                     }
                 ],
             },
             "occurrenceLanguage": "FI",
-            "remainingCapacity": 43,
+            "remainingCapacity": 9,
             "ticketSystem": {"type": "INTERNAL"},
             "time": "2020-12-12T00:00:00+00:00",
             "venue": {
                 "translations": [
                     {
-                        "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                        "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                         "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                        "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
+                        "address": """04883 Mary Corner
+Port Mikeview, IN 23956""",
                         "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                        "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+                        "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
                         "languageCode": "FI",
-                        "name": "Free heart significant machine try.",
-                        "wwwUrl": "http://brooks.org/",
+                        "name": "Poor lawyer treat free heart significant.",
+                        "wwwUrl": "http://www.brooks.com/",
                     }
                 ]
             },
@@ -871,8 +876,8 @@ snapshots["test_occurrences_filter_by_language 1"] = {
     "data": {
         "occurrences": {
             "edges": [
-                {"node": {"time": "1985-04-04T17:23:07+00:00"}},
-                {"node": {"time": "1994-08-09T11:57:00+00:00"}},
+                {"node": {"time": "2005-09-07T17:47:05+00:00"}},
+                {"node": {"time": "2016-04-25T18:13:39+00:00"}},
             ]
         }
     }
@@ -927,9 +932,9 @@ snapshots["test_occurrences_filter_by_venue 1"] = {
     "data": {
         "occurrences": {
             "edges": [
-                {"node": {"time": "1972-03-26T04:44:55+00:00"}},
-                {"node": {"time": "1982-06-18T10:23:32+00:00"}},
-                {"node": {"time": "1985-10-25T17:18:53+00:00"}},
+                {"node": {"time": "1998-11-25T00:15:59+00:00"}},
+                {"node": {"time": "2016-01-01T13:37:17+00:00"}},
+                {"node": {"time": "2018-03-30T01:34:27+00:00"}},
             ]
         }
     }
@@ -943,36 +948,37 @@ snapshots["test_occurrences_query_normal_user 1"] = {
                     "node": {
                         "enrolmentCount": 0,
                         "event": {
-                            "capacityPerOccurrence": 43,
-                            "duration": 112,
-                            "image": "http://testserver/media/send.jpg",
-                            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                            "capacityPerOccurrence": 9,
+                            "duration": 1,
+                            "image": "http://testserver/media/law.jpg",
+                            "participantsPerInvite": "FAMILY",
                             "publishedAt": "2020-12-12T00:00:00+00:00",
                             "translations": [
                                 {
-                                    "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                                    "description": "Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.",
                                     "languageCode": "FI",
-                                    "name": "Up always sport return. Light a point charge stand store.",
-                                    "shortDescription": "East site chance of.",
+                                    "name": "Always sport return student light a point.",
+                                    "shortDescription": "Who Mrs public east site chance.",
                                 }
                             ],
                         },
-                        "remainingCapacity": 43,
+                        "remainingCapacity": 9,
                         "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
                                 {
-                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                                    "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                                     "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                                    "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
+                                    "address": """04883 Mary Corner
+Port Mikeview, IN 23956""",
                                     "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+                                    "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
                                     "languageCode": "FI",
-                                    "name": "Free heart significant machine try.",
-                                    "wwwUrl": "http://brooks.org/",
+                                    "name": "Poor lawyer treat free heart significant.",
+                                    "wwwUrl": "http://www.brooks.com/",
                                 }
                             ]
                         },
@@ -991,36 +997,37 @@ snapshots["test_occurrences_query_project_user 1"] = {
                     "node": {
                         "enrolmentCount": 0,
                         "event": {
-                            "capacityPerOccurrence": 43,
-                            "duration": 112,
-                            "image": "http://testserver/media/send.jpg",
-                            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+                            "capacityPerOccurrence": 9,
+                            "duration": 1,
+                            "image": "http://testserver/media/law.jpg",
+                            "participantsPerInvite": "FAMILY",
                             "publishedAt": "2020-12-12T00:00:00+00:00",
                             "translations": [
                                 {
-                                    "description": "Expert interview old affect quite nearly gun. Born land military first he law ago. Yard door indicate country individual course.",
+                                    "description": "Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.",
                                     "languageCode": "FI",
-                                    "name": "Up always sport return. Light a point charge stand store.",
-                                    "shortDescription": "East site chance of.",
+                                    "name": "Always sport return student light a point.",
+                                    "shortDescription": "Who Mrs public east site chance.",
                                 }
                             ],
                         },
-                        "remainingCapacity": 43,
+                        "remainingCapacity": 9,
                         "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T00:00:00+00:00",
                         "venue": {
                             "translations": [
                                 {
-                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                                    "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                                     "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                                    "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
+                                    "address": """04883 Mary Corner
+Port Mikeview, IN 23956""",
                                     "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+                                    "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
                                     "languageCode": "FI",
-                                    "name": "Free heart significant machine try.",
-                                    "wwwUrl": "http://brooks.org/",
+                                    "name": "Poor lawyer treat free heart significant.",
+                                    "wwwUrl": "http://www.brooks.com/",
                                 }
                             ]
                         },
@@ -1030,37 +1037,38 @@ Page box child care any concern. Defense level church use.""",
                     "node": {
                         "enrolmentCount": 0,
                         "event": {
-                            "capacityPerOccurrence": 26,
-                            "duration": 220,
-                            "image": "http://testserver/media/eight.jpg",
-                            "participantsPerInvite": "CHILD_AND_GUARDIAN",
+                            "capacityPerOccurrence": 47,
+                            "duration": 245,
+                            "image": "http://testserver/media/answer.jpg",
+                            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
                             "publishedAt": None,
                             "translations": [
                                 {
-                                    "description": """Along hear follow sometimes. Special far magazine. Know say former conference carry factor front Mr.
-Conference thing much like test.""",
+                                    "description": """Indeed discuss challenge school rule wish. Along hear follow sometimes.
+Far magazine on summer.""",
                                     "languageCode": "FI",
-                                    "name": "Huge realize at rather that place against moment.",
-                                    "shortDescription": "Run hand human value base.",
+                                    "name": "Notice rule huge realize at rather.",
+                                    "shortDescription": "Once strong artist save decide listen.",
                                 }
                             ],
                         },
-                        "remainingCapacity": 26,
+                        "remainingCapacity": 47,
                         "ticketSystem": {"type": "INTERNAL"},
                         "time": "2020-12-12T06:00:00+00:00",
                         "venue": {
                             "translations": [
                                 {
-                                    "accessibilityInfo": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting.",
+                                    "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                                     "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
-                                    "address": """48830 Whitehead Rapid Suite 548
-Whiteview, TN 11309""",
+                                    "address": """04883 Mary Corner
+Port Mikeview, IN 23956""",
                                     "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
-                                    "description": """Perform in weight success answer. Hospital number lose least then. Beyond than trial western.
+                                    "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
                                     "languageCode": "FI",
-                                    "name": "Free heart significant machine try.",
-                                    "wwwUrl": "http://brooks.org/",
+                                    "name": "Poor lawyer treat free heart significant.",
+                                    "wwwUrl": "http://www.brooks.com/",
                                 }
                             ]
                         },
@@ -1151,7 +1159,7 @@ snapshots["test_set_enrolment_attendance[True] 1"] = {
 snapshots["test_unenrol_occurrence 1"] = {
     "data": {
         "unenrolOccurrence": {
-            "child": {"firstName": "Jesse"},
+            "child": {"firstName": "Robert"},
             "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
         }
     }
@@ -1161,7 +1169,7 @@ snapshots["test_update_event_group[model_perm] 1"] = {
     "data": {
         "updateEventGroup": {
             "eventGroup": {
-                "image": "spring.jpg",
+                "image": "teacher.jpg",
                 "translations": [
                     {
                         "description": "desc",
@@ -1187,7 +1195,7 @@ snapshots["test_update_event_group[object_perm] 1"] = {
     "data": {
         "updateEventGroup": {
             "eventGroup": {
-                "image": "spring.jpg",
+                "image": "teacher.jpg",
                 "translations": [
                     {
                         "description": "desc",
@@ -1215,7 +1223,7 @@ snapshots["test_update_event_project_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
-                "image": "http://testserver/media/spring.jpg",
+                "image": "http://testserver/media/teacher.jpg",
                 "imageAltText": "Image alt text",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "FAMILY",
@@ -1246,9 +1254,9 @@ snapshots["test_update_event_ready_for_event_group_publishing 1"] = {
     "data": {
         "updateEvent": {
             "event": {
-                "capacityPerOccurrence": 50,
-                "duration": 197,
-                "image": "http://testserver/media/spring.jpg",
+                "capacityPerOccurrence": 35,
+                "duration": 181,
+                "image": "http://testserver/media/teacher.jpg",
                 "imageAltText": "",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
@@ -1256,12 +1264,12 @@ snapshots["test_update_event_ready_for_event_group_publishing 1"] = {
                 "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
-                        "description": """Serious listen police shake. Page box child care any concern.
+                        "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                         "imageAltText": "",
                         "languageCode": "FI",
-                        "name": "Free heart significant machine try.",
-                        "shortDescription": "Perform in weight success answer.",
+                        "name": "Poor lawyer treat free heart significant.",
+                        "shortDescription": "Together history perform.",
                     }
                 ],
             }
@@ -1274,8 +1282,8 @@ snapshots["test_update_internal_ticket_system_event_capacity_required 1"] = {
         "updateEvent": {
             "event": {
                 "capacityPerOccurrence": 5,
-                "duration": 197,
-                "image": "http://testserver/media/spring.jpg",
+                "duration": 181,
+                "image": "http://testserver/media/teacher.jpg",
                 "imageAltText": "",
                 "occurrences": {"edges": []},
                 "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
@@ -1283,12 +1291,12 @@ snapshots["test_update_internal_ticket_system_event_capacity_required 1"] = {
                 "ticketSystem": {"type": "INTERNAL"},
                 "translations": [
                     {
-                        "description": """Serious listen police shake. Page box child care any concern.
+                        "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
 Agree room laugh prevent make. Our very television beat at success decade.""",
                         "imageAltText": "",
                         "languageCode": "FI",
-                        "name": "Free heart significant machine try.",
-                        "shortDescription": "Perform in weight success answer.",
+                        "name": "Poor lawyer treat free heart significant.",
+                        "shortDescription": "Together history perform.",
                     }
                 ],
             }

@@ -16,8 +16,6 @@ from graphene_django.types import DjangoObjectType
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import offset_to_cursor
-from languages.schema import LanguageNode
-from projects.models import Project
 
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
@@ -28,6 +26,8 @@ from kukkuu.exceptions import (
     MaxNumberOfChildrenPerGuardianError,
     ObjectDoesNotExistError,
 )
+from languages.schema import LanguageNode
+from projects.models import Project
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
 

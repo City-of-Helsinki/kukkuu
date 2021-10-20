@@ -2,7 +2,6 @@ from copy import deepcopy
 
 import pytest
 from guardian.shortcuts import assign_perm
-from projects.factories import ProjectFactory
 
 from children.factories import RelationshipFactory
 from children.tests.test_api import (
@@ -13,6 +12,7 @@ from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR
+from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 from users.models import Guardian
 

@@ -2,8 +2,6 @@ from datetime import timedelta
 
 import pytest
 from django.utils.timezone import now
-from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from subscriptions.models import FreeSpotNotificationSubscription
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code
@@ -14,6 +12,8 @@ from kukkuu.consts import (
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_NOT_FULL_ERROR,
 )
+from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from subscriptions.models import FreeSpotNotificationSubscription
 
 
 @pytest.fixture(autouse=True)
@@ -67,7 +67,8 @@ query OccurrencesHasChildFreeSpotNotificationSubscription($childId: ID!) {
 @pytest.fixture
 def guardian_child(guardian_api_client):
     return ChildWithGuardianFactory(
-        first_name="Subscriber", relationship__guardian__user=guardian_api_client.user,
+        first_name="Subscriber",
+        relationship__guardian__user=guardian_api_client.user,
     )
 
 
@@ -182,7 +183,9 @@ def test_cannot_subscribe_to_free_spot_notification_when_occurrence_not_full(
     guardian_api_client, guardian_child
 ):
     occurrence = OccurrenceFactory(
-        event__published_at=now(), time=now() + timedelta(days=14), capacity_override=1,
+        event__published_at=now(),
+        time=now() + timedelta(days=14),
+        capacity_override=1,
     )
 
     executed = guardian_api_client.execute(

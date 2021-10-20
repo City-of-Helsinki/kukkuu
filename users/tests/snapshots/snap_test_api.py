@@ -12,21 +12,21 @@ snapshots["test_guardians_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "email": "mperez@cox.com",
-                        "firstName": "Sandra",
-                        "lastName": "Meyer",
-                        "phoneNumber": "(727)708-9817",
+                        "email": "michellewalker@example.net",
+                        "firstName": "Dustin",
+                        "lastName": "Smith",
+                        "phoneNumber": "001-117-159-1023x20281",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-11-22",
-                                            "firstName": "Christopher",
-                                            "lastName": "Jones",
+                                            "birthdate": "2020-03-01",
+                                            "firstName": "Jason",
+                                            "lastName": "Owens",
                                             "project": {"year": 2020},
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "PARENT",
                                     }
                                 }
                             ]
@@ -44,21 +44,21 @@ snapshots["test_guardians_query_project_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "email": "ramirezandrew@burns.com",
+                        "email": "debbie77@example.com",
                         "firstName": "Guardian having children in own and another project",
                         "lastName": "Should be visible 1/2",
-                        "phoneNumber": "638.034.6697x2701",
+                        "phoneNumber": "(712)406-7506x4976",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-09-05",
-                                            "firstName": "Craig",
-                                            "lastName": "Oneill",
+                                            "birthdate": "2020-07-20",
+                                            "firstName": "Jennifer",
+                                            "lastName": "Allen",
                                             "project": {"year": 2020},
                                         },
-                                        "type": "PARENT",
+                                        "type": "ADVOCATE",
                                     }
                                 }
                             ]
@@ -67,21 +67,21 @@ snapshots["test_guardians_query_project_user 1"] = {
                 },
                 {
                     "node": {
-                        "email": "mperez@cox.com",
+                        "email": "michellewalker@example.net",
                         "firstName": "Another project own guardian",
                         "lastName": "Should be visible 2/2",
-                        "phoneNumber": "708-981-7101",
+                        "phoneNumber": "+1-102-320-2813x072",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-04-08",
-                                            "firstName": "Elizabeth",
-                                            "lastName": "Jackson",
+                                            "birthdate": "2020-07-09",
+                                            "firstName": "Shawn",
+                                            "lastName": "Douglas",
                                             "project": {"year": 2030},
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "PARENT",
                                     }
                                 }
                             ]
@@ -174,23 +174,23 @@ snapshots["test_my_profile_no_profile 1"] = {"data": {"myProfile": None}}
 snapshots["test_my_profile_query 1"] = {
     "data": {
         "myProfile": {
-            "email": "mperez@cox.com",
-            "firstName": "Robin",
+            "email": "michellewalker@example.net",
+            "firstName": "Timothy",
             "language": "FI",
             "languagesSpokenAtHome": {"edges": []},
-            "lastName": "Moses",
-            "phoneNumber": "910-232-0281",
+            "lastName": "Baldwin",
+            "phoneNumber": "803.466.9727",
             "relationships": {
                 "edges": [
                     {
                         "node": {
                             "child": {
-                                "birthdate": "2020-03-01",
-                                "firstName": "Jason",
-                                "lastName": "Owens",
-                                "postalCode": "70898",
+                                "birthdate": "2020-11-25",
+                                "firstName": "Andrew",
+                                "lastName": "Eaton",
+                                "postalCode": "17159",
                             },
-                            "type": "ADVOCATE",
+                            "type": "PARENT",
                         }
                     }
                 ]

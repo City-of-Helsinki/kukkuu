@@ -8,6 +8,7 @@ from guardian.admin import (
     GuardedModelAdmin,
 )
 from parler.admin import TranslatableAdmin
+
 from projects.models import Project
 
 

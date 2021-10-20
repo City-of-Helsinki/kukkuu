@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from graphene import relay
 from graphene_django import DjangoObjectType
 from graphql_jwt.decorators import login_required
-from subscriptions.models import FreeSpotNotificationSubscription
 
 from children.models import Child
 from children.schema import ChildNode
@@ -18,6 +17,7 @@ from kukkuu.exceptions import (
     ObjectDoesNotExistError,
     OccurrenceIsNotFullError,
 )
+from subscriptions.models import FreeSpotNotificationSubscription
 
 logger = logging.getLogger(__name__)
 

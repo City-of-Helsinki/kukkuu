@@ -14,7 +14,6 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
 from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
-from projects.models import Project
 
 from children.models import Child
 from children.schema import ChildNode
@@ -42,6 +41,7 @@ from kukkuu.exceptions import (
     SingleEventsDisallowedError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
+from projects.models import Project
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)

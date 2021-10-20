@@ -22,5 +22,8 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "projects",
             },
         ),
-        migrations.RemoveField(model_name="project", name="users",),
+        migrations.RemoveField(
+            model_name="project",
+            name="users",
+        ),
     ]

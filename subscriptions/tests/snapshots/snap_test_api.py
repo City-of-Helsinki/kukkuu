@@ -16,7 +16,7 @@ snapshots["test_child_free_spot_notifications_query 1"] = {
                             "child": {"firstName": "Subscriber"},
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "id": "RnJlZVNwb3ROb3RpZmljYXRpb25TdWJzY3JpcHRpb25Ob2RlOjE=",
-                            "occurrence": {"time": "2007-11-18T00:35:06+00:00"},
+                            "occurrence": {"time": "1971-11-04T13:17:08+00:00"},
                         }
                     }
                 ]
@@ -69,7 +69,7 @@ snapshots["test_unsubscribe_from_free_spot_notification 1"] = {
     "data": {
         "unsubscribeFromFreeSpotNotification": {
             "child": {"firstName": "Subscriber"},
-            "occurrence": {"time": "2007-11-18T00:35:06+00:00"},
+            "occurrence": {"time": "1971-11-04T13:17:08+00:00"},
         }
     }
 }

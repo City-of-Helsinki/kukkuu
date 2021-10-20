@@ -4,14 +4,14 @@ import pytest
 from django.core import mail
 from django.utils import timezone
 from django.utils.timezone import now
-from messaging.factories import MessageFactory
-from messaging.models import AlreadySentError, Message
-from projects.factories import ProjectFactory
-from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_mails_match_snapshot
 from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from messaging.factories import MessageFactory
+from messaging.models import AlreadySentError, Message
+from projects.factories import ProjectFactory
+from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 
 
 @pytest.mark.parametrize("guardian_language", ("fi", "en"))
@@ -120,13 +120,15 @@ def test_message_sending_with_filters(snapshot, recipient_selection, event_selec
         relationship__guardian__email="subscribed-occurrence-tomorrow-1@example.com",
     )
     FreeSpotNotificationSubscriptionFactory(
-        child=child_subscribed_tomorrow_1, occurrence=occurrence_tomorrow_1,
+        child=child_subscribed_tomorrow_1,
+        occurrence=occurrence_tomorrow_1,
     )
     child_subscribed_tomorrow_2 = ChildWithGuardianFactory(
         relationship__guardian__email="subscribed-occurrence-tomorrow-2@example.com",
     )
     FreeSpotNotificationSubscriptionFactory(
-        child=child_subscribed_tomorrow_2, occurrence=occurrence_tomorrow_2,
+        child=child_subscribed_tomorrow_2,
+        occurrence=occurrence_tomorrow_2,
     )
 
     another_event = EventFactory(published_at=timezone.now())
@@ -165,10 +167,12 @@ def test_message_sending_with_filters(snapshot, recipient_selection, event_selec
         relationship__guardian__email="enrolled-both-events@example.com",
     )  # this child should have no invitations
     EnrolmentFactory(
-        child=child_both_events, occurrence=another_event_occurrence_tomorrow,
+        child=child_both_events,
+        occurrence=another_event_occurrence_tomorrow,
     )
     EnrolmentFactory(
-        child=child_both_events, occurrence=occurrence_tomorrow_1,
+        child=child_both_events,
+        occurrence=occurrence_tomorrow_1,
     )
 
     ChildWithGuardianFactory(

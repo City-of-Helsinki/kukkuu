@@ -1,6 +1,7 @@
 from django.core.management import BaseCommand
 from django.db import transaction
 from django.utils import translation
+
 from languages.models import Language, LanguageAlreadyExistsError
 
 DEFAULT_LANGUAGES_FILE = "data/default_languages.csv"

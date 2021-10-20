@@ -1,10 +1,10 @@
 import pytest
 from django.utils.timezone import now
-from messaging.factories import MessageFactory
-from messaging.models import Message
 from parler.utils.context import switch_language
 
 from common.tests.conftest import *  # noqa
+from messaging.factories import MessageFactory
+from messaging.models import Message
 
 
 @pytest.fixture(autouse=True)

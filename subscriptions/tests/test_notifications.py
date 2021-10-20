@@ -3,11 +3,11 @@ from datetime import timedelta
 import pytest
 from django.core import mail
 from django.utils.timezone import now
-from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from subscriptions.tests.utils import assert_child_has_subscriptions
 
 from common.tests.utils import assert_mails_match_snapshot
 from events.factories import EnrolmentFactory, OccurrenceFactory
+from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from subscriptions.tests.utils import assert_child_has_subscriptions
 
 
 @pytest.mark.django_db

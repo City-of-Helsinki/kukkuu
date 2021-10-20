@@ -2,9 +2,9 @@ from io import StringIO
 
 import pytest
 from django.core.management import call_command
-from languages.models import Language
 
 from kukkuu.settings import PARLER_SUPPORTED_LANGUAGE_CODES
+from languages.models import Language
 
 
 def call_command_and_assert_output(snapshot, *args, **kwargs):
