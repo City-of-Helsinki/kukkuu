@@ -91,3 +91,7 @@ class TicketSystemUrlMissingError(KukkuuGraphQLError):
 
 class NoFreeTicketSystemPasswordsError(KukkuuGraphQLError):
     """A free ticket system password is needed but there isn't any."""
+
+
+class AuthenticationExpiredError(KukkuuGraphQLError):
+    """Authentication expired."""

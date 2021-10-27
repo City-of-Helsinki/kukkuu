@@ -9,10 +9,13 @@ from graphql.language.ast import (
     InlineFragment,
     OperationDefinition,
 )
+from helusers.oidc import AuthenticationError
 
 from kukkuu.consts import (
     ALREADY_SUBSCRIBED_ERROR,
     API_USAGE_ERROR,
+    AUTHENTICATION_ERROR,
+    AUTHENTICATION_EXPIRED_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
@@ -38,6 +41,7 @@ from kukkuu.consts import (
 from kukkuu.exceptions import (
     AlreadySubscribedError,
     ApiUsageError,
+    AuthenticationExpiredError,
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
@@ -87,6 +91,8 @@ error_codes_kukkuu = {
     SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
     TicketSystemUrlMissingError: TICKET_SYSTEM_URL_MISSING_ERROR,
     NoFreeTicketSystemPasswordsError: NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
+    AuthenticationError: AUTHENTICATION_ERROR,
+    AuthenticationExpiredError: AUTHENTICATION_EXPIRED_ERROR,
 }
 
 sentry_ignored_errors = (

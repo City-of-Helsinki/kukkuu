@@ -90,14 +90,14 @@ def context(f):
     return decorator
 
 
-def user_passes_test(test_func, exc=PermissionDenied):
+def user_passes_test(test_func):
     def decorator(f):
         @wraps(f)
         @context(f)
         def wrapper(context, *args, **kwargs):
             if test_func(context.user):
                 return f(*args, **kwargs)
-            raise exc
+            raise PermissionDenied("You do not have permission to perform this action")
 
         return wrapper
 
