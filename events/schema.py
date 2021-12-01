@@ -12,7 +12,6 @@ from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_file_upload.scalars import Upload
-from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 
 from children.models import Child
@@ -21,6 +20,7 @@ from common.schema import LanguageEnum
 from common.utils import (
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
+    login_required,
     project_user_required,
     update_object,
     update_object_with_translations,

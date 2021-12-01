@@ -9,11 +9,13 @@ from graphql.language.ast import (
     InlineFragment,
     OperationDefinition,
 )
-from graphql_jwt.exceptions import PermissionDenied as JwtPermissionDenied
+from helusers.oidc import AuthenticationError
 
 from kukkuu.consts import (
     ALREADY_SUBSCRIBED_ERROR,
     API_USAGE_ERROR,
+    AUTHENTICATION_ERROR,
+    AUTHENTICATION_EXPIRED_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
@@ -39,6 +41,7 @@ from kukkuu.consts import (
 from kukkuu.exceptions import (
     AlreadySubscribedError,
     ApiUsageError,
+    AuthenticationExpiredError,
     ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
@@ -64,7 +67,6 @@ from kukkuu.exceptions import (
 error_codes_shared = {
     Exception: GENERAL_ERROR,
     ObjectDoesNotExistError: OBJECT_DOES_NOT_EXIST_ERROR,
-    JwtPermissionDenied: PERMISSION_DENIED_ERROR,
     PermissionDenied: PERMISSION_DENIED_ERROR,
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
@@ -89,11 +91,12 @@ error_codes_kukkuu = {
     SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
     TicketSystemUrlMissingError: TICKET_SYSTEM_URL_MISSING_ERROR,
     NoFreeTicketSystemPasswordsError: NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
+    AuthenticationError: AUTHENTICATION_ERROR,
+    AuthenticationExpiredError: AUTHENTICATION_EXPIRED_ERROR,
 }
 
 sentry_ignored_errors = (
     ObjectDoesNotExist,
-    JwtPermissionDenied,
     PermissionDenied,
 )
 
@@ -183,15 +186,16 @@ class SentryGraphQLView(FileUploadGraphQLView):
         result = super().execute_graphql_request(request, data, query, *args, **kwargs)
         # If 'invalid' is set, it's a bad request
         if result and result.errors and not result.invalid:
-            errors = [
+            errors_to_sentry = [
                 e
                 for e in result.errors
                 if not isinstance(
-                    getattr(e, "original_error", None), KukkuuGraphQLError
+                    getattr(e, "original_error", None),
+                    (KukkuuGraphQLError,) + sentry_ignored_errors,
                 )
             ]
-            if errors:
-                self._capture_sentry_exceptions(result.errors, query)
+            if errors_to_sentry:
+                self._capture_sentry_exceptions(errors_to_sentry, query)
         return result
 
     def _capture_sentry_exceptions(self, errors, query):

@@ -13,13 +13,12 @@ from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
-from graphql_jwt.decorators import login_required
 from graphql_relay import from_global_id
 from graphql_relay.connection.arrayconnection import offset_to_cursor
 
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
-from common.utils import update_object
+from common.utils import login_required, update_object
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
