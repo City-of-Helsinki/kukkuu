@@ -1,1 +1,7 @@
 {% extends "admin/guardian/model/change_form.html" %}
+
+{# restore django-parler tabs #}
+{% block field_sets %}
+{% include "admin/parler/language_tabs.html" %}
+{{ block.super }}
+{% endblock %}
