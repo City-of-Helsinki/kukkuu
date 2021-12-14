@@ -145,8 +145,6 @@ class Message(TimestampedModel, TranslatableModel):
         upcoming_events = Event.objects.filter(
             project=self.project, occurrences__time__gte=now
         ).published()
-        if self.event_id:
-            upcoming_events = upcoming_events.filter(pk=self.event_id)
 
         children = Child.objects.filter(project=self.project, guardians__isnull=False)
         enrolments = Enrolment.objects.filter(child__in=children)

@@ -44,7 +44,11 @@ snapshots["test_message_sending_with_filters[event-enrolled] 1"] = [
 
 snapshots["test_message_sending_with_filters[event-invited] 1"] = [
     ["attended-another-event@example.com"],
+    ["attended-occurrence-yesterday-1@example.com"],
+    ["attended-occurrence-yesterday-2@example.com"],
     ["enrolled-another-event@example.com"],
+    ["enrolled-occurrence-tomorrow-1@example.com"],
+    ["enrolled-occurrence-tomorrow-2@example.com"],
     ["subscribed-another-event@example.com"],
     ["subscribed-occurrence-tomorrow-1@example.com"],
     ["subscribed-occurrence-tomorrow-2@example.com"],
@@ -125,7 +129,11 @@ snapshots["test_message_sending_with_filters[occurrence_tomorrow_1-enrolled] 1"]
 
 snapshots["test_message_sending_with_filters[occurrence_tomorrow_1-invited] 1"] = [
     ["attended-another-event@example.com"],
+    ["attended-occurrence-yesterday-1@example.com"],
+    ["attended-occurrence-yesterday-2@example.com"],
     ["enrolled-another-event@example.com"],
+    ["enrolled-occurrence-tomorrow-1@example.com"],
+    ["enrolled-occurrence-tomorrow-2@example.com"],
     ["subscribed-another-event@example.com"],
     ["subscribed-occurrence-tomorrow-1@example.com"],
     ["subscribed-occurrence-tomorrow-2@example.com"],
@@ -156,7 +164,11 @@ snapshots["test_message_sending_with_filters[occurrence_yesterday_1-enrolled] 1"
 
 snapshots["test_message_sending_with_filters[occurrence_yesterday_1-invited] 1"] = [
     ["attended-another-event@example.com"],
+    ["attended-occurrence-yesterday-1@example.com"],
+    ["attended-occurrence-yesterday-2@example.com"],
     ["enrolled-another-event@example.com"],
+    ["enrolled-occurrence-tomorrow-1@example.com"],
+    ["enrolled-occurrence-tomorrow-2@example.com"],
     ["subscribed-another-event@example.com"],
     ["subscribed-occurrence-tomorrow-1@example.com"],
     ["subscribed-occurrence-tomorrow-2@example.com"],
