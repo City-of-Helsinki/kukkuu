@@ -17,3 +17,5 @@ Pillow
 pycountry
 django-guardian
 requests
+djangorestframework
+drf-spectacular

@@ -8,6 +8,8 @@ aniso8601==7.0.0
     # via graphene
 asgiref==3.4.1
     # via django
+attrs==21.2.0
+    # via jsonschema
 azure-core==1.19.0
     # via azure-storage-blob
 azure-storage-blob==12.9.0
@@ -40,6 +42,8 @@ django==3.2.8
     #   django-ilmoitin
     #   django-mailer
     #   django-storages
+    #   djangorestframework
+    #   drf-spectacular
     #   graphene-django
 django-anymail==8.4
     # via django-ilmoitin
@@ -64,6 +68,12 @@ django-parler==2.2
     #   -r requirements.in
     #   django-ilmoitin
 django-storages[azure,google]==1.12.1
+    # via -r requirements.in
+djangorestframework==3.12.4
+    # via
+    #   -r requirements.in
+    #   drf-spectacular
+drf-spectacular==0.21.0
     # via -r requirements.in
 ecdsa==0.17.0
     # via python-jose
@@ -105,10 +115,14 @@ graphql-relay==2.0.1
     # via graphene
 idna==3.2
     # via requests
+inflection==0.5.1
+    # via drf-spectacular
 isodate==0.6.0
     # via msrest
 jinja2==3.0.2
     # via django-ilmoitin
+jsonschema==4.2.1
+    # via drf-spectacular
 lockfile==0.12.2
     # via django-mailer
 markupsafe==2.0.1
@@ -146,12 +160,16 @@ pycparser==2.20
     # via cffi
 pyparsing==2.4.7
     # via packaging
+pyrsistent==0.18.0
+    # via jsonschema
 python-dateutil==2.8.2
     # via faker
 python-jose==3.3.0
     # via django-helusers
 pytz==2021.3
     # via django
+pyyaml==6.0
+    # via drf-spectacular
 requests==2.26.0
     # via
     #   -r requirements.in
@@ -195,6 +213,8 @@ text-unidecode==1.3
     # via
     #   faker
     #   graphene-django
+uritemplate==4.1.1
+    # via drf-spectacular
 urllib3==1.26.7
     # via
     #   requests

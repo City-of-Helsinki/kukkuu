@@ -11,6 +11,7 @@ from guardian.admin import GuardedModelAdmin
 from children.models import Relationship
 from languages.models import Language
 from projects.models import Project
+from reports.models import Permission as ReportPermission
 from users.models import Guardian
 
 
@@ -59,7 +60,10 @@ class PermissionFilterMixin:
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name in ("permissions", "user_permissions"):
             qs = kwargs.get("queryset", db_field.remote_field.model.objects)
-            qs = qs.filter(codename__in=Project.get_permission_codenames())
+            qs = qs.filter(
+                codename__in=Project.get_permission_codenames()
+                + ReportPermission.get_codenames()
+            )
             kwargs["queryset"] = qs
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
