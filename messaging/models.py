@@ -1,7 +1,6 @@
-from functools import reduce
-
 from django.conf import settings
 from django.db import models, transaction
+from django.db.models import Exists, OuterRef, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.utils import Message as MailerMessage
@@ -11,7 +10,7 @@ from parler.utils.context import switch_language
 
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
-from events.models import Enrolment, Event, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence
 from projects.models import Project
 from subscriptions.models import FreeSpotNotificationSubscription
 from users.models import Guardian
@@ -142,10 +141,6 @@ class Message(TimestampedModel, TranslatableModel):
             return guardians.distinct()
 
         now = timezone.now()
-        upcoming_events = Event.objects.filter(
-            project=self.project, occurrences__time__gte=now
-        ).published()
-
         children = Child.objects.filter(project=self.project, guardians__isnull=False)
         enrolments = Enrolment.objects.filter(child__in=children)
         subscriptions = FreeSpotNotificationSubscription.objects.filter(
@@ -162,14 +157,27 @@ class Message(TimestampedModel, TranslatableModel):
             subscriptions = subscriptions.filter(occurrence__in=occurrences)
 
         if self.recipient_selection == Message.INVITED:
-            if not upcoming_events.exists():
-                return Guardian.objects.none()
+            # There is an upcoming event for which the user hasn't enrolled
+            # in. For event groups this additionally means that user shouldn't be
+            # enrolled in any other events belonging to the same event group.
+            upcoming_events = Event.objects.filter(
+                project=self.project, occurrences__time__gte=now
+            ).published()
 
-            children_enrolled_to_every_upcoming_event = reduce(
-                lambda x, y: x.filter(occurrences__event=y), upcoming_events, children
+            upcoming_single_events = upcoming_events.filter(event_group=None)
+            upcoming_event_groups = EventGroup.objects.filter(
+                events__in=upcoming_events
+            ).published()
+
+            enrollable_single_events = upcoming_single_events.exclude(
+                occurrences__enrolments__child=OuterRef("pk")
             )
-            children_with_invitation = children.exclude(
-                pk__in=children_enrolled_to_every_upcoming_event.values("pk")
+            enrollable_event_groups = upcoming_event_groups.exclude(
+                events__occurrences__enrolments__child=OuterRef("pk")
+            )
+
+            children_with_invitation = children.filter(
+                Q(Exists(enrollable_single_events) | Exists(enrollable_event_groups))
             )
 
             return guardians.filter(children__in=children_with_invitation).distinct()

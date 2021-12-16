@@ -33,6 +33,9 @@ class EventGroupQueryset(TranslatableQuerySet):
             Q(project__in=user.administered_projects) | Q(published_at__isnull=False)
         ).distinct()
 
+    def published(self):
+        return self.filter(published_at__isnull=False)
+
 
 class EventGroup(TimestampedModel, TranslatableModel):
     translations = TranslatedFields(

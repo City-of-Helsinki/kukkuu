@@ -7,7 +7,12 @@ from django.utils.timezone import now
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_mails_match_snapshot
-from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
 from messaging.factories import MessageFactory
 from messaging.models import AlreadySentError, Message
 from projects.factories import ProjectFactory
@@ -195,5 +200,71 @@ def test_message_sending_with_filters(snapshot, recipient_selection, event_selec
     message.send()
 
     snapshot.assert_match(sorted(m.to for m in mail.outbox))
+    assert message.recipient_count == len(mail.outbox)
+    assert message.sent_at
+
+
+@pytest.mark.parametrize("upcoming_occurrence", (True, False))
+def test_message_sending_to_invited_group_and_event_groups(upcoming_occurrence):
+    """Sending message to invited group when an event group has to be considered.
+
+    Event group consists of two events, with one occurrence each:
+        * event 1
+            * tomorrow with 1 enrolled child
+            * yesterday with 1 attended child
+        * event 2
+            * yesterday with 1 attended child
+    """
+    yesterday = timezone.now() - timedelta(days=1)
+    tomorrow = timezone.now() + timedelta(days=1)
+
+    event_group = EventGroupFactory(published_at=timezone.now())
+    event_1 = EventFactory(event_group=event_group, published_at=timezone.now())
+    event_2 = EventFactory(event_group=event_group, published_at=timezone.now())
+
+    occurrence_yesterday_1 = OccurrenceFactory(event=event_1, time=yesterday)
+    occurrence_yesterday_2 = OccurrenceFactory(event=event_2, time=yesterday)
+
+    child_attended_yesterday_1 = ChildWithGuardianFactory(
+        relationship__guardian__email="attended-occurrence-yesterday-1@example.com",
+    )
+    child_attended_yesterday_2 = ChildWithGuardianFactory(
+        relationship__guardian__email="attended-occurrence-yesterday-2@example.com",
+    )
+
+    EnrolmentFactory(
+        occurrence=occurrence_yesterday_1,
+        child=child_attended_yesterday_1,
+        attended=True,
+    )
+    EnrolmentFactory(
+        occurrence=occurrence_yesterday_2,
+        child=child_attended_yesterday_2,
+        attended=True,
+    )
+
+    if upcoming_occurrence:
+        occurrence_tomorrow = OccurrenceFactory(event=event_1, time=tomorrow)
+
+        child_enrolled_tomorrow = ChildWithGuardianFactory(
+            relationship__guardian__email="enrolled-occurrence-tomorrow@example.com",
+        )
+        EnrolmentFactory(occurrence=occurrence_tomorrow, child=child_enrolled_tomorrow)
+
+    # Child hasn't attended any events in the event group.
+    ChildWithGuardianFactory(
+        relationship__guardian__email="should-receive-mail@example.com",
+    )
+
+    message = MessageFactory(recipient_selection=Message.INVITED)
+
+    message.send()
+
+    emails = sorted(m.to for m in mail.outbox)
+
+    if upcoming_occurrence:
+        assert emails == [["should-receive-mail@example.com"]]
+    else:
+        assert emails == []
     assert message.recipient_count == len(mail.outbox)
     assert message.sent_at
