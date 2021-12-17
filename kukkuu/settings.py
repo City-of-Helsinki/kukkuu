@@ -150,6 +150,8 @@ INSTALLED_APPS = [
     "django_ilmoitin",
     "django_filters",
     "guardian",
+    "rest_framework",
+    "drf_spectacular",
     # local apps
     "users",
     "children",
@@ -161,6 +163,7 @@ INSTALLED_APPS = [
     "subscriptions",
     "messaging",
     "importers",
+    "reports",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
@@ -241,6 +244,23 @@ KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
 )
 KUKKUU_REMINDER_DAYS_IN_ADVANCE = env("KUKKUU_REMINDER_DAYS_IN_ADVANCE")
 KUKKUU_NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+    ]
+    + (["rest_framework.authentication.SessionAuthentication"] if DEBUG else []),
+    "DEFAULT_PERMISSION_CLASSES": ["reports.drf_permissions.ReportAPIPermission"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"]
+    + (["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else []),
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Kukkuu report API",
+    "VERSION": "1.0.0",
+}
 
 LOGGING = {
     "version": 1,

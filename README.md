@@ -92,9 +92,17 @@ It is also possible to get emails sent right away without any cronjobs by settin
 * Run `python manage.py runserver localhost:8081`
 * The project is now running at [localhost:8081](http://localhost:8081) 
 
-## API Documentation
+## GraphQL API Documentation
 
-To view the API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section
+To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section
+
+## Report API
+
+For fetching data for reporting purposes there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/).
+
+The API requires authentication via HTTP basic authentication, or alternatively session authentication when DEBUG is `True`. The accessing user must also have Django permission `reports.access_report_api`.
+
+API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
 
 ## Keeping Python requirements up to date
 
