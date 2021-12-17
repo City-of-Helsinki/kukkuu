@@ -31,7 +31,7 @@ cryptography==35.0.0
     # via azure-storage-blob
 deprecation==2.1.0
     # via django-helusers
-django==3.2.8
+django==3.2.10
     # via
     #   -r requirements.in
     #   django-anymail
