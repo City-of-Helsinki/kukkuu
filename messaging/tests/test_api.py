@@ -9,7 +9,11 @@ from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
 from events.factories import EventFactory, OccurrenceFactory
-from kukkuu.consts import MESSAGE_ALREADY_SENT_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
+from kukkuu.consts import (
+    DATA_VALIDATION_ERROR,
+    MESSAGE_ALREADY_SENT_ERROR,
+    OBJECT_DOES_NOT_EXIST_ERROR,
+)
 from messaging.factories import MessageFactory
 from messaging.models import Message
 
@@ -152,7 +156,7 @@ mutation AddMessage($input: AddMessageMutationInput!) {
 """
 
 
-def get_add_message_variables(project, event=None, occurrences=None):
+def get_add_message_variables(project, event=None, occurrences=None, recipient="ALL"):
     variables = {
         "input": {
             "translations": [
@@ -162,7 +166,7 @@ def get_add_message_variables(project, event=None, occurrences=None):
                     "languageCode": "FI",
                 }
             ],
-            "recipientSelection": "ALL",
+            "recipientSelection": recipient,
             "projectId": get_global_id(project),
         }
     }
@@ -194,6 +198,28 @@ def test_add_message(snapshot, project_user_api_client, project, event_selection
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("event_selection", ("event", "event_and_occurrences"))
+@pytest.mark.django_db
+def test_cannot_add_message_with_event_for_invited_group_message(
+    project_user_api_client, event_selection, project
+):
+    event = EventFactory(published_at=now())
+    occurrences = []
+
+    if event_selection == "event_and_occurrences":
+        occurrences = [OccurrenceFactory(event=event)]
+
+    variables = get_add_message_variables(
+        project, event=event, occurrences=occurrences, recipient="INVITED"
+    )
+
+    executed = project_user_api_client.execute(
+        ADD_MESSAGE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
 
 
 @pytest.mark.django_db
@@ -236,7 +262,9 @@ mutation UpdateMessage($input: UpdateMessageMutationInput!) {
 """
 
 
-def get_update_message_variables(message, event=None, occurrences=None):
+def get_update_message_variables(
+    message, event=None, occurrences=None, recipient="ATTENDED"
+):
     variables = {
         "input": {
             "translations": [
@@ -246,7 +274,7 @@ def get_update_message_variables(message, event=None, occurrences=None):
                     "languageCode": "FI",
                 }
             ],
-            "recipientSelection": "ATTENDED",
+            "recipientSelection": recipient,
             "id": get_global_id(message),
         }
     }
@@ -298,6 +326,28 @@ def test_update_message(snapshot, project_user_api_client, event_selection):
         else old_event
     )
     assert [o.pk for o in message.occurrences.all()] == [o.pk for o in new_occurrences]
+
+
+@pytest.mark.parametrize("event_selection", ("event", "event_and_occurrences"))
+@pytest.mark.django_db
+def test_cannot_update_event_for_invited_group_message(
+    project_user_api_client, message, event_selection
+):
+    event = EventFactory(published_at=now())
+    occurrences = []
+
+    if event_selection == "event_and_occurrences":
+        occurrences = [OccurrenceFactory(event=event)]
+
+    variables = get_update_message_variables(
+        message, event=event, occurrences=occurrences, recipient="INVITED"
+    )
+
+    executed = project_user_api_client.execute(
+        UPDATE_MESSAGE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
 
 
 @pytest.mark.django_db

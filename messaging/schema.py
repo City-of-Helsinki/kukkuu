@@ -122,6 +122,9 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
             for occurrence_id in data.pop("occurrence_ids", [])
         ]
 
+        validate_recipient_selection_and_data(
+            data["recipient_selection"], data["event"], occurrences
+        )
         validate_event_and_occurrences(data["event"], occurrences)
 
         message = Message.objects.create_translatable_object(**data)
@@ -178,6 +181,12 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
         else:
             occurrences = None
 
+        if recipient_selection := data.get("recipient_selection"):
+            validate_recipient_selection_and_data(
+                recipient_selection,
+                data["event"] if "event" in data else message.event,
+                occurrences,
+            )
         validate_event_and_occurrences(
             data["event"] if "event" in data else message.event,
             occurrences if occurrences is not None else message.occurrences.all(),
@@ -193,6 +202,14 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
         )
 
         return UpdateMessageMutation(message=message)
+
+
+def validate_recipient_selection_and_data(recipient_selection, event, occurrences):
+    if recipient_selection == RecipientSelectionEnum.INVITED and (event or occurrences):
+        raise DataValidationError(
+            "Selecting an event or occurrences are not supported when "
+            "recipient_selection is INVITED."
+        )
 
 
 def validate_event_and_occurrences(event, occurrences):
