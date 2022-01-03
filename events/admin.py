@@ -126,7 +126,19 @@ class EnrolmentsInlineFormSet(BaseInlineFormSet):
 class EnrolmentsInline(admin.TabularInline):
     model = Enrolment
     extra = 0
-    readonly_fields = ("created_at", "updated_at")
+    fields = (
+        "child",
+        "attended",
+        "created_at",
+        "updated_at",
+        "reminder_sent_at",
+        "feedback_notification_sent_at",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
     formset = EnrolmentsInlineFormSet
     raw_id_fields = ("child",)
 

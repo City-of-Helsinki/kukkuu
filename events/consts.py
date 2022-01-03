@@ -5,3 +5,4 @@ class NotificationType:
     OCCURRENCE_UNENROLMENT = "occurrence_unenrolment"
     OCCURRENCE_CANCELLED = "occurrence_cancelled"
     OCCURRENCE_REMINDER = "occurrence_reminder"
+    OCCURRENCE_FEEDBACK = "occurrence_feedback"

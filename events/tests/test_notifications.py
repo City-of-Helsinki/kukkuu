@@ -31,6 +31,11 @@ from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 
 
+@pytest.fixture(autouse=True)
+def setup(settings):
+    settings.KUKKUU_FEEDBACK_NOTIFICATION_DELAY = 15
+
+
 @pytest.fixture
 def notification_template_event_published_fi():
     return create_notification_template_in_language(
@@ -115,6 +120,22 @@ def notification_template_occurrence_reminder_fi():
         NotificationType.OCCURRENCE_REMINDER,
         "fi",
         subject="Occurrence reminder FI",
+        body_text="""
+        Event FI: {{ occurrence.event.name }}
+        Guardian FI: {{ guardian }}
+        Occurrence: {{ occurrence.time }}
+        Child: {{ child }}
+        Enrolment: {{ enrolment.occurrence.time }}
+""",
+    )
+
+
+@pytest.fixture
+def notification_template_feedback_fi():
+    return create_notification_template_in_language(
+        NotificationType.OCCURRENCE_FEEDBACK,
+        "fi",
+        subject="Feedback FI",
         body_text="""
         Event FI: {{ occurrence.event.name }}
         Guardian FI: {{ guardian }}
@@ -323,3 +344,82 @@ def test_occurrence_reminder_notification(
     enrolments = Enrolment.objects.order_by("id")
     assert all(e.reminder_sent_at == now() for e in enrolments[0:2])
     assert all(e.reminder_sent_at is None for e in enrolments[2:6])
+
+
+@pytest.mark.django_db
+def test_feedback_notification(
+    snapshot,
+    notification_template_feedback_fi,
+):
+    seven_days_in_minutes = 60 * 24 * 7
+
+    suitable_start_time_deltas_and_durations = [
+        (60, 15),  # occurrence started 60min ago, duration 15min
+        (30, 15),  # ended 15min ago, should be the last suitable (delay is 15min)
+        (135, None),  # should be the last suitable for the default duration 120min
+        (seven_days_in_minutes, 15),  # the last minute that is not too old
+    ]
+    suitable_enrolments = [
+        EnrolmentFactory(
+            child=ChildWithGuardianFactory(
+                relationship__guardian__first_name=f"{d[0], d[1]}",
+                relationship__guardian__last_name="I Should Receive A Notification",
+            ),
+            occurrence__time=now() - timedelta(minutes=d[0]),
+            occurrence__event__duration=d[1],
+        )
+        for d in suitable_start_time_deltas_and_durations
+    ]
+
+    not_suitable_start_time_deltas_and_durations = [
+        (-60, 15),  # occurrence starts in 60min
+        (-5, 15),
+        (29, 15),  # should be the first not suitable (delay is 15min)
+        (134, None),  # should be the first not suitable for the default duration 120min
+        (seven_days_in_minutes + 1, 15),  # the first minute that is too old
+    ]
+    not_suitable_enrolments = [
+        EnrolmentFactory(
+            child=ChildWithGuardianFactory(
+                relationship__guardian__first_name=f"{d[0], d[1]}",
+                relationship__guardian__last_name="I Should NOT Receive A Notification",
+            ),
+            occurrence__time=now() - timedelta(minutes=d[0]),
+            occurrence__event__duration=d[1],
+        )
+        for d in not_suitable_start_time_deltas_and_durations
+    ]
+
+    call_command("send_feedback_notifications")
+
+    assert_mails_match_snapshot(snapshot)
+
+    for enrolment in suitable_enrolments:
+        enrolment.refresh_from_db()
+        assert enrolment.feedback_notification_sent_at == now()
+
+    for enrolment in not_suitable_enrolments:
+        enrolment.refresh_from_db()
+        assert enrolment.feedback_notification_sent_at is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("force", (False, True))
+def test_feedback_notification_instance_checks(
+    snapshot,
+    notification_template_feedback_fi,
+    force,
+):
+    too_old_enrolment = EnrolmentFactory(
+        occurrence__time=now() - timedelta(days=8), child=ChildWithGuardianFactory()
+    )
+    already_sent_enrolment = EnrolmentFactory(
+        occurrence__time=now() - timedelta(days=1),
+        feedback_notification_sent_at=now(),
+        child=ChildWithGuardianFactory(),
+    )
+
+    too_old_enrolment.send_feedback_notification(force)
+    already_sent_enrolment.send_feedback_notification(force)
+
+    assert_mails_match_snapshot(snapshot)

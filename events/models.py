@@ -4,9 +4,9 @@ from datetime import timedelta
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import F, Q, UniqueConstraint
+from django.db.models import ExpressionWrapper, F, Q, UniqueConstraint
+from django.db.models.functions import Coalesce
 from django.utils import timezone
-from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
@@ -296,10 +296,10 @@ class OccurrenceQueryset(models.QuerySet):
             obj.send_free_spot_notifications_if_needed()
 
     def upcoming(self):
-        return self.filter(time__gt=now())
+        return self.filter(time__gt=timezone.now())
 
     def in_past(self):
-        return self.exclude(time__gt=now())
+        return self.exclude(time__gt=timezone.now())
 
 
 class Occurrence(TimestampedModel):
@@ -371,7 +371,7 @@ class Occurrence(TimestampedModel):
             self.send_free_spot_notifications_if_needed()
 
     def delete(self, *args, **kwargs):
-        if self.time >= now():
+        if self.time > timezone.now():
             # this QS needs to be evaluated here, it would not work after the
             # occurrence has been deleted
             children = list(self.children.all())
@@ -433,7 +433,7 @@ class EnrolmentQueryset(models.QuerySet):
             enrolment.delete()
 
     def upcoming(self):
-        return self.filter(occurrence__time__gt=now())
+        return self.filter(occurrence__time__gt=timezone.now())
 
     def send_reminder_notifications(self):
         today = timezone.localtime().date()
@@ -454,6 +454,35 @@ class EnrolmentQueryset(models.QuerySet):
 
         return count
 
+    def send_feedback_notifications(self):
+        now = timezone.now()
+        delay = timedelta(minutes=settings.KUKKUU_FEEDBACK_NOTIFICATION_DELAY)
+
+        enrolments = (
+            self.annotate(
+                end_time=ExpressionWrapper(
+                    F("occurrence__time")
+                    # use 120min as the default value for duration
+                    + Coalesce(F("occurrence__event__duration"), 120)
+                    * timedelta(minutes=1),
+                    output_field=models.DateTimeField(),
+                ),
+            )
+            .filter(
+                feedback_notification_sent_at=None,
+                child__guardians__isnull=False,
+                end_time__lte=now - delay,
+                # we never want to send feedback notifications related to occurrences
+                # that took place over a week ago
+                occurrence__time__range=(now - timedelta(days=7), now),
+            )
+            .select_related("occurrence")
+        )
+        for enrolment in enrolments:
+            enrolment.send_feedback_notification()
+
+        return len(enrolments)
+
 
 class Enrolment(TimestampedModel):
     child = models.ForeignKey(
@@ -473,6 +502,9 @@ class Enrolment(TimestampedModel):
     attended = models.BooleanField(verbose_name=_("attended"), null=True, blank=True)
     reminder_sent_at = models.DateTimeField(
         verbose_name=_("reminder sent at"), null=True, blank=True
+    )
+    feedback_notification_sent_at = models.DateTimeField(
+        verbose_name=_("feedback notification sent at"), null=True, blank=True
     )
 
     objects = EnrolmentQueryset.as_manager()
@@ -538,6 +570,34 @@ class Enrolment(TimestampedModel):
         send_event_notifications_to_guardians(
             self.occurrence.event,
             NotificationType.OCCURRENCE_REMINDER,
+            self.child,
+            occurrence=self.occurrence,
+            enrolment=self,
+        )
+
+    @transaction.atomic()
+    def send_feedback_notification(self, force=False):
+        if self.feedback_notification_sent_at and not force:
+            logger.warning(
+                f"Tried to send already sent feedback notification for enrolment {self}"
+            )
+            return
+
+        # an additional instance level sanity check to prevent sending feedback
+        # notifications related to too old enrolments
+        if self.occurrence.time < (timezone.now() - timedelta(days=7)) and not force:
+            logger.warning(
+                f"Tried to send feedback notification of too old occurrence, "
+                f"enrolment: {self}"
+            )
+            return
+
+        self.feedback_notification_sent_at = timezone.now()
+        self.save()
+
+        send_event_notifications_to_guardians(
+            self.occurrence.event,
+            NotificationType.OCCURRENCE_FEEDBACK,
             self.child,
             occurrence=self.occurrence,
             enrolment=self,
@@ -618,7 +678,7 @@ class TicketSystemPassword(models.Model):
         if self.child:
             raise PasswordAlreadyAssignedError("The password is already assigned.")
 
-        self.assigned_at = now()
+        self.assigned_at = timezone.now()
         self.child = child
         self.save()
 
