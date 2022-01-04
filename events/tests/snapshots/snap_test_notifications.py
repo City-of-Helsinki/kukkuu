@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
-
 snapshots = Snapshot()
 
 snapshots["test_event_group_publish_notification 1"] = [
@@ -44,21 +43,28 @@ snapshots["test_feedback_notification 1"] = [
         Enrolment: 2020-12-05 00:00:00+00:00""",
 ]
 
-snapshots["test_feedback_notification_instance_checks[False] 1"] = []
+snapshots["test_feedback_notification_instance_checks[False] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Feedback FI|
+        Event FI: Respond draw military dog hospital number.
+        Guardian FI: Samantha Bryant (tonya77@example.com)
+        Occurrence: 2020-12-11 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-11 00:00:00+00:00"""
+]
 
 snapshots["test_feedback_notification_instance_checks[True] 1"] = [
     """kukkuu@example.com|['tonya77@example.com']|Feedback FI|
         Event FI: Respond draw military dog hospital number.
         Guardian FI: Samantha Bryant (tonya77@example.com)
-        Occurrence: 2020-12-04 00:00:00+00:00
+        Occurrence: 2020-12-11 00:00:00+00:00
         Child: Alexis Black (2020-07-29)
-        Enrolment: 2020-12-04 00:00:00+00:00""",
+        Enrolment: 2020-12-11 00:00:00+00:00""",
     """kukkuu@example.com|['johnsonnathaniel@example.com']|Feedback FI|
         Event FI: Front Mr amount conference thing much like test.
         Guardian FI: Jennifer Nielsen (johnsonnathaniel@example.com)
-        Occurrence: 2020-12-11 00:00:00+00:00
+        Occurrence: 2020-12-17 00:00:00+00:00
         Child: Calvin Gutierrez (2020-01-18)
-        Enrolment: 2020-12-11 00:00:00+00:00""",
+        Enrolment: 2020-12-17 00:00:00+00:00""",
 ]
 
 snapshots["test_occurrence_cancelled_notification[False] 1"] = [
@@ -99,6 +105,23 @@ snapshots["test_occurrence_reminder_notification 1"] = [
         Occurrence: 2020-12-13 00:00:00+00:00
         Child: Calvin Gutierrez (2020-01-18)
         Enrolment: 2020-12-13 00:00:00+00:00""",
+]
+
+snapshots["test_reminder_notification_instance_checks[False] 1"] = []
+
+snapshots["test_reminder_notification_instance_checks[True] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Occurrence reminder FI|
+        Event FI: Respond draw military dog hospital number.
+        Guardian FI: Samantha Bryant (tonya77@example.com)
+        Occurrence: 2020-12-04 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-04 00:00:00+00:00""",
+    """kukkuu@example.com|['johnsonnathaniel@example.com']|Occurrence reminder FI|
+        Event FI: Front Mr amount conference thing much like test.
+        Guardian FI: Jennifer Nielsen (johnsonnathaniel@example.com)
+        Occurrence: 2020-12-11 00:00:00+00:00
+        Child: Calvin Gutierrez (2020-01-18)
+        Enrolment: 2020-12-11 00:00:00+00:00""",
 ]
 
 snapshots["test_unenrol_occurrence_notification 1"] = [

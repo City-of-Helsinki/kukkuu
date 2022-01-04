@@ -131,7 +131,7 @@ def notification_template_occurrence_reminder_fi():
 
 
 @pytest.fixture
-def notification_template_feedback_fi():
+def notification_template_occurrence_feedback_fi():
     return create_notification_template_in_language(
         NotificationType.OCCURRENCE_FEEDBACK,
         "fi",
@@ -347,9 +347,31 @@ def test_occurrence_reminder_notification(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("force", (False, True))
+def test_feedback_notification_instance_checks(
+    snapshot,
+    notification_template_occurrence_feedback_fi,
+    force,
+):
+    enrolment_already_in_past = EnrolmentFactory(
+        occurrence__time=now() - timedelta(days=1), child=ChildWithGuardianFactory()
+    )
+    already_sent_enrolment = EnrolmentFactory(
+        occurrence__time=now() + timedelta(days=5),
+        feedback_notification_sent_at=now(),
+        child=ChildWithGuardianFactory(),
+    )
+
+    enrolment_already_in_past.send_feedback_notification(force)
+    already_sent_enrolment.send_feedback_notification(force)
+
+    assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
 def test_feedback_notification(
     snapshot,
-    notification_template_feedback_fi,
+    notification_template_occurrence_feedback_fi,
 ):
     seven_days_in_minutes = 60 * 24 * 7
 
@@ -405,9 +427,9 @@ def test_feedback_notification(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("force", (False, True))
-def test_feedback_notification_instance_checks(
+def test_reminder_notification_instance_checks(
     snapshot,
-    notification_template_feedback_fi,
+    notification_template_occurrence_reminder_fi,
     force,
 ):
     too_old_enrolment = EnrolmentFactory(
@@ -419,7 +441,7 @@ def test_feedback_notification_instance_checks(
         child=ChildWithGuardianFactory(),
     )
 
-    too_old_enrolment.send_feedback_notification(force)
-    already_sent_enrolment.send_feedback_notification(force)
+    too_old_enrolment.send_reminder_notification(force)
+    already_sent_enrolment.send_reminder_notification(force)
 
     assert_mails_match_snapshot(snapshot)

@@ -440,19 +440,18 @@ class EnrolmentQueryset(models.QuerySet):
         close_enough = today + timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE)
         tomorrow = today + timedelta(days=1)
 
-        count = 0
-        for enrolment in self.filter(
+        enrolments = self.filter(
             reminder_sent_at=None,
             created_at__date__lt=F("occurrence__time__date")
             - timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE),
             occurrence__time__date__lte=close_enough,
             occurrence__time__date__gte=tomorrow,
             child__guardians__isnull=False,
-        ):
+        ).select_related("occurrence")
+        for enrolment in enrolments:
             enrolment.send_reminder_notification()
-            count += 1
 
-        return count
+        return len(enrolments)
 
     def send_feedback_notifications(self):
         now = timezone.now()
@@ -563,7 +562,23 @@ class Enrolment(TimestampedModel):
     def can_user_administer(self, user):
         return self.occurrence.can_user_administer(user)
 
-    def send_reminder_notification(self):
+    @transaction.atomic()
+    def send_reminder_notification(self, force=False):
+        if self.reminder_sent_at and not force:
+            logger.warning(
+                f"Tried to send already sent reminder notification for enrolment {self}"
+            )
+            return
+
+        # an additional instance level sanity check to prevent sending reminder
+        # notifications related to occurrences already in the past
+        if self.occurrence.time < timezone.now() and not force:
+            logger.warning(
+                f"Tried to send reminder notification related to an occurrence already "
+                f"in the past, enrolment: {self}"
+            )
+            return
+
         self.reminder_sent_at = timezone.now()
         self.save()
 
