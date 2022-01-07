@@ -114,3 +114,16 @@ jobs:
           secret_name: "project-staging-kukkuu-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_reminder_notifications}"
+
+      - name: Deploy send feedback notifications cronjob
+        uses: City-of-Helsinki/setup-cronjob-action@main
+        with:
+          name: send-feedback-notifications-cronjob
+          image_repository: ghcr.io/city-of-helsinki/${{ github.event.repository.name }}
+          image_tag:  ${{ github.sha }}
+          kubeconfig_raw: ${{ env.KUBECONFIG_RAW}}
+          target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
+          schedule: "1,16,31,46 * * * *"
+          secret_name: "project-staging-kukkuu-secret"
+          command: "{/bin/sh}"
+          args: "{-c,cd /app && python manage.py send_feedback_notifications}"

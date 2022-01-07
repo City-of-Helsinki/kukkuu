@@ -70,6 +70,19 @@ Example crontab for sending reminder notifications every day at 12am:
     0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
     # An empty line is required at the end of this file for a valid cron file.
 
+
+#### Feedback notifications
+
+To send notifications asking for feedback of recently ended events occurrences, `send_feedback_notifications` management command needs to be executed periodically.
+
+An additional delay between an occurrence's end time and the notification's send time can be configured with setting `KUKKUU_FEEDBACK_NOTIFICATION_DELAY`. The default value is `15`(min).
+
+Example crontab for sending feedback notifications:
+
+    1,16,31,46 * * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
+    # An empty line is required at the end of this file for a valid cron file.
+
+
 #### Queued email sending
 
 By default email sending is queued, which means that you need to set `send_mail` and `retry_deferred` to be executed periodically to get emails actually sent.

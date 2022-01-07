@@ -16,6 +16,57 @@ snapshots["test_event_group_publish_notification 1"] = [
 """
 ]
 
+snapshots["test_feedback_notification 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Feedback FI|
+        Event FI: Answer entire increase thank certainly again thought.
+        Guardian FI: (60, 15) I Should Receive A Notification (tonya77@example.com)
+        Occurrence: 2020-12-11 23:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-11 23:00:00+00:00""",
+    """kukkuu@example.com|['johnsonnathaniel@example.com']|Feedback FI|
+        Event FI: Mr amount conference thing much like test.
+        Guardian FI: (30, 15) I Should Receive A Notification (johnsonnathaniel@example.com)
+        Occurrence: 2020-12-11 23:30:00+00:00
+        Child: Calvin Gutierrez (2020-01-18)
+        Enrolment: 2020-12-11 23:30:00+00:00""",
+    """kukkuu@example.com|['aaronlee@example.org']|Feedback FI|
+        Event FI: History ahead well herself consider fight.
+        Guardian FI: (135, None) I Should Receive A Notification (aaronlee@example.org)
+        Occurrence: 2020-12-11 21:45:00+00:00
+        Child: Melissa Morrison (2020-04-12)
+        Enrolment: 2020-12-11 21:45:00+00:00""",
+    """kukkuu@example.com|['christine87@example.com']|Feedback FI|
+        Event FI: Sort clearly happy peace really brother.
+        Guardian FI: (10080, 15) I Should Receive A Notification (christine87@example.com)
+        Occurrence: 2020-12-05 00:00:00+00:00
+        Child: Kathleen Allen (2020-01-06)
+        Enrolment: 2020-12-05 00:00:00+00:00""",
+]
+
+snapshots["test_feedback_notification_instance_checks[False] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Feedback FI|
+        Event FI: Respond draw military dog hospital number.
+        Guardian FI: Samantha Bryant (tonya77@example.com)
+        Occurrence: 2020-12-11 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-11 00:00:00+00:00"""
+]
+
+snapshots["test_feedback_notification_instance_checks[True] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Feedback FI|
+        Event FI: Respond draw military dog hospital number.
+        Guardian FI: Samantha Bryant (tonya77@example.com)
+        Occurrence: 2020-12-11 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-11 00:00:00+00:00""",
+    """kukkuu@example.com|['johnsonnathaniel@example.com']|Feedback FI|
+        Event FI: Front Mr amount conference thing much like test.
+        Guardian FI: Jennifer Nielsen (johnsonnathaniel@example.com)
+        Occurrence: 2020-12-17 00:00:00+00:00
+        Child: Calvin Gutierrez (2020-01-18)
+        Enrolment: 2020-12-17 00:00:00+00:00""",
+]
+
 snapshots["test_occurrence_cancelled_notification[False] 1"] = [
     """kukkuu@example.com|['michellewalker@example.net']|Occurrence cancelled FI|
         Event FI: Our very television beat at success decade.
@@ -54,6 +105,23 @@ snapshots["test_occurrence_reminder_notification 1"] = [
         Occurrence: 2020-12-13 00:00:00+00:00
         Child: Calvin Gutierrez (2020-01-18)
         Enrolment: 2020-12-13 00:00:00+00:00""",
+]
+
+snapshots["test_reminder_notification_instance_checks[False] 1"] = []
+
+snapshots["test_reminder_notification_instance_checks[True] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Occurrence reminder FI|
+        Event FI: Respond draw military dog hospital number.
+        Guardian FI: Samantha Bryant (tonya77@example.com)
+        Occurrence: 2020-12-04 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-04 00:00:00+00:00""",
+    """kukkuu@example.com|['johnsonnathaniel@example.com']|Occurrence reminder FI|
+        Event FI: Front Mr amount conference thing much like test.
+        Guardian FI: Jennifer Nielsen (johnsonnathaniel@example.com)
+        Occurrence: 2020-12-11 00:00:00+00:00
+        Child: Calvin Gutierrez (2020-01-18)
+        Enrolment: 2020-12-11 00:00:00+00:00""",
 ]
 
 snapshots["test_unenrol_occurrence_notification 1"] = [
