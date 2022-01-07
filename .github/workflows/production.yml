@@ -125,7 +125,7 @@ jobs:
           image_tag:  ${{ github.sha }}
           kubeconfig_raw: ${{ env.KUBECONFIG_RAW }}
           target_namespace: ${{ secrets.K8S_NAMESPACE_STABLE }}
-          schedule: "1,16,31,46 * * * *"
+          schedule: "1-59/15 * * * *" # xx:01, xx:16, xx:31, xx:46
           secret_name: "project-kukkuu-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_feedback_notifications}"
