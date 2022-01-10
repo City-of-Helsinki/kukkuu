@@ -1,6 +1,21 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.13.0] - 10 Jan 2022
+
+### Added
+- Add initial reporting API
+- Add feedback notification
+
+## Changed
+- Ignore authentication expired error from Sentry
+- Change reminder notification "days in advance" to 1
+
+## Fixed
+- Validate that event and occurrences are not given when message is for INVITED
+- Fix manual messages directed to INVITED to work with event groups
+- Ignore extra cruft coming from graphql-python from Sentry
+
 ## [1.12.0] - 14 Dec 2021
 
 ### Changed
@@ -217,7 +232,8 @@ the version in kukkuu/__init.py__ -->
 
 
 
-[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.12.0...HEAD
+[Unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.13.0...HEAD
+[1.13.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.12.0...release-1.13.0
 [1.12.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.1...release-1.12.0
 [1.11.1]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.11.0...release-1.11.1
 [1.11.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.10.5...release-1.11.0
