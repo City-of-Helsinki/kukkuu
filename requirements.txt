@@ -133,7 +133,7 @@ oauthlib==3.1.1
     # via requests-oauthlib
 packaging==21.0
     # via deprecation
-pillow==8.3.2
+pillow==9.0.0
     # via -r requirements.in
 promise==2.3
     # via
