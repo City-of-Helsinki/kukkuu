@@ -26,6 +26,7 @@ notifications.register(NotificationType.EVENT_PUBLISHED, _("event published"))
 notifications.register(
     NotificationType.EVENT_GROUP_PUBLISHED, _("event group published")
 )
+notifications.register(NotificationType.OCCURRENCE_FEEDBACK, _("occurrence feedback"))
 notifications.register(NotificationType.OCCURRENCE_ENROLMENT, _("occurrence enrolment"))
 notifications.register(
     NotificationType.OCCURRENCE_UNENROLMENT, _("occurrence unenrolment")
@@ -64,6 +65,7 @@ common_occurrence_context = {
 dummy_context.update(
     {
         NotificationType.EVENT_PUBLISHED: {**common_event_context},
+        NotificationType.OCCURRENCE_FEEDBACK: {**common_occurrence_context},
         NotificationType.OCCURRENCE_ENROLMENT: {**common_occurrence_context},
         NotificationType.OCCURRENCE_UNENROLMENT: {**common_occurrence_context},
         NotificationType.OCCURRENCE_CANCELLED: {**common_occurrence_context},
