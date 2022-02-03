@@ -99,6 +99,7 @@ sentry_ignored_errors = (
     ObjectDoesNotExist,
     PermissionDenied,
     AuthenticationExpiredError,
+    AuthenticationError,
 )
 
 error_codes = {**error_codes_shared, **error_codes_kukkuu}
