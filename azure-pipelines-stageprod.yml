@@ -3,7 +3,7 @@
 trigger:
   tags:
     include:
-    - release-*tags/*
+    - release-*
   paths:
     exclude:
     - README.md
