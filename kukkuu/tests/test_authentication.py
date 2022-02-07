@@ -65,7 +65,7 @@ def test_authentication_error(live_server):
         ):
             response = graphql_request(live_server)
             assert_match_error_code(response.json(), AUTHENTICATION_ERROR)
-            sentry.assert_not_called()
+            sentry.assert_called()
 
 
 def test_authentication_expired_error(live_server):
