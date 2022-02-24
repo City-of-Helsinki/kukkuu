@@ -19,3 +19,4 @@ django-guardian
 requests
 djangorestframework
 drf-spectacular
+hashids
