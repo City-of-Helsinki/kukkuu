@@ -7,10 +7,10 @@ COPY --chown=appuser:appuser requirements.txt /app/requirements.txt
 COPY --chown=appuser:appuser requirements-prod.txt /app/requirements-prod.txt
 
 RUN apt-install.sh \
-        git \
-        netcat \
-        libpq-dev \
-        build-essential \
+    git \
+    netcat \
+    libpq-dev \
+    build-essential \
     && pip install -U pip \
     && pip install --no-cache-dir -r /app/requirements.txt \
     && pip install --no-cache-dir  -r /app/requirements-prod.txt \
@@ -25,7 +25,7 @@ FROM appbase as development
 
 COPY --chown=appuser:appuser requirements-dev.txt /app/requirements-dev.txt
 RUN apt-install.sh \
-        build-essential \
+    build-essential \
     && pip install --no-cache-dir -r /app/requirements-dev.txt \
     && apt-cleanup.sh build-essential
 
@@ -42,7 +42,7 @@ FROM appbase as production
 
 COPY --chown=appuser:appuser . /app/
 
-RUN SECRET_KEY="only-used-for-collectstatic" python manage.py collectstatic
+RUN SECRET_KEY="only-used-for-collectstatic" KUKKUU_HASHID_SALT="only-used-for-collectstatic" python manage.py collectstatic
 
 USER appuser
 EXPOSE 8000/tcp

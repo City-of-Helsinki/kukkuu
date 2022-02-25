@@ -29,6 +29,7 @@ def setup_test_environment(settings):
     settings.DEFAULT_FROM_EMAIL = "kukkuu@example.com"
     settings.ILMOITIN_TRANSLATED_FROM_EMAIL = {}
     settings.MEDIA_ROOT = "test_media"
+    settings.KUKKUU_HASHID_SALT = "topsecret"
     settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE = 7
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield

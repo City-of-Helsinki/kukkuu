@@ -73,6 +73,8 @@ jobs:
           K8S_SECRET_DATABASE_USERNAME: ${{ secrets.K8S_SECRET_DATABASE_USERNAME_STAGING }}
           K8S_SECRET_DATABASE_PASSWORD: ${{ secrets.K8S_SECRET_DATABASE_PASSWORD_STAGING }}
           K8S_SECRET_KUKKUU_NOTIFICATIONS_SHEET_ID: ${{ secrets.KUKKUU_NOTIFICATIONS_SHEET_ID }}
+          K8S_SECRET_KUKKUU_HASHID_SALT: ${{ secrets.K8S_SECRET_KUKKUU_HASHID_SALT }}
+          K8S_SECRET_KUKKUU_TICKET_VERIFICATION_URL: https://kukkuu-ui.${{ env.BASE_DOMAIN }}/ticket-verification-endpoint/{reference_id}
 
       - name: Deploy send mail cronjob
         uses: City-of-Helsinki/setup-cronjob-action@main
