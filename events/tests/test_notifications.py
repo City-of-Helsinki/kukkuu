@@ -196,10 +196,14 @@ def test_occurrence_enrolment_notifications_on_model_level(
         relationship__guardian__user=user_api_client.user,
         project=project,
     )
-    Enrolment.objects.create(child=child, occurrence=occurrence)
+    enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
     # unenrolling on model level should NOT trigger a notification
     occurrence.children.remove(child)
     assert len(mail.outbox) == 1
+    # qrcode should be attached
+    assert len(mail.outbox[0].attachments) == 1
+    # verify the name of the file
+    assert mail.outbox[0].attachments[0][0] == f"ticket-{enrolment.reference_id}.svg"
     assert_mails_match_snapshot(snapshot)
 
 

@@ -13,6 +13,7 @@ from parler.models import TranslatedFields
 
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
+from common.qrcode_service import create_qrcode
 from events.consts import NotificationType
 from events.utils import (
     send_event_group_notifications_to_guardians,
@@ -539,11 +540,19 @@ class Enrolment(TimestampedModel):
                 ).delete()
 
         if created:
+            ticket_qrcode = create_qrcode(self.reference_id, "svg")
             send_event_notifications_to_guardians(
                 self.occurrence.event,
                 NotificationType.OCCURRENCE_ENROLMENT,
                 self.child,
                 occurrence=self.occurrence,
+                attachments=[
+                    (
+                        f"ticket-{self.reference_id}.svg",
+                        ticket_qrcode.decode(),
+                        "image/svg+xml",
+                    ),
+                ],
             )
 
     def delete(self, *args, **kwargs):
