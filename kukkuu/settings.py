@@ -242,6 +242,11 @@ GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN = 100
 KUKKUU_QUERY_MAX_DEPTH = 12
 KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
+# IF KUKKUU_TICKET_VERIFICATION_URL is set to None,
+# the qr code won't be attached to the enrolment notification email.
+# Use {reference_id} as a specified value in the given string
+# e.g http://localhost:3000/ticket-verification-endpoint/{reference_id}
+KUKKUU_TICKET_VERIFICATION_URL = env("KUKKUU_TICKET_VERIFICATION_URL")
 # How much an enrolled occurrence can be in the past and still be considered as
 # not being in the past. In minutes.
 KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
