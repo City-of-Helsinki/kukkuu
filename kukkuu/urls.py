@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.utils.translation import ugettext
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
@@ -23,8 +23,8 @@ router.register(r"children", ChildViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path(
-        "graphql",
+    re_path(
+        "graphql/?$",
         csrf_exempt(
             SentryGraphQLView.as_view(
                 graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG, backend=gql_backend
