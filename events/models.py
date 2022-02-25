@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -22,6 +23,8 @@ from kukkuu.consts import (
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
+from kukkuu.exceptions import IllegalEnrolmentReferenceId
+from kukkuu.service import get_hashid_service
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
@@ -620,6 +623,22 @@ class Enrolment(TimestampedModel):
 
     def is_upcoming(self):
         return self.occurrence.time >= timezone.now()
+
+    @property
+    def reference_id(self):
+        """The enrolment id encoded with Kukkuu hashids utils."""
+        hashids = get_hashid_service()
+        return hashids.encode(self.id)
+
+    @classmethod
+    def decode_reference_id(cls, reference_id: str) -> Optional[int]:
+        """Decode the enrolment reference id
+        which is encoded with Kukkuu hashids utils."""
+        hashids = get_hashid_service()
+        enrolment_id = hashids.decode(reference_id)
+        if not enrolment_id:
+            raise IllegalEnrolmentReferenceId("Could not decode the enrolment id")
+        return enrolment_id[0]
 
 
 class NoFreePasswordsError(Exception):
