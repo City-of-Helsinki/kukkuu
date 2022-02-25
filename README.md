@@ -6,10 +6,13 @@
 [![codecov](https://codecov.io/gh/City-of-Helsinki/kukkuu/branch/develop/graph/badge.svg)](https://codecov.io/gh/City-of-Helsinki/kukkuu)
 
 ## Environments
+
 Production environment:
+
 - https://kukkuu-api.prod.hel.ninja/kukkuu/graphql
 
 Testing environment:
+
 - https://kukkuu.test.kuva.hel.ninja/graphql
 
 ## Development with Docker
@@ -24,13 +27,13 @@ The project is now running at [localhost:8081](http://localhost:8081)
 
 Prerequisites:
 
-* PostgreSQL 11
-* Python 3.9
+- PostgreSQL 11
+- Python 3.9
 
 ### Installing Python requirements
 
-* Run `pip install -r requirements.txt`
-* Run `pip install -r requirements-dev.txt` (development requirements)
+- Run `pip install -r requirements.txt`
+- Run `pip install -r requirements-dev.txt` (development requirements)
 
 ### Database
 
@@ -55,10 +58,11 @@ Add default languages (optional)
 
 The emails notifications that Kukkuu sends can be imported from a Google Sheets spreadsheet. To do that, first configure setting `KUKKUU_NOTIFICATIONS_SHEET_ID`, and then either
 
-1) run `python manage.py import_notifications` to import and update all the notifications, or
-2) use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
+1. run `python manage.py import_notifications` to import and update all the notifications, or
+2. use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
 
 ### Cron jobs
+
 `cron` is required for sending reminder notifications, and for sending emails queued (optional).
 
 #### Reminder notifications
@@ -69,7 +73,6 @@ Example crontab for sending reminder notifications every day at 12am:
 
     0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
     # An empty line is required at the end of this file for a valid cron file.
-
 
 #### Feedback notifications
 
@@ -82,13 +85,12 @@ Example crontab for sending feedback notifications:
     1,16,31,46 * * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
     # An empty line is required at the end of this file for a valid cron file.
 
-
 #### Queued email sending
 
 By default email sending is queued, which means that you need to set `send_mail` and `retry_deferred` to be executed periodically to get emails actually sent.
 
 Example crontab for queued emails (includes reminder notification sending as well):
-   
+
     * * * * * (/path/to/your/python path/to/your/app/manage.py send_mail > /var/log/cron.log 2>&1)
     0,20,40 * * * * (/path/to/your/python path/to/your/app/manage.py retry_deferred > /var/log/cron.log 2>&1)
     0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
@@ -99,11 +101,11 @@ It is also possible to get emails sent right away without any cronjobs by settin
 
 ### Daily running, Debugging
 
-* Create `.env` file: `touch .env`
-* Set the `DEBUG` environment variable to `1`.
-* Run `python manage.py migrate`
-* Run `python manage.py runserver localhost:8081`
-* The project is now running at [localhost:8081](http://localhost:8081) 
+- Create `.env` file: `touch .env`
+- Set the `DEBUG` environment variable to `1`.
+- Run `python manage.py migrate`
+- Run `python manage.py runserver localhost:8081`
+- The project is now running at [localhost:8081](http://localhost:8081)
 
 ## GraphQL API Documentation
 
@@ -117,42 +119,54 @@ The API requires authentication via HTTP basic authentication, or alternatively 
 
 API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
 
+## QR-code ticket verification
+
+When an enrolment is created, the guardian has get a mail in a text format. This pull request adds a QR-code to the mail's attachments. The QR-code is created from the ticket verification url and the enrolment's reference id, which is 5 chars code (lowercased alphabets) that is easy to write manually in the urls if needed.
+
+If KUKKUU_TICKET_VERIFICATION_URL is set to None, the QR-code won't be attached to the enrolment notification email. Use {reference_id} as a specified value in the given string, e.g http://localhost:3000/ticket-verification-endpoint/{reference_id}.
+
+The [Hashids](https://hashids.org/python/) is used to create the magic number that is used as a reference id to Enrolment instance. A salt is needed to prevent the malicious users to guess the magic numbers to tickets.
+
+```
+KUKKUU_HASHID_SALT=ULGd5YeRv6yVtvoj
+KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/ticket-verification-endpoint/{reference_id}
+```
+
 ## Keeping Python requirements up to date
 
 1. Install `pip-tools`:
 
-    * `pip install pip-tools`
+   - `pip install pip-tools`
 
 2. Add new packages to `requirements.in` or `requirements-dev.in`
 
 3. Update `.txt` file for the changed requirements file:
 
-    * `pip-compile requirements.in`
-    * `pip-compile requirements-dev.in`
+   - `pip-compile requirements.in`
+   - `pip-compile requirements-dev.in`
 
 4. If you want to update dependencies to their newest versions, run:
 
-    * `pip-compile --upgrade requirements.in`
+   - `pip-compile --upgrade requirements.in`
 
 5. To install Python requirements run:
 
-    * `pip-sync requirements.txt`
+   - `pip-sync requirements.txt`
 
 ## Code format
 
 This project uses [`black`](https://github.com/ambv/black) for Python code formatting.
 We follow the basic config, without any modifications. Basic `black` commands:
 
-* To let `black` do its magic: `black .`
-* To see which files `black` would change: `black --check .`
+- To let `black` do its magic: `black .`
+- To see which files `black` would change: `black --check .`
 
 Or you can use [`pre-commit`](https://pre-commit.com/) to quickly format your code before committing.
 
-
 1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
-    * `pip install pre-commit`
+   - `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
-    * `pre-commit install`
+   - `pre-commit install`
 
 After that, formatting hooks will run against all changed files before committing
 
