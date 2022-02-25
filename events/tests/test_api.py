@@ -2290,3 +2290,51 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
         another_child.ticket_system_passwords.get(event=event)
         == another_childs_password
     )
+
+
+VERIFY_TICKET_QUERY = """
+  query VerifyTicket($referenceId: String!){
+    verifyTicket(referenceId:$referenceId){
+      enrolment {
+        occurrence {
+          time
+        }
+        child {
+          birthdate
+        }
+      }
+      validity
+    }
+  }
+"""
+
+
+# NOTE: api_client is for anonymous users
+def test_verify_valid_ticket(api_client, snapshot):
+    upcoming_occurrence = OccurrenceFactory(time=timezone.now() + timedelta(days=1))
+    valid_enrolment = EnrolmentFactory(occurrence=upcoming_occurrence)
+    executed = api_client.execute(
+        VERIFY_TICKET_QUERY, variables={"referenceId": valid_enrolment.reference_id}
+    )
+    assert executed["data"]["verifyTicket"]["validity"] is True
+    snapshot.assert_match(executed)
+
+
+# NOTE: api_client is for anonymous users
+def test_verify_invalid_ticket(api_client, snapshot):
+    past_occurrence = OccurrenceFactory(time=timezone.now() - timedelta(days=1))
+    invalid_enrolment = EnrolmentFactory(occurrence=past_occurrence)
+    executed = api_client.execute(
+        VERIFY_TICKET_QUERY, variables={"referenceId": invalid_enrolment.reference_id}
+    )
+    assert executed["data"]["verifyTicket"]["validity"] is False
+    snapshot.assert_match(executed)
+
+
+def test_erroneous_ticket_verification(api_client, snapshot):
+    executed = api_client.execute(
+        VERIFY_TICKET_QUERY, variables={"referenceId": "INVALID REFERENCE"}
+    )
+    assert executed["errors"][0]["message"] == "Could not decode the enrolment id"
+    assert executed["data"]["verifyTicket"] is None
+    snapshot.assert_match(executed)
