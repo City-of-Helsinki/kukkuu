@@ -11,9 +11,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
+import events.notification_service as notification_service
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
-from common.qrcode_service import create_qrcode
 from events.consts import NotificationType
 from events.utils import (
     send_event_group_notifications_to_guardians,
@@ -524,31 +524,6 @@ class Enrolment(TimestampedModel):
     def __str__(self):
         return f"{self.pk} {self.child_id}"
 
-    def _send_enrolment_creation_notification(self):
-        attachments = []
-        if settings.KUKKUU_TICKET_VERIFICATION_URL:
-            ticket_qrcode_content = settings.KUKKUU_TICKET_VERIFICATION_URL.format(
-                reference_id=self.reference_id
-            )
-            ticket_qrcode = create_qrcode(
-                ticket_qrcode_content,
-                "svg",
-            )
-            attachments.append(
-                (
-                    f"ticket-{self.reference_id}.svg",  # file name
-                    ticket_qrcode.decode(),  # content (decoded)
-                    "image/svg+xml",  # MIME-type
-                )
-            )
-        send_event_notifications_to_guardians(
-            self.occurrence.event,
-            NotificationType.OCCURRENCE_ENROLMENT,
-            self.child,
-            occurrence=self.occurrence,
-            attachments=attachments,
-        )
-
     def save(self, *args, **kwargs):
         created = self.pk is None
 
@@ -565,7 +540,7 @@ class Enrolment(TimestampedModel):
                 ).delete()
 
         if created:
-            self._send_enrolment_creation_notification()
+            notification_service.send_enrolment_creation_notification(self)
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
