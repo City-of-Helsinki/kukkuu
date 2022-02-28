@@ -419,7 +419,11 @@ class EnrolmentNode(DjangoObjectType):
 
 
 class TicketVerificationNode(ObjectType):
-    enrolment = graphene.Field(EnrolmentNode)
+    event_name = graphene.String(required=True, description="The name of the event")
+    occurrence_time = graphene.DateTime(
+        required=True, description="The time of the event occurrence"
+    )
+    venue_name = graphene.String(description="The name of the venue")
     validity = graphene.Boolean(required=True)
 
 
@@ -976,7 +980,12 @@ class Query:
     def resolve_verify_ticket(self, info, **kwargs):
         enrolment_reference_id = kwargs.get("reference_id", None)
         enrolment, ticket_validity = check_ticket_validity(enrolment_reference_id)
-        return TicketVerificationNode(enrolment=enrolment, validity=ticket_validity)
+        return TicketVerificationNode(
+            event_name=enrolment.occurrence.event.name,
+            occurrence_time=enrolment.occurrence.time,
+            venue_name=enrolment.occurrence.venue.name,
+            validity=ticket_validity,
+        )
 
 
 class Mutation:

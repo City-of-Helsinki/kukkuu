@@ -1401,11 +1401,10 @@ snapshots["test_update_ticketmaster_event[False] 1"] = {
 snapshots["test_verify_invalid_ticket 1"] = {
     "data": {
         "verifyTicket": {
-            "enrolment": {
-                "child": {"birthdate": "2020-08-01"},
-                "occurrence": {"time": "2020-12-11T00:00:00+00:00"},
-            },
+            "eventName": "Record card my. Sure sister return.",
+            "occurrenceTime": "2020-12-11T00:00:00+00:00",
             "validity": False,
+            "venueName": "Remember stay public high concern glass person.",
         }
     }
 }
@@ -1413,11 +1412,10 @@ snapshots["test_verify_invalid_ticket 1"] = {
 snapshots["test_verify_valid_ticket 1"] = {
     "data": {
         "verifyTicket": {
-            "enrolment": {
-                "child": {"birthdate": "2020-08-01"},
-                "occurrence": {"time": "2020-12-13T00:00:00+00:00"},
-            },
+            "eventName": "Record card my. Sure sister return.",
+            "occurrenceTime": "2020-12-13T00:00:00+00:00",
             "validity": True,
+            "venueName": "Remember stay public high concern glass person.",
         }
     }
 }

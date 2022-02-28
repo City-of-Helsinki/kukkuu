@@ -2295,14 +2295,9 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
 VERIFY_TICKET_QUERY = """
   query VerifyTicket($referenceId: String!){
     verifyTicket(referenceId:$referenceId){
-      enrolment {
-        occurrence {
-          time
-        }
-        child {
-          birthdate
-        }
-      }
+      occurrenceTime
+      eventName
+      venueName
       validity
     }
   }
@@ -2317,6 +2312,16 @@ def test_verify_valid_ticket(api_client, snapshot):
         VERIFY_TICKET_QUERY, variables={"referenceId": valid_enrolment.reference_id}
     )
     assert executed["data"]["verifyTicket"]["validity"] is True
+    assert (
+        executed["data"]["verifyTicket"]["occurrenceTime"]
+        == upcoming_occurrence.time.isoformat()
+    )
+    assert (
+        executed["data"]["verifyTicket"]["eventName"] == upcoming_occurrence.event.name
+    )
+    assert (
+        executed["data"]["verifyTicket"]["venueName"] == upcoming_occurrence.venue.name
+    )
     snapshot.assert_match(executed)
 
 
