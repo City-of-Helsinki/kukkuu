@@ -401,6 +401,9 @@ class OccurrenceNode(DjangoObjectType):
 
 
 class EnrolmentNode(DjangoObjectType):
+
+    reference_id = graphene.String(description="An unique encoded reference id")
+
     class Meta:
         model = Enrolment
         interfaces = (relay.Node,)
@@ -410,6 +413,9 @@ class EnrolmentNode(DjangoObjectType):
     @login_required
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user)
+
+    def resolve_reference_id(self, info, **kwargs):
+        return self.reference_id
 
 
 class TicketVerificationNode(ObjectType):

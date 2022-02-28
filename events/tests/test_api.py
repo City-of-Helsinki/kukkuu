@@ -2338,3 +2338,66 @@ def test_erroneous_ticket_verification(api_client, snapshot):
     assert executed["errors"][0]["message"] == "Could not decode the enrolment id"
     assert executed["data"]["verifyTicket"] is None
     snapshot.assert_match(executed)
+
+
+GET_ENROLMENT_REFERENCE_ID_QUERY = """
+  query getChildEnrolments($id: ID!) {
+    child(id: $id){
+      enrolments {
+        edges {
+          node {
+            referenceId
+          }
+        }
+      }
+    }
+  }
+"""
+
+
+def test_get_enrolment_reference_id_with_authorized_guardian(
+    guardian_api_client,
+    occurrence,
+    child_with_user_guardian,
+):
+    EnrolmentFactory(occurrence=occurrence, child=child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        GET_ENROLMENT_REFERENCE_ID_QUERY,
+        variables={"id": to_global_id("ChildNode", child_with_user_guardian.id)},
+    )
+    assert (
+        executed["data"]["child"]["enrolments"]["edges"][0]["node"]["referenceId"]
+        is not None
+    )
+
+
+def test_get_enrolment_reference_id_with_unauthorized_guardian(
+    guardian_api_client,
+    occurrence,
+    child_with_random_guardian,
+):
+    EnrolmentFactory(occurrence=occurrence, child=child_with_random_guardian)
+
+    # Random user should not see the reference id
+    executed = guardian_api_client.execute(
+        GET_ENROLMENT_REFERENCE_ID_QUERY,
+        variables={"id": to_global_id("ChildNode", child_with_random_guardian.id)},
+    )
+    assert executed["data"]["child"] is None
+
+
+def test_get_enrolment_reference_id_from_public_api(
+    api_client,
+    occurrence,
+    child_with_random_guardian,
+):
+    EnrolmentFactory(occurrence=occurrence, child=child_with_random_guardian)
+
+    # Random user should not see the reference id
+    executed = api_client.execute(
+        GET_ENROLMENT_REFERENCE_ID_QUERY,
+        variables={"id": to_global_id("ChildNode", child_with_random_guardian.id)},
+    )
+    assert executed["data"]["child"] is None
+    assert_permission_denied(executed)
