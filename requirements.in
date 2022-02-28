@@ -20,3 +20,4 @@ requests
 djangorestframework
 drf-spectacular
 hashids
+qrcode
