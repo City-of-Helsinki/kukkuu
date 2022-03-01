@@ -20,10 +20,15 @@ FACTORIES = {
     QRCodeFileFormatEnum.PNG.value: qrcode.image.pil.PilImage,
 }
 
+MIME_TYPES = {
+    QRCodeFileFormatEnum.SVG.value: "image/svg+xml",
+    QRCodeFileFormatEnum.PNG.value: "image/png",
+}
+
 
 def create_qrcode(
     input_data: str,
-    file_format: QRCodeFileFormatEnum = "svg",
+    file_format: QRCodeFileFormatEnum = QRCodeFileFormatEnum.SVG,
 ) -> bytes:
     """Create a QRCode of the given input data.
 
@@ -39,7 +44,7 @@ def create_qrcode(
         version=1,
         box_size=10,
         border=4,
-        image_factory=FACTORIES[file_format],
+        image_factory=FACTORIES[file_format.value],
     )
     qr.add_data(input_data)
     qr.make(fit=True)

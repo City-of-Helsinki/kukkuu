@@ -213,7 +213,7 @@ def test_occurrence_enrolment_notifications_on_model_level(
         # verify the name of the file
         assert (
             mail.outbox[0].attachments[0][0] == "KuKu-ticket-"
-            f"{str(enrolment.occurrence.time.date())}-{enrolment.reference_id}.svg"
+            f"{str(enrolment.occurrence.time.date())}-{enrolment.reference_id}.png"
         )
     else:
         assert len(mail.outbox[0].attachments) == 0
