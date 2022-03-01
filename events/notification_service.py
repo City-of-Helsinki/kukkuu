@@ -18,7 +18,7 @@ def _get_ticket_filename(enrolment: "Enrolment", file_format: QRCodeFileFormatEn
     return f"KuKu-ticket-{date_string}-{enrolment.reference_id}.{file_format.value}"
 
 
-def _decode_ticket_qrcode(ticket_qrcode: bytes, file_format: QRCodeFileFormatEnum.PNG):
+def _decode_ticket_qrcode(ticket_qrcode: bytes, file_format: QRCodeFileFormatEnum):
     if file_format == QRCodeFileFormatEnum.PNG:
         return base64.b64encode(ticket_qrcode).decode()
     return ticket_qrcode.decode()
