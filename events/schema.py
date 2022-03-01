@@ -27,6 +27,7 @@ from common.utils import (
 )
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, NoFreePasswordsError, Occurrence
+from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
@@ -400,6 +401,9 @@ class OccurrenceNode(DjangoObjectType):
 
 
 class EnrolmentNode(DjangoObjectType):
+
+    reference_id = graphene.String(description="An unique encoded reference id")
+
     class Meta:
         model = Enrolment
         interfaces = (relay.Node,)
@@ -409,6 +413,18 @@ class EnrolmentNode(DjangoObjectType):
     @login_required
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user)
+
+    def resolve_reference_id(self, info, **kwargs):
+        return self.reference_id
+
+
+class TicketVerificationNode(ObjectType):
+    event_name = graphene.String(required=True, description="The name of the event")
+    occurrence_time = graphene.DateTime(
+        required=True, description="The time of the event occurrence"
+    )
+    venue_name = graphene.String(description="The name of the venue")
+    validity = graphene.Boolean(required=True)
 
 
 class EventTranslationsInput(graphene.InputObjectType):
@@ -939,6 +955,9 @@ class Query:
     event = relay.Node.Field(EventNode)
     event_group = relay.Node.Field(EventGroupNode)
     occurrence = relay.Node.Field(OccurrenceNode)
+    verify_ticket = graphene.Field(
+        TicketVerificationNode, reference_id=graphene.String(required=True)
+    )
 
     def resolve_events_and_event_groups(self, info, **kwargs):
         event_qs = Event.objects.filter(event_group=None)
@@ -956,6 +975,16 @@ class Query:
             ),
             key=lambda e: e.created_at,
             reverse=True,
+        )
+
+    def resolve_verify_ticket(self, info, **kwargs):
+        enrolment_reference_id = kwargs.get("reference_id", None)
+        enrolment, ticket_validity = check_ticket_validity(enrolment_reference_id)
+        return TicketVerificationNode(
+            event_name=enrolment.occurrence.event.name,
+            occurrence_time=enrolment.occurrence.time,
+            venue_name=enrolment.occurrence.venue.name,
+            validity=ticket_validity,
         )
 
 

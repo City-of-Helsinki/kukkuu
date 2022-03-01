@@ -1,6 +1,21 @@
 from graphql import GraphQLError
 
 
+class TicketVerificationError(Exception):
+    """General error related to ticket verfication"""
+
+
+class IllegalEnrolmentReferenceId(TicketVerificationError):
+    """Illegal Enrolment reference id"""
+
+
+class EnrolmentReferenceIdDoesNotExist(TicketVerificationError):
+    """
+    The decoded enrolment reference id
+    could not be linked to any of the enrolments
+    """
+
+
 class KukkuuGraphQLError(GraphQLError):
     """GraphQLError that is not sent to Sentry."""
 

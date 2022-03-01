@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
@@ -7,7 +8,7 @@ from children.factories import ChildFactory
 from projects.models import Project
 from venues.models import Venue
 
-from ..factories import EventFactory, OccurrenceFactory
+from ..factories import EnrolmentFactory, EventFactory, OccurrenceFactory
 from ..models import Enrolment, Event, Occurrence
 
 User = get_user_model()
@@ -52,3 +53,11 @@ def test_occurrence_clean_ticket_system_url(event_published):
         assert ei.value.code == "TICKET_SYSTEM_URL_MISSING_ERROR"
     else:
         occurrence.clean()
+
+
+@pytest.mark.django_db
+def test_enrolment_reference_id():
+    enrolments = EnrolmentFactory.create_batch(10)
+    for enrolment in enrolments:
+        assert len(enrolment.reference_id) == settings.KUKKUU_HASHID_MIN_LENGTH
+        assert Enrolment.decode_reference_id(enrolment.reference_id) == enrolment.id

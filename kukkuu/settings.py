@@ -3,6 +3,7 @@ import subprocess
 
 import environ
 import sentry_sdk
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -53,6 +54,8 @@ env = environ.Env(
     AZURE_CONTAINER=(str, ""),
     ENABLE_GRAPHIQL=(bool, False),
     KUKKUU_UI_BASE_URL=(str, "http://localhost:3000"),
+    KUKKUU_TICKET_VERIFICATION_URL=(str, ""),
+    KUKKUU_HASHID_SALT=(str, None),
     KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY=(int, 30),
     KUKKUU_REMINDER_DAYS_IN_ADVANCE=(int, 1),
     KUKKUU_FEEDBACK_NOTIFICATION_DELAY=(int, 15),
@@ -239,6 +242,11 @@ GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
 KUKKUU_MAX_NUM_OF_CHILDREN_PER_GUARDIAN = 100
 KUKKUU_QUERY_MAX_DEPTH = 12
 KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
+# IF KUKKUU_TICKET_VERIFICATION_URL is set to None,
+# the qr code won't be attached to the enrolment notification email.
+# Use {reference_id} as a specified value in the given string
+# e.g http://localhost:3000/ticket-verification-endpoint/{reference_id}
+KUKKUU_TICKET_VERIFICATION_URL = env("KUKKUU_TICKET_VERIFICATION_URL")
 # How much an enrolled occurrence can be in the past and still be considered as
 # not being in the past. In minutes.
 KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
@@ -247,6 +255,16 @@ KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = env(
 KUKKUU_REMINDER_DAYS_IN_ADVANCE = env("KUKKUU_REMINDER_DAYS_IN_ADVANCE")
 KUKKUU_FEEDBACK_NOTIFICATION_DELAY = env("KUKKUU_FEEDBACK_NOTIFICATION_DELAY")
 KUKKUU_NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
+
+KUKKUU_HASHID_MIN_LENGTH = 5
+KUKKUU_HASHID_ALPHABET = "abcdefghijklmnopqrstuvwxyz"
+KUKKUU_HASHID_SALT = env.str("KUKKUU_HASHID_SALT")
+if KUKKUU_HASHID_SALT is None:
+    raise ImproperlyConfigured(
+        "KUKKUU_HASHID_SALT must be configured! "
+        "Hashids in Kukkuu utils requires the setting!"
+    )
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [

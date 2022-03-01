@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,6 +11,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
+import events.notification_service as notification_service
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.consts import NotificationType
@@ -22,6 +24,8 @@ from kukkuu.consts import (
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
+from kukkuu.exceptions import IllegalEnrolmentReferenceId
+from kukkuu.service import get_hashid_service
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
@@ -536,12 +540,7 @@ class Enrolment(TimestampedModel):
                 ).delete()
 
         if created:
-            send_event_notifications_to_guardians(
-                self.occurrence.event,
-                NotificationType.OCCURRENCE_ENROLMENT,
-                self.child,
-                occurrence=self.occurrence,
-            )
+            notification_service.send_enrolment_creation_notification(self)
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
@@ -620,6 +619,22 @@ class Enrolment(TimestampedModel):
 
     def is_upcoming(self):
         return self.occurrence.time >= timezone.now()
+
+    @property
+    def reference_id(self):
+        """The enrolment id encoded with Kukkuu hashids utils."""
+        hashids = get_hashid_service()
+        return hashids.encode(self.id)
+
+    @classmethod
+    def decode_reference_id(cls, reference_id: str) -> Optional[int]:
+        """Decode the enrolment reference id
+        which is encoded with Kukkuu hashids utils."""
+        hashids = get_hashid_service()
+        enrolment_id = hashids.decode(reference_id)
+        if not enrolment_id:
+            raise IllegalEnrolmentReferenceId("Could not decode the enrolment id")
+        return enrolment_id[0]
 
 
 class NoFreePasswordsError(Exception):

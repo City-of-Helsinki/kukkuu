@@ -200,6 +200,18 @@ snapshots["test_enrolment_visibility_project_user 1"] = {
     }
 }
 
+snapshots["test_erroneous_ticket_verification 1"] = {
+    "data": {"verifyTicket": None},
+    "errors": [
+        {
+            "extensions": {"code": "GENERAL_ERROR"},
+            "locations": [{"column": 5, "line": 3}],
+            "message": "Could not decode the enrolment id",
+            "path": ["verifyTicket"],
+        }
+    ],
+}
+
 snapshots["test_event_filter_by_project 1"] = {
     "data": {"events": {"edges": [{"node": {"name": "Should be visible"}}]}}
 }
@@ -1384,4 +1396,26 @@ snapshots["test_update_occurrence_ticket_system_url[True-False] 1"] = {
 
 snapshots["test_update_ticketmaster_event[False] 1"] = {
     "data": {"updateEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
+}
+
+snapshots["test_verify_invalid_ticket 1"] = {
+    "data": {
+        "verifyTicket": {
+            "eventName": "Record card my. Sure sister return.",
+            "occurrenceTime": "2020-12-11T00:00:00+00:00",
+            "validity": False,
+            "venueName": "Remember stay public high concern glass person.",
+        }
+    }
+}
+
+snapshots["test_verify_valid_ticket 1"] = {
+    "data": {
+        "verifyTicket": {
+            "eventName": "Record card my. Sure sister return.",
+            "occurrenceTime": "2020-12-13T00:00:00+00:00",
+            "validity": True,
+            "venueName": "Remember stay public high concern glass person.",
+        }
+    }
 }

@@ -9,6 +9,7 @@ on:
 
 env:
   SECRET_KEY: topsecret123
+  KUKKUU_HASHID_SALT: almosttopsecret123
 
 
 jobs:

@@ -55,3 +55,5 @@ jobs:
           K8S_SECRET_KUKKUU_UI_BASE_URL: "https://kukkuu-ui.${{ env.BASE_DOMAIN }}"
           K8S_SECRET_ADD_DEFAULT_LANGUAGES: 1
           K8S_SECRET_KUKKUU_NOTIFICATIONS_SHEET_ID: ${{ secrets.KUKKUU_NOTIFICATIONS_SHEET_ID }}
+          K8S_SECRET_KUKKUU_HASHID_SALT: ${{ secrets.K8S_SECRET_KUKKUU_HASHID_SALT }}
+          K8S_SECRET_KUKKUU_TICKET_VERIFICATION_URL: https://kukkuu-ui.${{ env.BASE_DOMAIN }}/ticket-verification-endpoint/{reference_id}

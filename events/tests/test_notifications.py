@@ -183,23 +183,40 @@ def test_event_group_publish_notification(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "ticket_verification_url_setting",
+    [None, "http://kultus-ui.test.kuva.hel.ninja/verify-ticket-endpoint/"],
+)
 def test_occurrence_enrolment_notifications_on_model_level(
+    ticket_verification_url_setting,
+    settings,
     snapshot,
     user_api_client,
     notification_template_occurrence_unenrolment_fi,
     notification_template_occurrence_enrolment_fi,
     project,
 ):
+    settings.KUKKUU_TICKET_VERIFICATION_URL = ticket_verification_url_setting
     occurrence = OccurrenceFactory(id=74, time=now())
     child = ChildWithGuardianFactory(
         pk="545c5fe5-235b-46fd-aa2a-cd5de6fdd0fc",
         relationship__guardian__user=user_api_client.user,
         project=project,
     )
-    Enrolment.objects.create(child=child, occurrence=occurrence)
+    enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
     # unenrolling on model level should NOT trigger a notification
     occurrence.children.remove(child)
     assert len(mail.outbox) == 1
+    if ticket_verification_url_setting:
+        # qrcode should be attached
+        assert len(mail.outbox[0].attachments) == 1
+        # verify the name of the file
+        assert (
+            mail.outbox[0].attachments[0][0] == "KuKu-ticket-"
+            f"{str(enrolment.occurrence.time.date())}-{enrolment.reference_id}.svg"
+        )
+    else:
+        assert len(mail.outbox[0].attachments) == 0
     assert_mails_match_snapshot(snapshot)
 
 

@@ -83,7 +83,18 @@ snapshots["test_occurrence_cancelled_notification[True] 1"] = [
         Child: Michael Patton (2020-06-24)"""
 ]
 
-snapshots["test_occurrence_enrolment_notifications_on_model_level 1"] = [
+snapshots["test_occurrence_enrolment_notifications_on_model_level[None] 1"] = [
+    """kukkuu@example.com|['michellewalker@example.net']|Occurrence enrolment FI|
+        Event FI: Poor lawyer treat free heart significant.
+        Guardian FI: Allen Riddle (michellewalker@example.net)
+        Occurrence: 2020-12-12 00:00:00+00:00
+        Child: Andrew Becker (2020-08-01)
+        Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
+]
+
+snapshots[
+    "test_occurrence_enrolment_notifications_on_model_level[http://kultus-ui.test.kuva.hel.ninja/verify-ticket-endpoint/] 1"
+] = [
     """kukkuu@example.com|['michellewalker@example.net']|Occurrence enrolment FI|
         Event FI: Poor lawyer treat free heart significant.
         Guardian FI: Allen Riddle (michellewalker@example.net)

@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
+from typing import List, Optional
 
 from django.conf import settings
 from django.utils import timezone
@@ -9,7 +10,9 @@ from parler.utils.context import switch_language
 from common.utils import get_global_id
 
 
-def send_event_notifications_to_guardians(event, notification_type, children, **kwargs):
+def send_event_notifications_to_guardians(
+    event, notification_type, children, attachments: Optional[List] = None, **kwargs
+):
     if not isinstance(children, Iterable):
         children = [children]
 
@@ -39,6 +42,7 @@ def send_event_notifications_to_guardians(event, notification_type, children, **
                     notification_type,
                     context=context,
                     language=guardian.language,
+                    attachments=attachments,
                 )
 
 
