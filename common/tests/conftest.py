@@ -13,6 +13,7 @@ from graphene.test import Client
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
+from common.notification_service import SMSNotificationService
 from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
@@ -206,3 +207,10 @@ def create_api_client_with_user(user):
     )
     client.user = user
     return client
+
+
+@pytest.fixture
+def sms_notification():
+    return SMSNotificationService(
+        api_token="topsecret", api_url="http://send-sms.test.localhost"
+    )

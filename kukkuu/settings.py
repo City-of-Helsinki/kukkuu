@@ -31,10 +31,14 @@ env = environ.Env(
     CACHE_URL=(str, "locmemcache://"),
     MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
     DEFAULT_FROM_EMAIL=(str, "kukkuu@example.com"),
+    DEFAULT_SMS_SENDER=(str, "Hel.fi"),
     ILMOITIN_TRANSLATED_FROM_EMAIL=(dict, {}),
+    TRANSLATED_SMS_SENDER=(dict, {}),
     MAIL_MAILGUN_KEY=(str, ""),
     MAIL_MAILGUN_DOMAIN=(str, ""),
     MAIL_MAILGUN_API=(str, ""),
+    NOTIFICATION_SERVICE_API_TOKEN=(str, ""),
+    NOTIFICATION_SERVICE_API_URL=(str, "https://notification-service.hel.fi/v1/"),
     SENTRY_DSN=(str, ""),
     SENTRY_ENVIRONMENT=(str, ""),
     CORS_ORIGIN_WHITELIST=(list, []),
@@ -91,6 +95,13 @@ EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
 ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")
+
+if env.str("DEFAULT_SMS_SENDER"):
+    DEFAULT_SMS_SENDER = env.str("DEFAULT_SMS_SENDER")
+
+TRANSLATED_SMS_SENDER = env("TRANSLATED_SMS_SENDER")
+NOTIFICATION_SERVICE_API_TOKEN = env.str("NOTIFICATION_SERVICE_API_TOKEN")
+NOTIFICATION_SERVICE_API_URL = env.str("NOTIFICATION_SERVICE_API_URL")
 
 try:
     REVISION = (
