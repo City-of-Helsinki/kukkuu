@@ -24,7 +24,7 @@ router.register(r"children", ChildViewSet)
 urlpatterns = [
     path("admin/", admin.site.urls),
     re_path(
-        "graphql/?$",
+        r"^graphql/?$",
         csrf_exempt(
             SentryGraphQLView.as_view(
                 graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG, backend=gql_backend
