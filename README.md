@@ -123,13 +123,13 @@ API documentation of the report API can be viewed at [localhost:8081/reports/sch
 
 When an enrolment is created, the guardian has get a mail in a text format. This pull request adds a QR-code to the mail's attachments. The QR-code is created from the ticket verification url and the enrolment's reference id, which is 5 chars code (lowercased alphabets) that is easy to write manually in the urls if needed.
 
-If KUKKUU_TICKET_VERIFICATION_URL is set to None, the QR-code won't be attached to the enrolment notification email. Use {reference_id} as a specified value in the given string, e.g http://localhost:3000/ticket-verification-endpoint/{reference_id}.
+If KUKKUU_TICKET_VERIFICATION_URL is set to None, the QR-code won't be attached to the enrolment notification email. Use {reference_id} as a specified value in the given string, e.g http://localhost:3000/check-ticket-validity/{reference_id}.
 
 The [Hashids](https://hashids.org/python/) is used to create the magic number that is used as a reference id to Enrolment instance. A salt is needed to prevent the malicious users to guess the magic numbers to tickets.
 
 ```
 KUKKUU_HASHID_SALT=ULGd5YeRv6yVtvoj
-KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/ticket-verification-endpoint/{reference_id}
+KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/check-ticket-validity/{reference_id}
 ```
 
 ## Keeping Python requirements up to date

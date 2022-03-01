@@ -245,7 +245,7 @@ KUKKUU_UI_BASE_URL = env("KUKKUU_UI_BASE_URL")
 # IF KUKKUU_TICKET_VERIFICATION_URL is set to None,
 # the qr code won't be attached to the enrolment notification email.
 # Use {reference_id} as a specified value in the given string
-# e.g http://localhost:3000/ticket-verification-endpoint/{reference_id}
+# e.g http://localhost:3000/check-ticket-validity/{reference_id}
 KUKKUU_TICKET_VERIFICATION_URL = env("KUKKUU_TICKET_VERIFICATION_URL")
 # How much an enrolled occurrence can be in the past and still be considered as
 # not being in the past. In minutes.
