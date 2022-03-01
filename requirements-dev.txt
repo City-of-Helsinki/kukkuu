@@ -4,8 +4,6 @@
 #
 #    pip-compile requirements-dev.in
 #
-appnope==0.1.2
-    # via ipython
 attrs==21.2.0
     # via
     #   -c requirements.txt
@@ -40,7 +38,7 @@ idna==3.2
     #   requests
 iniconfig==1.1.1
     # via pytest
-ipython==7.28.0
+ipython==7.31.1
     # via -r requirements-dev.in
 isort==5.9.3
     # via -r requirements-dev.in
