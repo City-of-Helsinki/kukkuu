@@ -22,6 +22,7 @@ from events.factories import (
     TicketSystemPasswordFactory,
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence
+from events.ticket_service import check_ticket_validity
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
@@ -39,7 +40,7 @@ from kukkuu.consts import (
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
-from kukkuu.exceptions import QueryTooDeepError
+from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist, QueryTooDeepError
 from kukkuu.schema import schema
 from kukkuu.views import DepthAnalysisBackend
 from projects.factories import ProjectFactory
@@ -1188,6 +1189,28 @@ def test_unenrol_occurrence(
     assert child.occurrences.count() == 0
     assert child_with_random_guardian.occurrences.count() == 1
     snapshot.assert_match(executed)
+
+
+def test_ticket_not_valid_after_unenrol(user_api_client, occurrence, project):
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user, project=project
+    )
+    enrolment = EnrolmentFactory(occurrence=occurrence, child=child)
+    assert Enrolment.objects.count() == 1
+    to_be_invalid_reference_id = enrolment.reference_id
+
+    unenrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    unenrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    unenrolment_variables["input"]["childId"] = to_global_id("ChildNode", child.id)
+    user_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=unenrolment_variables
+    )
+    assert Enrolment.objects.count() == 0
+
+    with pytest.raises(EnrolmentReferenceIdDoesNotExist):
+        check_ticket_validity(to_be_invalid_reference_id)
 
 
 def test_cannot_unenrol_from_occurrence_in_past(
