@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import activate
+from freezegun import freeze_time
 from graphql_relay import to_global_id
 from parler.utils.context import switch_language
 
@@ -1140,6 +1141,41 @@ def test_enrol_occurrence_not_allowed(
         ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
     )
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+@freeze_time("2020-11-11")
+@pytest.mark.parametrize(
+    "enrolled_amount,should_raise", [(0, False), (1, False), (2, True), (3, True)]
+)
+def test_enrol_limit_reached(
+    enrolled_amount,
+    should_raise,
+    guardian_api_client,
+    child_with_user_guardian,
+    snapshot,
+):
+    occurrences = OccurrenceFactory.create_batch(
+        enrolled_amount + 1, time=timezone.now()
+    )
+    for i in range(enrolled_amount):
+        EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrences[i])
+    occurrence = occurrences[-1]
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = to_global_id(
+        "OccurrenceNode", occurrence.id
+    )
+    enrolment_variables["input"]["childId"] = to_global_id(
+        "ChildNode", child_with_user_guardian.id
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    if should_raise:
+        assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
+    else:
+        snapshot.assert_match(executed)
 
 
 def test_unenrol_occurrence(

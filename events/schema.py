@@ -70,6 +70,12 @@ def validate_enrolment(child, occurrence):
     if occurrence.time < timezone.now():
         raise PastOccurrenceError("Cannot join occurrence in the past")
 
+    if (
+        child.occurrences.filter(time__year=occurrence.time.year).count()
+        >= occurrence.event.project.enrolment_limit
+    ):
+        raise IneligibleOccurrenceEnrolment("Yearly enrolment limit has been reached")
+
 
 def validate_enrolment_deletion(enrolment):
     if not enrolment.is_upcoming():

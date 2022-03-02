@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
@@ -12,6 +13,14 @@ class Project(TranslatableModel):
         verbose_name=_("single events allowed"),
         help_text=_("Whether it is allowed to create events outside event groups."),
         default=True,
+    )
+    enrolment_limit = models.PositiveSmallIntegerField(
+        verbose_name=_("enrolment limit"),
+        help_text=_(
+            "How many times a single user can participate events per year. "
+            "Changing this will not affect any existing enrolments."
+        ),
+        default=settings.KUKKUU_DEFAULT_ENROLMENT_LIMIT,
     )
 
     class Meta:
