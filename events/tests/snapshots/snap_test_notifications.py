@@ -103,7 +103,24 @@ snapshots[
         Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
 ]
 
-snapshots["test_occurrence_reminder_notification 1"] = [
+snapshots["test_occurrence_reminder_notification[None] 1"] = [
+    """kukkuu@example.com|['tonya77@example.com']|Occurrence reminder FI|
+        Event FI: Answer entire increase thank certainly again thought.
+        Guardian FI: I Should Receive A Notification (tonya77@example.com)
+        Occurrence: 2020-12-19 00:00:00+00:00
+        Child: Alexis Black (2020-07-29)
+        Enrolment: 2020-12-19 00:00:00+00:00""",
+    """kukkuu@example.com|['johnsonnathaniel@example.com']|Occurrence reminder FI|
+        Event FI: Mr amount conference thing much like test.
+        Guardian FI: I Should Receive A Notification (johnsonnathaniel@example.com)
+        Occurrence: 2020-12-13 00:00:00+00:00
+        Child: Calvin Gutierrez (2020-01-18)
+        Enrolment: 2020-12-13 00:00:00+00:00""",
+]
+
+snapshots[
+    "test_occurrence_reminder_notification[http://kultus-ui.test.kuva.hel.ninja/verify-ticket-endpoint/] 1"
+] = [
     """kukkuu@example.com|['tonya77@example.com']|Occurrence reminder FI|
         Event FI: Answer entire increase thank certainly again thought.
         Guardian FI: I Should Receive A Notification (tonya77@example.com)

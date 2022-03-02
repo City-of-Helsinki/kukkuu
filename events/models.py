@@ -580,14 +580,7 @@ class Enrolment(TimestampedModel):
 
         self.reminder_sent_at = timezone.now()
         self.save()
-
-        send_event_notifications_to_guardians(
-            self.occurrence.event,
-            NotificationType.OCCURRENCE_REMINDER,
-            self.child,
-            occurrence=self.occurrence,
-            enrolment=self,
-        )
+        notification_service.send_event_reminder_notification(self)
 
     @transaction.atomic()
     def send_feedback_notification(self, force=False):
