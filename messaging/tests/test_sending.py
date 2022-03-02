@@ -4,6 +4,7 @@ import pytest
 from django.core import mail
 from django.utils import timezone
 from django.utils.timezone import now
+from freezegun import freeze_time
 
 from children.factories import ChildWithGuardianFactory
 from common.tests.utils import assert_mails_match_snapshot
@@ -50,6 +51,7 @@ def test_cannot_send_message_again_without_force(snapshot, message):
     assert message.sent_at
 
 
+@freeze_time("2020-11-11")
 @pytest.mark.parametrize(
     "recipient_selection",
     (
@@ -204,6 +206,7 @@ def test_message_sending_with_filters(snapshot, recipient_selection, event_selec
     assert message.sent_at
 
 
+@freeze_time("2020-11-11")
 @pytest.mark.parametrize("upcoming_occurrence", (True, False))
 def test_message_sending_to_invited_group_and_event_groups(upcoming_occurrence):
     """Sending message to invited group when an event group has to be considered.
@@ -264,6 +267,45 @@ def test_message_sending_to_invited_group_and_event_groups(upcoming_occurrence):
 
     if upcoming_occurrence:
         assert emails == [["should-receive-mail@example.com"]]
+    else:
+        assert emails == []
+    assert message.recipient_count == len(mail.outbox)
+    assert message.sent_at
+
+
+@freeze_time("2020-11-11")
+@pytest.mark.parametrize(
+    "enrolled_amount,should_send", [(0, True), (1, True), (2, False), (3, False)]
+)
+def test_message_sending_to_invited_with_enrolment_limit(
+    child_with_user_guardian, enrolled_amount, should_send
+):
+    """Child who has already enrolled to exactly or more events this year than what is
+    allowed by the project's yearly enrolment limit, should not receive an email.
+    """
+    yesterday = timezone.now() - timedelta(days=1)
+    tomorrow = timezone.now() + timedelta(days=1)
+    expected_email = child_with_user_guardian.relationships.first().guardian.email
+
+    occurrences = OccurrenceFactory.create_batch(
+        enrolled_amount, time=yesterday, event__published_at=yesterday
+    )
+    for i in range(enrolled_amount):
+        EnrolmentFactory(
+            child=child_with_user_guardian, occurrence=occurrences[i], attended=True
+        )
+
+    # Should receive a message regarding this event (occurrence)
+    OccurrenceFactory.create(time=tomorrow, event__published_at=timezone.now())
+
+    message = MessageFactory(recipient_selection=Message.INVITED)
+
+    message.send()
+
+    emails = sorted(m.to for m in mail.outbox)
+
+    if should_send:
+        assert emails == [[expected_email]]
     else:
         assert emails == []
     assert message.recipient_count == len(mail.outbox)

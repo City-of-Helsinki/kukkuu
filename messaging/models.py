@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models, transaction
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Count, Exists, F, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.utils import Message as MailerMessage
@@ -176,8 +177,31 @@ class Message(TimestampedModel, TranslatableModel):
                 events__occurrences__enrolments__child=OuterRef("pk")
             )
 
-            children_with_invitation = children.filter(
-                Q(Exists(enrollable_single_events) | Exists(enrollable_event_groups))
+            # Coalesce adds a default value for children which do not have enrollments
+            # this year. Required for gte query filter to work.
+            current_year_enrolment_count = Coalesce(
+                Subquery(
+                    enrolments.filter(
+                        occurrence__time__year=now.year, child=OuterRef("pk")
+                    )
+                    .values("child")
+                    .annotate(count=Count("pk"))
+                    .values("count")
+                ),
+                0,
+            )
+
+            children_with_invitation = (
+                children.filter(
+                    Q(
+                        Exists(enrollable_single_events)
+                        | Exists(enrollable_event_groups)
+                    )
+                )
+                .annotate(current_year_enrolment_count=current_year_enrolment_count)
+                .exclude(
+                    current_year_enrolment_count__gte=F("project__enrolment_limit")
+                )
             )
 
             return guardians.filter(children__in=children_with_invitation).distinct()
