@@ -291,12 +291,20 @@ def test_occurrence_cancelled_notification(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "ticket_verification_url_setting",
+    [None, "http://kultus-ui.test.kuva.hel.ninja/verify-ticket-endpoint/"],
+)
 def test_occurrence_reminder_notification(
+    ticket_verification_url_setting,
+    settings,
     snapshot,
     notification_template_occurrence_reminder_fi,
     project,
 ):
+    settings.KUKKUU_TICKET_VERIFICATION_URL = ticket_verification_url_setting
     actual_now = now()
+    notifiable_enrolments = []
 
     # time frozen so that the Enrolments will get created_at in the past
     with freeze_time(actual_now - timedelta(days=8)):
@@ -309,10 +317,12 @@ def test_occurrence_reminder_notification(
                 relationship__guardian__last_name="Receive A Notification",
                 project=project,
             )
-            EnrolmentFactory(
-                child=child,
-                occurrence__time=actual_now + delta,
-                occurrence__event__project=project,
+            notifiable_enrolments.append(
+                EnrolmentFactory(
+                    child=child,
+                    occurrence__time=actual_now + delta,
+                    occurrence__event__project=project,
+                )
             )
 
         # these should not create a reminder notification
@@ -348,6 +358,19 @@ def test_occurrence_reminder_notification(
     call_command("send_reminder_notifications")
 
     assert len(mail.outbox) == 2
+    # Test the mail QR-code-ticket attachment
+    if ticket_verification_url_setting:
+        for index, enrolment in enumerate(notifiable_enrolments):
+            # qrcode should be attached
+            assert len(mail.outbox[index].attachments) == 1
+            # verify the name of the file
+            assert (
+                mail.outbox[index].attachments[0][0] == "KuKu-ticket-"
+                f"{str(enrolment.occurrence.time.date())}-{enrolment.reference_id}.png"
+            )
+    else:
+        assert len(mail.outbox[0].attachments) == 0
+
     assert_mails_match_snapshot(snapshot)
 
     enrolments = Enrolment.objects.order_by("id")

@@ -48,3 +48,20 @@ def send_enrolment_creation_notification(enrolment: "Enrolment"):
         occurrence=enrolment.occurrence,
         attachments=attachments,
     )
+
+
+def send_event_reminder_notification(enrolment: "Enrolment"):
+    attachments = []
+    if settings.KUKKUU_TICKET_VERIFICATION_URL:
+        ticket_qrcode = create_ticket_as_attachment(
+            enrolment, QRCODE_ATTACHMENT_FILE_FORMAT
+        )
+        attachments.append(ticket_qrcode)
+    send_event_notifications_to_guardians(
+        enrolment.occurrence.event,
+        NotificationType.OCCURRENCE_REMINDER,
+        enrolment.child,
+        occurrence=enrolment.occurrence,
+        enrolment=enrolment,
+        attachments=attachments,
+    )
