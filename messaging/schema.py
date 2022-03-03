@@ -50,6 +50,7 @@ class MessageNode(DjangoObjectType):
         fields = (
             "id",
             "project",
+            "protocol",
             "created_at",
             "updated_at",
             "subject",
@@ -61,7 +62,7 @@ class MessageNode(DjangoObjectType):
             "recipient_count",
             "translations",
         )
-        filter_fields = ("project_id",)
+        filter_fields = ("project_id", "protocol")
 
     @classmethod
     @project_user_required

@@ -143,6 +143,80 @@ snapshots["test_messages_query_project_filter 1"] = {
     }
 }
 
+snapshots["test_messages_query_protocol_filter[email] 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Which president smile staff country actually generation. Age member whatever open effort clear. Difficult look can. Care figure mention wrong when lead involve. Event lay yes policy data control as receive.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Partner exist true.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Girl middle same space speak. Person the probably deep center develop character situation. Score think turn argue present.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Decade every town.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Voice radio happen color scene. Create state rock only. Several behavior media career decide season mission TV. Work head table city central deep response. Through resource professional debate produce college able.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Walk fish teach.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Sea something western research. Candidate century network bar hear quite wonder. Up always sport return. Light a point charge stand store. Generation able take food share.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Product issue along.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Site chance of performance. Hand cause receive kitchen middle. Step able last in able local garden. Nearly gun two born land military first.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Discussion remain.",
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_send_message 1"] = {
     "data": {
         "sendMessage": {
