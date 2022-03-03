@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 from django.urls import include, path, re_path
-from django.utils.translation import ugettext
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 from helusers.admin_site import admin
@@ -12,7 +12,9 @@ from common.utils import get_api_version
 from kukkuu.views import DepthAnalysisBackend, SentryGraphQLView
 from reports.api import ChildViewSet
 
-admin.site.index_title = " ".join([ugettext("Kukkuu backend"), get_api_version()])
+admin.site.index_title = _("Kukkuu backend {api_version}").format(
+    api_version=get_api_version()
+)
 
 gql_backend = DepthAnalysisBackend(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
 
