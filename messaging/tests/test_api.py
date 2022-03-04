@@ -20,8 +20,8 @@ from messaging.factories import MessageFactory
 from messaging.models import Message
 
 MESSAGES_QUERY = """
-query Messages($projectId: ID, $protocol: String) {
-  messages(projectId: $projectId, protocol: $protocol) {
+query Messages($projectId: ID, $protocol: String, $occurrences: [ID]) {
+  messages(projectId: $projectId, protocol: $protocol, occurrences: $occurrences) {
     edges {
       node {
         project {
@@ -91,6 +91,29 @@ def test_messages_query_protocol_filter(
         for edge in executed["data"]["messages"]["edges"]
     )
     assert len(executed["data"]["messages"]["edges"]) == 5
+    snapshot.assert_match(executed)
+
+
+def test_messages_query_occurrences_filter(snapshot, project_user_api_client, project):
+    occurrence1 = OccurrenceFactory(
+        messages=MessageFactory.create_batch(2, project=project)
+    )
+    occurrence2 = OccurrenceFactory(
+        messages=MessageFactory.create_batch(2, project=project)
+    )
+    OccurrenceFactory(messages=MessageFactory.create_batch(2, project=project))
+
+    assert Message.objects.count() == 6
+
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={
+            "occurrences": [
+                get_global_id(occurrence) for occurrence in [occurrence1, occurrence2]
+            ]
+        },
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 4
     snapshot.assert_match(executed)
 
 

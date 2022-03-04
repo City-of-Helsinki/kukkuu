@@ -126,6 +126,75 @@ snapshots["test_messages_query 1"] = {
     }
 }
 
+snapshots["test_messages_query_occurrences_filter 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [{"node": {"time": "1984-03-20T05:51:53+00:00"}}]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Him question stay.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Child care any. Minute defense level church. Alone our very television beat at success.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [{"node": {"time": "1984-03-20T05:51:53+00:00"}}]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Business hot PM.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Focus significant kind. Laugh smile behavior whom gas. Significant minute rest. Special far magazine.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [{"node": {"time": "2014-01-31T20:11:10+00:00"}}]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Attention practice.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Conference carry factor front Mr amount conference thing. Positive cold start rest tonight including believe. Respond range bit college question. Stop treatment suggest. Sometimes growth check court.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [{"node": {"time": "2014-01-31T20:11:10+00:00"}}]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Past life thus.",
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_messages_query_project_filter 1"] = {
     "data": {
         "messages": {
