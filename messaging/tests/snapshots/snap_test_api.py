@@ -13,6 +13,7 @@ snapshots["test_add_message[None] 1"] = {
                 "event": None,
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
+                "protocol": "EMAIL",
                 "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
@@ -35,6 +36,7 @@ snapshots["test_add_message[event] 1"] = {
                 "event": {"name": "Poor lawyer treat free heart significant."},
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
+                "protocol": "EMAIL",
                 "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
@@ -63,6 +65,7 @@ snapshots["test_add_message[occurrences] 1"] = {
                     ]
                 },
                 "project": {"year": 2020},
+                "protocol": "EMAIL",
                 "recipientCount": 0,
                 "recipientSelection": "ALL",
                 "sentAt": None,
@@ -111,6 +114,7 @@ snapshots["test_messages_query 1"] = {
                         "event": None,
                         "occurrences": {"edges": []},
                         "project": {"year": 2020},
+                        "protocol": "EMAIL",
                         "recipientCount": 0,
                         "recipientSelection": "ALL",
                         "sentAt": None,
@@ -132,6 +136,7 @@ snapshots["test_messages_query_project_filter 1"] = {
                         "event": None,
                         "occurrences": {"edges": []},
                         "project": {"year": 2020},
+                        "protocol": "EMAIL",
                         "recipientCount": 0,
                         "recipientSelection": "ALL",
                         "sentAt": None,
@@ -217,10 +222,98 @@ snapshots["test_messages_query_protocol_filter[email] 1"] = {
     }
 }
 
+snapshots["test_messages_query_protocol_filter[sms] 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Him question stay.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Child care any. Minute defense level church. Alone our very television beat at success.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Business hot PM.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Enter everything history remember stay public high. Exist shoulder write century. Never skill down subject town. According hard enough watch condition like lay.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Detail.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting. Near increase process truth list pressure. Capital city sing himself yard stuff.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Their tell.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Base may middle good father boy economy. Fly discussion huge get this success. Science sort already name. Senior number scene today friend maintain marriage.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Even perhaps that.",
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_send_message 1"] = {
     "data": {
         "sendMessage": {
             "message": {
+                "protocol": "EMAIL",
+                "recipientCount": 1,
+                "sentAt": "2020-12-12T00:00:00+00:00",
+                "subject": "Otsikko",
+            }
+        }
+    }
+}
+
+snapshots["test_send_sms_message 1"] = {
+    "data": {
+        "sendMessage": {
+            "message": {
+                "protocol": "SMS",
                 "recipientCount": 1,
                 "sentAt": "2020-12-12T00:00:00+00:00",
                 "subject": "Otsikko",
@@ -236,6 +329,7 @@ snapshots["test_update_message[None] 1"] = {
                 "event": {"name": "Poor lawyer treat free heart significant."},
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
+                "protocol": "SMS",
                 "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,
@@ -260,6 +354,7 @@ snapshots["test_update_message[event] 1"] = {
                 },
                 "occurrences": {"edges": []},
                 "project": {"year": 2020},
+                "protocol": "SMS",
                 "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,
@@ -286,6 +381,7 @@ snapshots["test_update_message[event_and_occurrences] 1"] = {
                     "edges": [{"node": {"time": "2016-08-16T07:10:00+00:00"}}]
                 },
                 "project": {"year": 2020},
+                "protocol": "SMS",
                 "recipientCount": 0,
                 "recipientSelection": "ATTENDED",
                 "sentAt": None,

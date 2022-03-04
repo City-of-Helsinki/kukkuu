@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from .models import AlreadySentError, Message
+from messaging.exceptions import AlreadySentError
+
+from .models import Message
 
 
 @admin.register(Message)

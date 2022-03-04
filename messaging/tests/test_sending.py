@@ -14,8 +14,9 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
+from messaging.exceptions import AlreadySentError
 from messaging.factories import MessageFactory
-from messaging.models import AlreadySentError, Message
+from messaging.models import Message
 from projects.factories import ProjectFactory
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 
