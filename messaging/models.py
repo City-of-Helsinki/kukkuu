@@ -42,7 +42,15 @@ class Message(TimestampedModel, TranslatableModel):
             _("Subscribed to free spot notification"),
         ),
     )
-
+    EMAIL = "email"
+    SMS = "sms"
+    PROTOCOL_CHOICES = ((EMAIL, _("Email")), (SMS, _("SMS")))
+    protocol = models.CharField(
+        max_length=16,
+        verbose_name=_("notification type"),
+        choices=PROTOCOL_CHOICES,
+        default=EMAIL,
+    )
     project = models.ForeignKey(
         Project,
         verbose_name=_("project"),
