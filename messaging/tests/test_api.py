@@ -202,7 +202,12 @@ mutation AddMessage($input: AddMessageMutationInput!) {
 
 
 def get_add_message_variables(
-    project, event=None, occurrences=None, recipient="ALL", protocol="EMAIL"
+    project,
+    event=None,
+    occurrences=None,
+    recipient="ALL",
+    protocol="EMAIL",
+    send_directly=False,
 ):
     variables = {
         "input": {
@@ -216,12 +221,15 @@ def get_add_message_variables(
             "recipientSelection": recipient,
             "projectId": get_global_id(project),
             "protocol": protocol,
+            "sendDirectly": send_directly,
         }
     }
     if event:
         variables["input"]["eventId"] = get_global_id(event)
     if occurrences is not None:
         variables["input"]["occurrenceIds"] = [get_global_id(o) for o in occurrences]
+    if send_directly:
+        variables["input"]["sendDirectly"] = send_directly
     return variables
 
 
@@ -246,6 +254,23 @@ def test_add_message(snapshot, project_user_api_client, project, event_selection
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("protocol", ["EMAIL", "SMS"])
+@patch.object(SMSNotificationService, "send_sms")
+def test_send_email_directly_with_add_message(
+    mock_send_sms, protocol, project, project_user_api_client
+):
+    ChildWithGuardianFactory()
+
+    variables = get_add_message_variables(
+        project, protocol=protocol, send_directly=True
+    )
+    project_user_api_client.execute(ADD_MESSAGE_MUTATION, variables=variables)
+    if protocol == "SMS":
+        mock_send_sms.assert_called_once()
+    elif protocol == "EMAIL":
+        assert len(mail.outbox) == 1
 
 
 @pytest.mark.parametrize("event_selection", ("event", "event_and_occurrences"))

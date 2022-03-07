@@ -107,6 +107,9 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
         recipient_selection = RecipientSelectionEnum(required=True)
         event_id = graphene.ID()
         occurrence_ids = graphene.List(graphene.NonNull(graphene.ID))
+        send_directly = graphene.Boolean(
+            default=False, description="Sends the message directly after the save"
+        )
 
     message = graphene.Field(MessageNode)
 
@@ -114,8 +117,8 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
     @project_user_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        send_directly = kwargs.pop("send_directly", False)
         data = deepcopy(kwargs)
-
         data["project"] = get_obj_if_user_can_administer(
             info, data.pop("project_id"), Project
         )
@@ -142,6 +145,10 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
         logger.info(
             f"user {info.context.user.uuid} added message {message} with data {kwargs}"
         )
+
+        if send_directly:
+            message.send()
+            logger.info(f"user {info.context.user.uuid} sent message {message}")
 
         return AddMessageMutation(message=message)
 
