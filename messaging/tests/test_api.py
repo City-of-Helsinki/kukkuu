@@ -451,15 +451,17 @@ def test_send_message(snapshot, project_user_api_client, message):
 
 @pytest.mark.django_db
 @patch.object(SMSNotificationService, "send_sms")
-def test_send_sms_message(
+def test_send_sms_message_sent_with_default_language(
     mock_send_sms, snapshot, project_user_api_client, sms_message
 ):
-    ChildWithGuardianFactory()
+    child = ChildWithGuardianFactory(relationship__guardian__language="sv")
+    guardian = child.relationships.first().guardian
 
     executed = project_user_api_client.execute(
         SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(sms_message)}}
     )
-
+    assert guardian.language == "sv"
+    assert executed["data"]["sendMessage"]["message"]["subject"] == "Otsikko"
     snapshot.assert_match(executed)
     assert len(mail.outbox) == 0
     mock_send_sms.assert_called_once()
