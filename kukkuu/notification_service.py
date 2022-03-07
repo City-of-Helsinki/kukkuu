@@ -16,7 +16,10 @@ def send_sms_notification(destinations: List[str], body_text: str, language=None
     if not language:
         language = settings.LANGUAGES[0][0]
 
-    if language in getattr(settings, "TRANSLATED_SMS_SENDER", {}):
+    if (
+        language in getattr(settings, "TRANSLATED_SMS_SENDER", {})
+        and settings.TRANSLATED_SMS_SENDER[language]
+    ):
         sender = settings.TRANSLATED_SMS_SENDER[language]
     else:
         sender = settings.DEFAULT_SMS_SENDER

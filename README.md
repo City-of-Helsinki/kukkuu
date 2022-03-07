@@ -99,6 +99,15 @@ Example crontab for queued emails (includes reminder notification sending as wel
 
 It is also possible to get emails sent right away without any cronjobs by setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `False`, which can be convenient in development. **CAUTION** do not use this in production!
 
+#### SMS notifications
+
+To use the SMS notification functionality, you have to acquire the API_KEY from [Notification Service API](https://github.com/City-of-Helsinki/notification-service-api). The following environment variables are needed:
+
+        ```python
+        NOTIFICATION_SERVICE_API_TOKEN=your_api_key
+        NOTIFICATION_SERVICE_API_URL=notification_service_end_point
+        ```
+
 ### Daily running, Debugging
 
 - Create `.env` file: `touch .env`
