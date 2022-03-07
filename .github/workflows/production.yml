@@ -61,6 +61,9 @@ jobs:
           K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
           K8S_SECRET_DEFAULT_FROM_EMAIL: "Kulttuurin kummilapset <noreply@hel.fi>"
           K8S_SECRET_ILMOITIN_TRANSLATED_FROM_EMAIL: "fi=Kulttuurin kummilapset <noreply@hel.fi>,en=Culture Kids <noreply@hel.fi>,sv=Kulturens fadderbarn <noreply@hel.fi>"
+          K8S_SECRET_TRANSLATED_SMS_SENDER: "fi=Kulttuurin kummilapset,en=Culture Kids,sv=Kulturens fadderbarn"
+          K8S_SECRET_NOTIFICATION_SERVICE_API_TOKEN: ${{ secrets.GH_NS_API_TOKEN_STABLE }}
+          K8S_SECRET_NOTIFICATION_SERVICE_API_URL: ${{ secrets.GH_NS_API_URL_STABLE }}
           K8S_SECRET_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
           K8S_SECRET_AZURE_ACCOUNT_NAME: ${{ secrets.AZURE_ACCOUNT_NAME }}
           K8S_SECRET_AZURE_ACCOUNT_KEY: ${{ secrets.AZURE_ACCOUNT_KEY }}

@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 from django.core import mail
@@ -6,6 +7,7 @@ from django.utils.timezone import now
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
+from common.notification_service import SMSNotificationService
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
 from events.factories import EventFactory, OccurrenceFactory
@@ -18,13 +20,14 @@ from messaging.factories import MessageFactory
 from messaging.models import Message
 
 MESSAGES_QUERY = """
-query Messages {
-  messages {
+query Messages($projectId: ID, $protocol: String, $occurrences: [ID]) {
+  messages(projectId: $projectId, protocol: $protocol, occurrences: $occurrences) {
     edges {
       node {
         project {
           year
         }
+        protocol
         subject
         bodyText
         recipientSelection
@@ -70,6 +73,47 @@ def test_messages_query_project_filter(
         MESSAGES_QUERY, variables={"project_id": get_global_id(project)}
     )
 
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("protocol", [Message.SMS, Message.EMAIL])
+def test_messages_query_protocol_filter(
+    protocol, snapshot, project_user_api_client, project
+):
+    MessageFactory.create_batch(5, protocol=Message.SMS, project=project)
+    MessageFactory.create_batch(5, protocol=Message.EMAIL, project=project)
+
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY, variables={"protocol": protocol}
+    )
+    assert all(
+        edge["node"]["protocol"] == protocol.upper()
+        for edge in executed["data"]["messages"]["edges"]
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 5
+    snapshot.assert_match(executed)
+
+
+def test_messages_query_occurrences_filter(snapshot, project_user_api_client, project):
+    occurrence1 = OccurrenceFactory(
+        messages=MessageFactory.create_batch(2, project=project)
+    )
+    occurrence2 = OccurrenceFactory(
+        messages=MessageFactory.create_batch(2, project=project)
+    )
+    OccurrenceFactory(messages=MessageFactory.create_batch(2, project=project))
+
+    assert Message.objects.count() == 6
+
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={
+            "occurrences": [
+                get_global_id(occurrence) for occurrence in [occurrence1, occurrence2]
+            ]
+        },
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 4
     snapshot.assert_match(executed)
 
 
@@ -129,6 +173,7 @@ ADD_MESSAGE_MUTATION = """
 mutation AddMessage($input: AddMessageMutationInput!) {
   addMessage(input: $input) {
     message {
+      protocol
       translations {
         languageCode
         subject
@@ -156,7 +201,9 @@ mutation AddMessage($input: AddMessageMutationInput!) {
 """
 
 
-def get_add_message_variables(project, event=None, occurrences=None, recipient="ALL"):
+def get_add_message_variables(
+    project, event=None, occurrences=None, recipient="ALL", protocol="EMAIL"
+):
     variables = {
         "input": {
             "translations": [
@@ -168,6 +215,7 @@ def get_add_message_variables(project, event=None, occurrences=None, recipient="
             ],
             "recipientSelection": recipient,
             "projectId": get_global_id(project),
+            "protocol": protocol,
         }
     }
     if event:
@@ -212,7 +260,11 @@ def test_cannot_add_message_with_event_for_invited_group_message(
         occurrences = [OccurrenceFactory(event=event)]
 
     variables = get_add_message_variables(
-        project, event=event, occurrences=occurrences, recipient="INVITED"
+        project,
+        event=event,
+        occurrences=occurrences,
+        recipient="INVITED",
+        protocol="EMAIL",
     )
 
     executed = project_user_api_client.execute(
@@ -235,6 +287,7 @@ UPDATE_MESSAGE_MUTATION = """
 mutation UpdateMessage($input: UpdateMessageMutationInput!) {
   updateMessage(input: $input) {
     message {
+      protocol
       translations {
         languageCode
         subject
@@ -263,7 +316,7 @@ mutation UpdateMessage($input: UpdateMessageMutationInput!) {
 
 
 def get_update_message_variables(
-    message, event=None, occurrences=None, recipient="ATTENDED"
+    message, event=None, occurrences=None, recipient="ATTENDED", **kwargs
 ):
     variables = {
         "input": {
@@ -276,6 +329,7 @@ def get_update_message_variables(
             ],
             "recipientSelection": recipient,
             "id": get_global_id(message),
+            **kwargs,
         }
     }
     if event:
@@ -309,7 +363,7 @@ def test_update_message(snapshot, project_user_api_client, event_selection):
         new_occurrences = []
 
     variables = get_update_message_variables(
-        message, event=new_event, occurrences=new_occurrences
+        message, event=new_event, occurrences=new_occurrences, protocol="SMS"
     )
 
     executed = project_user_api_client.execute(
@@ -373,6 +427,7 @@ SEND_MESSAGE_MUTATION = """
 mutation SendMessage($input: SendMessageMutationInput!) {
   sendMessage(input: $input) {
     message {
+      protocol
       subject
       sentAt
       recipientCount
@@ -392,6 +447,22 @@ def test_send_message(snapshot, project_user_api_client, message):
 
     snapshot.assert_match(executed)
     assert len(mail.outbox) == 1
+
+
+@pytest.mark.django_db
+@patch.object(SMSNotificationService, "send_sms")
+def test_send_sms_message(
+    mock_send_sms, snapshot, project_user_api_client, sms_message
+):
+    ChildWithGuardianFactory()
+
+    executed = project_user_api_client.execute(
+        SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(sms_message)}}
+    )
+
+    snapshot.assert_match(executed)
+    assert len(mail.outbox) == 0
+    mock_send_sms.assert_called_once()
 
 
 @pytest.mark.django_db

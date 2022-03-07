@@ -44,6 +44,14 @@ class OccurrenceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Occurrence
 
+    @factory.post_generation
+    def messages(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for message in extracted:
+                self.messages.add(message)
+
 
 class EnrolmentFactory(factory.django.DjangoModelFactory):
     child = factory.SubFactory("children.factories.ChildFactory")

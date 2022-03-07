@@ -18,7 +18,8 @@ from events.models import Event, Occurrence
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
 from projects.models import Project
 
-from .models import AlreadySentError, Message
+from .exceptions import AlreadySentError
+from .models import Message
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,11 @@ class RecipientSelectionEnum(graphene.Enum):
     SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION = "subscribed_to_free_spot_notification"
 
 
+ProtocolType = graphene.Enum(
+    "ProtocolType", [(c[0].upper(), c[0]) for c in Message.PROTOCOL_CHOICES]
+)
+
+
 class MessageNode(DjangoObjectType):
     subject = graphene.String()
     body_text = graphene.String()
@@ -50,6 +56,7 @@ class MessageNode(DjangoObjectType):
         fields = (
             "id",
             "project",
+            "protocol",
             "created_at",
             "updated_at",
             "subject",
@@ -61,7 +68,7 @@ class MessageNode(DjangoObjectType):
             "recipient_count",
             "translations",
         )
-        filter_fields = ("project_id",)
+        filter_fields = ("project_id", "protocol", "occurrences")
 
     @classmethod
     @project_user_required
@@ -94,6 +101,7 @@ class MessageTranslationsInput(graphene.InputObjectType):
 
 class AddMessageMutation(graphene.relay.ClientIDMutation):
     class Input:
+        protocol = ProtocolType(default=Message.EMAIL, required=True)
         translations = graphene.List(MessageTranslationsInput)
         project_id = graphene.GlobalID()
         recipient_selection = RecipientSelectionEnum(required=True)
@@ -141,6 +149,7 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
 class UpdateMessageMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        protocol = ProtocolType(default=Message.EMAIL)
         translations = graphene.List(MessageTranslationsInput)
         project_id = graphene.ID()
         recipient_selection = RecipientSelectionEnum()
