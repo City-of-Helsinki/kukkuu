@@ -61,7 +61,11 @@ jobs:
           K8S_SECRET_MAILER_EMAIL_BACKEND: "anymail.backends.mailgun.EmailBackend"
           K8S_SECRET_DEFAULT_FROM_EMAIL: "Kulttuurin kummilapset <noreply@hel.fi>"
           K8S_SECRET_ILMOITIN_TRANSLATED_FROM_EMAIL: "fi=Kulttuurin kummilapset <noreply@hel.fi>,en=Culture Kids <noreply@hel.fi>,sv=Kulturens fadderbarn <noreply@hel.fi>"
-          K8S_SECRET_TRANSLATED_SMS_SENDER: "fi=Kulttuurin kummilapset,en=Culture Kids,sv=Kulturens fadderbarn"
+          # Message sender. International numbers with + or 00 prefix
+          # and 5 to 15 numbers following it, national ones / shortcodes
+          # with 1 to 15 numbers, alphanumeric with max 11 characters.
+          # https://quriiri.fi/wp-content/uploads/2022/03/Quriiri-HTTP-MT-API-v1.pdf
+          # K8S_SECRET_TRANSLATED_SMS_SENDER: "fi=Kulttuurin kummilapset,en=Culture Kids,sv=Kulturens fadderbarn"
           K8S_SECRET_NOTIFICATION_SERVICE_API_TOKEN: ${{ secrets.GH_NS_API_TOKEN_STABLE }}
           K8S_SECRET_NOTIFICATION_SERVICE_API_URL: ${{ secrets.GH_NS_API_URL_STABLE }}
           K8S_SECRET_DEFAULT_FILE_STORAGE: "storages.backends.azure_storage.AzureStorage"
