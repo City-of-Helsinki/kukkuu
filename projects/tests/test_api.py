@@ -22,6 +22,7 @@ query Projects {
           name
         }
         singleEventsAllowed
+        enrolmentLimit
       }
     }
   }
@@ -39,6 +40,7 @@ query Project($id: ID!) {
       name
     }
     singleEventsAllowed
+    enrolmentLimit
   }
 }
 """
