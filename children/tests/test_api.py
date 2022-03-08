@@ -738,6 +738,57 @@ def test_delete_child_mutation_wrong_user(
     assert Child.objects.count() == 1
 
 
+CHILD_ENROLMENT_COUNT_QUERY = """
+query Child($id: ID!, $year: Int) {
+  child(id: $id) {
+    enrolmentCount(year: $year)
+  }
+}
+"""
+
+
+@pytest.mark.parametrize(
+    "year_delta,expected_count",
+    [(-2, 0), (-1, 1), (0, 2), (None, 2), (1, 1), (2, 0)],
+)
+def test_child_enrolment_count(
+    guardian_api_client, child_with_user_guardian, year_delta, expected_count
+):
+    variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+    if year_delta:
+        variables["year"] = timezone.now().year + year_delta
+
+    last_year = timezone.now() - timedelta(days=365)
+    this_year = timezone.now() + timedelta(days=1)
+    next_year = timezone.now() + timedelta(days=365)
+
+    last_year_occurrence = OccurrenceFactory.create(
+        time=last_year, event__published_at=last_year
+    )
+    this_year_occurences = OccurrenceFactory.create_batch(
+        2, time=this_year, event__published_at=this_year
+    )
+    next_year_occurrence = OccurrenceFactory.create(
+        time=next_year, event__published_at=next_year
+    )
+
+    for occurrence in [
+        last_year_occurrence,
+        *this_year_occurences,
+        next_year_occurrence,
+    ]:
+        EnrolmentFactory(
+            child=child_with_user_guardian,
+            occurrence=occurrence,
+        )
+
+    executed = guardian_api_client.execute(
+        CHILD_ENROLMENT_COUNT_QUERY, variables=variables
+    )
+
+    assert executed["data"]["child"]["enrolmentCount"] == expected_count
+
+
 def test_get_available_events(
     snapshot,
     guardian_api_client,

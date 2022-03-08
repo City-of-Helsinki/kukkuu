@@ -54,6 +54,9 @@ class ChildNode(DjangoObjectType):
     )
     past_events = relay.ConnectionField("events.schema.EventConnection")
     languages_spoken_at_home = DjangoConnectionField(LanguageNode)
+    enrolment_count = graphene.Int(
+        description="How many enrolments child has this year.", year=graphene.Int()
+    )
 
     class Meta:
         model = Child
@@ -93,6 +96,10 @@ class ChildNode(DjangoObjectType):
             return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+    def resolve_enrolment_count(self: Child, info, **kwargs):
+        year = kwargs.get("year") or timezone.now().year
+        return self.occurrences.filter(time__year=year).count()
 
     def resolve_past_events(self, info, **kwargs):
         """
