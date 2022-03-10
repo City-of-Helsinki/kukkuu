@@ -119,6 +119,15 @@ class EventQueryset(TranslatableQuerySet):
     def unpublished(self):
         return self.filter(published_at__isnull=True)
 
+    def upcoming(self):
+        return self.filter(occurrences__time__gte=timezone.now()).distinct()
+
+    def upcoming_with_leeway(self):
+        return self.filter(
+            occurrences__time__gte=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        ).distinct()
+
     def available(self, child):
         """
         A child's available events must match all of the following rules:
@@ -133,8 +142,7 @@ class EventQueryset(TranslatableQuerySet):
         )
         return (
             self.published()
-            .filter(occurrences__time__gte=timezone.now())
-            .distinct()
+            .upcoming()
             .exclude(occurrences__in=child.occurrences.all())
             .exclude(event_group__in=child_enrolled_event_groups)
         )

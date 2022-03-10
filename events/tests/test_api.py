@@ -167,8 +167,9 @@ query Event($id:ID!) {
 """
 
 EVENTS_FILTER_QUERY = """
-query Events($projectId: ID) {
-  events(projectId: $projectId) {
+query Events($projectId: ID, $upcoming: Boolean, $upcomingWithLeeway: Boolean) {
+  events(projectId: $projectId, upcoming: $upcoming,
+         upcomingWithLeeway: $upcomingWithLeeway) {
     edges {
       node {
         name
@@ -1083,6 +1084,44 @@ def test_event_filter_by_project(
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("leeway", [False, True])
+def test_event_filter_by_upcoming_events(
+    guardian_api_client,
+    child_with_user_guardian,
+    settings,
+    leeway,
+):
+    leeway_point = timezone.now() - timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
+    )
+    not_visible = leeway_point - timedelta(minutes=5)
+    within_leeway = leeway_point + timedelta(minutes=5)
+    future = timezone.now() + timedelta(days=1)
+    # No occurrences
+    EventFactory(published_at=now())
+    OccurrenceFactory.create(
+        time=not_visible, event__name="Not visible", event__published_at=not_visible
+    )
+    OccurrenceFactory.create(
+        time=within_leeway,
+        event__name="Within leeway",
+        event__published_at=within_leeway,
+    )
+    OccurrenceFactory.create(
+        time=future, event__name="In the future", event__published_at=now()
+    )
+
+    variables = {"upcomingWithLeeway" if leeway else "upcoming": True}
+
+    executed = guardian_api_client.execute(EVENTS_FILTER_QUERY, variables=variables)
+    events = [event["node"]["name"] for event in executed["data"]["events"]["edges"]]
+
+    if leeway:
+        assert set(events) == {"Within leeway", "In the future"}
+    else:
+        assert set(events) == {"In the future"}
 
 
 def test_enrol_occurrence(
