@@ -520,6 +520,7 @@ class Enrolment(TimestampedModel):
                 fields=["child", "occurrence"], name="unq_child_occurrence"
             )
         ]
+        ordering = ("id",)
 
     def __str__(self):
         return f"{self.pk} {self.child_id}"

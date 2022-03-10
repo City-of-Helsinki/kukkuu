@@ -47,6 +47,7 @@ class ProjectNode(DjangoObjectType):
             "name",
             "my_permissions",
             "single_events_allowed",
+            "enrolment_limit",
         )
 
     @classmethod

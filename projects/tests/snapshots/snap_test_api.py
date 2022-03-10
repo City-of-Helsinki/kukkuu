@@ -9,6 +9,7 @@ snapshots = Snapshot()
 snapshots["test_project_query_normal_user 1"] = {
     "data": {
         "project": {
+            "enrolmentLimit": 2,
             "id": "UHJvamVjdE5vZGU6MQ==",
             "name": "Testiprojekti",
             "singleEventsAllowed": True,
@@ -24,6 +25,7 @@ snapshots["test_projects_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
+                        "enrolmentLimit": 2,
                         "id": "UHJvamVjdE5vZGU6MQ==",
                         "name": "Testiprojekti",
                         "singleEventsAllowed": True,

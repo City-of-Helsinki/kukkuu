@@ -378,19 +378,6 @@ snapshots["test_send_message 1"] = {
     }
 }
 
-snapshots["test_send_sms_message 1"] = {
-    "data": {
-        "sendMessage": {
-            "message": {
-                "protocol": "SMS",
-                "recipientCount": 1,
-                "sentAt": "2020-12-12T00:00:00+00:00",
-                "subject": "Otsikko",
-            }
-        }
-    }
-}
-
 snapshots["test_send_sms_message_sent_with_default_language 1"] = {
     "data": {
         "sendMessage": {
