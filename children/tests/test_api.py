@@ -769,7 +769,7 @@ def test_child_enrolment_count(
         2, time=this_year, event__published_at=this_year
     )
     next_year_occurrence = OccurrenceFactory.create(
-        time=next_year, event__published_at=next_year
+        time=next_year, event__published_at=now()
     )
 
     for occurrence in [
