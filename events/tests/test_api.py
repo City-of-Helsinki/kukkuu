@@ -36,6 +36,7 @@ from kukkuu.consts import (
     NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
+    OCCURRENCE_MISMATCH_ERROR,
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
@@ -704,6 +705,54 @@ def test_add_occurrence_project_user(snapshot, project_user_api_client, event, v
         ADD_OCCURRENCE_MUTATION, variables=occurrence_variables
     )
     snapshot.assert_match(executed)
+
+
+def test_add_occurrence_different_year(project_user_api_client, event, venue):
+    """All occurrences have to be within the same calendar year."""
+    OccurrenceFactory(time=timezone.now(), venue=venue, event=event)
+    occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
+    occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
+    occurrence_variables["input"]["time"] = (
+        timezone.now() + timedelta(days=365)
+    ).isoformat()
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=occurrence_variables
+    )
+
+    assert_match_error_code(executed, OCCURRENCE_MISMATCH_ERROR)
+
+
+@pytest.mark.parametrize("single_occurrence", [True, False])
+def test_update_occurrence_different_year(
+    project_user_api_client, occurrence, single_occurrence, snapshot
+):
+    """All occurrences have to be within the same calendar year."""
+    if not single_occurrence:
+        OccurrenceFactory(
+            time=timezone.now(), venue=occurrence.venue, event=occurrence.event
+        )
+    occurrence_variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["id"] = to_global_id("OccurrenceNode", occurrence.id)
+    occurrence_variables["input"]["eventId"] = to_global_id(
+        "EventNode", occurrence.event.id
+    )
+    occurrence_variables["input"]["venueId"] = to_global_id(
+        "VenueNode", occurrence.venue.id
+    )
+    occurrence_variables["input"]["time"] = (
+        timezone.now() + timedelta(days=365)
+    ).isoformat()
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=occurrence_variables
+    )
+
+    if single_occurrence:
+        snapshot.assert_match(executed)
+    else:
+        assert_match_error_code(executed, OCCURRENCE_MISMATCH_ERROR)
 
 
 def test_add_occurrence_ticket_system_url(snapshot, project_user_api_client, venue):

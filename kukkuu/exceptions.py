@@ -47,6 +47,10 @@ class OccurrenceIsFullError(KukkuuGraphQLError):
     """Error when child join an occurrence which is already full"""
 
 
+class OccurrenceYearMismatchError(KukkuuGraphQLError):
+    """Error when an event occurrence has different year from other occurrences"""
+
+
 class EventAlreadyPublishedError(KukkuuGraphQLError):
     """Error when admin publish event which is already published"""
 
