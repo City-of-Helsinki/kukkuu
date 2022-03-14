@@ -85,7 +85,7 @@ def validate_enrolment_deletion(enrolment):
         )
 
 
-def validate_occurrence(kwargs, occurrence: Occurrence = None):
+def validate_occurrence_input(kwargs, occurrence: Occurrence = None):
     if time := kwargs.get("time"):
         if occurrence:
             # Don't consider the occurrence which is being updated
@@ -729,7 +729,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
-        validate_occurrence(kwargs)
+        validate_occurrence_input(kwargs)
         occurrence = Occurrence.objects.create(**kwargs)
 
         # needed because enrolment_count is an annotated field
@@ -776,7 +776,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
-        validate_occurrence(kwargs, occurrence=occurrence)
+        validate_occurrence_input(kwargs, occurrence=occurrence)
         update_object(occurrence, kwargs)
 
         try:
