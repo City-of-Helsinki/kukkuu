@@ -1,3 +1,4 @@
+import itertools
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Dict
@@ -114,7 +115,7 @@ query Events {
 """
 
 EVENT_QUERY = """
-query Event($id:ID!) {
+query Event($id: ID!) {
   event(id: $id) {
     translations{
       name
@@ -603,6 +604,54 @@ def test_event_query_normal_user(snapshot, user_api_client, event, venue):
     executed = user_api_client.execute(EVENT_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
+
+
+CAN_CHILD_ENROLL_EVENT_QUERY = """
+query Event($id: ID!, $childId: ID!) {
+  event(id: $id) {
+    name
+    canChildEnroll(childId: $childId)
+  }
+}
+"""
+
+
+@pytest.mark.parametrize("enrolment_in_future", [True, False])
+def test_event_query_can_child_enroll(
+    guardian_api_client,
+    child_with_user_guardian,
+    future,
+    past,
+    enrolment_in_future,
+):
+    """Enrolment shouldn't be allowed since child has enrolled to a different event
+    in the same event group.
+    """
+    event_group = EventGroupFactory(
+        name="Event group with one of two events enrolled", published_at=now()
+    )
+    unenrolled_occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=event_group,
+    )
+    enrolled_occurrence = OccurrenceFactory(
+        time=future if enrolment_in_future else past,
+        event__published_at=now() if enrolment_in_future else past,
+        event__event_group=event_group,
+    )
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=enrolled_occurrence)
+
+    variables = {
+        "id": to_global_id("EventNode", unenrolled_occurrence.event.id),
+        "childId": get_global_id(child_with_user_guardian),
+    }
+
+    executed = guardian_api_client.execute(
+        CAN_CHILD_ENROLL_EVENT_QUERY, variables=variables
+    )
+
+    assert executed["data"]["event"]["canChildEnroll"] is False
 
 
 def test_occurrences_query_unauthenticated(api_client):
@@ -1919,8 +1968,10 @@ def test_event_group_query_wrong_project(
 
 
 EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY = """
-query EventsAndEventGroups($projectId: ID) {
-  eventsAndEventGroups(projectId: $projectId) {
+query EventsAndEventGroups($projectId: ID, $upcoming: Boolean,
+                           $upcomingWithLeeway: Boolean) {
+  eventsAndEventGroups(projectId: $projectId, upcoming: $upcoming,
+                       upcomingWithLeeway: $upcomingWithLeeway) {
     edges {
       node {
         ... on EventNode {
@@ -1992,6 +2043,67 @@ def test_events_and_event_groups_query_project_filtering(
     snapshot.assert_match(
         executed, name="First project in filter, permission to see both projects"
     )
+
+
+@pytest.mark.parametrize(
+    "leeway,has_event_group", itertools.product((True, False), repeat=2)
+)
+def test_events_and_event_groups_query_upcoming_filter(
+    guardian_api_client,
+    child_with_user_guardian,
+    settings,
+    snapshot,
+    has_event_group,
+    leeway,
+):
+    leeway_point = timezone.now() - timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
+    )
+    not_visible = leeway_point - timedelta(minutes=5)
+    within_leeway = leeway_point + timedelta(minutes=5)
+    future = timezone.now() + timedelta(days=1)
+
+    # No occurrences
+    EventFactory(
+        published_at=now(),
+        event_group=EventGroupFactory(published_at=now()) if has_event_group else None,
+    )
+    OccurrenceFactory.create(
+        time=not_visible,
+        event__name="Not visible",
+        event__published_at=not_visible,
+        event__event_group=EventGroupFactory(
+            name="Not visible", published_at=not_visible
+        )
+        if has_event_group
+        else None,
+    )
+    OccurrenceFactory.create(
+        time=within_leeway,
+        event__name="Within leeway",
+        event__published_at=within_leeway,
+        event__event_group=EventGroupFactory(
+            name="Within leeway", published_at=within_leeway
+        )
+        if has_event_group
+        else None,
+    )
+    OccurrenceFactory.create(
+        time=future,
+        event__name="In the future",
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(name="In the future", published_at=now())
+        if has_event_group
+        else None,
+    )
+
+    variables = {"upcomingWithLeeway" if leeway else "upcoming": True}
+
+    executed = guardian_api_client.execute(
+        EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
 
 
 ADD_EVENT_GROUP_MUTATION = """

@@ -1,5 +1,6 @@
 import logging
 from copy import deepcopy
+from typing import Optional
 
 import graphene
 from django.apps import apps
@@ -173,6 +174,7 @@ class EventNode(DjangoObjectType):
     image_alt_text = graphene.String()
     participants_per_invite = EventParticipantsPerInvite(required=True)
     ticket_system = graphene.Field(EventTicketSystem)
+    can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
 
     class Meta:
         model = Event
@@ -238,6 +240,14 @@ class EventNode(DjangoObjectType):
         # Event object is needed for resolving EventTicketSystem fields
         return self
 
+    def resolve_can_child_enroll(self: Event, info, **kwargs) -> Optional[bool]:
+        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+        try:
+            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
+        except Child.DoesNotExist:
+            return None
+        return self.can_child_enroll(child)
+
 
 class EventConnection(Connection):
     class Meta:
@@ -257,6 +267,7 @@ class EventGroupNode(DjangoObjectType):
     description = graphene.String()
     short_description = graphene.String()
     image_alt_text = graphene.String()
+    can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
 
     class Meta:
         model = EventGroup
@@ -300,6 +311,14 @@ class EventGroupNode(DjangoObjectType):
 
     def resolve_translations(self, info, **kwargs):
         return self.translations.order_by("language_code")
+
+    def resolve_can_child_enroll(self: EventGroup, info, **kwargs) -> Optional[bool]:
+        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+        try:
+            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
+        except Child.DoesNotExist:
+            return None
+        return self.can_child_enroll(child)
 
 
 class EventOrEventGroup(graphene.Union):
@@ -977,7 +996,10 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
 class Query:
     events = DjangoFilterConnectionField(EventNode)
     events_and_event_groups = graphene.ConnectionField(
-        EventOrEventGroupConnection, project_id=graphene.ID()
+        EventOrEventGroupConnection,
+        project_id=graphene.ID(),
+        upcoming=graphene.Boolean(),
+        upcoming_with_leeway=graphene.Boolean(),
     )
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
@@ -996,6 +1018,13 @@ class Query:
             project_id = get_node_id_from_global_id(kwargs["project_id"], "ProjectNode")
             event_qs = event_qs.filter(project_id=project_id)
             event_group_qs = event_group_qs.filter(project_id=project_id)
+
+        if kwargs.get("upcoming_with_leeway", False):
+            event_qs = event_qs.upcoming_with_leeway()
+            event_group_qs = event_group_qs.upcoming_with_leeway()
+        elif kwargs.get("upcoming", False):
+            event_qs = event_qs.upcoming()
+            event_group_qs = event_group_qs.upcoming()
 
         return sorted(
             (

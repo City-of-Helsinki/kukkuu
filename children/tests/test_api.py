@@ -1170,3 +1170,206 @@ def test_available_events_and_event_groups(
         executed2["data"]["child"]["availableEventsAndEventGroups"]
         == executed["data"]["child"]["availableEventsAndEventGroups"]
     )
+
+
+CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY = """
+query Child($id: ID!) {
+  child(id: $id) {
+    upcomingEventsAndEventGroups{
+      edges {
+        node {
+          ... on EventNode {
+            name
+            canChildEnroll(childId: $id)
+            __typename
+          }
+          ... on EventGroupNode {
+            name
+            canChildEnroll(childId: $id)
+            __typename
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_upcoming_events_and_event_groups(
+    snapshot,
+    guardian_api_client,
+    child_with_user_guardian,
+    future,
+    past,
+    project,
+    another_project,
+):
+    # Don't check for enrolment limit in this test
+    project.enrolment_limit = 10
+    project.save()
+
+    # the following should NOT be returned
+    EventFactory(name="Event without occurrences", published_at=now())
+    OccurrenceFactory(event__name="Unpublished event", time=future)
+    OccurrenceFactory(event__published_at=now(), event__name="Event in past", time=past)
+    OccurrenceFactory(
+        time=future,
+        event__name="Event from another project",
+        event__published_at=now(),
+        event__project=another_project,
+    )
+    EventGroupFactory(name="Empty event group", published_at=now())
+    OccurrenceFactory(
+        time=future,
+        event__event_group=EventGroupFactory(name="Unpublished event group"),
+    )
+    EventFactory(
+        event_group=EventGroupFactory(
+            name="Event group without occurrences", published_at=now()
+        ),
+        published_at=now(),
+    )
+
+    # Child cannot enroll to the following events (canChildEnroll == False)
+    EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=future, event=EventFactory(name="Enrolled event", published_at=now())
+        ),
+    )
+
+    event_group = EventGroupFactory(
+        name="Event group with one of two events enrolled", published_at=now()
+    )
+    event_group_occurrences = OccurrenceFactory.create_batch(
+        2,
+        time=timezone.now(),
+        event__published_at=now(),
+        event__event_group=event_group,
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian, occurrence=event_group_occurrences[0]
+    )
+
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__project=another_project,
+        event__event_group=EventGroupFactory(
+            published_at=now(), project=another_project
+        ),
+    )  # event group from another project
+
+    # the following should be returned (canChildEnroll == False)
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(
+            name="This should be the third", published_at=now() + timedelta(minutes=2)
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(
+            name="This should be the first", published_at=now() + timedelta(minutes=4)
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event=EventFactory(
+            published_at=now() + timedelta(minutes=3), name="This should be the second"
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event=EventFactory(
+            published_at=now() + timedelta(minutes=1), name="This should be the fourth"
+        ),
+    )
+
+    variables = {"id": get_global_id(child_with_user_guardian)}
+    executed = guardian_api_client.execute(
+        CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    assign_perm("admin", guardian_api_client.user, project)
+    executed2 = guardian_api_client.execute(
+        CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
+    )
+
+    # having admin rights on the project should not affect available events
+    assert (
+        executed2["data"]["child"]["upcomingEventsAndEventGroups"]
+        == executed["data"]["child"]["upcomingEventsAndEventGroups"]
+    )
+
+
+@pytest.mark.parametrize("enrolments_in_future", [True, False])
+def test_test_upcoming_events_and_event_groups_yearly_enrolment_limit(
+    snapshot,
+    guardian_api_client,
+    child_with_user_guardian,
+    future,
+    past,
+    project,
+    enrolments_in_future,
+):
+    project.enrolment_limit = 2
+    project.save()
+
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__event_group=EventGroupFactory(
+            name="This should be the first", published_at=now() + timedelta(minutes=2)
+        ),
+    )
+    OccurrenceFactory(
+        time=future,
+        event=EventFactory(
+            published_at=now() + timedelta(minutes=1), name="This should be the second"
+        ),
+    )
+
+    occurrence_time = future if enrolments_in_future else past
+    publish_time = min(occurrence_time, now())
+
+    EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=occurrence_time,
+            event=EventFactory(name="Enrolled event", published_at=publish_time),
+        ),
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=occurrence_time,
+            event=EventFactory(
+                name="Enrolled event",
+                published_at=publish_time,
+                event_group=EventGroupFactory(
+                    name="Enrolled event group", published_at=publish_time
+                ),
+            ),
+        ),
+    )
+
+    variables = {"id": get_global_id(child_with_user_guardian)}
+    executed = guardian_api_client.execute(
+        CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY, variables=variables
+    )
+
+    nodes = executed["data"]["child"]["upcomingEventsAndEventGroups"]["edges"]
+
+    if enrolments_in_future:
+        assert len(nodes) == 4
+    else:
+        assert len(nodes) == 2
+
+    for node in nodes:
+        assert node["node"]["canChildEnroll"] is False

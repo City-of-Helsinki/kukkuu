@@ -553,6 +553,59 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
     }
 }
 
+snapshots["test_upcoming_events_and_event_groups 1"] = {
+    "data": {
+        "child": {
+            "upcomingEventsAndEventGroups": {
+                "edges": [
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "canChildEnroll": True,
+                            "name": "This should be the first",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": True,
+                            "name": "This should be the second",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "canChildEnroll": True,
+                            "name": "This should be the third",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": True,
+                            "name": "This should be the fourth",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": False,
+                            "name": "Enrolled event",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "canChildEnroll": False,
+                            "name": "Event group with one of two events enrolled",
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_update_child_mutation 1"] = {
     "data": {
         "updateChild": {

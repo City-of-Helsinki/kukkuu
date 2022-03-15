@@ -52,6 +52,10 @@ class ChildNode(DjangoObjectType):
     available_events_and_event_groups = relay.ConnectionField(
         "events.schema.EventOrEventGroupConnection"
     )
+    upcoming_events_and_event_groups = relay.ConnectionField(
+        "events.schema.EventOrEventGroupConnection",
+        description="All upcoming events and event groups for the child's project.",
+    )
     past_events = relay.ConnectionField("events.schema.EventConnection")
     languages_spoken_at_home = DjangoConnectionField(LanguageNode)
     enrolment_count = graphene.Int(
@@ -109,7 +113,7 @@ class ChildNode(DjangoObjectType):
             time__year=timezone.now().year, time__lt=timezone.now()
         ).count()
 
-    def resolve_past_events(self, info, **kwargs):
+    def resolve_past_events(self: Child, info, **kwargs):
         """
         Past events include Events the user has enrolled AND the occurrence of the
         enrolment is more than KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY mins in the
@@ -122,10 +126,27 @@ class ChildNode(DjangoObjectType):
         )
         return events.filter(occurrences__in=past_enough_enrolled_occurrences)
 
-    def resolve_available_events(self, info, **kwargs):
+    def resolve_available_events(self: Child, info, **kwargs):
         return self.project.events.user_can_view(info.context.user).available(self)
 
-    def resolve_available_events_and_event_groups(self, info, **kwargs):
+    def resolve_upcoming_events_and_event_groups(self: Child, info, **kwargs):
+        from events.schema import EventGroupNode, EventNode  # noqa
+
+        upcoming_events = self.project.events.published().upcoming()
+        upcoming_event_groups = self.project.event_groups.filter(
+            events__in=upcoming_events
+        )
+
+        return sorted(
+            (
+                *EventNode.get_queryset(upcoming_events.filter(event_group=None), info),
+                *EventGroupNode.get_queryset(upcoming_event_groups, info),
+            ),
+            key=lambda e: e.published_at,
+            reverse=True,
+        )
+
+    def resolve_available_events_and_event_groups(self: Child, info, **kwargs):
         from events.schema import EventGroupNode, EventNode  # noqa
 
         available_events = self.project.events.available(self)
@@ -144,7 +165,7 @@ class ChildNode(DjangoObjectType):
             reverse=True,
         )
 
-    def resolve_occurrences(self, info, **kwargs):
+    def resolve_occurrences(self: Child, info, **kwargs):
         # Use distinct to avoid duplicated rows when querying nested occurrences
         return self.occurrences.distinct()
 

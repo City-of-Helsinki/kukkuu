@@ -40,6 +40,15 @@ class EventGroupQueryset(TranslatableQuerySet):
     def published(self):
         return self.filter(published_at__isnull=False)
 
+    def upcoming(self):
+        return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
+
+    def upcoming_with_leeway(self):
+        return self.filter(
+            events__occurrences__time__gte=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        ).distinct()
+
 
 class EventGroup(TimestampedModel, TranslatableModel):
     translations = TranslatedFields(
@@ -80,6 +89,26 @@ class EventGroup(TimestampedModel, TranslatableModel):
 
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
+
+    def can_child_enroll(self, child) -> bool:
+        """Check if the child can enroll to an event in the event group."""
+
+        if occurrence := Occurrence.objects.filter(event__event_group=self).first():
+            # Need to have at least one occurrence
+            year = occurrence.time.year
+        else:
+            return False
+
+        if (
+            child.occurrences.filter(time__year=year).count()
+            >= child.project.enrolment_limit
+        ):
+            return False
+
+        if child.occurrences.filter(event__event_group=self).exists():
+            return False
+
+        return True
 
     def publish(self):
         unpublished_events = self.events.unpublished()
@@ -263,6 +292,29 @@ class Event(TimestampedModel, TranslatableModel):
 
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
+
+    def can_child_enroll(self, child: Child) -> bool:
+        """Check if the child can enroll to the event."""
+
+        if occurrence := self.occurrences.first():
+            # Need to have at least one occurrence
+            year = occurrence.time.year
+        else:
+            return False
+
+        if self.event_group and not self.event_group.can_child_enroll(child):
+            return False
+
+        if (
+            child.occurrences.filter(time__year=year).count()
+            >= child.project.enrolment_limit
+        ):
+            return False
+
+        if child.occurrences.filter(event=self).exists():
+            return False
+
+        return True
 
     @transaction.atomic
     def publish(self, send_notifications=True):
