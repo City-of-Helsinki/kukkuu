@@ -37,6 +37,7 @@ from kukkuu.exceptions import (
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceIsFullError,
+    OccurrenceYearMismatchError,
     PastEnrolmentError,
     PastOccurrenceError,
     SingleEventsDisallowedError,
@@ -82,6 +83,26 @@ def validate_enrolment_deletion(enrolment):
         raise PastEnrolmentError(
             "Cannot unenrol from an occurrence that is in the past."
         )
+
+
+def validate_occurrence_input(kwargs, occurrence: Occurrence = None):
+    if time := kwargs.get("time"):
+        if occurrence:
+            # Don't consider the occurrence which is being updated
+            existing_occurrences = occurrence.event.occurrences.exclude(
+                pk=occurrence.pk
+            )
+        else:
+            event = Event.objects.get(pk=kwargs["event_id"])
+            existing_occurrences = event.occurrences.all()
+
+        if (
+            existing_occurrences.exists()
+            and not existing_occurrences.filter(time__year=time.year).exists()
+        ):
+            raise OccurrenceYearMismatchError(
+                "Occurrence has different year than the rest of the event occurrences"
+            )
 
 
 class EventParticipantsPerInvite(graphene.Enum):
@@ -708,6 +729,7 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
+        validate_occurrence_input(kwargs)
         occurrence = Occurrence.objects.create(**kwargs)
 
         # needed because enrolment_count is an annotated field
@@ -754,6 +776,7 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
+        validate_occurrence_input(kwargs, occurrence=occurrence)
         update_object(occurrence, kwargs)
 
         try:

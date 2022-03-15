@@ -57,6 +57,9 @@ class ChildNode(DjangoObjectType):
     enrolment_count = graphene.Int(
         description="How many enrolments child has this year.", year=graphene.Int()
     )
+    past_enrolment_count = graphene.Int(
+        description="How many past enrolments child has this year.",
+    )
 
     class Meta:
         model = Child
@@ -100,6 +103,11 @@ class ChildNode(DjangoObjectType):
     def resolve_enrolment_count(self: Child, info, **kwargs):
         year = kwargs.get("year") or timezone.now().year
         return self.occurrences.filter(time__year=year).count()
+
+    def resolve_past_enrolment_count(self: Child, info, **kwargs):
+        return self.occurrences.filter(
+            time__year=timezone.now().year, time__lt=timezone.now()
+        ).count()
 
     def resolve_past_events(self, info, **kwargs):
         """

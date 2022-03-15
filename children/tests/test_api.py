@@ -742,6 +742,7 @@ CHILD_ENROLMENT_COUNT_QUERY = """
 query Child($id: ID!, $year: Int) {
   child(id: $id) {
     enrolmentCount(year: $year)
+    pastEnrolmentCount
   }
 }
 """
@@ -769,7 +770,7 @@ def test_child_enrolment_count(
         2, time=this_year, event__published_at=this_year
     )
     next_year_occurrence = OccurrenceFactory.create(
-        time=next_year, event__published_at=next_year
+        time=next_year, event__published_at=now()
     )
 
     for occurrence in [
@@ -787,6 +788,37 @@ def test_child_enrolment_count(
     )
 
     assert executed["data"]["child"]["enrolmentCount"] == expected_count
+
+
+@pytest.mark.parametrize("in_the_past", [0, 1, 2])
+def test_child_past_enrolment_count(
+    guardian_api_client, child_with_user_guardian, in_the_past
+):
+    """Number of this year's enrollments in the past."""
+    variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+
+    past = timezone.now() - timedelta(hours=1)
+    future = timezone.now() + timedelta(hours=1)
+
+    for i in range(in_the_past):
+        EnrolmentFactory(
+            child=child_with_user_guardian,
+            occurrence__time=past,
+            occurrence__event__published_at=past,
+        )
+
+    for i in range(2 - in_the_past):
+        EnrolmentFactory(
+            child=child_with_user_guardian,
+            occurrence__time=future,
+            occurrence__event__published_at=past,
+        )
+
+    executed = guardian_api_client.execute(
+        CHILD_ENROLMENT_COUNT_QUERY, variables=variables
+    )
+
+    assert executed["data"]["child"]["pastEnrolmentCount"] == in_the_past
 
 
 def test_get_available_events(

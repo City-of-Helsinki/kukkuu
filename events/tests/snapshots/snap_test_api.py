@@ -1340,6 +1340,24 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
+snapshots["test_update_occurrence_different_year[True] 1"] = {
+    "data": {
+        "updateOccurrence": {
+            "occurrence": {
+                "capacity": 5,
+                "capacityOverride": 5,
+                "enrolmentCount": 0,
+                "event": {"createdAt": "2020-12-12T00:00:00+00:00"},
+                "occurrenceLanguage": "SV",
+                "remainingCapacity": 5,
+                "ticketSystem": {"type": "INTERNAL"},
+                "time": "2021-12-12T00:00:00+00:00",
+                "venue": {"createdAt": "2020-12-12T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
 snapshots["test_update_occurrence_project_user 1"] = {
     "data": {
         "updateOccurrence": {
