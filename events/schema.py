@@ -244,8 +244,8 @@ class EventNode(DjangoObjectType):
         child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
         try:
             child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist:
-            return None
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
         return self.can_child_enroll(child)
 
 
@@ -316,8 +316,8 @@ class EventGroupNode(DjangoObjectType):
         child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
         try:
             child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist:
-            return None
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
         return self.can_child_enroll(child)
 
 

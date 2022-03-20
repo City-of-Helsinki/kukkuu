@@ -1089,7 +1089,9 @@ def test_available_events_and_event_groups(
     OccurrenceFactory(time=future)  # unpublished event
     EnrolmentFactory(
         child=child_with_user_guardian,
-        occurrence=OccurrenceFactory(time=future, event=EventFactory()),
+        occurrence=OccurrenceFactory(
+            time=future, event=EventFactory(published_at=now())
+        ),
     )  # enrolled event
     OccurrenceFactory(event__published_at=now(), time=past)  # event in past
     OccurrenceFactory(
