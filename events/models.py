@@ -1,4 +1,5 @@
 import logging
+import warnings
 from datetime import timedelta
 from typing import Optional
 
@@ -166,6 +167,14 @@ class EventQueryset(TranslatableQuerySet):
             * the child must not have enrolled to any event in the same event group
               as the event
         """
+
+        warnings.warn(
+            "Query doesn't exclude events when yearly "
+            "limit of enrolments have been exceeded.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         child_enrolled_event_groups = EventGroup.objects.filter(
             events__occurrences__in=child.occurrences.all()
         )

@@ -48,9 +48,17 @@ class ChildrenConnection(graphene.Connection):
 
 
 class ChildNode(DjangoObjectType):
-    available_events = relay.ConnectionField("events.schema.EventConnection")
+    available_events = relay.ConnectionField(
+        "events.schema.EventConnection",
+        deprecation_reason=(
+            "Doesn't exclude events when yearly limit of enrolments have been exceeded."
+        ),
+    )
     available_events_and_event_groups = relay.ConnectionField(
-        "events.schema.EventOrEventGroupConnection"
+        "events.schema.EventOrEventGroupConnection",
+        deprecation_reason=(
+            "Doesn't exclude events when yearly limit of enrolments have been exceeded."
+        ),
     )
     upcoming_events_and_event_groups = relay.ConnectionField(
         "events.schema.EventOrEventGroupConnection",
