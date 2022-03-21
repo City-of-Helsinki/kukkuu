@@ -1197,6 +1197,38 @@ snapshots["test_publish_ticketmaster_event[object_perm-False] 1"] = {
     "data": {"publishEvent": {"event": {"publishedAt": "2020-12-12T00:00:00+00:00"}}}
 }
 
+snapshots["test_republish_event_group[model_perm-True] 1"] = {
+    "data": {
+        "publishEventGroup": {
+            "eventGroup": {
+                "events": {
+                    "edges": [
+                        {"node": {"publishedAt": "2020-12-11T00:00:00+00:00"}},
+                        {"node": {"publishedAt": "2020-12-12T00:00:00+00:00"}},
+                    ]
+                },
+                "publishedAt": "2020-12-12T00:00:00+00:00",
+            }
+        }
+    }
+}
+
+snapshots["test_republish_event_group[object_perm-True] 1"] = {
+    "data": {
+        "publishEventGroup": {
+            "eventGroup": {
+                "events": {
+                    "edges": [
+                        {"node": {"publishedAt": "2020-12-11T00:00:00+00:00"}},
+                        {"node": {"publishedAt": "2020-12-12T00:00:00+00:00"}},
+                    ]
+                },
+                "publishedAt": "2020-12-12T00:00:00+00:00",
+            }
+        }
+    }
+}
+
 snapshots["test_required_translation 1"] = {
     "data": {
         "addEvent": {
