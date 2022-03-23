@@ -171,13 +171,43 @@ def test_event_group_publish_notification(
     snapshot,
     notification_template_event_published_fi,
     notification_template_event_group_published_fi,
+    project,
     another_project,
 ):
-    ChildWithGuardianFactory(id=777)
+    ChildWithGuardianFactory(id=777, project=project)
     ChildWithGuardianFactory(project=another_project)
     event = EventFactory(id=777, event_group=EventGroupFactory(id=777))
 
     event.event_group.publish()
+
+    assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
+def test_event_group_republish_notification(
+    snapshot,
+    notification_template_event_published_fi,
+    notification_template_event_group_published_fi,
+    project,
+    another_project,
+    past,
+):
+    ChildWithGuardianFactory(id=777, project=project)
+    ChildWithGuardianFactory(project=another_project)
+    event_group = EventGroupFactory(id=777, published_at=past)
+    EventFactory(
+        id=777,
+        event_group=event_group,
+        ready_for_event_group_publishing=True,
+        published_at=past,
+    )
+    EventFactory(
+        id=778,
+        event_group=event_group,
+        ready_for_event_group_publishing=True,
+    )
+
+    event_group.publish()
 
     assert_mails_match_snapshot(snapshot)
 

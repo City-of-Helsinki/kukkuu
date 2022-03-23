@@ -309,7 +309,7 @@ class EventGroupNode(DjangoObjectType):
     def get_node(cls, info, id):
         return super().get_node(info, id)
 
-    def resolve_translations(self, info, **kwargs):
+    def resolve_translations(self: EventGroup, info, **kwargs):
         return self.translations.order_by("language_code")
 
     def resolve_can_child_enroll(self: EventGroup, info, **kwargs) -> Optional[bool]:
@@ -976,7 +976,8 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         if not event_group.can_user_publish(user):
             raise PermissionDenied("No permission to publish the event group.")
 
-        if event_group.is_published():
+        if event_group.is_published() and not event_group.events.unpublished().exists():
+            # Republishing an event group is allowed if new unpublished events exist
             raise EventGroupAlreadyPublishedError("Event group is already published")
 
         try:

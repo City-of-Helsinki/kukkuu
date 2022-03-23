@@ -2357,6 +2357,39 @@ def test_publish_event_group(snapshot, publisher_api_client):
     assert_match_error_code(executed, EVENT_GROUP_ALREADY_PUBLISHED_ERROR)
 
 
+@pytest.mark.parametrize("event_ready", [True, False])
+def test_republish_event_group(snapshot, publisher_api_client, event_ready, past):
+    """Event group can be republished if it contains unpublished events which
+    are ready for publishing.
+    """
+    event_group = EventGroupFactory(published_at=past)
+    EventFactory(
+        event_group=event_group,
+        ready_for_event_group_publishing=True,
+        published_at=past,
+    )
+    new_event = EventFactory(
+        event_group=event_group,
+        ready_for_event_group_publishing=event_ready,
+    )
+
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(event_group)
+
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    new_event.refresh_from_db()
+
+    if event_ready:
+        snapshot.assert_match(executed)
+        assert new_event.published_at
+    else:
+        assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
+        assert not new_event.published_at
+
+
 EVENT_GROUP_EVENTS_FILTER_QUERY = """
 query EventGroup($id: ID!, $availableForChild: String) {
   eventGroup(id: $id) {
