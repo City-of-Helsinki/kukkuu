@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from django.utils import timezone
+
 from events.models import Enrolment
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 
@@ -17,4 +19,6 @@ def check_ticket_validity(enrolment_reference_id: str) -> Tuple[Enrolment, bool]
         raise EnrolmentReferenceIdDoesNotExist(
             "The decoded reference id does not match to any of the existing enrolments"
         )
-    return (enrolment, enrolment.is_upcoming())
+
+    valid = enrolment.occurrence.time.date() >= timezone.localdate()
+    return enrolment, valid
