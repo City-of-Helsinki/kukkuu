@@ -32,6 +32,7 @@ def setup_test_environment(settings):
     settings.MEDIA_ROOT = "test_media"
     settings.KUKKUU_HASHID_SALT = "topsecret"
     settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE = 7
+    settings.KUKKUU_DEFAULT_EVENT_DURATION = 120
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)

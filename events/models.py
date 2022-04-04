@@ -534,8 +534,10 @@ class EnrolmentQueryset(models.QuerySet):
             self.annotate(
                 end_time=ExpressionWrapper(
                     F("occurrence__time")
-                    # use 120min as the default value for duration
-                    + Coalesce(F("occurrence__event__duration"), 120)
+                    + Coalesce(
+                        F("occurrence__event__duration"),
+                        settings.KUKKUU_DEFAULT_EVENT_DURATION,
+                    )
                     * timedelta(minutes=1),
                     output_field=models.DateTimeField(),
                 ),
