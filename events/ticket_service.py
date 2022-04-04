@@ -1,5 +1,7 @@
+from datetime import timedelta
 from typing import Tuple
 
+from django.conf import settings
 from django.utils import timezone
 
 from events.models import Enrolment
@@ -14,11 +16,16 @@ def check_ticket_validity(enrolment_reference_id: str) -> Tuple[Enrolment, bool]
 
     enrolment_id = Enrolment.decode_reference_id(enrolment_reference_id)
     try:
-        enrolment = Enrolment.objects.get(pk=enrolment_id)
+        enrolment = Enrolment.objects.with_end_time().get(pk=enrolment_id)
     except (Enrolment.DoesNotExist):
         raise EnrolmentReferenceIdDoesNotExist(
             "The decoded reference id does not match to any of the existing enrolments"
         )
-
-    valid = enrolment.occurrence.time.date() >= timezone.localdate()
+    start = enrolment.occurrence.time - timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
+    )
+    end = enrolment.end_time + timedelta(
+        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
+    )
+    valid = start <= timezone.now() <= end
     return enrolment, valid

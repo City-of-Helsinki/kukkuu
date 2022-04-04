@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import timedelta
 
 import pytest
 from django.utils import timezone
@@ -16,17 +16,20 @@ from kukkuu.exceptions import (
 @pytest.mark.parametrize(
     "occurrence_time, expected",
     [
-        (datetime(2020, 11, 11, 12, tzinfo=timezone.now().tzinfo), True),  # Present
-        (datetime(2020, 11, 11, 13, tzinfo=timezone.now().tzinfo), True),  # +1h
-        (datetime(2020, 11, 11, 11, tzinfo=timezone.now().tzinfo), True),  # -1h
-        (datetime(2020, 11, 13, 12, tzinfo=timezone.now().tzinfo), True),  # +1d
-        (datetime(2020, 11, 10, 12, tzinfo=timezone.now().tzinfo), False),  # -1d
+        (timedelta(minutes=16), False),  # Starts in 16 minutes
+        (timedelta(minutes=15), True),  # Starts in 15 minutes
+        (timedelta(minutes=0), True),  # Starts now
+        (timedelta(minutes=-30), True),  # Ended 15 minutes ago
+        (timedelta(minutes=-31), False),  # Ended 16 minutes ago
     ],
 )
 @pytest.mark.django_db
-def test_check_ticket_validity(project, occurrence_time, expected):
+def test_check_ticket_validity(project, occurrence_time, expected, settings):
     """Tickets are show valid for the whole day on the occurrence day."""
-    occurrence = OccurrenceFactory(time=occurrence_time)
+    settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = 15
+    occurrence = OccurrenceFactory(
+        time=timezone.now() + occurrence_time, event__duration=15
+    )
     expected_enrolment = EnrolmentFactory(occurrence=occurrence)
     enrolment, validity = check_ticket_validity(expected_enrolment.reference_id)
     assert enrolment == expected_enrolment

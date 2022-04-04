@@ -1522,7 +1522,7 @@ snapshots["test_verify_valid_ticket 1"] = {
     "data": {
         "verifyTicket": {
             "eventName": "Record card my. Sure sister return.",
-            "occurrenceTime": "2020-12-13T00:00:00+00:00",
+            "occurrenceTime": "2020-12-12T00:00:00+00:00",
             "validity": True,
             "venueName": "Remember stay public high concern glass person.",
         }

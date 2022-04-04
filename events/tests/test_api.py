@@ -2588,7 +2588,7 @@ VERIFY_TICKET_QUERY = """
 
 # NOTE: api_client is for anonymous users
 def test_verify_valid_ticket(api_client, snapshot):
-    upcoming_occurrence = OccurrenceFactory(time=timezone.now() + timedelta(days=1))
+    upcoming_occurrence = OccurrenceFactory(time=timezone.now())
     valid_enrolment = EnrolmentFactory(occurrence=upcoming_occurrence)
     executed = api_client.execute(
         VERIFY_TICKET_QUERY, variables={"referenceId": valid_enrolment.reference_id}
