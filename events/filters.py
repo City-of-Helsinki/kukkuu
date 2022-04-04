@@ -1,8 +1,4 @@
-from datetime import timedelta
-
 import django_filters
-from django.conf import settings
-from django.utils import timezone
 from graphql_relay import from_global_id
 
 from children.models import Child
@@ -14,11 +10,9 @@ from events.utils import convert_to_localtime_tz
 class OccurrenceFilter(django_filters.FilterSet):
     date = django_filters.DateFilter(lookup_expr="date", field_name="time")
     time = django_filters.TimeFilter(method="filter_by_time", field_name="time")
-    upcoming = django_filters.BooleanFilter(
-        method="filter_by_upcoming", field_name="time"
-    )
+    upcoming = django_filters.BooleanFilter(method="filter_by_upcoming")
     upcoming_with_leeway = django_filters.BooleanFilter(
-        method="filter_by_upcoming_with_leeway", field_name="time"
+        method="filter_by_upcoming_with_leeway"
     )
     venue_id = django_filters.CharFilter(
         field_name="venue", method="filter_by_venue_global_id"
@@ -49,20 +43,12 @@ class OccurrenceFilter(django_filters.FilterSet):
 
     def filter_by_upcoming(self, qs, name, value):
         if value:
-            return qs.filter(**{name + "__gte": timezone.now()})
+            return qs.upcoming()
         return qs
 
     def filter_by_upcoming_with_leeway(self, qs, name, value):
         if value:
-            return qs.filter(
-                **{
-                    name
-                    + "__gte": timezone.now()
-                    - timedelta(
-                        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
-                    )
-                }
-            )
+            return qs.upcoming_with_leeway()
         return qs
 
     def filter_by_venue_global_id(self, qs, name, value):

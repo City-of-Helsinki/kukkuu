@@ -369,7 +369,13 @@ class OccurrenceQueryset(models.QuerySet):
             obj.send_free_spot_notifications_if_needed()
 
     def upcoming(self):
-        return self.filter(time__gt=timezone.now())
+        return self.filter(time__gte=timezone.now())
+
+    def upcoming_with_leeway(self):
+        return self.filter(
+            time__gte=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        )
 
     def in_past(self):
         return self.exclude(time__gt=timezone.now())
@@ -506,7 +512,7 @@ class EnrolmentQueryset(models.QuerySet):
             enrolment.delete()
 
     def upcoming(self):
-        return self.filter(occurrence__time__gt=timezone.now())
+        return self.filter(occurrence__time__gte=timezone.now())
 
     def send_reminder_notifications(self):
         today = timezone.localtime().date()
