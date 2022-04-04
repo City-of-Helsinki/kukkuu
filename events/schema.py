@@ -1000,7 +1000,6 @@ class Query:
         EventOrEventGroupConnection,
         project_id=graphene.ID(),
         upcoming=graphene.Boolean(),
-        upcoming_with_leeway=graphene.Boolean(),
     )
     occurrences = DjangoFilterConnectionField(OccurrenceNode)
 
@@ -1020,10 +1019,7 @@ class Query:
             event_qs = event_qs.filter(project_id=project_id)
             event_group_qs = event_group_qs.filter(project_id=project_id)
 
-        if kwargs.get("upcoming_with_leeway", False):
-            event_qs = event_qs.upcoming_with_leeway()
-            event_group_qs = event_group_qs.upcoming_with_leeway()
-        elif kwargs.get("upcoming", False):
+        if kwargs.get("upcoming", False):
             event_qs = event_qs.upcoming()
             event_group_qs = event_group_qs.upcoming()
 

@@ -524,7 +524,7 @@ snapshots["test_events_and_event_groups_query_project_user 1"] = {
     }
 }
 
-snapshots["test_events_and_event_groups_query_upcoming_filter[False-False] 1"] = {
+snapshots["test_events_and_event_groups_query_upcoming_filter[False] 1"] = {
     "data": {
         "eventsAndEventGroups": {
             "edges": [{"node": {"__typename": "EventNode", "name": "In the future"}}]
@@ -532,33 +532,11 @@ snapshots["test_events_and_event_groups_query_upcoming_filter[False-False] 1"] =
     }
 }
 
-snapshots["test_events_and_event_groups_query_upcoming_filter[False-True] 1"] = {
+snapshots["test_events_and_event_groups_query_upcoming_filter[True] 1"] = {
     "data": {
         "eventsAndEventGroups": {
             "edges": [
                 {"node": {"__typename": "EventGroupNode", "name": "In the future"}}
-            ]
-        }
-    }
-}
-
-snapshots["test_events_and_event_groups_query_upcoming_filter[True-False] 1"] = {
-    "data": {
-        "eventsAndEventGroups": {
-            "edges": [
-                {"node": {"__typename": "EventNode", "name": "Within leeway"}},
-                {"node": {"__typename": "EventNode", "name": "In the future"}},
-            ]
-        }
-    }
-}
-
-snapshots["test_events_and_event_groups_query_upcoming_filter[True-True] 1"] = {
-    "data": {
-        "eventsAndEventGroups": {
-            "edges": [
-                {"node": {"__typename": "EventGroupNode", "name": "Within leeway"}},
-                {"node": {"__typename": "EventGroupNode", "name": "In the future"}},
             ]
         }
     }

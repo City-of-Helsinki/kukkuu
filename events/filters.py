@@ -72,9 +72,6 @@ class EventFilter(django_filters.FilterSet):
         method="filter_by_available_for_child"
     )
     upcoming = django_filters.BooleanFilter(method="filter_by_upcoming")
-    upcoming_with_leeway = django_filters.BooleanFilter(
-        method="filter_by_upcoming_with_leeway"
-    )
 
     class Meta:
         model = Event
@@ -94,9 +91,4 @@ class EventFilter(django_filters.FilterSet):
     def filter_by_upcoming(self, qs, name, value):
         if value:
             return qs.upcoming()
-        return qs
-
-    def filter_by_upcoming_with_leeway(self, qs, name, value):
-        if value:
-            return qs.upcoming_with_leeway()
         return qs

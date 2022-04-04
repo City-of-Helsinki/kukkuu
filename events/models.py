@@ -44,12 +44,6 @@ class EventGroupQueryset(TranslatableQuerySet):
     def upcoming(self):
         return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
 
-    def upcoming_with_leeway(self):
-        return self.filter(
-            events__occurrences__time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        ).distinct()
-
 
 class EventGroup(TimestampedModel, TranslatableModel):
     translations = TranslatedFields(
@@ -151,12 +145,6 @@ class EventQueryset(TranslatableQuerySet):
 
     def upcoming(self):
         return self.filter(occurrences__time__gte=timezone.now()).distinct()
-
-    def upcoming_with_leeway(self):
-        return self.filter(
-            occurrences__time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        ).distinct()
 
     def available(self, child):
         """
