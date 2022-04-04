@@ -14,6 +14,9 @@ class OccurrenceFilter(django_filters.FilterSet):
     upcoming_with_leeway = django_filters.BooleanFilter(
         method="filter_by_upcoming_with_leeway"
     )
+    upcoming_with_ongoing = django_filters.BooleanFilter(
+        method="filter_by_upcoming_with_ongoing"
+    )
     venue_id = django_filters.CharFilter(
         field_name="venue", method="filter_by_venue_global_id"
     )
@@ -49,6 +52,11 @@ class OccurrenceFilter(django_filters.FilterSet):
     def filter_by_upcoming_with_leeway(self, qs, name, value):
         if value:
             return qs.upcoming_with_leeway()
+        return qs
+
+    def filter_by_upcoming_with_ongoing(self, qs, name, value):
+        if value:
+            return qs.upcoming_with_ongoing()
         return qs
 
     def filter_by_venue_global_id(self, qs, name, value):
