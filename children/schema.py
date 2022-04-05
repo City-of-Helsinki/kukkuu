@@ -128,8 +128,10 @@ class ChildNode(DjangoObjectType):
         past.
         """
         events = self.project.events.user_can_view(info.context.user).published()
-        past_enough_enrolled_occurrences = self.occurrences.filter(
-            time__lt=timezone.now()
+
+        occurrences = self.occurrences.with_end_time()
+        past_enough_enrolled_occurrences = occurrences.filter(
+            end_time__lt=timezone.now()
             - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
         )
         return events.filter(occurrences__in=past_enough_enrolled_occurrences)

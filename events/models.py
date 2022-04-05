@@ -44,12 +44,6 @@ class EventGroupQueryset(TranslatableQuerySet):
     def upcoming(self):
         return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
 
-    def upcoming_with_leeway(self):
-        return self.filter(
-            events__occurrences__time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        ).distinct()
-
 
 class EventGroup(TimestampedModel, TranslatableModel):
     translations = TranslatedFields(
@@ -151,12 +145,6 @@ class EventQueryset(TranslatableQuerySet):
 
     def upcoming(self):
         return self.filter(occurrences__time__gte=timezone.now()).distinct()
-
-    def upcoming_with_leeway(self):
-        return self.filter(
-            occurrences__time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        ).distinct()
 
     def available(self, child):
         """
@@ -369,10 +357,37 @@ class OccurrenceQueryset(models.QuerySet):
             obj.send_free_spot_notifications_if_needed()
 
     def upcoming(self):
-        return self.filter(time__gt=timezone.now())
+        return self.filter(time__gte=timezone.now())
+
+    def upcoming_with_leeway(self):
+        return self.filter(
+            time__gte=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        )
+
+    def upcoming_with_ongoing(self):
+        """Return occurrences that are upcoming or still ongoing (with added leeway)."""
+        qs = self.with_end_time()
+        return qs.filter(
+            end_time__gte=timezone.now()
+            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        )
 
     def in_past(self):
         return self.exclude(time__gt=timezone.now())
+
+    def with_end_time(self):
+        return self.annotate(
+            end_time=ExpressionWrapper(
+                F("time")
+                + Coalesce(
+                    F("event__duration"),
+                    settings.KUKKUU_DEFAULT_EVENT_DURATION,
+                )
+                * timedelta(minutes=1),
+                output_field=models.DateTimeField(),
+            ),
+        )
 
 
 class Occurrence(TimestampedModel):
@@ -506,7 +521,20 @@ class EnrolmentQueryset(models.QuerySet):
             enrolment.delete()
 
     def upcoming(self):
-        return self.filter(occurrence__time__gt=timezone.now())
+        return self.filter(occurrence__time__gte=timezone.now())
+
+    def with_end_time(self):
+        return self.annotate(
+            end_time=ExpressionWrapper(
+                F("occurrence__time")
+                + Coalesce(
+                    F("occurrence__event__duration"),
+                    settings.KUKKUU_DEFAULT_EVENT_DURATION,
+                )
+                * timedelta(minutes=1),
+                output_field=models.DateTimeField(),
+            ),
+        )
 
     def send_reminder_notifications(self):
         today = timezone.localtime().date()
@@ -531,15 +559,7 @@ class EnrolmentQueryset(models.QuerySet):
         delay = timedelta(minutes=settings.KUKKUU_FEEDBACK_NOTIFICATION_DELAY)
 
         enrolments = (
-            self.annotate(
-                end_time=ExpressionWrapper(
-                    F("occurrence__time")
-                    # use 120min as the default value for duration
-                    + Coalesce(F("occurrence__event__duration"), 120)
-                    * timedelta(minutes=1),
-                    output_field=models.DateTimeField(),
-                ),
-            )
+            self.with_end_time()
             .filter(
                 feedback_notification_sent_at=None,
                 child__guardians__isnull=False,

@@ -524,7 +524,7 @@ snapshots["test_events_and_event_groups_query_project_user 1"] = {
     }
 }
 
-snapshots["test_events_and_event_groups_query_upcoming_filter[False-False] 1"] = {
+snapshots["test_events_and_event_groups_query_upcoming_filter[False] 1"] = {
     "data": {
         "eventsAndEventGroups": {
             "edges": [{"node": {"__typename": "EventNode", "name": "In the future"}}]
@@ -532,33 +532,11 @@ snapshots["test_events_and_event_groups_query_upcoming_filter[False-False] 1"] =
     }
 }
 
-snapshots["test_events_and_event_groups_query_upcoming_filter[False-True] 1"] = {
+snapshots["test_events_and_event_groups_query_upcoming_filter[True] 1"] = {
     "data": {
         "eventsAndEventGroups": {
             "edges": [
                 {"node": {"__typename": "EventGroupNode", "name": "In the future"}}
-            ]
-        }
-    }
-}
-
-snapshots["test_events_and_event_groups_query_upcoming_filter[True-False] 1"] = {
-    "data": {
-        "eventsAndEventGroups": {
-            "edges": [
-                {"node": {"__typename": "EventNode", "name": "Within leeway"}},
-                {"node": {"__typename": "EventNode", "name": "In the future"}},
-            ]
-        }
-    }
-}
-
-snapshots["test_events_and_event_groups_query_upcoming_filter[True-True] 1"] = {
-    "data": {
-        "eventsAndEventGroups": {
-            "edges": [
-                {"node": {"__typename": "EventGroupNode", "name": "Within leeway"}},
-                {"node": {"__typename": "EventGroupNode", "name": "In the future"}},
             ]
         }
     }
@@ -1001,6 +979,23 @@ snapshots["test_occurrences_filter_by_upcoming_with_leeway[False] 1"] = {
 snapshots["test_occurrences_filter_by_upcoming_with_leeway[True] 1"] = {
     "data": {
         "occurrences": {"edges": [{"node": {"time": "2020-12-11T23:31:00+00:00"}}]}
+    }
+}
+
+snapshots["test_occurrences_filter_by_upcoming_with_ongoing[False] 1"] = {
+    "data": {
+        "occurrences": {
+            "edges": [
+                {"node": {"time": "2020-12-11T22:29:00+00:00"}},
+                {"node": {"time": "2020-12-11T22:31:00+00:00"}},
+            ]
+        }
+    }
+}
+
+snapshots["test_occurrences_filter_by_upcoming_with_ongoing[True] 1"] = {
+    "data": {
+        "occurrences": {"edges": [{"node": {"time": "2020-12-11T22:31:00+00:00"}}]}
     }
 }
 
@@ -1527,7 +1522,7 @@ snapshots["test_verify_valid_ticket 1"] = {
     "data": {
         "verifyTicket": {
             "eventName": "Record card my. Sure sister return.",
-            "occurrenceTime": "2020-12-13T00:00:00+00:00",
+            "occurrenceTime": "2020-12-12T00:00:00+00:00",
             "validity": True,
             "venueName": "Remember stay public high concern glass person.",
         }

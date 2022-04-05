@@ -408,8 +408,8 @@ snapshots["test_get_past_events 1"] = {
             "availableEvents": {"edges": []},
             "occurrences": {
                 "edges": [
-                    {"node": {"time": "2020-12-11T23:29:00+00:00"}},
-                    {"node": {"time": "2020-12-11T23:31:00+00:00"}},
+                    {"node": {"time": "2020-12-11T22:59:00+00:00"}},
+                    {"node": {"time": "2020-12-11T23:01:00+00:00"}},
                 ]
             },
             "pastEvents": {

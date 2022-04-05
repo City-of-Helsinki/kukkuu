@@ -884,18 +884,23 @@ def test_get_past_events(
     snapshot, guardian_api_client, child_with_user_guardian, project, venue
 ):
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
-
-    past = timezone.now() - timedelta(
-        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1
+    duration = 30
+    past = (
+        timezone.now()
+        - timedelta(minutes=duration)
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1)
     )
-    not_enough_past = timezone.now() - timedelta(
-        minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1
+    not_enough_past = (
+        timezone.now()
+        - timedelta(minutes=duration)
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1)
     )
     future = timezone.now() + timedelta(minutes=1)
 
     # Enrolled occurrence in the past, event should be visible
     event = EventFactory(
         published_at=timezone.now(),
+        duration=duration,
         project=project,
         name="enrolled occurrence in the past",
     )
@@ -906,6 +911,7 @@ def test_get_past_events(
     # Enrolled occurrence in the past but not enough, event should NOT be visible
     event_2 = EventFactory(
         published_at=timezone.now(),
+        duration=duration,
         project=project,
         name="enrolled occurrence in the past but not enough",
     )
@@ -920,6 +926,7 @@ def test_get_past_events(
     # Event without an enrolment in the past, should NOT be visible
     event_3 = EventFactory(
         published_at=timezone.now(),
+        duration=duration,
         project=project,
         name="unenrolled event in the past",
     )
