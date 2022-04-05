@@ -1,6 +1,18 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.15.0] - 6 Apr 2022
+
+### Added
+
+- Republish an event group
+- Events occurrences have to be on the same year
+- Query for child's upcoming events and event groups
+
+### Changed
+
+- Ticket is show until 1 hour after the event has ended.
+
 ## [1.14.0] - 9 Mar 2022
 
 ### Added
