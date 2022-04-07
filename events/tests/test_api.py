@@ -30,6 +30,7 @@ from kukkuu.consts import (
     EVENT_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
+    EVENT_NOT_PUBLISHED_ERROR,
     GENERAL_ERROR,
     INELIGIBLE_OCCURRENCE_ENROLMENT,
     MISSING_DEFAULT_TRANSLATION_ERROR,
@@ -1184,7 +1185,7 @@ def test_enrol_occurrence(
 
 
 def test_already_enroled_occurrence(
-    guardian_api_client, snapshot, occurrence, child_with_user_guardian
+    guardian_api_client, occurrence, child_with_user_guardian
 ):
     EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrence)
 
@@ -1201,6 +1202,21 @@ def test_already_enroled_occurrence(
     )
 
     assert_match_error_code(executed, CHILD_ALREADY_JOINED_EVENT_ERROR)
+
+
+def test_enrol_event_not_published(guardian_api_client, child_with_user_guardian):
+    event = EventFactory()
+    occurrence = OccurrenceFactory(event=event, time=timezone.now() + timedelta(days=1))
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = get_global_id(occurrence)
+    enrolment_variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert_match_error_code(executed, EVENT_NOT_PUBLISHED_ERROR)
 
 
 def test_already_enrolled_same_event(
@@ -1223,11 +1239,10 @@ def test_already_enrolled_same_event(
 
 
 def test_already_enrolled_same_event_group(
-    guardian_api_client, child_with_user_guardian
+    guardian_api_client, child_with_user_guardian, event_group
 ):
-    event_group = EventGroupFactory()
-    event_1 = EventFactory(event_group=event_group)
-    event_2 = EventFactory(event_group=event_group)
+    event_1 = EventFactory(event_group=event_group, published_at=timezone.now())
+    event_2 = EventFactory(event_group=event_group, published_at=timezone.now())
     occurrence_1 = OccurrenceFactory(
         event=event_1, time=timezone.now() + timedelta(days=1)
     )
@@ -1249,7 +1264,7 @@ def test_already_enrolled_same_event_group(
 
 
 def test_enrol_occurrence_not_allowed(
-    guardian_api_client, snapshot, occurrence, child_with_random_guardian
+    guardian_api_client, occurrence, child_with_random_guardian
 ):
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
@@ -1277,7 +1292,7 @@ def test_enrol_limit_reached(
     snapshot,
 ):
     occurrences = OccurrenceFactory.create_batch(
-        enrolled_amount + 1, time=timezone.now()
+        enrolled_amount + 1, time=timezone.now(), event__published_at=timezone.now()
     )
     for i in range(enrolled_amount):
         EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrences[i])
@@ -1772,7 +1787,9 @@ def test_child_enrol_occurence_from_different_project(
 ):
     next_project = ProjectFactory(year=2021)
     another_occurrence = OccurrenceFactory(
-        event__project=next_project, venue__project=next_project
+        event__project=next_project,
+        event__published_at=timezone.now(),
+        venue__project=next_project,
     )
     assert Occurrence.objects.count() == 2
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
