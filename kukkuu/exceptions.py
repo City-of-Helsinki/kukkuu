@@ -63,6 +63,10 @@ class EventGroupNotReadyForPublishingError(KukkuuGraphQLError):
     """Event group not ready for publishing"""
 
 
+class EventNotPublishedError(KukkuuGraphQLError):
+    """Event is not published"""
+
+
 class ObjectDoesNotExistError(KukkuuGraphQLError):
     """Object does not exist"""
 

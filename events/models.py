@@ -88,6 +88,9 @@ class EventGroup(TimestampedModel, TranslatableModel):
     def can_child_enroll(self, child) -> bool:
         """Check if the child can enroll to an event in the event group."""
 
+        if not self.is_published():
+            return False
+
         if occurrence := Occurrence.objects.filter(event__event_group=self).first():
             # Need to have at least one occurrence
             year = occurrence.time.year
@@ -292,6 +295,9 @@ class Event(TimestampedModel, TranslatableModel):
 
     def can_child_enroll(self, child: Child) -> bool:
         """Check if the child can enroll to the event."""
+
+        if not self.is_published():
+            return False
 
         if occurrence := self.occurrences.first():
             # Need to have at least one occurrence

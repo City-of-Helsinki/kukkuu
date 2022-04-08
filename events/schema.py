@@ -34,6 +34,7 @@ from kukkuu.exceptions import (
     DataValidationError,
     EventAlreadyPublishedError,
     EventGroupAlreadyPublishedError,
+    EventNotPublishedError,
     IneligibleOccurrenceEnrolment,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
@@ -55,6 +56,10 @@ EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
 def validate_enrolment(child, occurrence):
+
+    if not occurrence.event.is_published():
+        raise EventNotPublishedError("Event is not published")
+
     if child.project != occurrence.event.project:
         raise IneligibleOccurrenceEnrolment(
             "Child does not belong to the project event"
