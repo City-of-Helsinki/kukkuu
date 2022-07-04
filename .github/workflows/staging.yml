@@ -93,6 +93,7 @@ jobs:
           target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "* * * * *" # every min
           secret_name: "project-staging-kukkuu-secret"
+          file_secret_name: "project-staging-kukkuu-file-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_mail}"
           max_duration: 3600 # 1h
@@ -107,6 +108,7 @@ jobs:
           target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "*/20 * * * *" # every 20 mins
           secret_name: "project-staging-kukkuu-secret"
+          file_secret_name: "project-staging-kukkuu-file-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py retry_deferred}"
           max_duration: 3600 # 1h
@@ -121,6 +123,7 @@ jobs:
           target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "0 12 * * *" # daily at noon UTC
           secret_name: "project-staging-kukkuu-secret"
+          file_secret_name: "project-staging-kukkuu-file-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_reminder_notifications}"
 
@@ -134,5 +137,6 @@ jobs:
           target_namespace: ${{ secrets.K8S_NAMESPACE_STAGING }}
           schedule: "1-59/15 * * * *" # xx:01, xx:16, xx:31, xx:46
           secret_name: "project-staging-kukkuu-secret"
+          file_secret_name: "project-staging-kukkuu-file-secret"
           command: "{/bin/sh}"
           args: "{-c,cd /app && python manage.py send_feedback_notifications}"
