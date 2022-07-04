@@ -132,11 +132,9 @@ if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
     # GOOGLE_APPLICATION_CREDENTIALS do not work even it is mentioned in documentation
     from google.oauth2 import service_account
 
-    staging_gcs_bucket_credentials_file = env("STAGING_GCS_BUCKET_CREDENTIALS")
-    if os.path.exists(staging_gcs_bucket_credentials_file):
-        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-            staging_gcs_bucket_credentials_file
-        )
+    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+        env("STAGING_GCS_BUCKET_CREDENTIALS")
+    )
 
     GS_BUCKET_NAME = env("GS_BUCKET_NAME")
     GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
