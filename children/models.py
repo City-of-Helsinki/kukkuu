@@ -1,6 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
@@ -78,6 +79,24 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
 
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
+
+    def get_enrolment_count(self, year: int = None, past=False):
+        if year and past:
+            raise ValueError("Cannot use year and past arguments at the same time.")
+        now = timezone.now()
+        year = year or now.year
+
+        occurrence_filters = Q(time__year=year)
+        ticket_system_filters = Q(event__occurrences__time__year=year)
+        if past:
+            occurrence_filters &= Q(time__lt=now)
+            ticket_system_filters &= Q(event__occurrences__time__lt=now)
+        return (
+            self.occurrences.filter(occurrence_filters).count()
+            + self.ticket_system_passwords.filter(ticket_system_filters)
+            .distinct()
+            .count()
+        )
 
 
 class RelationshipQuerySet(models.QuerySet):
