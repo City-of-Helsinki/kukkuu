@@ -488,14 +488,15 @@ class Occurrence(TimestampedModel):
         except AttributeError:
             return self.enrolments.count()
 
-    def get_capacity(self):
+    def get_capacity(self) -> Optional[int]:
         if self.capacity_override is not None:
             return self.capacity_override
         else:
             return self.event.capacity_per_occurrence
 
-    def get_remaining_capacity(self):
-        return max(self.get_capacity() - self.get_enrolment_count(), 0)
+    def get_remaining_capacity(self) -> int:
+        capacity = self.get_capacity() or 0
+        return max(capacity - self.get_enrolment_count(), 0)
 
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project
