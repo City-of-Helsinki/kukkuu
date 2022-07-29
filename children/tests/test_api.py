@@ -169,7 +169,7 @@ def test_submit_children_and_guardian_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_submit_children_and_guardian(snapshot, user_api_client, languages):
+def test_submit_children_and_guardian(snapshot, user_api_client, languages, project):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["languagesSpokenAtHome"] = [
         get_global_id(language) for language in languages[0:2]
@@ -192,7 +192,7 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages):
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
 
 
-def test_submit_children_and_guardian_with_email(snapshot, user_api_client):
+def test_submit_children_and_guardian_with_email(snapshot, user_api_client, project):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["email"] = "updated_email@example.com"
 
@@ -542,7 +542,7 @@ ADD_CHILD_VARIABLES = {
 }
 
 
-def test_add_child_mutation(snapshot, guardian_api_client):
+def test_add_child_mutation(snapshot, guardian_api_client, project):
     executed = guardian_api_client.execute(
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
     )

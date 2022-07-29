@@ -72,7 +72,9 @@ def test_cannot_send_message_again_without_force(snapshot, message):
         "occurrence_yesterday_1",
     ),
 )
-def test_message_sending_with_filters(snapshot, recipient_selection, event_selection):
+def test_message_sending_with_filters(
+    snapshot, recipient_selection, event_selection, project
+):
     """Ridiculously complex filtering test
 
     There are three events:
@@ -209,7 +211,9 @@ def test_message_sending_with_filters(snapshot, recipient_selection, event_selec
 
 @freeze_time("2020-11-11")
 @pytest.mark.parametrize("upcoming_occurrence", (True, False))
-def test_message_sending_to_invited_group_and_event_groups(upcoming_occurrence):
+def test_message_sending_to_invited_group_and_event_groups(
+    upcoming_occurrence, project
+):
     """Sending message to invited group when an event group has to be considered.
 
     Event group consists of two events, with one occurrence each:
