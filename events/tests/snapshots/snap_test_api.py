@@ -133,7 +133,7 @@ snapshots["test_delete_event_group[object_perm] 1"] = {
     "data": {"deleteEventGroup": {"__typename": "DeleteEventGroupMutationPayload"}}
 }
 
-snapshots["test_enrol_limit_reached[0-False] 1"] = {
+snapshots["test_enrol_limit_reached[False-0-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
@@ -145,7 +145,31 @@ snapshots["test_enrol_limit_reached[0-False] 1"] = {
     }
 }
 
-snapshots["test_enrol_limit_reached[1-False] 1"] = {
+snapshots["test_enrol_limit_reached[False-1-False] 1"] = {
+    "data": {
+        "enrolOccurrence": {
+            "enrolment": {
+                "child": {"firstName": "Brandon"},
+                "createdAt": "2020-11-11T00:00:00+00:00",
+                "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_enrol_limit_reached[True-0-False] 1"] = {
+    "data": {
+        "enrolOccurrence": {
+            "enrolment": {
+                "child": {"firstName": "Brandon"},
+                "createdAt": "2020-11-11T00:00:00+00:00",
+                "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
+            }
+        }
+    }
+}
+
+snapshots["test_enrol_limit_reached[True-1-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
