@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
@@ -80,7 +82,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
 
-    def get_enrolment_count(self, year: int = None, past=False):
+    def get_enrolment_count(self, year: Optional[int] = None, past=False):
         if year and past:
             raise ValueError("Cannot use year and past arguments at the same time.")
         now = timezone.now()
