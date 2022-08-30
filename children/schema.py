@@ -113,13 +113,11 @@ class ChildNode(DjangoObjectType):
             return None
 
     def resolve_enrolment_count(self: Child, info, **kwargs):
-        year = kwargs.get("year") or timezone.now().year
-        return self.occurrences.filter(time__year=year).count()
+        year = kwargs.get("year")
+        return self.get_enrolment_count(year)
 
     def resolve_past_enrolment_count(self: Child, info, **kwargs):
-        return self.occurrences.filter(
-            time__year=timezone.now().year, time__lt=timezone.now()
-        ).count()
+        return self.get_enrolment_count(past=True)
 
     def resolve_past_events(self: Child, info, **kwargs):
         """

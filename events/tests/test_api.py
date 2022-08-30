@@ -1284,18 +1284,31 @@ def test_enrol_occurrence_not_allowed(
 @pytest.mark.parametrize(
     "enrolled_amount,should_raise", [(0, False), (1, False), (2, True), (3, True)]
 )
+@pytest.mark.parametrize("use_ticket_system_passwords", [True, False])
 def test_enrol_limit_reached(
     enrolled_amount,
     should_raise,
     guardian_api_client,
     child_with_user_guardian,
     snapshot,
+    use_ticket_system_passwords,
 ):
     occurrences = OccurrenceFactory.create_batch(
-        enrolled_amount + 1, time=timezone.now(), event__published_at=timezone.now()
+        enrolled_amount + 1,
+        time=timezone.now(),
+        event__published_at=timezone.now(),
+        event__ticket_system=Event.TICKETMASTER
+        if use_ticket_system_passwords
+        else Event.INTERNAL,
     )
     for i in range(enrolled_amount):
-        EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrences[i])
+        # Previous enrolments have been with TicketSystemPasswords
+        if use_ticket_system_passwords:
+            TicketSystemPasswordFactory(
+                child=child_with_user_guardian, event=occurrences[i].event
+            )
+        else:
+            EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrences[i])
     occurrence = occurrences[-1]
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(

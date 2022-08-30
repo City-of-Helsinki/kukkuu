@@ -14,6 +14,7 @@ from ..factories import (
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
+    TicketSystemPasswordFactory,
 )
 from ..models import Enrolment, Event, EventGroup, Occurrence
 
@@ -73,8 +74,13 @@ def test_enrolment_reference_id():
 @pytest.mark.parametrize(
     "has_enrolled,can_child_enroll", [(True, False), (False, True)]
 )
+@pytest.mark.parametrize("use_ticket_system_passwords", [True, False])
 def test_event_group_can_child_enroll_already_enrolled(
-    has_enrolled, can_child_enroll, child_with_random_guardian, future
+    has_enrolled,
+    can_child_enroll,
+    child_with_random_guardian,
+    future,
+    use_ticket_system_passwords,
 ):
     """Enrolment shouldn't be allowed since child has enrolled to a different event
     in the same event group.
@@ -85,6 +91,9 @@ def test_event_group_can_child_enroll_already_enrolled(
     OccurrenceFactory(
         time=future,
         event__published_at=now(),
+        event__ticket_system=Event.TICKETMASTER
+        if use_ticket_system_passwords
+        else Event.INTERNAL,
         event__event_group=event_group,
     )
     enrolled_occurrence = OccurrenceFactory(
@@ -93,9 +102,14 @@ def test_event_group_can_child_enroll_already_enrolled(
         event__event_group=event_group,
     )
     if has_enrolled:
-        EnrolmentFactory(
-            child=child_with_random_guardian, occurrence=enrolled_occurrence
-        )
+        if use_ticket_system_passwords:
+            TicketSystemPasswordFactory(
+                event=enrolled_occurrence.event, child=child_with_random_guardian
+            )
+        else:
+            EnrolmentFactory(
+                child=child_with_random_guardian, occurrence=enrolled_occurrence
+            )
     assert event_group.can_child_enroll(child_with_random_guardian) is can_child_enroll
 
 
@@ -133,8 +147,13 @@ def test_event_group_can_child_enroll_no_occurrence(child_with_random_guardian):
     "enrolment_limit,can_child_enroll",
     [(3, True), (2, False), (1, False), (0, False)],
 )
+@pytest.mark.parametrize("use_ticket_system_passwords", [True, False])
 def test_event_group_can_child_enroll_project_limit_reached(
-    enrolment_limit, can_child_enroll, child_with_random_guardian, future
+    enrolment_limit,
+    can_child_enroll,
+    child_with_random_guardian,
+    future,
+    use_ticket_system_passwords,
 ):
     """
     Enrolment shouldn't be possible when event group enrolment limit is reached.
@@ -154,14 +173,23 @@ def test_event_group_can_child_enroll_project_limit_reached(
         enrolled_occurrence = OccurrenceFactory(
             time=future,
             event__published_at=now(),
+            event__ticket_system=Event.TICKETMASTER
+            if use_ticket_system_passwords
+            else Event.INTERNAL,
             event__event_group=enrolled_event_group,
         )
-        EnrolmentFactory(
-            child=child_with_random_guardian, occurrence=enrolled_occurrence
-        )
+
+        if use_ticket_system_passwords:
+            TicketSystemPasswordFactory(
+                event=enrolled_occurrence.event, child=child_with_random_guardian
+            )
+        else:
+            EnrolmentFactory(
+                child=child_with_random_guardian, occurrence=enrolled_occurrence
+            )
 
     assert EventGroup.objects.count() == 2
-    assert Enrolment.objects.count() == 2
+    assert Enrolment.objects.count() == 0 if use_ticket_system_passwords else 2
     event_group = EventGroupFactory(
         name="Event group with an occurrence", published_at=now(), project=project
     )
@@ -222,8 +250,13 @@ def test_event_can_child_enroll_event_group_unenrollable(child_with_random_guard
     "enrolment_limit,can_child_enroll",
     [(3, True), (2, False), (1, False), (0, False)],
 )
+@pytest.mark.parametrize("use_ticket_system_passwords", [True, False])
 def test_event_can_child_enroll_project_limit_reached(
-    enrolment_limit, can_child_enroll, child_with_random_guardian, future
+    enrolment_limit,
+    can_child_enroll,
+    child_with_random_guardian,
+    future,
+    use_ticket_system_passwords,
 ):
     """
     Enrolment shouldn't be possible when event enrolment limit is reached.
@@ -243,14 +276,23 @@ def test_event_can_child_enroll_project_limit_reached(
         enrolled_occurrence = OccurrenceFactory(
             time=future,
             event__published_at=now(),
+            event__ticket_system=Event.TICKETMASTER
+            if use_ticket_system_passwords
+            else Event.INTERNAL,
             event__event_group=enrolled_event_group,
         )
-        EnrolmentFactory(
-            child=child_with_random_guardian, occurrence=enrolled_occurrence
-        )
+
+        if use_ticket_system_passwords:
+            TicketSystemPasswordFactory(
+                event=enrolled_occurrence.event, child=child_with_random_guardian
+            )
+        else:
+            EnrolmentFactory(
+                child=child_with_random_guardian, occurrence=enrolled_occurrence
+            )
 
     assert EventGroup.objects.count() == 2
-    assert Enrolment.objects.count() == 2
+    assert Enrolment.objects.count() == 0 if use_ticket_system_passwords else 2
     event_group = EventGroupFactory(
         name="Event group with an occurrence", published_at=now(), project=project
     )
@@ -266,14 +308,27 @@ def test_event_can_child_enroll_project_limit_reached(
 
 
 @pytest.mark.django_db
-def test_event_can_child_enroll_already_enrolled(child_with_random_guardian, future):
+@pytest.mark.parametrize("use_ticket_system_passwords", [True, False])
+def test_event_can_child_enroll_already_enrolled(
+    child_with_random_guardian, future, use_ticket_system_passwords
+):
     event_group = EventGroupFactory(published_at=now())
     enrolled_occurrence = OccurrenceFactory(
         time=future,
         event__published_at=now(),
+        event__ticket_system=Event.TICKETMASTER
+        if use_ticket_system_passwords
+        else Event.INTERNAL,
         event__event_group=event_group,
     )
-    EnrolmentFactory(child=child_with_random_guardian, occurrence=enrolled_occurrence)
+    if use_ticket_system_passwords:
+        TicketSystemPasswordFactory(
+            event=enrolled_occurrence.event, child=child_with_random_guardian
+        )
+    else:
+        EnrolmentFactory(
+            child=child_with_random_guardian, occurrence=enrolled_occurrence
+        )
     assert (
         enrolled_occurrence.event.can_child_enroll(child_with_random_guardian) is False
     )

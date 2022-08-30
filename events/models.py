@@ -85,7 +85,7 @@ class EventGroup(TimestampedModel, TranslatableModel):
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
 
-    def can_child_enroll(self, child) -> bool:
+    def can_child_enroll(self, child: Child) -> bool:
         """Check if the child can enroll to an event in the event group."""
 
         if not self.is_published():
@@ -97,13 +97,13 @@ class EventGroup(TimestampedModel, TranslatableModel):
         else:
             return False
 
-        if (
-            child.occurrences.filter(time__year=year).count()
-            >= child.project.enrolment_limit
-        ):
+        if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
             return False
 
         if child.occurrences.filter(event__event_group=self).exists():
+            return False
+
+        if child.ticket_system_passwords.filter(event__event_group=self).exists():
             return False
 
         return True
@@ -151,7 +151,7 @@ class EventQueryset(TranslatableQuerySet):
 
     def available(self, child):
         """
-        A child's available events must match all of the following rules:
+        A child's available events must match all the following rules:
             * the event must be published
             * the event must have at least one occurrence in the future
             * the child must not have enrolled to the event
@@ -308,13 +308,13 @@ class Event(TimestampedModel, TranslatableModel):
         if self.event_group and not self.event_group.can_child_enroll(child):
             return False
 
-        if (
-            child.occurrences.filter(time__year=year).count()
-            >= child.project.enrolment_limit
-        ):
+        if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
             return False
 
         if child.occurrences.filter(event=self).exists():
+            return False
+
+        if child.ticket_system_passwords.filter(event=self).exists():
             return False
 
         return True
@@ -488,14 +488,15 @@ class Occurrence(TimestampedModel):
         except AttributeError:
             return self.enrolments.count()
 
-    def get_capacity(self):
+    def get_capacity(self) -> Optional[int]:
         if self.capacity_override is not None:
             return self.capacity_override
         else:
             return self.event.capacity_per_occurrence
 
-    def get_remaining_capacity(self):
-        return max(self.get_capacity() - self.get_enrolment_count(), 0)
+    def get_remaining_capacity(self) -> int:
+        capacity = self.get_capacity() or 0
+        return max(capacity - self.get_enrolment_count(), 0)
 
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project

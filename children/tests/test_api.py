@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 import pytz
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import localtime, now
@@ -19,7 +20,9 @@ from events.factories import (
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
+    TicketSystemPasswordFactory,
 )
+from events.models import Event
 from kukkuu.consts import (
     API_USAGE_ERROR,
     DATA_VALIDATION_ERROR,
@@ -169,7 +172,7 @@ def test_submit_children_and_guardian_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_submit_children_and_guardian(snapshot, user_api_client, languages):
+def test_submit_children_and_guardian(snapshot, user_api_client, languages, project):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["languagesSpokenAtHome"] = [
         get_global_id(language) for language in languages[0:2]
@@ -192,7 +195,7 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages):
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
 
 
-def test_submit_children_and_guardian_with_email(snapshot, user_api_client):
+def test_submit_children_and_guardian_with_email(snapshot, user_api_client, project):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["email"] = "updated_email@example.com"
 
@@ -542,7 +545,7 @@ ADD_CHILD_VARIABLES = {
 }
 
 
-def test_add_child_mutation(snapshot, guardian_api_client):
+def test_add_child_mutation(snapshot, guardian_api_client, project):
     executed = guardian_api_client.execute(
         ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
     )
@@ -748,6 +751,7 @@ query Child($id: ID!, $year: Int) {
 """
 
 
+@freeze_time("2021-02-02T12:00:00Z")
 @pytest.mark.parametrize(
     "year_delta,expected_count",
     [(-2, 0), (-1, 1), (0, 2), (None, 2), (1, 1), (2, 0)],
@@ -759,9 +763,9 @@ def test_child_enrolment_count(
     if year_delta:
         variables["year"] = timezone.now().year + year_delta
 
-    last_year = timezone.now() - timedelta(days=365)
-    this_year = timezone.now() + timedelta(days=1)
-    next_year = timezone.now() + timedelta(days=365)
+    last_year = timezone.now() - relativedelta(years=1)
+    this_year = timezone.now()
+    next_year = timezone.now() + relativedelta(years=1)
 
     last_year_occurrence = OccurrenceFactory.create(
         time=last_year, event__published_at=last_year
@@ -790,9 +794,72 @@ def test_child_enrolment_count(
     assert executed["data"]["child"]["enrolmentCount"] == expected_count
 
 
-@pytest.mark.parametrize("in_the_past", [0, 1, 2])
+@freeze_time("2021-02-02T12:00:00Z")
+@pytest.mark.parametrize(
+    "year_delta,expected_count",
+    [(-2, 0), (-1, 1), (0, 2), (None, 2), (1, 1), (2, 0)],
+)
+def test_child_enrolment_count_with_ticket_system_passwords(
+    guardian_api_client, child_with_user_guardian, year_delta, expected_count
+):
+    variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+    if year_delta:
+        variables["year"] = timezone.now().year + year_delta
+
+    last_year = timezone.now() - relativedelta(years=1)
+    this_year = timezone.now()
+    next_year = timezone.now() + relativedelta(years=1)
+
+    last_year_occurrence = OccurrenceFactory.create(
+        time=last_year,
+        ticket_system_url="https://example.com",
+        event__published_at=last_year,
+        event__ticket_system=Event.TICKETMASTER,
+        event__capacity_per_occurrence=None,
+    )
+    this_year_occurences = OccurrenceFactory.create_batch(
+        2,
+        time=this_year,
+        ticket_system_url="https://example.com",
+        event__published_at=this_year,
+        event__ticket_system=Event.TICKETMASTER,
+        event__capacity_per_occurrence=None,
+    )
+    # This should make sure distinct ticket system passwords are considered in the count
+    OccurrenceFactory.create_batch(
+        2,
+        time=this_year,
+        ticket_system_url="https://example.com",
+        event=this_year_occurences[0].event,
+    )
+    next_year_occurrence = OccurrenceFactory.create(
+        time=next_year,
+        ticket_system_url="https://example.com",
+        event__published_at=now(),
+        event__ticket_system=Event.TICKETMASTER,
+        event__capacity_per_occurrence=None,
+    )
+
+    for occurrence in [
+        last_year_occurrence,
+        *this_year_occurences,
+        next_year_occurrence,
+    ]:
+        TicketSystemPasswordFactory(
+            event=occurrence.event, child=child_with_user_guardian
+        )
+
+    executed = guardian_api_client.execute(
+        CHILD_ENROLMENT_COUNT_QUERY, variables=variables
+    )
+
+    assert executed["data"]["child"]["enrolmentCount"] == expected_count
+
+
+@freeze_time("2021-02-02T12:00:00Z")
+@pytest.mark.parametrize("past_enrolment_count", [0, 1, 2])
 def test_child_past_enrolment_count(
-    guardian_api_client, child_with_user_guardian, in_the_past
+    guardian_api_client, child_with_user_guardian, past_enrolment_count
 ):
     """Number of this year's enrollments in the past."""
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
@@ -800,14 +867,14 @@ def test_child_past_enrolment_count(
     past = timezone.now() - timedelta(hours=1)
     future = timezone.now() + timedelta(hours=1)
 
-    for i in range(in_the_past):
+    for i in range(past_enrolment_count):
         EnrolmentFactory(
             child=child_with_user_guardian,
             occurrence__time=past,
             occurrence__event__published_at=past,
         )
 
-    for i in range(2 - in_the_past):
+    for i in range(2 - past_enrolment_count):
         EnrolmentFactory(
             child=child_with_user_guardian,
             occurrence__time=future,
@@ -818,7 +885,57 @@ def test_child_past_enrolment_count(
         CHILD_ENROLMENT_COUNT_QUERY, variables=variables
     )
 
-    assert executed["data"]["child"]["pastEnrolmentCount"] == in_the_past
+    assert executed["data"]["child"]["pastEnrolmentCount"] == past_enrolment_count
+
+
+@freeze_time("2021-02-02T12:00:00Z")
+@pytest.mark.parametrize("past_enrolment_count", [0, 1, 2])
+def test_child_past_enrolment_count_with_ticket_system_passwords(
+    guardian_api_client,
+    child_with_user_guardian,
+    past_enrolment_count,
+):
+    """Number of this year's enrollments in the past.
+
+    External ticket system event is considered to be in the past when the first
+    occurrence of the event is in the past.
+    """
+    variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+
+    past = timezone.now() - timedelta(hours=1)
+    future = timezone.now() + timedelta(hours=1)
+
+    for i in range(past_enrolment_count):
+        past_event = EventFactory(
+            published_at=past,
+            ticket_system=Event.TICKETMASTER,
+            capacity_per_occurrence=None,
+        )
+        # Event with a past occurrence is considered to be in the past
+        OccurrenceFactory(
+            time=past, ticket_system_url="https://example.com", event=past_event
+        )
+        OccurrenceFactory(
+            time=future, ticket_system_url="https://example.com", event=past_event
+        )
+        TicketSystemPasswordFactory(event=past_event, child=child_with_user_guardian)
+
+    for i in range(2 - past_enrolment_count):
+        future_event = EventFactory(
+            published_at=past,
+            ticket_system=Event.TICKETMASTER,
+            capacity_per_occurrence=None,
+        )
+        OccurrenceFactory(
+            time=future, ticket_system_url="https://example.com", event=future_event
+        )
+        TicketSystemPasswordFactory(event=future_event, child=child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        CHILD_ENROLMENT_COUNT_QUERY, variables=variables
+    )
+
+    assert executed["data"]["child"]["pastEnrolmentCount"] == past_enrolment_count
 
 
 def test_get_available_events(
