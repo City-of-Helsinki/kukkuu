@@ -16,6 +16,7 @@ import events.notification_service as notification_service
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from events.consts import NotificationType
+from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
 from events.utils import (
     send_event_group_notifications_to_guardians,
     send_event_notifications_to_guardians,
@@ -727,21 +728,13 @@ class Enrolment(TimestampedModel):
         return enrolment_id[0]
 
 
-class NoFreePasswordsError(Exception):
-    pass
-
-
-class PasswordAlreadyAssignedError(Exception):
-    pass
-
-
 class TicketSystemPasswordQueryset(models.QuerySet):
     def free(self):
         return self.filter(child=None)
 
     @transaction.atomic
-    def assign(self, event, child):
-        obj = (
+    def assign(self, event: Event, child: Child) -> "TicketSystemPassword":
+        obj: TicketSystemPassword = (
             self.select_for_update(skip_locked=True).filter(event=event).free().first()
         )
         if not obj:
@@ -753,7 +746,7 @@ class TicketSystemPasswordQueryset(models.QuerySet):
                 f"No free ticket system passwords left to event {event}."
             )
 
-        obj.assign(event, child)
+        obj.assign(child)
 
         return obj
 
@@ -794,14 +787,20 @@ class TicketSystemPassword(models.Model):
             ),
         )
 
-    def assign(self, event, child):
+    def assign(self, child: Child) -> None:
         if self.child:
             raise PasswordAlreadyAssignedError("The password is already assigned.")
+
+        if TicketSystemPassword.objects.filter(event=self.event, child=child).exists():
+            raise PasswordAlreadyAssignedError(
+                "A password is already assigned to the given child/event pair."
+            )
 
         self.assigned_at = timezone.now()
         self.child = child
         self.save()
 
         logger.info(
-            f'Ticket system password "{self.value}" assigned to {child.pk} to {event}.'
+            f'Ticket system password "{self.value}" assigned to {child.pk} to '
+            f"{self.event}"
         )

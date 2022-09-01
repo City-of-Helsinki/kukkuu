@@ -41,6 +41,7 @@ from kukkuu.consts import (
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
+    TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist, QueryTooDeepError
@@ -2602,6 +2603,106 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
         another_child.ticket_system_passwords.get(event=event)
         == another_childs_password
     )
+
+
+ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION = """
+mutation AssignTicketSystemPassword($input: AssignTicketSystemPasswordMutationInput!) {
+  assignTicketSystemPassword(input: $input) {
+    event {
+      name
+    }
+    child {
+      firstName
+      lastName
+    }
+    password
+  }
+}
+"""
+
+
+def test_assign_ticket_system_password(snapshot, guardian_api_client):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
+    )
+    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, value="FATAL LEAK"
+    )
+    free_password = TicketSystemPasswordFactory(
+        event=event, child=None, value="the correct password"
+    )
+    another_free_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, child=None, value="wrong password"
+    )
+
+    variables = {
+        "input": {
+            "eventId": get_global_id(event),
+            "childId": get_global_id(child),
+        }
+    }
+
+    executed = guardian_api_client.execute(
+        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
+        variables=variables,
+    )
+
+    snapshot.assert_match(executed)
+    assert child.ticket_system_passwords.get(event=event) == free_password
+
+    # second mutation should result in password already assigned error
+    executed = guardian_api_client.execute(
+        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
+        variables=variables,
+    )
+
+    assert_match_error_code(executed, TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR)
+
+
+def test_assign_ticket_system_password_no_free_passwords(
+    guardian_api_client,
+):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
+    )
+    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, value="FATAL LEAK"
+    )
+
+    variables = {
+        "input": {"eventId": get_global_id(event), "childId": get_global_id(child)}
+    }
+
+    executed = guardian_api_client.execute(
+        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
+        variables=variables,
+    )
+
+    assert_match_error_code(executed, NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR)
+
+
+def test_assign_ticket_system_password_not_own_child(guardian_api_client):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    another_child = ChildWithGuardianFactory()
+    some_free_password = TicketSystemPasswordFactory(event=event)  # noqa: F841
+
+    variables = {
+        "input": {
+            "eventId": get_global_id(event),
+            "childId": get_global_id(another_child),
+        }
+    }
+
+    # try to assign a password to someone else's child
+    executed = guardian_api_client.execute(
+        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
+        variables=variables,
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+    assert not another_child.ticket_system_passwords.filter(event=event).exists()
 
 
 VERIFY_TICKET_QUERY = """
