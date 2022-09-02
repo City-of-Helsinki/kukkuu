@@ -341,12 +341,6 @@ class Event(TimestampedModel, TranslatableModel):
     def is_published(self):
         return bool(self.published_at)
 
-    def get_or_assign_ticket_system_password(self, child):
-        try:
-            return self.ticket_system_passwords.get(child=child).value
-        except TicketSystemPassword.DoesNotExist:
-            return TicketSystemPassword.objects.assign(self, child).value
-
 
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
