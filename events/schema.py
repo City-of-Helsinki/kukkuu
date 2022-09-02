@@ -147,18 +147,14 @@ class TicketmasterEventTicketSystem(ObjectType):
     class Meta:
         interfaces = (EventTicketSystem,)
 
-    def resolve_child_password(self, info, **kwargs):
+    def resolve_child_password(event: Event, info, **kwargs):
         try:
             child = Child.objects.user_can_view(info.context.user).get(
                 id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
             )
-        except Child.DoesNotExist as e:
+            return event.ticket_system_passwords.get(child=child).value
+        except (Child.DoesNotExist, TicketSystemPassword.DoesNotExist) as e:
             raise ObjectDoesNotExistError(e)
-
-        try:
-            return self.get_or_assign_ticket_system_password(child)
-        except NoFreePasswordsError as e:
-            raise NoFreeTicketSystemPasswordsError(e)
 
 
 class InternalEventTicketSystem(ObjectType):
