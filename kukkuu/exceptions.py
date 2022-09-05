@@ -116,5 +116,13 @@ class NoFreeTicketSystemPasswordsError(KukkuuGraphQLError):
     """A free ticket system password is needed but there isn't any."""
 
 
+class TicketSystemPasswordAlreadyAssignedError(KukkuuGraphQLError):
+    """
+    The ticket system password in question has already been assigned to a child/event
+    pair or a ticket system password has already been assigned to the child/event pair
+    in question.
+    """
+
+
 class AuthenticationExpiredError(KukkuuGraphQLError):
     """Authentication expired."""

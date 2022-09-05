@@ -113,6 +113,16 @@ snapshots["test_add_ticketmaster_event 1"] = {
     "data": {"addEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
 }
 
+snapshots["test_assign_ticket_system_password 1"] = {
+    "data": {
+        "assignTicketSystemPassword": {
+            "child": {"firstName": "Joshua", "lastName": "Jensen"},
+            "event": {"name": "Dog hospital number."},
+            "password": "the correct password",
+        }
+    }
+}
+
 snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     "data": {
         "enrolOccurrence": {

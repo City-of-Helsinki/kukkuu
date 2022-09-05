@@ -26,8 +26,9 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
+from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
 from events.filters import EventFilter, OccurrenceFilter
-from events.models import Enrolment, Event, EventGroup, NoFreePasswordsError, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
@@ -43,6 +44,7 @@ from kukkuu.exceptions import (
     PastEnrolmentError,
     PastOccurrenceError,
     SingleEventsDisallowedError,
+    TicketSystemPasswordAlreadyAssignedError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
@@ -490,6 +492,39 @@ class EventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(
         required=True, description="Can be changed only if the event is unpublished."
     )
+
+
+class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        event_id = graphene.GlobalID(required=True)
+        child_id = graphene.GlobalID(required=True)
+
+    event = graphene.Field(EventNode)
+    child = graphene.Field(ChildNode)
+    password = graphene.String(description="The assigned ticket system password")
+
+    @classmethod
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_id = get_node_id_from_global_id(kwargs.get("event_id"), "EventNode")
+        child_id = get_node_id_from_global_id(kwargs.get("child_id"), "ChildNode")
+
+        try:
+            event = Event.objects.user_can_view(info.context.user).get(pk=event_id)
+            child = Child.objects.user_can_update(info.context.user).get(pk=child_id)
+        except (Event.DoesNotExist, Child.DoesNotExist) as e:
+            raise ObjectDoesNotExistError(e)
+
+        try:
+            password = TicketSystemPassword.objects.assign(event=event, child=child)
+        except NoFreePasswordsError as e:
+            raise NoFreeTicketSystemPasswordsError(str(e))
+        except PasswordAlreadyAssignedError as e:
+            raise TicketSystemPasswordAlreadyAssignedError(str(e))
+
+        return AssignTicketSystemPasswordMutation(
+            event=event, child=child, password=password.value
+        )
 
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
@@ -1065,3 +1100,5 @@ class Mutation:
     update_event_group = UpdateEventGroupMutation.Field()
     delete_event_group = DeleteEventGroupMutation.Field()
     publish_event_group = PublishEventGroupMutation.Field()
+
+    assign_ticket_system_password = AssignTicketSystemPasswordMutation.Field()
