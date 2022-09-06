@@ -328,14 +328,14 @@ class EventGroupNode(DjangoObjectType):
         return self.can_child_enroll(child)
 
 
-class EventOrEventGroup(graphene.Union):
+class EventOrEventGroupUnion(graphene.Union):
     class Meta:
         types = (EventNode, EventGroupNode)
 
 
 class EventOrEventGroupConnection(Connection):
     class Meta:
-        node = EventOrEventGroup
+        node = EventOrEventGroupUnion
 
 
 class EventGroupConnection(Connection):
