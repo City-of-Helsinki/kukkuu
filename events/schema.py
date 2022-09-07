@@ -6,7 +6,7 @@ import graphene
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
@@ -328,14 +328,14 @@ class EventGroupNode(DjangoObjectType):
         return self.can_child_enroll(child)
 
 
-class EventOrEventGroup(graphene.Union):
+class EventOrEventGroupUnion(graphene.Union):
     class Meta:
         types = (EventNode, EventGroupNode)
 
 
 class EventOrEventGroupConnection(Connection):
     class Meta:
-        node = EventOrEventGroup
+        node = EventOrEventGroupUnion
 
 
 class EventGroupConnection(Connection):
@@ -469,6 +469,36 @@ class EnrolmentNode(DjangoObjectType):
 
     def resolve_reference_id(self, info, **kwargs):
         return self.reference_id
+
+
+class TicketmasterEnrolmentNode(DjangoObjectType):
+    created_at = graphene.DateTime(required=True)
+
+    class Meta:
+        model = TicketSystemPassword
+        interfaces = (relay.Node,)
+        fields = ("event", "created_at")
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return queryset.filter(
+            Q(child__guardians__user=info.context.user)
+            | Q(child__project__in=info.context.user.administered_projects)
+        ).distinct()
+
+    def resolve_created_at(self, info):
+        return self.assigned_at
+
+
+class InternalOrTicketSystemEnrolmentUnion(graphene.Union):
+    class Meta:
+        types = (EnrolmentNode, TicketmasterEnrolmentNode)
+
+
+class InternalOrTicketSystemEnrolmentConnection(Connection):
+    class Meta:
+        node = InternalOrTicketSystemEnrolmentUnion
 
 
 class TicketVerificationNode(ObjectType):

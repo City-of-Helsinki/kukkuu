@@ -6,6 +6,43 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
+snapshots["test_active_internal_and_ticketmaster_enrolments 1"] = {
+    "data": {
+        "child": {
+            "activeInternalAndTicketSystemEnrolments": {
+                "edges": [
+                    {
+                        "node": {
+                            "__typename": "TicketmasterEnrolmentNode",
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "event": {"name": "1/4"},
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EnrolmentNode",
+                            "occurrence": {"event": {"name": "2/4"}},
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "TicketmasterEnrolmentNode",
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "event": {"name": "3/4"},
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EnrolmentNode",
+                            "occurrence": {"event": {"name": "4/4"}},
+                        }
+                    },
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_add_child_mutation 1"] = {
     "data": {
         "addChild": {

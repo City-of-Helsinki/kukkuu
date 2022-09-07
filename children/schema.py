@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import F, Max
 from django.utils import timezone
 from django.utils.timezone import localtime, now
 from django_ilmoitin.utils import send_notification
@@ -19,6 +20,7 @@ from graphql_relay.connection.arrayconnection import offset_to_cursor
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
+from events.models import Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -71,6 +73,11 @@ class ChildNode(DjangoObjectType):
     )
     past_enrolment_count = graphene.Int(
         description="How many past enrolments child has this year.",
+    )
+    active_internal_and_ticket_system_enrolments = relay.ConnectionField(
+        "events.schema.InternalOrTicketSystemEnrolmentConnection",
+        description="All upcoming and ongoing (with leeway) internal and ticket system "
+        "enrolments sorted by time.",
     )
 
     class Meta:
@@ -176,6 +183,25 @@ class ChildNode(DjangoObjectType):
     def resolve_occurrences(self: Child, info, **kwargs):
         # Use distinct to avoid duplicated rows when querying nested occurrences
         return self.occurrences.distinct()
+
+    def resolve_active_internal_and_ticket_system_enrolments(self, info, **kwargs):
+        from events.schema import EnrolmentNode, TicketmasterEnrolmentNode  # noqa
+
+        active_occurrences = Occurrence.objects.upcoming_with_ongoing()
+        internal_enrolments = self.enrolments.filter(
+            occurrence__in=active_occurrences
+        ).annotate(time=F("occurrence__time"))
+        ticket_system_passwords = self.ticket_system_passwords.filter(
+            event__occurrences__in=active_occurrences
+        ).annotate(time=Max("event__occurrences__time"))
+
+        return sorted(
+            (
+                *EnrolmentNode.get_queryset(internal_enrolments, info),
+                *TicketmasterEnrolmentNode.get_queryset(ticket_system_passwords, info),
+            ),
+            key=lambda e: e.time,
+        )
 
 
 class RelationshipTypeEnum(graphene.Enum):

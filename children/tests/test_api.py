@@ -1499,3 +1499,130 @@ def test_test_upcoming_events_and_event_groups_yearly_enrolment_limit(
 
     for node in nodes:
         assert node["node"]["canChildEnroll"] is False
+
+
+CHILD_ACTIVE_INTERNAL_AND_TICKETMASTER_ENROLMENTS_QUERY = """
+query Child($id: ID!) {
+  child(id: $id) {
+    activeInternalAndTicketSystemEnrolments{
+      edges {
+        node {
+          ... on EnrolmentNode {
+            occurrence {
+              event {
+                name
+              }
+            }
+            __typename
+          }
+          ... on TicketmasterEnrolmentNode {
+            createdAt
+            event {
+              name
+            }
+            __typename
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_active_internal_and_ticketmaster_enrolments(
+    snapshot,
+    guardian_api_client,
+    child_with_user_guardian,
+    future,
+    past,
+):
+    # unenrolled event, should not be returned
+    OccurrenceFactory(
+        event__name="INCORRECT",
+        event__published_at=now(),
+        time=future,
+    )
+
+    # unassigned Ticketmaster password, should not be returned
+    password_0 = TicketSystemPasswordFactory(
+        event=EventFactory(
+            published_at=now(),
+            ticket_system=Event.TICKETMASTER,
+            name="INCORRECT",
+        ),
+    )
+    OccurrenceFactory(event=password_0.event, time=future)
+
+    # enrolment in the past, should not be returned
+    enrolment = EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=past,
+            event=EventFactory(published_at=now(), name="INCORRECT"),
+        ),
+    )
+    # add also one occurrence in the future, should not affect anything
+    OccurrenceFactory(event=enrolment.occurrence.event, time=future)
+
+    # enrolment in the future + 1 day, should be returned as the second enrolment
+    enrolment = EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=future + timedelta(days=1),
+            event=EventFactory(published_at=now(), name="2/4"),
+        ),
+    )
+    # add also one occurrence in the past, should not affect anything
+    OccurrenceFactory(event=enrolment.occurrence.event, time=past)
+
+    # enrolment in the future + 3 days, should be returned as the fourth enrolment
+    enrolment = EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=future + timedelta(days=3),
+            event=EventFactory(published_at=now(), name="4/4"),
+        ),
+    )
+
+    # Ticketmaster password whose event is fully in the past, should not be returned
+    password_1 = TicketSystemPasswordFactory(
+        event=EventFactory(
+            published_at=now(),
+            ticket_system=Event.TICKETMASTER,
+            name="INCORRECT",
+        ),
+        child=child_with_user_guardian,
+        assigned_at=now(),
+    )
+    OccurrenceFactory(event=password_1.event, time=past)
+
+    # Ticketmaster password whose event's latest occurrence is at "future", should be
+    # returned as the first enrolment
+    password_2 = TicketSystemPasswordFactory(
+        event=EventFactory(
+            published_at=now(), ticket_system=Event.TICKETMASTER, name="1/4"
+        ),
+        child=child_with_user_guardian,
+        assigned_at=now(),
+    )
+    OccurrenceFactory(event=password_2.event, time=past)
+    OccurrenceFactory(event=password_2.event, time=future)
+
+    # Ticketmaster password whose event's latest occurrence is at "future" + 2 days,
+    # should be returned as the third enrolment
+    password_3 = TicketSystemPasswordFactory(
+        event=EventFactory(
+            published_at=now(), ticket_system=Event.TICKETMASTER, name="3/4"
+        ),
+        child=child_with_user_guardian,
+        assigned_at=now(),
+    )
+    OccurrenceFactory(event=password_3.event, time=future + timedelta(days=2))
+
+    variables = {"id": get_global_id(child_with_user_guardian)}
+    executed = guardian_api_client.execute(
+        CHILD_ACTIVE_INTERNAL_AND_TICKETMASTER_ENROLMENTS_QUERY, variables=variables
+    )
+
+    snapshot.assert_match(executed)
