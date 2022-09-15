@@ -1,11 +1,13 @@
 import logging
 from copy import deepcopy
-from typing import Optional
+from typing import List, Optional
 
 import graphene
+from graphene_django.utils import camelize
+
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
@@ -45,6 +47,7 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
     SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
+    TicketSystemPasswordNothingToImportError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
@@ -522,6 +525,97 @@ class EventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(
         required=True, description="Can be changed only if the event is unpublished."
     )
+
+
+class ImportTicketSystemPasswordErrorType(graphene.Scalar):
+    @staticmethod
+    def serialize(errors):
+        if isinstance(errors, dict):
+            if errors.get("__all__", False):
+                errors["non_field_errors"] = errors.pop("__all__")
+            return camelize(errors)
+        raise Exception("`errors` should be dict!")
+
+
+class ImportTicketSystemPasswordsMutation(
+    graphene.relay.ClientIDMutation  # , metaclass=CustomClientIDMutationMeta
+):
+    class Input:
+        event_id = graphene.GlobalID(required=True)
+        passwords = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+    event = graphene.Field(EventNode)
+    passwords = graphene.List(
+        graphene.String, description="A list of imported passwords"
+    )
+    errors = graphene.Field(
+        ImportTicketSystemPasswordErrorType,
+        description="A list of passwords which could not be imported",
+    )
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        event_id = get_node_id_from_global_id(kwargs.get("event_id"), "EventNode")
+        given_passwords = kwargs.get("passwords")
+
+        if not given_passwords:
+            raise TicketSystemPasswordNothingToImportError(
+                "There is no passwords given to be imported. "
+                "At least 1 password required."
+            )
+
+        try:
+            event = Event.objects.user_can_view(info.context.user).get(pk=event_id)
+        except (Event.DoesNotExist) as e:
+            raise ObjectDoesNotExistError(e)
+
+        # Save passwords one by one instead of bulk, to also collect the errors...
+        (imported_passwords, errors) = cls._create_batch(
+            [
+                TicketSystemPassword(event=event, value=password)
+                for password in given_passwords
+            ]
+        )
+
+        return ImportTicketSystemPasswordsMutation(
+            event=event,
+            passwords=[
+                ticket_system_password.value
+                for ticket_system_password in imported_passwords
+            ],
+            errors=errors,
+        )
+
+    @classmethod
+    def _create_batch(cls, passwords_batch: List[TicketSystemPassword]):
+        imported_passwords: list[TicketSystemPassword] = []
+        passwords_with_errors: list[str] = []
+        for obj in passwords_batch:
+            try:
+                # Use atomic to create a new transaction
+                with transaction.atomic():
+                    obj.save()
+                imported_passwords.append(obj)
+            except IntegrityError:
+                # Collect the passwords with integrity error
+                passwords_with_errors.append(obj.value)
+                continue
+        errors = cls._get_errors_field_value(passwords_with_errors)
+        return imported_passwords, errors
+
+    @classmethod
+    def _get_errors_field_value(cls, passwords_with_errors: List[str]):
+        return (
+            {
+                "passwords": [
+                    ("Could not import password", p) for p in passwords_with_errors
+                ]
+            }
+            if passwords_with_errors
+            else None
+        )
 
 
 class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
@@ -1132,3 +1226,4 @@ class Mutation:
     publish_event_group = PublishEventGroupMutation.Field()
 
     assign_ticket_system_password = AssignTicketSystemPasswordMutation.Field()
+    import_ticket_system_passwords = ImportTicketSystemPasswordsMutation.Field()

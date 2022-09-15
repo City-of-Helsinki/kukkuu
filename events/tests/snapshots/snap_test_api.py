@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
+
 snapshots = Snapshot()
 
 snapshots["test_add_event_group[model_perm] 1"] = {
@@ -737,6 +738,32 @@ If his their best. Election stay every something base.""",
                     }
                 },
             ]
+        }
+    }
+}
+
+snapshots["test_import_ticket_system_passwords 1"] = {
+    "data": {
+        "importTicketSystemPasswords": {
+            "errors": None,
+            "event": {"name": "Poor lawyer treat free heart significant."},
+            "passwords": ["123", "asd", "xyz321"],
+        }
+    }
+}
+
+snapshots["test_import_ticket_system_passwords_errors_with_integrity_errors 1"] = {
+    "data": {
+        "importTicketSystemPasswords": {
+            "errors": {
+                "passwords": [
+                    ["Could not import password", "123"],
+                    ["Could not import password", "asd"],
+                    ["Could not import password", "xyz321"],
+                ]
+            },
+            "event": {"name": "Poor lawyer treat free heart significant."},
+            "passwords": ["more", "passwords", "to", "test", "errors"],
         }
     }
 }
