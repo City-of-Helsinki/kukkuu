@@ -2616,7 +2616,11 @@ mutation ImportTicketSystemPasswordsMutation(
       name
     }
     passwords
-    errors
+    errors {
+        field
+        message
+        value
+    }
   }
 }
 """
@@ -2670,10 +2674,12 @@ def test_import_ticket_system_passwords_errors_with_integrity_errors(
     )
     # Passwords should contain only the added passwords
     assert executed["data"]["importTicketSystemPasswords"]["passwords"] == new_passwords
-    errors_as_text = str(
-        executed["data"]["importTicketSystemPasswords"]["errors"]["passwords"]
+    assert all(
+        [
+            p in str(executed["data"]["importTicketSystemPasswords"]["errors"])
+            for p in existing_passwords
+        ]
     )
-    assert all([p in errors_as_text for p in existing_passwords])
     assert TicketSystemPassword.objects.count() == len(
         new_passwords + existing_passwords
     )

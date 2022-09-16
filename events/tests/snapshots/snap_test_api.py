@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
+
 snapshots = Snapshot()
 
 snapshots["test_add_event_group[model_perm] 1"] = {
@@ -754,13 +755,23 @@ snapshots["test_import_ticket_system_passwords 1"] = {
 snapshots["test_import_ticket_system_passwords_errors_with_integrity_errors 1"] = {
     "data": {
         "importTicketSystemPasswords": {
-            "errors": {
-                "passwords": [
-                    ["Could not import password", "123"],
-                    ["Could not import password", "asd"],
-                    ["Could not import password", "xyz321"],
-                ]
-            },
+            "errors": [
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "123",
+                },
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "asd",
+                },
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "xyz321",
+                },
+            ],
             "event": {"name": "Poor lawyer treat free heart significant."},
             "passwords": ["more", "passwords", "to", "test", "errors"],
         }

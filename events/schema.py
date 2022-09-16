@@ -12,7 +12,6 @@ from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
-from graphene_django.utils import camelize
 from graphene_file_upload.scalars import Upload
 from graphql_relay import from_global_id
 
@@ -51,6 +50,7 @@ from kukkuu.exceptions import (
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
 from venues.models import Venue
+from common.schema import ErrorType
 
 logger = logging.getLogger(__name__)
 
@@ -526,19 +526,7 @@ class EventTicketSystemInput(graphene.InputObjectType):
     )
 
 
-class ImportTicketSystemPasswordErrorType(graphene.Scalar):
-    @staticmethod
-    def serialize(errors):
-        if isinstance(errors, dict):
-            if errors.get("__all__", False):
-                errors["non_field_errors"] = errors.pop("__all__")
-            return camelize(errors)
-        raise Exception("`errors` should be dict!")
-
-
-class ImportTicketSystemPasswordsMutation(
-    graphene.relay.ClientIDMutation  # , metaclass=CustomClientIDMutationMeta
-):
+class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
     class Input:
         event_id = graphene.GlobalID(required=True)
         passwords = graphene.List(graphene.NonNull(graphene.String), required=True)
@@ -547,8 +535,8 @@ class ImportTicketSystemPasswordsMutation(
     passwords = graphene.List(
         graphene.String, description="A list of imported passwords"
     )
-    errors = graphene.Field(
-        ImportTicketSystemPasswordErrorType,
+    errors = graphene.List(
+        ErrorType,
         description="A list of passwords which could not be imported",
     )
 
@@ -607,11 +595,12 @@ class ImportTicketSystemPasswordsMutation(
     @classmethod
     def _get_errors_field_value(cls, passwords_with_errors: List[str]):
         return (
-            {
-                "passwords": [
-                    ("Could not import password", p) for p in passwords_with_errors
-                ]
-            }
+            [
+                ErrorType(
+                    field="passwords", message="Could not import password", value=p
+                )
+                for p in passwords_with_errors
+            ]
             if passwords_with_errors
             else None
         )
