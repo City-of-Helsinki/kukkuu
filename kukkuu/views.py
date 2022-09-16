@@ -39,6 +39,7 @@ from kukkuu.consts import (
     QUERY_TOO_DEEP_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
+    TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import (
@@ -67,6 +68,7 @@ from kukkuu.exceptions import (
     QueryTooDeepError,
     SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
+    TicketSystemPasswordNothingToImportError,
     TicketSystemUrlMissingError,
 )
 
@@ -101,6 +103,9 @@ error_codes_kukkuu = {
     NoFreeTicketSystemPasswordsError: NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
     TicketSystemPasswordAlreadyAssignedError: (
         TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR
+    ),
+    TicketSystemPasswordNothingToImportError: (
+        TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR
     ),
     AuthenticationError: AUTHENTICATION_ERROR,
     AuthenticationExpiredError: AUTHENTICATION_EXPIRED_ERROR,

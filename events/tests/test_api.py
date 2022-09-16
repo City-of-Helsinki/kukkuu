@@ -22,7 +22,7 @@ from events.factories import (
     OccurrenceFactory,
     TicketSystemPasswordFactory,
 )
-from events.models import Enrolment, Event, EventGroup, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
@@ -40,8 +40,10 @@ from kukkuu.consts import (
     OCCURRENCE_MISMATCH_ERROR,
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
+    PERMISSION_DENIED_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
+    TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist, QueryTooDeepError
@@ -2603,6 +2605,138 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
         another_child.ticket_system_passwords.get(event=event)
         == another_childs_password
     )
+
+
+IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION = """
+mutation ImportTicketSystemPasswordsMutation(
+    $input: ImportTicketSystemPasswordsMutationInput!
+) {
+  importTicketSystemPasswords(input: $input) {
+    event {
+      name
+    }
+    passwords
+    errors {
+        field
+        message
+        value
+    }
+  }
+}
+"""
+
+
+def test_import_ticket_system_passwords(snapshot, project_user_api_client):
+    """project admins should be able to import a list passwords to an event."""
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    passwords = ["123", "asd", "xyz321"]
+
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={"input": {"eventId": get_global_id(event), "passwords": passwords}},
+    )
+    snapshot.assert_match(executed)
+    assert (
+        executed["data"]["importTicketSystemPasswords"]["event"]["name"] == event.name
+    )
+    assert executed["data"]["importTicketSystemPasswords"]["passwords"] == passwords
+    assert TicketSystemPassword.objects.count() == len(passwords)
+
+
+def test_import_ticket_system_passwords_errors_with_integrity_errors(
+    snapshot, project_user_api_client
+):
+    """
+    When importing some non-unique passwords,
+    the process should continue and
+    the given unique passwords should be imported
+    and the errors should be listed in the errors field.
+    """
+    existing_passwords = ["123", "asd", "xyz321"]
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    for password in existing_passwords:
+        TicketSystemPasswordFactory(event=event, value=password)
+
+    passwords_imported = (
+        ["more", "passwords"] + existing_passwords + ["to", "test", "errors"]
+    )
+
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={
+            "input": {"eventId": get_global_id(event), "passwords": passwords_imported}
+        },
+    )
+    new_passwords = [p for p in passwords_imported if p not in existing_passwords]
+    snapshot.assert_match(executed)
+    assert (
+        executed["data"]["importTicketSystemPasswords"]["event"]["name"] == event.name
+    )
+    # Passwords should contain only the added passwords
+    assert executed["data"]["importTicketSystemPasswords"]["passwords"] == new_passwords
+    error_values = [
+        e["value"] for e in executed["data"]["importTicketSystemPasswords"]["errors"]
+    ]
+    assert all([p in error_values for p in existing_passwords])
+    assert all([p not in error_values for p in new_passwords])
+    assert TicketSystemPassword.objects.count() == len(
+        new_passwords + existing_passwords
+    )
+
+
+def test_import_ticket_system_passwords_missing_required_params(
+    project_user_api_client,
+):
+    """Some of the required params are missing"""
+    # No passwords
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={"input": {"eventId": get_global_id(event), "passwords": None}},
+    )
+    assert_match_error_code(executed, GENERAL_ERROR)
+
+    # No event id
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={"input": {"eventId": None, "passwords": ["secret-coupon"]}},
+    )
+    assert_match_error_code(executed, GENERAL_ERROR)
+
+    # Empty list of passwords
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={"input": {"eventId": get_global_id(event), "passwords": []}},
+    )
+    assert_match_error_code(executed, TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR)
+
+
+def test_import_ticket_system_passwords_event_not_exist(project_user_api_client):
+    """The event where the passwords are imported does not exist"""
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    event_id = get_global_id(event)
+    event.delete()
+    executed = project_user_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={"input": {"eventId": event_id, "passwords": ["secret-coupon"]}},
+    )
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_import_ticket_system_passwords_invalid_permissions(guardian_api_client):
+    """
+    The user who is importing does not have enough permissions to do the operation.
+    Only the project admins should have the permissions.
+    """
+    event = EventFactory(ticket_system=Event.TICKETMASTER)
+    executed = guardian_api_client.execute(
+        IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+        variables={
+            "input": {"eventId": get_global_id(event), "passwords": ["secret-coupon"]}
+        },
+    )
+    assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
 
 
 ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION = """

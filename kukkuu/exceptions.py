@@ -124,5 +124,9 @@ class TicketSystemPasswordAlreadyAssignedError(KukkuuGraphQLError):
     """
 
 
+class TicketSystemPasswordNothingToImportError(KukkuuGraphQLError):
+    """Empty list of passwords given"""
+
+
 class AuthenticationExpiredError(KukkuuGraphQLError):
     """Authentication expired."""
