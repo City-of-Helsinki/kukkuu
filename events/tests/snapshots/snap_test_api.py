@@ -741,6 +741,42 @@ If his their best. Election stay every something base.""",
     }
 }
 
+snapshots["test_import_ticket_system_passwords 1"] = {
+    "data": {
+        "importTicketSystemPasswords": {
+            "errors": None,
+            "event": {"name": "Poor lawyer treat free heart significant."},
+            "passwords": ["123", "asd", "xyz321"],
+        }
+    }
+}
+
+snapshots["test_import_ticket_system_passwords_errors_with_integrity_errors 1"] = {
+    "data": {
+        "importTicketSystemPasswords": {
+            "errors": [
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "123",
+                },
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "asd",
+                },
+                {
+                    "field": "passwords",
+                    "message": "Could not import password",
+                    "value": "xyz321",
+                },
+            ],
+            "event": {"name": "Poor lawyer treat free heart significant."},
+            "passwords": ["more", "passwords", "to", "test", "errors"],
+        }
+    }
+}
+
 snapshots["test_occurrence_available_capacity_and_enrolment_count 1"] = {
     "data": {
         "occurrence": {
