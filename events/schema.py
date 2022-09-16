@@ -5,7 +5,7 @@ from typing import List, Optional
 import graphene
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
@@ -559,10 +559,11 @@ class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
 
         # Save passwords one by one instead of bulk, to also collect the errors...
         (imported_passwords, errors) = cls._create_batch(
+            event,
             [
                 TicketSystemPassword(event=event, value=password)
                 for password in given_passwords
-            ]
+            ],
         )
 
         return ImportTicketSystemPasswordsMutation(
@@ -575,20 +576,32 @@ class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
         )
 
     @classmethod
-    def _create_batch(cls, passwords_batch: List[TicketSystemPassword]):
-        imported_passwords: list[TicketSystemPassword] = []
-        passwords_with_errors: list[str] = []
-        for obj in passwords_batch:
-            try:
-                # Use atomic to create a new transaction
-                with transaction.atomic():
-                    obj.save()
-                imported_passwords.append(obj)
-            except IntegrityError:
-                # Collect the passwords with integrity error
-                passwords_with_errors.append(obj.value)
-                continue
-        errors = cls._get_errors_field_value(passwords_with_errors)
+    def _create_batch(cls, event: Event, passwords_batch: List[TicketSystemPassword]):
+        # Fetch the existing passwords for integrity test, because
+        # if the passwords already exists,
+        # an integrity error will be raised by bulk_create.
+        existing_passwords = TicketSystemPassword.objects.filter(
+            event=event, value__in=[p.value for p in passwords_batch]
+        )
+        # The errors can be collected before the bulk-create.
+        # The Django's bulk_create does not return any errors or PKs
+        # that could be used to check which instances were created and which were not.
+        errors = (
+            cls._get_errors_field_value(e.value for e in existing_passwords)
+            if existing_passwords
+            else None
+        )
+
+        passwords_to_be_imported = [
+            p
+            for p in passwords_batch
+            if p.value not in [e.value for e in existing_passwords]
+        ]
+
+        imported_passwords = TicketSystemPassword.objects.bulk_create(
+            passwords_to_be_imported
+        )
+
         return imported_passwords, errors
 
     @classmethod
