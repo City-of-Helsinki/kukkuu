@@ -2674,12 +2674,11 @@ def test_import_ticket_system_passwords_errors_with_integrity_errors(
     )
     # Passwords should contain only the added passwords
     assert executed["data"]["importTicketSystemPasswords"]["passwords"] == new_passwords
-    assert all(
-        [
-            p in str(executed["data"]["importTicketSystemPasswords"]["errors"])
-            for p in existing_passwords
-        ]
-    )
+    error_values = [
+        e["value"] for e in executed["data"]["importTicketSystemPasswords"]["errors"]
+    ]
+    assert all([p in error_values for p in existing_passwords])
+    assert all([p not in error_values for p in new_passwords])
     assert TicketSystemPassword.objects.count() == len(
         new_passwords + existing_passwords
     )
@@ -2689,7 +2688,7 @@ def test_import_ticket_system_passwords_missing_required_params(
     project_user_api_client,
 ):
     """Some of the required params are missing"""
-    # No event id
+    # No passwords
     event = EventFactory(ticket_system=Event.TICKETMASTER)
     executed = project_user_api_client.execute(
         IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
@@ -2697,7 +2696,7 @@ def test_import_ticket_system_passwords_missing_required_params(
     )
     assert_match_error_code(executed, GENERAL_ERROR)
 
-    # No passwords
+    # No event id
     executed = project_user_api_client.execute(
         IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
         variables={"input": {"eventId": None, "passwords": ["secret-coupon"]}},
@@ -2720,9 +2719,9 @@ def test_import_ticket_system_passwords_event_not_exist(project_user_api_client)
     event.delete()
     executed = project_user_api_client.execute(
         IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
-        variables={"input": {"eventId": event_id, "passwords": None}},
+        variables={"input": {"eventId": event_id, "passwords": ["secret-coupon"]}},
     )
-    assert_match_error_code(executed, GENERAL_ERROR)
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
 def test_import_ticket_system_passwords_invalid_permissions(guardian_api_client):

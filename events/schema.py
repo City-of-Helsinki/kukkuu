@@ -555,7 +555,7 @@ class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
 
         try:
             event = Event.objects.user_can_view(info.context.user).get(pk=event_id)
-        except (Event.DoesNotExist) as e:
+        except Event.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
         # Save passwords one by one instead of bulk, to also collect the errors...
