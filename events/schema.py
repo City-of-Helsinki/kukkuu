@@ -17,7 +17,7 @@ from graphql_relay import from_global_id
 
 from children.models import Child
 from children.schema import ChildNode
-from common.schema import LanguageEnum
+from common.schema import ErrorType, LanguageEnum
 from common.utils import (
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
@@ -50,7 +50,6 @@ from kukkuu.exceptions import (
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
 from venues.models import Venue
-from common.schema import ErrorType
 
 logger = logging.getLogger(__name__)
 

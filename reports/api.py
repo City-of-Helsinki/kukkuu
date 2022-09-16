@@ -125,11 +125,15 @@ class ChildSerializer(serializers.ModelSerializer):
 
 @extend_schema_view(list=extend_schema(description="Get all children data."))
 class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Child.objects.exclude(guardians=None).prefetch_related(
-        Prefetch(
-            "guardians__languages_spoken_at_home",
-            queryset=Language.objects.order_by("alpha_3_code"),
-            to_attr="prefetched_languages_spoken_at_home",
-        ),
+    queryset = (
+        Child.objects.exclude(guardians=None)
+        .prefetch_related(
+            Prefetch(
+                "guardians__languages_spoken_at_home",
+                queryset=Language.objects.order_by("alpha_3_code"),
+                to_attr="prefetched_languages_spoken_at_home",
+            ),
+        )
+        .order_by("last_name", "first_name")
     )
     serializer_class = ChildSerializer

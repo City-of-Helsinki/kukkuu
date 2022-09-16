@@ -1,6 +1,4 @@
 import graphene
-
-# from graphene_django.utils import camelize
 from django.conf import settings
 
 from common.utils import get_obj_from_global_id
@@ -22,7 +20,7 @@ def set_obj_languages_spoken_at_home(info, obj, language_global_ids):
 
 class ErrorType(graphene.ObjectType):
     """
-    A geric error type that can be used to add errors inside the data,
+    A generic error type that can be used to add errors inside the data,
     when using the errors field from the root is not possible.
 
     NOTE: Normally the errors should be added in the errors field
@@ -34,11 +32,3 @@ class ErrorType(graphene.ObjectType):
     field = graphene.String(required=True)
     message = graphene.String(required=True)
     value = graphene.String(required=True)
-
-    # @staticmethod
-    # def serialize(errors):
-    #     if isinstance(errors, dict):
-    #         if errors.get("__all__", False):
-    #             errors["non_field_errors"] = errors.pop("__all__")
-    #         return camelize(errors)
-    #     raise Exception("`errors` should be dict!")

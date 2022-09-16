@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
-
 snapshots = Snapshot()
 
 snapshots["test_children_endpoint 1"] = [
@@ -16,17 +15,17 @@ snapshots["test_children_endpoint 1"] = [
         "registration_date": "2021-02-02",
     },
     {
-        "birth_year": 2021,
-        "contact_language": "swe",
-        "languages_spoken_at_home": ["__OTHER__"],
-        "postal_code": "22222",
-        "registration_date": "2021-03-03",
-    },
-    {
         "birth_year": 2020,
         "contact_language": "eng",
         "languages_spoken_at_home": [],
         "postal_code": "33333",
         "registration_date": "2021-04-05",
+    },
+    {
+        "birth_year": 2021,
+        "contact_language": "swe",
+        "languages_spoken_at_home": ["__OTHER__"],
+        "postal_code": "22222",
+        "registration_date": "2021-03-03",
     },
 ]
