@@ -29,7 +29,6 @@ from kukkuu.consts import (
     MESSAGE_ALREADY_SENT_ERROR,
     MISSING_DEFAULT_TRANSLATION_ERROR,
     NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,
-    TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     OBJECT_DOES_NOT_EXIST_ERROR,
     OCCURRENCE_IS_FULL_ERROR,
     OCCURRENCE_IS_NOT_FULL_ERROR,
@@ -40,6 +39,7 @@ from kukkuu.consts import (
     QUERY_TOO_DEEP_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
+    TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
 from kukkuu.exceptions import (
@@ -67,8 +67,8 @@ from kukkuu.exceptions import (
     PastOccurrenceError,
     QueryTooDeepError,
     SingleEventsDisallowedError,
-    TicketSystemPasswordNothingToImportError,
     TicketSystemPasswordAlreadyAssignedError,
+    TicketSystemPasswordNothingToImportError,
     TicketSystemUrlMissingError,
 )
 

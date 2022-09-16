@@ -3,17 +3,16 @@ from copy import deepcopy
 from typing import List, Optional
 
 import graphene
-from graphene_django.utils import camelize
-
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
+from graphene_django.utils import camelize
 from graphene_file_upload.scalars import Upload
 from graphql_relay import from_global_id
 
