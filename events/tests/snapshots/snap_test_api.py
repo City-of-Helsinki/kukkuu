@@ -459,6 +459,12 @@ snapshots["test_event_ticket_system_password_assignation 2"] = {
     }
 }
 
+snapshots["test_event_ticket_system_password_counts 1"] = {
+    "data": {
+        "event": {"ticketSystem": {"freePasswordCount": 3, "usedPasswordCount": 2}}
+    }
+}
+
 snapshots["test_events_and_event_groups_query_normal_user 1"] = {
     "data": {
         "eventsAndEventGroups": {

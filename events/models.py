@@ -732,6 +732,9 @@ class TicketSystemPasswordQueryset(models.QuerySet):
     def free(self):
         return self.filter(child=None)
 
+    def used(self):
+        return self.exclude(child=None)
+
     @transaction.atomic
     def assign(self, event: Event, child: Child) -> "TicketSystemPassword":
         obj: TicketSystemPassword = (
