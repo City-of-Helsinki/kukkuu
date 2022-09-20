@@ -144,6 +144,8 @@ class EventTicketSystem(graphene.Interface):
 
 class TicketmasterEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID(required=True), required=True)
+    free_password_count = graphene.Int(required=True)
+    used_password_count = graphene.Int(required=True)
 
     class Meta:
         interfaces = (EventTicketSystem,)
@@ -160,6 +162,16 @@ class TicketmasterEventTicketSystem(ObjectType):
             return self.get_or_assign_ticket_system_password(child)
         except NoFreePasswordsError as e:
             raise NoFreeTicketSystemPasswordsError(e)
+
+    def resolve_free_password_count(self, info, **kwargs):
+        if not self.can_user_administer(info.context.user):
+            raise PermissionDenied()
+        return self.ticket_system_passwords.free().count()
+
+    def resolve_used_password_count(self, info, **kwargs):
+        if not self.can_user_administer(info.context.user):
+            raise PermissionDenied()
+        return self.ticket_system_passwords.used().count()
 
 
 class InternalEventTicketSystem(ObjectType):

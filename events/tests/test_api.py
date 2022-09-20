@@ -2607,6 +2607,60 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
     )
 
 
+EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY = """
+query TicketSystemPasswordCounts($eventId: ID!) {
+  event(id: $eventId) {
+    ticketSystem {
+      ... on TicketmasterEventTicketSystem {
+        freePasswordCount
+        usedPasswordCount
+      }
+    }
+  }
+}
+"""
+
+
+def test_event_ticket_system_password_counts(snapshot, project_user_api_client):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+
+    # free passwords
+    TicketSystemPasswordFactory.create_batch(3, event=event, child=None)
+
+    # used passwords
+    TicketSystemPasswordFactory.create_batch(2, event=event, assigned_at=now())
+
+    # another event free passwords, should not affect anything
+    TicketSystemPasswordFactory.create_batch(7, child=None)
+
+    # another event used passwords, should not affect anything
+    TicketSystemPasswordFactory.create_batch(6, assigned_at=now())
+
+    variables = {"eventId": get_global_id(event)}
+
+    executed = project_user_api_client.execute(
+        EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
+        variables=variables,
+    )
+
+    # expect 3 free passwords and 2 used passwords
+    snapshot.assert_match(executed)
+
+
+def test_event_ticket_system_password_counts_no_permission(guardian_api_client):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    TicketSystemPasswordFactory.create_batch(3, event=event, child=None)
+
+    variables = {"eventId": get_global_id(event)}
+
+    executed = guardian_api_client.execute(
+        EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
+        variables=variables,
+    )
+
+    assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
+
+
 IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION = """
 mutation ImportTicketSystemPasswordsMutation(
     $input: ImportTicketSystemPasswordsMutationInput!
