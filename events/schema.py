@@ -142,7 +142,7 @@ class EventTicketSystem(graphene.Interface):
 
 
 class TicketmasterEventTicketSystem(ObjectType):
-    child_password = graphene.String(child_id=graphene.ID(required=True), required=True)
+    child_password = graphene.String(child_id=graphene.ID())
 
     class Meta:
         interfaces = (EventTicketSystem,)
@@ -153,7 +153,9 @@ class TicketmasterEventTicketSystem(ObjectType):
                 id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
             )
             return event.ticket_system_passwords.get(child=child).value
-        except (Child.DoesNotExist, TicketSystemPassword.DoesNotExist) as e:
+        except TicketSystemPassword.DoesNotExist:
+            return None
+        except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
 
