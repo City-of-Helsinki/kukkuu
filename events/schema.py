@@ -143,7 +143,7 @@ class EventTicketSystem(graphene.Interface):
 
 
 class TicketmasterEventTicketSystem(ObjectType):
-    child_password = graphene.String(child_id=graphene.ID(required=True), required=True)
+    child_password = graphene.String(child_id=graphene.ID())
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
 
@@ -156,7 +156,9 @@ class TicketmasterEventTicketSystem(ObjectType):
                 id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
             )
             return event.ticket_system_passwords.get(child=child).value
-        except (Child.DoesNotExist, TicketSystemPassword.DoesNotExist) as e:
+        except TicketSystemPassword.DoesNotExist:
+            return None
+        except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
     def resolve_free_password_count(self, info, **kwargs):
