@@ -63,6 +63,7 @@ class EventAdmin(TranslatableAdmin):
         "event_group",
         "ready_for_event_group_publishing",
         "ticket_system",
+        "ticket_system_url",
     )
     list_display_links = ("id", "name")
     fields = (
@@ -79,6 +80,7 @@ class EventAdmin(TranslatableAdmin):
         "event_group",
         "ready_for_event_group_publishing",
         "ticket_system",
+        "ticket_system_url",
     )
     inlines = [
         OccurrencesInline,
