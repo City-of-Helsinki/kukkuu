@@ -1445,33 +1445,6 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
-snapshots["test_update_internal_ticket_system_event_capacity_required 1"] = {
-    "data": {
-        "updateEvent": {
-            "event": {
-                "capacityPerOccurrence": 5,
-                "duration": 181,
-                "image": "http://testserver/media/teacher.jpg",
-                "imageAltText": "",
-                "occurrences": {"edges": []},
-                "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
-                "readyForEventGroupPublishing": True,
-                "ticketSystem": {"type": "INTERNAL"},
-                "translations": [
-                    {
-                        "description": """Least then top sing. Serious listen police shake. Page box child care any concern.
-Agree room laugh prevent make. Our very television beat at success decade.""",
-                        "imageAltText": "",
-                        "languageCode": "FI",
-                        "name": "Poor lawyer treat free heart significant.",
-                        "shortDescription": "Together history perform.",
-                    }
-                ],
-            }
-        }
-    }
-}
-
 snapshots["test_update_occurrence_different_year[True] 1"] = {
     "data": {
         "updateOccurrence": {
@@ -1568,7 +1541,7 @@ snapshots["test_update_occurrence_ticket_system_url[True-False] 1"] = {
     }
 }
 
-snapshots["test_update_ticketmaster_event[False] 1"] = {
+snapshots["test_update_ticketmaster_event 1"] = {
     "data": {"updateEvent": {"event": {"ticketSystem": {"type": "TICKETMASTER"}}}}
 }
 

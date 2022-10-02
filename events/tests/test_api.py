@@ -729,7 +729,10 @@ def test_add_internal_ticket_system_event_capacity_required(
 def test_add_ticketmaster_event(snapshot, project_user_api_client, project):
     variables = deepcopy(ADD_EVENT_VARIABLES)
     variables["input"]["projectId"] = get_global_id(project)
-    variables["input"]["ticketSystem"] = {"type": "TICKETMASTER"}
+    variables["input"]["ticketSystem"] = {
+        "type": "TICKETMASTER",
+        "url": "https://example.com",
+    }
     variables["input"].pop("capacityPerOccurrence")
 
     executed = project_user_api_client.execute(
@@ -935,74 +938,59 @@ def test_update_event_ready_for_event_group_publishing(
     snapshot.assert_match(executed)
 
 
-def test_update_internal_ticket_system_event_capacity_required(
-    project_user_api_client, snapshot
-):
-    # try to change a ticketmaster event to an internal event without capacity
-    ticket_master_event = EventFactory(
-        ticket_system=Event.TICKETMASTER, capacity_per_occurrence=None
+def test_update_ticketmaster_event(snapshot, project_user_api_client):
+    event = EventFactory(
+        published_at=now(),
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_url="https://original.example.com",
     )
-    variables = {
-        "input": {
-            "id": get_global_id(ticket_master_event),
-            "ticketSystem": {"type": "INTERNAL"},
-        }
-    }
-
-    executed = project_user_api_client.execute(
-        UPDATE_EVENT_MUTATION, variables=variables
-    )
-
-    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-    assert "Capacity" in str(executed)
-
-    # try to update an internal event to not have capacity
-    internal_event = EventFactory(
-        ticket_system=Event.INTERNAL, capacity_per_occurrence=5
-    )
-    variables = {
-        "input": {"id": get_global_id(internal_event), "capacityPerOccurrence": None}
-    }
-
-    executed = project_user_api_client.execute(
-        UPDATE_EVENT_MUTATION, variables=variables
-    )
-
-    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-    assert "Capacity" in str(executed)
-
-    # changing a ticketmaster event to an internal event with capacity should work
-    variables = {
-        "input": {
-            "id": get_global_id(ticket_master_event),
-            "ticketSystem": {"type": "INTERNAL"},
-            "capacityPerOccurrence": 5,
-        }
-    }
-
-    executed = project_user_api_client.execute(
-        UPDATE_EVENT_MUTATION, variables=variables
-    )
-
-    snapshot.assert_match(executed)
-
-
-@pytest.mark.parametrize("published", (False, True))
-def test_update_ticketmaster_event(snapshot, project_user_api_client, published):
-    event = EventFactory(published_at=now() if published else None)
     variables = deepcopy(UPDATE_EVENT_VARIABLES)
     variables["input"]["id"] = get_global_id(event)
-    variables["input"]["ticketSystem"] = {"type": "TICKETMASTER"}
+    variables["input"]["ticketSystem"] = {"url": "https://updated.example.com"}
     variables["input"].pop("capacityPerOccurrence")
 
     executed = project_user_api_client.execute(
         UPDATE_TICKETMASTER_EVENT_MUTATION, variables=variables
     )
 
-    if not published:
-        snapshot.assert_match(executed)
-    else:
-        assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    snapshot.assert_match(executed)
+
+
+def test_update_ticketmaster_event_cannot_change_ticket_system(project_user_api_client):
+    event = EventFactory(
+        published_at=now(),
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_url="https://original.example.com",
+    )
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+    variables["input"]["ticketSystem"] = Event.INTERNAL
+    variables["input"].pop("capacityPerOccurrence")
+
+    project_user_api_client.execute(
+        UPDATE_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+
+    event.refresh_from_db()
+    assert event.ticket_system == Event.TICKETMASTER
+
+
+def test_update_ticketmaster_event_cannot_remove_url(project_user_api_client):
+    event = EventFactory(
+        published_at=now(),
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_url="https://original.example.com",
+    )
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+    variables["input"]["ticketSystem"] = {"url": ""}
+    variables["input"].pop("capacityPerOccurrence")
+
+    executed = project_user_api_client.execute(
+        UPDATE_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
 
 
 def test_delete_event_permission_denied(api_client, user_api_client):
