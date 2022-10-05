@@ -2515,50 +2515,15 @@ query TicketSystemChildPassword($eventId: ID!, $childId: ID!) {
 """
 
 
-def test_event_ticket_system_password_assignation(snapshot, guardian_api_client):
-    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
-    )
-    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK"
-    )
-    free_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, child=None, value="the correct password"
-    )
-    another_free_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, child=None, value="wrong password"
-    )
-
-    variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
-
-    executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
-        variables=variables,
-    )
-
-    snapshot.assert_match(executed)
-    assert child.ticket_system_passwords.get(event=event) == free_password
-
-    # second query should yield the same results
-    executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
-        variables=variables,
-    )
-
-    snapshot.assert_match(executed)
-    assert child.ticket_system_passwords.get(event=event) == free_password
-
-
-def test_event_ticket_system_password_assignation_no_free_passwords(
-    guardian_api_client,
+def test_event_ticket_system_password_own_child_password_exists(
+    snapshot, guardian_api_client
 ):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user.guardian.user
     )
-    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK"
+    existing_password = TicketSystemPasswordFactory(
+        event=event, child=child, value="the correct password"
     )
 
     variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
@@ -2568,12 +2533,33 @@ def test_event_ticket_system_password_assignation_no_free_passwords(
         variables=variables,
     )
 
-    assert_match_error_code(executed, NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR)
+    snapshot.assert_match(executed)
+    assert child.ticket_system_passwords.get(event=event) == existing_password
+
+
+def test_event_ticket_system_password_own_child_no_password(guardian_api_client):
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
+    )
+
+    variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
+
+    executed = guardian_api_client.execute(
+        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+        variables=variables,
+    )
+
+    assert executed["data"]["event"]["ticketSystem"]["childPassword"] is None
+    assert not child.ticket_system_passwords.filter(event=event).exists()
 
 
 def test_event_ticket_system_password_not_own_child(guardian_api_client):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     another_child = ChildWithGuardianFactory()
+    another_childs_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, child=another_child, value="FATAL LEAK"
+    )
     some_free_password = TicketSystemPasswordFactory(event=event)  # noqa: F841
 
     variables = {
@@ -2581,30 +2567,12 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
         "childId": get_global_id(another_child),
     }
 
-    # try to assign a password to someone else's child
     executed = guardian_api_client.execute(
         EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
         variables=variables,
     )
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
-    assert not another_child.ticket_system_passwords.filter(event=event).exists()
-
-    another_childs_password = TicketSystemPasswordFactory(
-        event=event, child=another_child, value="FATAL LEAK"
-    )
-
-    # try to read an assigned password of someone else's child
-    executed = guardian_api_client.execute(
-        EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
-        variables=variables,
-    )
-
-    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
-    assert (
-        another_child.ticket_system_passwords.get(event=event)
-        == another_childs_password
-    )
 
 
 EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY = """

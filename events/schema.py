@@ -143,25 +143,23 @@ class EventTicketSystem(graphene.Interface):
 
 
 class TicketmasterEventTicketSystem(ObjectType):
-    child_password = graphene.String(child_id=graphene.ID(required=True), required=True)
+    child_password = graphene.String(child_id=graphene.ID())
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
 
     class Meta:
         interfaces = (EventTicketSystem,)
 
-    def resolve_child_password(self, info, **kwargs):
+    def resolve_child_password(event: Event, info, **kwargs):
         try:
             child = Child.objects.user_can_view(info.context.user).get(
                 id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
             )
+            return event.ticket_system_passwords.get(child=child).value
+        except TicketSystemPassword.DoesNotExist:
+            return None
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
-
-        try:
-            return self.get_or_assign_ticket_system_password(child)
-        except NoFreePasswordsError as e:
-            raise NoFreeTicketSystemPasswordsError(e)
 
     def resolve_free_password_count(self, info, **kwargs):
         if not self.can_user_administer(info.context.user):
