@@ -244,6 +244,7 @@ class Event(TimestampedModel, TranslatableModel):
         verbose_name=_("ticket system"),
         default=INTERNAL,
     )
+    ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
 
     objects = EventQueryset.as_manager()
 
@@ -257,17 +258,24 @@ class Event(TimestampedModel, TranslatableModel):
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
     def clean(self):
-        if (
-            self.ticket_system == Event.INTERNAL
-            and self.capacity_per_occurrence is None
-        ):
-            raise ValidationError(
-                _(
-                    "Capacity per occurrence is required when ticket system is "
-                    "internal."
-                ),
-                code=DATA_VALIDATION_ERROR,
-            )
+        if self.ticket_system == Event.INTERNAL:
+            if self.capacity_per_occurrence is None:
+                raise ValidationError(
+                    _(
+                        "Capacity per occurrence is required when ticket system is "
+                        "internal."
+                    ),
+                    code=DATA_VALIDATION_ERROR,
+                )
+        elif self.ticket_system == Event.TICKETMASTER:
+            if not self.ticket_system_url:
+                raise ValidationError(
+                    _(
+                        "Ticket system URL is required when ticket system is "
+                        "Ticketmaster."
+                    ),
+                    code=TICKET_SYSTEM_URL_MISSING_ERROR,
+                )
 
     def save(self, *args, **kwargs):
         try:

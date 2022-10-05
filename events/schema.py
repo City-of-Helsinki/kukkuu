@@ -146,6 +146,7 @@ class TicketmasterEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID())
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
+    url = graphene.String(required=True)
 
     class Meta:
         interfaces = (EventTicketSystem,)
@@ -170,6 +171,9 @@ class TicketmasterEventTicketSystem(ObjectType):
         if not self.can_user_administer(info.context.user):
             raise PermissionDenied()
         return self.ticket_system_passwords.used().count()
+
+    def resolve_url(event: Event, info, **kwargs):
+        return event.ticket_system_url
 
 
 class InternalEventTicketSystem(ObjectType):
@@ -396,7 +400,13 @@ class OccurrenceNode(DjangoObjectType):
     child_has_free_spot_notification_subscription = graphene.Boolean(
         child_id=graphene.ID()
     )
-    ticket_system = graphene.Field(OccurrenceTicketSystem)
+    ticket_system = graphene.Field(
+        OccurrenceTicketSystem,
+        deprecation_reason=(
+            "There is no need for this because the only field ticketSystemUrl has been "
+            "moved to EventNode.ticketSystem."
+        ),
+    )
 
     @classmethod
     @login_required
@@ -529,10 +539,14 @@ class EventTranslationsInput(graphene.InputObjectType):
     language_code = LanguageEnum(required=True)
 
 
-class EventTicketSystemInput(graphene.InputObjectType):
-    type = TicketSystem(
-        required=True, description="Can be changed only if the event is unpublished."
-    )
+class AddEventTicketSystemInput(graphene.InputObjectType):
+    type = TicketSystem(required=True)
+    # TODO make this required when Kukkuu admin is updated to support it
+    url = graphene.String()
+
+
+class UpdateEventTicketSystemInput(graphene.InputObjectType):
+    url = graphene.String()
 
 
 class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
@@ -673,7 +687,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
         project_id = graphene.GlobalID()
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
-        ticket_system = EventTicketSystemInput()
+        ticket_system = AddEventTicketSystemInput()
 
     event = graphene.Field(EventNode)
 
@@ -696,9 +710,18 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
                 f"Single events are disallowed in project {project}."
             )
 
-        ticket_system_type = kwargs.pop("ticket_system", {}).get("type")
-        if ticket_system_type:
-            kwargs["ticket_system"] = ticket_system_type
+        if ticket_system := kwargs.pop("ticket_system", None):
+            kwargs.update(
+                {
+                    "ticket_system": ticket_system.get("type"),
+                    "ticket_system_url": ticket_system.get(
+                        "url",
+                        # TODO this is a temporal value to keep Kukkuu admin UI working
+                        # until it has the event URL implemented
+                        "https://example.com",
+                    ),
+                }
+            )
 
         event = Event.objects.create_translatable_object(**kwargs)
 
@@ -726,7 +749,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         project_id = graphene.GlobalID(required=False)
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
-        ticket_system = EventTicketSystemInput()
+        ticket_system = UpdateEventTicketSystemInput()
 
     event = graphene.Field(EventNode)
 
@@ -749,13 +772,8 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
 
-        ticket_system_type = kwargs.pop("ticket_system", {}).get("type")
-        if ticket_system_type:
-            if event.published_at and ticket_system_type != event.ticket_system:
-                raise DataValidationError(
-                    "Cannot change ticket system because the event is published."
-                )
-            kwargs["ticket_system"] = ticket_system_type
+        if ticket_system := kwargs.pop("ticket_system", None):
+            kwargs["ticket_system_url"] = ticket_system.get("url", "")
 
         update_object_with_translations(event, kwargs)
 
