@@ -541,7 +541,8 @@ class EventTranslationsInput(graphene.InputObjectType):
 
 class AddEventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(required=True)
-    url = graphene.String(required=True)
+    # TODO make this required when Kukkuu admin is updated to support it
+    url = graphene.String()
 
 
 class UpdateEventTicketSystemInput(graphene.InputObjectType):
@@ -713,7 +714,12 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
             kwargs.update(
                 {
                     "ticket_system": ticket_system.get("type"),
-                    "ticket_system_url": ticket_system.get("url"),
+                    "ticket_system_url": ticket_system.get(
+                        "url",
+                        # TODO this is a temporal value to keep Kukkuu admin UI working
+                        # until it has the event URL implemented
+                        "https://example.com",
+                    ),
                 }
             )
 
