@@ -245,6 +245,9 @@ class Event(TimestampedModel, TranslatableModel):
         default=INTERNAL,
     )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
+    ticket_system_end_time = models.DateTimeField(
+        verbose_name=_("ticket system end time"), blank=True, null=True
+    )
 
     objects = EventQueryset.as_manager()
 
