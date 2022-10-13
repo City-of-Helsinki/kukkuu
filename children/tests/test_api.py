@@ -1682,7 +1682,7 @@ def test_active_internal_and_ticketmaster_enrolments(
 ):
     # unenrolled event, should not be returned
     OccurrenceFactory(
-        event__name="INCORRECT",
+        event__name="INCORRECT 1",
         event__published_at=now(),
         time=future,
     )
@@ -1692,7 +1692,7 @@ def test_active_internal_and_ticketmaster_enrolments(
         event=EventFactory(
             published_at=now(),
             ticket_system=Event.TICKETMASTER,
-            name="INCORRECT",
+            name="INCORRECT 2",
         ),
     )
     OccurrenceFactory(event=password_0.event, time=future)
@@ -1702,7 +1702,7 @@ def test_active_internal_and_ticketmaster_enrolments(
         child=child_with_user_guardian,
         occurrence=OccurrenceFactory(
             time=past,
-            event=EventFactory(published_at=now(), name="INCORRECT"),
+            event=EventFactory(published_at=now(), name="INCORRECT 3"),
         ),
     )
     # add also one occurrence in the future, should not affect anything
@@ -1713,7 +1713,7 @@ def test_active_internal_and_ticketmaster_enrolments(
         child=child_with_user_guardian,
         occurrence=OccurrenceFactory(
             time=future + timedelta(days=1),
-            event=EventFactory(published_at=now(), name="2/4"),
+            event=EventFactory(published_at=now(), name="2/5"),
         ),
     )
     # add also one occurrence in the past, should not affect anything
@@ -1724,44 +1724,57 @@ def test_active_internal_and_ticketmaster_enrolments(
         child=child_with_user_guardian,
         occurrence=OccurrenceFactory(
             time=future + timedelta(days=3),
-            event=EventFactory(published_at=now(), name="4/4"),
+            event=EventFactory(published_at=now(), name="4/5"),
         ),
     )
 
-    # Ticketmaster password whose event is fully in the past, should not be returned
-    password_1 = TicketSystemPasswordFactory(
+    # Ticketmaster password whose event ends in the past, should not be returned
+    TicketSystemPasswordFactory(
         event=EventFactory(
             published_at=now(),
             ticket_system=Event.TICKETMASTER,
-            name="INCORRECT",
+            name="INCORRECT 4",
+            ticket_system_end_time=past,
         ),
         child=child_with_user_guardian,
         assigned_at=now(),
     )
-    OccurrenceFactory(event=password_1.event, time=past)
 
-    # Ticketmaster password whose event's latest occurrence is at "future", should be
-    # returned as the first enrolment
-    password_2 = TicketSystemPasswordFactory(
+    # Ticketmaster password whose event ends right now, should be returned as the
+    # first enrolment
+    TicketSystemPasswordFactory(
         event=EventFactory(
-            published_at=now(), ticket_system=Event.TICKETMASTER, name="1/4"
+            published_at=now(),
+            ticket_system=Event.TICKETMASTER,
+            name="1/5",
+            ticket_system_end_time=now(),
         ),
         child=child_with_user_guardian,
         assigned_at=now(),
     )
-    OccurrenceFactory(event=password_2.event, time=past)
-    OccurrenceFactory(event=password_2.event, time=future)
 
-    # Ticketmaster password whose event's latest occurrence is at "future" + 2 days,
-    # should be returned as the third enrolment
-    password_3 = TicketSystemPasswordFactory(
+    # Ticketmaster password whose event does not have an end time, should be returned
+    # as the last enrolment
+    TicketSystemPasswordFactory(
         event=EventFactory(
-            published_at=now(), ticket_system=Event.TICKETMASTER, name="3/4"
+            published_at=now(), ticket_system=Event.TICKETMASTER, name="5/5"
         ),
         child=child_with_user_guardian,
         assigned_at=now(),
     )
-    OccurrenceFactory(event=password_3.event, time=future + timedelta(days=2))
+
+    # Ticketmaster password whose event's ends at "future" + 2 days, should be returned
+    # as the third enrolment
+    TicketSystemPasswordFactory(
+        event=EventFactory(
+            published_at=now(),
+            ticket_system=Event.TICKETMASTER,
+            name="3/5",
+            ticket_system_end_time=future + timedelta(days=2),
+        ),
+        child=child_with_user_guardian,
+        assigned_at=now(),
+    )
 
     variables = {"id": get_global_id(child_with_user_guardian)}
     executed = guardian_api_client.execute(

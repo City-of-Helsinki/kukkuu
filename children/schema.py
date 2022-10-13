@@ -1,14 +1,14 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import graphene
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F, Max, Q
+from django.db.models import F, Q
 from django.utils import timezone
-from django.utils.timezone import localdate
+from django.utils.timezone import localdate, make_aware
 from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
@@ -224,17 +224,30 @@ class ChildNode(DjangoObjectType):
         active_occurrences = Occurrence.objects.upcoming_with_ongoing()
         internal_enrolments = self.enrolments.filter(
             occurrence__in=active_occurrences
-        ).annotate(time=F("occurrence__time"))
-        ticket_system_passwords = self.ticket_system_passwords.filter(
-            event__occurrences__in=active_occurrences
-        ).annotate(time=Max("event__occurrences__time"))
+        ).annotate(
+            # Technically to be 100% correct we should use the occurrence's end time
+            # instead of start time for sorting because for Ticketmaster enrolments the
+            # event's end time is used, but doing that would be way more complicated
+            # and the difference not matter at all in practice.
+            time=F("occurrence__time"),
+            published_at=F("occurrence__event__published_at"),
+        )
+        ticket_system_passwords = (
+            self.ticket_system_passwords.event_upcoming_or_ongoing().annotate(
+                time=F("event__ticket_system_end_time"),
+                published_at=F("event__published_at"),
+            )
+        )
 
+        datetime_max = make_aware(datetime.max, timezone=timezone.utc)
         return sorted(
             (
                 *EnrolmentNode.get_queryset(internal_enrolments, info),
                 *TicketmasterEnrolmentNode.get_queryset(ticket_system_passwords, info),
             ),
-            key=lambda e: e.time,
+            # Sort events by time with Ticketmaster events without an end time as last,
+            # and sort those by published at to keep the ordering stable.
+            key=lambda e: (e.time or datetime_max, e.published_at),
         )
 
 

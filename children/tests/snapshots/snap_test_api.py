@@ -15,26 +15,33 @@ snapshots["test_active_internal_and_ticketmaster_enrolments 1"] = {
                         "node": {
                             "__typename": "TicketmasterEnrolmentNode",
                             "createdAt": "2020-12-12T00:00:00+00:00",
-                            "event": {"name": "1/4"},
+                            "event": {"name": "1/5"},
                         }
                     },
                     {
                         "node": {
                             "__typename": "EnrolmentNode",
-                            "occurrence": {"event": {"name": "2/4"}},
+                            "occurrence": {"event": {"name": "2/5"}},
                         }
                     },
                     {
                         "node": {
                             "__typename": "TicketmasterEnrolmentNode",
                             "createdAt": "2020-12-12T00:00:00+00:00",
-                            "event": {"name": "3/4"},
+                            "event": {"name": "3/5"},
                         }
                     },
                     {
                         "node": {
                             "__typename": "EnrolmentNode",
-                            "occurrence": {"event": {"name": "4/4"}},
+                            "occurrence": {"event": {"name": "4/5"}},
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "TicketmasterEnrolmentNode",
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "event": {"name": "5/5"},
                         }
                     },
                 ]

@@ -758,6 +758,12 @@ class TicketSystemPasswordQueryset(models.QuerySet):
 
         return obj
 
+    def event_upcoming_or_ongoing(self):
+        return self.exclude(event__published_at__isnull=True).filter(
+            Q(event__ticket_system_end_time__isnull=True)
+            | Q(event__ticket_system_end_time__gte=timezone.now())
+        )
+
 
 class TicketSystemPassword(models.Model):
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
