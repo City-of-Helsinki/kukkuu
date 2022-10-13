@@ -997,19 +997,34 @@ def test_get_available_events(
     )
 
 
+CHILD_PAST_EVENTS_QUERY = """
+query Child($id: ID!) {
+  child(id: $id) {
+    pastEvents {
+      edges {
+        node {
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
+
 def test_get_past_events(
     snapshot, guardian_api_client, child_with_user_guardian, project, venue
 ):
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
-    duration = 30
+    duration_mins = 30
     past = (
         timezone.now()
-        - timedelta(minutes=duration)
+        - timedelta(minutes=duration_mins)
         - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1)
     )
     not_enough_past = (
         timezone.now()
-        - timedelta(minutes=duration)
+        - timedelta(minutes=duration_mins)
         - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1)
     )
     future = timezone.now() + timedelta(minutes=1)
@@ -1017,7 +1032,7 @@ def test_get_past_events(
     # Enrolled occurrence in the past, event should be visible
     event = EventFactory(
         published_at=timezone.now(),
-        duration=duration,
+        duration=duration_mins,
         project=project,
         name="enrolled occurrence in the past",
     )
@@ -1028,7 +1043,7 @@ def test_get_past_events(
     # Enrolled occurrence in the past but not enough, event should NOT be visible
     event_2 = EventFactory(
         published_at=timezone.now(),
-        duration=duration,
+        duration=duration_mins,
         project=project,
         name="enrolled occurrence in the past but not enough",
     )
@@ -1043,7 +1058,7 @@ def test_get_past_events(
     # Event without an enrolment in the past, should NOT be visible
     event_3 = EventFactory(
         published_at=timezone.now(),
-        duration=duration,
+        duration=duration_mins,
         project=project,
         name="unenrolled event in the past",
     )
@@ -1055,6 +1070,134 @@ def test_get_past_events(
 
     assign_perm("admin", guardian_api_client.user, project)
     executed2 = guardian_api_client.execute(CHILD_EVENTS_QUERY, variables=variables)
+
+    # having admin rights on the project should not affect past events
+    assert (
+        executed2["data"]["child"]["pastEvents"]
+        == executed["data"]["child"]["pastEvents"]
+    )
+
+
+def test_get_past_events_including_external_ticket_system_events(
+    snapshot, guardian_api_client, child_with_user_guardian, project, venue
+):
+    variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+    duration_mins = 30
+    past = (
+        timezone.now()
+        - timedelta(minutes=duration_mins)
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY + 1)
+    )
+    not_enough_past = (
+        timezone.now()
+        - timedelta(minutes=duration_mins)
+        - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY - 1)
+    )
+    future = timezone.now() + timedelta(minutes=1)
+    ticket_master_event_past = timezone.now() - timedelta(minutes=1)
+
+    # Enrolled occurrence in the past, event should be visible as the first event
+    event = EventFactory(
+        published_at=timezone.now(),
+        duration=duration_mins,
+        project=project,
+        name="Expected as 1/4",
+    )
+    OccurrenceFactory(time=future, event=event, venue=venue)
+    the_past_occurrence = OccurrenceFactory(
+        time=past - timedelta(hours=3), event=event, venue=venue
+    )
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=the_past_occurrence)
+
+    # Enrolled occurrence in the past but not enough, event should NOT be visible
+    event_2 = EventFactory(
+        published_at=timezone.now(),
+        duration=duration_mins,
+        project=project,
+        name="ERROR: enrolled occurrence in the past but not enough",
+    )
+    OccurrenceFactory(time=future, event=event_2, venue=venue)
+    the_not_so_past_occurrence = OccurrenceFactory(
+        time=not_enough_past, event=event_2, venue=venue
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian, occurrence=the_not_so_past_occurrence
+    )
+
+    # Event without an enrolment in the past, should NOT be visible
+    event_3 = EventFactory(
+        published_at=timezone.now(),
+        duration=duration_mins,
+        project=project,
+        name="ERROR: unenrolled event in the past",
+    )
+    OccurrenceFactory(time=past, event=event_3, venue=venue)
+    OccurrenceFactory(time=not_enough_past, event=event_3, venue=venue)
+
+    # Another enrolled occurrence in the past, event should be visible as the third
+    # event
+    event_4 = EventFactory(
+        published_at=timezone.now(),
+        duration=duration_mins,
+        project=project,
+        name="Expected as 3/4",
+    )
+    OccurrenceFactory(time=future, event=event_4, venue=venue)
+    the_past_occurrence_2 = OccurrenceFactory(
+        time=past - timedelta(hours=1), event=event_4, venue=venue
+    )
+    EnrolmentFactory(child=child_with_user_guardian, occurrence=the_past_occurrence_2)
+
+    # Enrolled Ticketmaster event in the past, should be visible as the second event
+    ticketmaster_event_1 = EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=timezone.now(),
+        name="Expected as 2/4",
+        ticket_system_end_time=ticket_master_event_past - timedelta(hours=2),
+    )
+    TicketSystemPasswordFactory(
+        event=ticketmaster_event_1, child=child_with_user_guardian
+    )
+
+    # Enrolled Ticketmaster event in the future, event should NOT be
+    # visible
+    ticketmaster_event_2 = EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=timezone.now(),
+        name="ERROR: enrolled Ticketmaster event in the future",
+        ticket_system_end_time=future,
+    )
+    TicketSystemPasswordFactory(
+        event=ticketmaster_event_2, child=child_with_user_guardian
+    )
+
+    # Unenrolled Ticketmaster event in the past, event should NOT be visible
+    ticketmaster_event_3 = EventFactory(  # noqa
+        ticket_system=Event.TICKETMASTER,
+        published_at=timezone.now(),
+        name="ERROR: unenrolled Ticketmaster event in the past",
+        ticket_system_end_time=ticket_master_event_past,
+    )
+
+    # Another enrolled Ticketmaster event in the past, should be visible as the fourth
+    # event
+    ticketmaster_event_4 = EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=timezone.now(),
+        name="Expected as 4/4",
+        ticket_system_end_time=ticket_master_event_past,
+    )
+    TicketSystemPasswordFactory(
+        event=ticketmaster_event_4, child=child_with_user_guardian
+    )
+
+    executed = guardian_api_client.execute(CHILD_PAST_EVENTS_QUERY, variables=variables)
+    snapshot.assert_match(executed)
+
+    assign_perm("admin", guardian_api_client.user, project)
+    executed2 = guardian_api_client.execute(
+        CHILD_PAST_EVENTS_QUERY, variables=variables
+    )
 
     # having admin rights on the project should not affect past events
     assert (

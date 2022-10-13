@@ -469,6 +469,21 @@ snapshots["test_get_past_events 1"] = {
     }
 }
 
+snapshots["test_get_past_events_including_external_ticket_system_events 1"] = {
+    "data": {
+        "child": {
+            "pastEvents": {
+                "edges": [
+                    {"node": {"name": "Expected as 1/4"}},
+                    {"node": {"name": "Expected as 2/4"}},
+                    {"node": {"name": "Expected as 3/4"}},
+                    {"node": {"name": "Expected as 4/4"}},
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_submit_children_and_guardian 1"] = {
     "data": {
         "submitChildrenAndGuardian": {
