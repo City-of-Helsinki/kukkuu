@@ -732,6 +732,7 @@ def test_add_ticketmaster_event(snapshot, project_user_api_client, project):
     variables["input"]["ticketSystem"] = {
         "type": "TICKETMASTER",
         "url": "https://example.com",
+        "endTime": "2020-02-02T02:02:02Z",
     }
     variables["input"].pop("capacityPerOccurrence")
 
@@ -946,7 +947,10 @@ def test_update_ticketmaster_event(snapshot, project_user_api_client):
     )
     variables = deepcopy(UPDATE_EVENT_VARIABLES)
     variables["input"]["id"] = get_global_id(event)
-    variables["input"]["ticketSystem"] = {"url": "https://updated.example.com"}
+    variables["input"]["ticketSystem"] = {
+        "url": "https://updated.example.com",
+        "endTime": "2020-02-02T02:02:02Z",
+    }
     variables["input"].pop("capacityPerOccurrence")
 
     executed = project_user_api_client.execute(

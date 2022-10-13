@@ -147,6 +147,7 @@ class TicketmasterEventTicketSystem(ObjectType):
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
     url = graphene.String(required=True)
+    end_time = graphene.DateTime(required=True)
 
     class Meta:
         interfaces = (EventTicketSystem,)
@@ -174,6 +175,9 @@ class TicketmasterEventTicketSystem(ObjectType):
 
     def resolve_url(event: Event, info, **kwargs):
         return event.ticket_system_url
+
+    def resolve_end_time(event: Event, info, **kwargs):
+        return event.ticket_system_end_time
 
 
 class InternalEventTicketSystem(ObjectType):
@@ -543,10 +547,12 @@ class AddEventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(required=True)
     # TODO make this required when Kukkuu admin is updated to support it
     url = graphene.String()
+    end_time = graphene.String()
 
 
 class UpdateEventTicketSystemInput(graphene.InputObjectType):
     url = graphene.String()
+    end_time = graphene.String()
 
 
 class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
@@ -720,6 +726,7 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
                         # until it has the event URL implemented
                         "https://example.com",
                     ),
+                    "ticket_system_end_time": ticket_system.get("end_time"),
                 }
             )
 
@@ -773,7 +780,10 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
 
         if ticket_system := kwargs.pop("ticket_system", None):
-            kwargs["ticket_system_url"] = ticket_system.get("url", "")
+            if "url" in ticket_system:
+                kwargs["ticket_system_url"] = ticket_system.get("url", "")
+            if "end_time" in ticket_system:
+                kwargs["ticket_system_end_time"] = ticket_system.get("end_time")
 
         update_object_with_translations(event, kwargs)
 
