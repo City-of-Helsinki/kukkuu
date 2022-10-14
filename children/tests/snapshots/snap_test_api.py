@@ -621,42 +621,56 @@ snapshots["test_upcoming_events_and_event_groups 1"] = {
                         "node": {
                             "__typename": "EventGroupNode",
                             "canChildEnroll": True,
-                            "name": "This should be the first",
+                            "name": "This should be the 1/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventNode",
                             "canChildEnroll": True,
-                            "name": "This should be the second",
-                        }
-                    },
-                    {
-                        "node": {
-                            "__typename": "EventGroupNode",
-                            "canChildEnroll": True,
-                            "name": "This should be the third",
-                        }
-                    },
-                    {
-                        "node": {
-                            "__typename": "EventNode",
-                            "canChildEnroll": True,
-                            "name": "This should be the fourth",
+                            "name": "This should be 2/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventNode",
                             "canChildEnroll": False,
-                            "name": "Enrolled event",
+                            "name": "This should be 3/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": False,
+                            "name": "This should be 4/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": True,
+                            "name": "This should be 5/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "canChildEnroll": True,
+                            "name": "This should be 6/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": False,
+                            "name": "This should be 7/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventGroupNode",
                             "canChildEnroll": False,
-                            "name": "Event group with one of two events enrolled",
+                            "name": "This should be 8/8",
                         }
                     },
                 ]

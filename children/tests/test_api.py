@@ -1500,27 +1500,6 @@ def test_upcoming_events_and_event_groups(
         published_at=now(),
     )
 
-    # Child cannot enroll to the following events (canChildEnroll == False)
-    EnrolmentFactory(
-        child=child_with_user_guardian,
-        occurrence=OccurrenceFactory(
-            time=future, event=EventFactory(name="Enrolled event", published_at=now())
-        ),
-    )
-
-    event_group = EventGroupFactory(
-        name="Event group with one of two events enrolled", published_at=now()
-    )
-    event_group_occurrences = OccurrenceFactory.create_batch(
-        2,
-        time=timezone.now(),
-        event__published_at=now(),
-        event__event_group=event_group,
-    )
-    EnrolmentFactory(
-        child=child_with_user_guardian, occurrence=event_group_occurrences[0]
-    )
-
     OccurrenceFactory(
         time=future,
         event__published_at=now(),
@@ -1531,31 +1510,78 @@ def test_upcoming_events_and_event_groups(
     )  # event group from another project
 
     # the following should be returned (canChildEnroll == False)
+    EnrolmentFactory(
+        child=child_with_user_guardian,
+        occurrence=OccurrenceFactory(
+            time=future,
+            event=EventFactory(
+                name="This should be 7/8", published_at=now() - timedelta(minutes=70)
+            ),
+        ),
+    )
+    event_group = EventGroupFactory(
+        name="This should be 8/8", published_at=now() - timedelta(minutes=80)
+    )
+    event_group_occurrences = OccurrenceFactory.create_batch(
+        2,
+        time=timezone.now(),
+        event__published_at=now(),
+        event__event_group=event_group,
+    )
+    EnrolmentFactory(
+        child=child_with_user_guardian, occurrence=event_group_occurrences[0]
+    )
     OccurrenceFactory(
         time=future,
         event__published_at=now(),
         event__event_group=EventGroupFactory(
-            name="This should be the third", published_at=now() + timedelta(minutes=2)
+            name="This should be 6/8", published_at=now() + timedelta(minutes=10)
         ),
     )
     OccurrenceFactory(
         time=future,
         event__published_at=now(),
         event__event_group=EventGroupFactory(
-            name="This should be the first", published_at=now() + timedelta(minutes=4)
+            name="This should be the 1/8", published_at=now() + timedelta(minutes=60)
         ),
     )
     OccurrenceFactory(
         time=future,
         event=EventFactory(
-            published_at=now() + timedelta(minutes=3), name="This should be the second"
+            published_at=now() + timedelta(minutes=50), name="This should be 2/8"
         ),
     )
     OccurrenceFactory(
         time=future,
         event=EventFactory(
-            published_at=now() + timedelta(minutes=1), name="This should be the fourth"
+            published_at=now() + timedelta(minutes=20), name="This should be 5/8"
         ),
+    )
+
+    # Ticketmaster events
+    EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=now() + timedelta(minutes=40),
+        name="This should be 3/8",
+    )
+    EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=now() + timedelta(minutes=30),
+        name="This should be 4/8",
+        ticket_system_end_time=now() + timedelta(minutes=60),
+    )
+    EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=now() + timedelta(minutes=10),
+        name="ERROR: Event in the past",
+        ticket_system_end_time=now() - timedelta(minutes=1),
+    )
+    EventFactory(
+        ticket_system=Event.TICKETMASTER,
+        published_at=now() + timedelta(minutes=10),
+        name="ERROR: Event from another project",
+        ticket_system_end_time=now() + timedelta(minutes=1),
+        project=ProjectFactory(year=3000),
     )
 
     variables = {"id": get_global_id(child_with_user_guardian)}

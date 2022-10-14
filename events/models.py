@@ -148,7 +148,14 @@ class EventQueryset(TranslatableQuerySet):
         return self.filter(published_at__isnull=True)
 
     def upcoming(self):
-        return self.filter(occurrences__time__gte=timezone.now()).distinct()
+        now = timezone.now()
+        return self.filter(
+            Q(occurrences__time__gte=now)
+            | (
+                Q(ticket_system=Event.TICKETMASTER)
+                & (Q(ticket_system_end_time=None) | Q(ticket_system_end_time__gte=now))
+            )
+        ).distinct()
 
     def available(self, child):
         """
