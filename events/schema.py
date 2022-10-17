@@ -147,7 +147,7 @@ class TicketmasterEventTicketSystem(ObjectType):
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
     url = graphene.String(required=True)
-    end_time = graphene.DateTime(required=True)
+    end_time = graphene.DateTime()
 
     class Meta:
         interfaces = (EventTicketSystem,)
@@ -742,6 +742,11 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
             f"with data {original_kwargs}"
         )
 
+        # The event object must contain objects as its properties where needed, and
+        # this is probably the easiest way to achieve that. Without this for example
+        # event.ticketSystemEndTime would be a string instead of a datetime object.
+        event.refresh_from_db()
+
         return AddEventMutation(event=event)
 
 
@@ -796,6 +801,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
             f"user {info.context.user.uuid} updated event {event} "
             f"with data {original_kwargs}"
         )
+
+        # The event object must contain objects as its properties where needed, and
+        # this is probably the easiest way to achieve that. Without this for example
+        # event.ticketSystemEndTime would be a string instead of a datetime object.
+        event.refresh_from_db()
 
         return UpdateEventMutation(event=event)
 
