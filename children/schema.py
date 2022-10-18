@@ -1,14 +1,14 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import graphene
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F, Max
+from django.db.models import F, Q
 from django.utils import timezone
-from django.utils.timezone import localtime, now
+from django.utils.timezone import localdate, make_aware
 from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
@@ -20,7 +20,7 @@ from graphql_relay.connection.arrayconnection import offset_to_cursor
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
-from events.models import Occurrence
+from events.models import Event, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -128,18 +128,52 @@ class ChildNode(DjangoObjectType):
 
     def resolve_past_events(self: Child, info, **kwargs):
         """
-        Past events include Events the user has enrolled AND the occurrence of the
-        enrolment is more than KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY mins in the
-        past.
+        Past events include:
+          * internal ticket system Events the user has enrolled and the end time of the
+            Enrolment's Occurrence is enough in the past. Enough means
+            settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY amount of minutes.
+          * external ticket system Events the user has a password to and the Event's
+            ticket_system_end_time is in the past at all.
         """
-        events = self.project.events.user_can_view(info.context.user).published()
+        from events.schema import OccurrenceNode, TicketmasterEnrolmentNode  # noqa
+
+        published_events = self.project.events.user_can_view(
+            info.context.user
+        ).published()
 
         occurrences = self.occurrences.with_end_time()
-        past_enough_enrolled_occurrences = occurrences.filter(
-            end_time__lt=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
+        now = timezone.now()
+        past_enough = now - timedelta(
+            minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
         )
-        return events.filter(occurrences__in=past_enough_enrolled_occurrences)
+        past_enough_enrolled_occurrences = occurrences.filter(
+            end_time__lt=past_enough,
+            event__in=published_events,
+        ).select_related("event")
+
+        past_ticket_system_passwords = (
+            self.ticket_system_passwords.filter(
+                (
+                    ~Q(event__ticket_system=Event.INTERNAL)
+                    & Q(event__ticket_system_end_time__lt=now)
+                ),
+                event__in=published_events,
+            )
+            .select_related("event")
+            .annotate(end_time=F("event__ticket_system_end_time"))
+        )
+
+        occurrences_and_passwords = sorted(
+            (
+                *OccurrenceNode.get_queryset(past_enough_enrolled_occurrences, info),
+                *TicketmasterEnrolmentNode.get_queryset(
+                    past_ticket_system_passwords, info
+                ),
+            ),
+            key=lambda x: x.end_time,
+        )
+
+        return [x.event for x in occurrences_and_passwords]
 
     def resolve_available_events(self: Child, info, **kwargs):
         return self.project.events.user_can_view(info.context.user).available(self)
@@ -190,17 +224,30 @@ class ChildNode(DjangoObjectType):
         active_occurrences = Occurrence.objects.upcoming_with_ongoing()
         internal_enrolments = self.enrolments.filter(
             occurrence__in=active_occurrences
-        ).annotate(time=F("occurrence__time"))
-        ticket_system_passwords = self.ticket_system_passwords.filter(
-            event__occurrences__in=active_occurrences
-        ).annotate(time=Max("event__occurrences__time"))
+        ).annotate(
+            # Technically to be 100% correct we should use the occurrence's end time
+            # instead of start time for sorting because for Ticketmaster enrolments the
+            # event's end time is used, but doing that would be way more complicated
+            # and the difference not matter at all in practice.
+            time=F("occurrence__time"),
+            published_at=F("occurrence__event__published_at"),
+        )
+        ticket_system_passwords = (
+            self.ticket_system_passwords.event_upcoming_or_ongoing().annotate(
+                time=F("event__ticket_system_end_time"),
+                published_at=F("event__published_at"),
+            )
+        )
 
+        datetime_max = make_aware(datetime.max, timezone=timezone.utc)
         return sorted(
             (
                 *EnrolmentNode.get_queryset(internal_enrolments, info),
                 *TicketmasterEnrolmentNode.get_queryset(ticket_system_passwords, info),
             ),
-            key=lambda e: e.time,
+            # Sort events by time with Ticketmaster events without an end time as last,
+            # and sort those by published at to keep the ordering stable.
+            key=lambda e: (e.time or datetime_max, e.published_at),
         )
 
 
@@ -264,7 +311,7 @@ def validate_child_data(child_data):
     if "birthdate" in child_data:
         birth_year = child_data["birthdate"].year
         if (
-            child_data["birthdate"] > localtime(now()).date()
+            child_data["birthdate"] > localdate()
             or not Project.objects.filter(year=birth_year).exists()
         ):
             raise DataValidationError("Illegal birthdate.")

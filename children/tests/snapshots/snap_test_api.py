@@ -15,26 +15,33 @@ snapshots["test_active_internal_and_ticketmaster_enrolments 1"] = {
                         "node": {
                             "__typename": "TicketmasterEnrolmentNode",
                             "createdAt": "2020-12-12T00:00:00+00:00",
-                            "event": {"name": "1/4"},
+                            "event": {"name": "1/5"},
                         }
                     },
                     {
                         "node": {
                             "__typename": "EnrolmentNode",
-                            "occurrence": {"event": {"name": "2/4"}},
+                            "occurrence": {"event": {"name": "2/5"}},
                         }
                     },
                     {
                         "node": {
                             "__typename": "TicketmasterEnrolmentNode",
                             "createdAt": "2020-12-12T00:00:00+00:00",
-                            "event": {"name": "3/4"},
+                            "event": {"name": "3/5"},
                         }
                     },
                     {
                         "node": {
                             "__typename": "EnrolmentNode",
-                            "occurrence": {"event": {"name": "4/4"}},
+                            "occurrence": {"event": {"name": "4/5"}},
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "TicketmasterEnrolmentNode",
+                            "createdAt": "2020-12-12T00:00:00+00:00",
+                            "event": {"name": "5/5"},
                         }
                     },
                 ]
@@ -469,6 +476,21 @@ snapshots["test_get_past_events 1"] = {
     }
 }
 
+snapshots["test_get_past_events_including_external_ticket_system_events 1"] = {
+    "data": {
+        "child": {
+            "pastEvents": {
+                "edges": [
+                    {"node": {"name": "Expected as 1/4"}},
+                    {"node": {"name": "Expected as 2/4"}},
+                    {"node": {"name": "Expected as 3/4"}},
+                    {"node": {"name": "Expected as 4/4"}},
+                ]
+            }
+        }
+    }
+}
+
 snapshots["test_submit_children_and_guardian 1"] = {
     "data": {
         "submitChildrenAndGuardian": {
@@ -599,42 +621,56 @@ snapshots["test_upcoming_events_and_event_groups 1"] = {
                         "node": {
                             "__typename": "EventGroupNode",
                             "canChildEnroll": True,
-                            "name": "This should be the first",
+                            "name": "This should be the 1/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventNode",
                             "canChildEnroll": True,
-                            "name": "This should be the second",
-                        }
-                    },
-                    {
-                        "node": {
-                            "__typename": "EventGroupNode",
-                            "canChildEnroll": True,
-                            "name": "This should be the third",
-                        }
-                    },
-                    {
-                        "node": {
-                            "__typename": "EventNode",
-                            "canChildEnroll": True,
-                            "name": "This should be the fourth",
+                            "name": "This should be 2/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventNode",
                             "canChildEnroll": False,
-                            "name": "Enrolled event",
+                            "name": "This should be 3/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": False,
+                            "name": "This should be 4/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": True,
+                            "name": "This should be 5/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventGroupNode",
+                            "canChildEnroll": True,
+                            "name": "This should be 6/8",
+                        }
+                    },
+                    {
+                        "node": {
+                            "__typename": "EventNode",
+                            "canChildEnroll": False,
+                            "name": "This should be 7/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventGroupNode",
                             "canChildEnroll": False,
-                            "name": "Event group with one of two events enrolled",
+                            "name": "This should be 8/8",
                         }
                     },
                 ]

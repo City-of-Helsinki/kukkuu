@@ -148,7 +148,14 @@ class EventQueryset(TranslatableQuerySet):
         return self.filter(published_at__isnull=True)
 
     def upcoming(self):
-        return self.filter(occurrences__time__gte=timezone.now()).distinct()
+        now = timezone.now()
+        return self.filter(
+            Q(occurrences__time__gte=now)
+            | (
+                Q(ticket_system=Event.TICKETMASTER)
+                & (Q(ticket_system_end_time=None) | Q(ticket_system_end_time__gte=now))
+            )
+        ).distinct()
 
     def available(self, child):
         """
@@ -245,6 +252,9 @@ class Event(TimestampedModel, TranslatableModel):
         default=INTERNAL,
     )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
+    ticket_system_end_time = models.DateTimeField(
+        verbose_name=_("ticket system end time"), blank=True, null=True
+    )
 
     objects = EventQueryset.as_manager()
 
@@ -754,6 +764,12 @@ class TicketSystemPasswordQueryset(models.QuerySet):
         obj.assign(child)
 
         return obj
+
+    def event_upcoming_or_ongoing(self):
+        return self.exclude(event__published_at__isnull=True).filter(
+            Q(event__ticket_system_end_time__isnull=True)
+            | Q(event__ticket_system_end_time__gte=timezone.now())
+        )
 
 
 class TicketSystemPassword(models.Model):
