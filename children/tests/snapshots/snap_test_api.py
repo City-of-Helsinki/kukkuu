@@ -634,14 +634,14 @@ snapshots["test_upcoming_events_and_event_groups 1"] = {
                     {
                         "node": {
                             "__typename": "EventNode",
-                            "canChildEnroll": False,
+                            "canChildEnroll": True,
                             "name": "This should be 3/8",
                         }
                     },
                     {
                         "node": {
                             "__typename": "EventNode",
-                            "canChildEnroll": False,
+                            "canChildEnroll": True,
                             "name": "This should be 4/8",
                         }
                     },
