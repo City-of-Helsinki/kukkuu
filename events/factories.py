@@ -1,5 +1,6 @@
 import factory
 import pytz
+from django.utils import timezone
 
 from children.factories import ChildFactory
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
@@ -34,6 +35,14 @@ class EventFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Event
+
+
+class TicketmasterEventFactory(EventFactory):
+    published_at = factory.LazyFunction(lambda: timezone.now())
+    ticket_system = Event.TICKETMASTER
+    ticket_system_url = factory.Faker("url")
+    capacity_per_occurrence = None
+    duration = None
 
 
 class OccurrenceFactory(factory.django.DjangoModelFactory):
