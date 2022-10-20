@@ -20,6 +20,7 @@ from events.factories import (
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
+    TicketmasterEventFactory,
     TicketSystemPasswordFactory,
 )
 from events.models import Event
@@ -810,44 +811,36 @@ def test_child_enrolment_count_with_ticket_system_passwords(
     this_year = timezone.now()
     next_year = timezone.now() + relativedelta(years=1)
 
-    last_year_occurrence = OccurrenceFactory.create(
-        time=last_year,
+    last_year_event = EventFactory.create(
         ticket_system_url="https://example.com",
-        event__published_at=last_year,
-        event__ticket_system=Event.TICKETMASTER,
-        event__capacity_per_occurrence=None,
+        published_at=last_year,
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_end_time=last_year,
+        capacity_per_occurrence=None,
     )
-    this_year_occurences = OccurrenceFactory.create_batch(
+    this_year_events = EventFactory.create_batch(
         2,
-        time=this_year,
         ticket_system_url="https://example.com",
-        event__published_at=this_year,
-        event__ticket_system=Event.TICKETMASTER,
-        event__capacity_per_occurrence=None,
-    )
-    # This should make sure distinct ticket system passwords are considered in the count
-    OccurrenceFactory.create_batch(
-        2,
-        time=this_year,
-        ticket_system_url="https://example.com",
-        event=this_year_occurences[0].event,
-    )
-    next_year_occurrence = OccurrenceFactory.create(
-        time=next_year,
-        ticket_system_url="https://example.com",
-        event__published_at=now(),
-        event__ticket_system=Event.TICKETMASTER,
-        event__capacity_per_occurrence=None,
+        published_at=this_year,
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_end_time=this_year,
+        capacity_per_occurrence=None,
     )
 
-    for occurrence in [
-        last_year_occurrence,
-        *this_year_occurences,
-        next_year_occurrence,
+    next_year_event = EventFactory.create(
+        ticket_system_url="https://example.com",
+        published_at=next_year,
+        ticket_system=Event.TICKETMASTER,
+        ticket_system_end_time=next_year,
+        capacity_per_occurrence=None,
+    )
+
+    for event in [
+        last_year_event,
+        *this_year_events,
+        next_year_event,
     ]:
-        TicketSystemPasswordFactory(
-            event=occurrence.event, child=child_with_user_guardian
-        )
+        TicketSystemPasswordFactory(event=event, child=child_with_user_guardian)
 
     executed = guardian_api_client.execute(
         CHILD_ENROLMENT_COUNT_QUERY, variables=variables
@@ -895,39 +888,28 @@ def test_child_past_enrolment_count_with_ticket_system_passwords(
     child_with_user_guardian,
     past_enrolment_count,
 ):
-    """Number of this year's enrollments in the past.
-
-    External ticket system event is considered to be in the past when the first
-    occurrence of the event is in the past.
-    """
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
+    child = child_with_user_guardian
 
     past = timezone.now() - timedelta(hours=1)
     future = timezone.now() + timedelta(hours=1)
 
     for i in range(past_enrolment_count):
-        past_event = EventFactory(
+        # some other past event
+        TicketmasterEventFactory(published_at=past)
+
+        someone_else_enrolled_past_event = TicketmasterEventFactory(published_at=past)
+        TicketSystemPasswordFactory(event=someone_else_enrolled_past_event)
+
+        # this should be counted
+        enrolled_past_event = TicketmasterEventFactory(
             published_at=past,
-            ticket_system=Event.TICKETMASTER,
-            capacity_per_occurrence=None,
         )
-        # Event with a past occurrence is considered to be in the past
-        OccurrenceFactory(
-            time=past, ticket_system_url="https://example.com", event=past_event
-        )
-        OccurrenceFactory(
-            time=future, ticket_system_url="https://example.com", event=past_event
-        )
-        TicketSystemPasswordFactory(event=past_event, child=child_with_user_guardian)
+        TicketSystemPasswordFactory(event=enrolled_past_event, child=child)
 
     for i in range(2 - past_enrolment_count):
         future_event = EventFactory(
-            published_at=past,
-            ticket_system=Event.TICKETMASTER,
-            capacity_per_occurrence=None,
-        )
-        OccurrenceFactory(
-            time=future, ticket_system_url="https://example.com", event=future_event
+            published_at=future,
         )
         TicketSystemPasswordFactory(event=future_event, child=child_with_user_guardian)
 

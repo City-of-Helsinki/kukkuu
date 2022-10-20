@@ -83,16 +83,21 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         return user.can_administer_project(self.project)
 
     def get_enrolment_count(self, year: Optional[int] = None, past=False):
+        from events.models import Event  # noqa
+
         if year and past:
             raise ValueError("Cannot use year and past arguments at the same time.")
         now = timezone.now()
         year = year or now.year
 
         occurrence_filters = Q(time__year=year)
-        ticket_system_filters = Q(event__occurrences__time__year=year)
+        # For external ticket system events published_at field is used to determine the
+        # event's year. That is obviously not a perfect solution, but the best we can
+        # do with the current data, and most probably good enough.
+        ticket_system_filters = Q(event__published_at__year=year)
         if past:
             occurrence_filters &= Q(time__lt=now)
-            ticket_system_filters &= Q(event__occurrences__time__lt=now)
+            ticket_system_filters &= Q(event__published_at__lt=now)
         return (
             self.occurrences.filter(occurrence_filters).count()
             + self.ticket_system_passwords.filter(ticket_system_filters)

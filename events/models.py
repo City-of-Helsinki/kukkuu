@@ -92,10 +92,22 @@ class EventGroup(TimestampedModel, TranslatableModel):
         if not self.is_published():
             return False
 
+        # We check only the year based on the first occurrence or the first external
+        # ticket system event's published_at field. That has obvious shortcomings when
+        # the events span on multiple years. However, this should be good enough, and
+        # the whole yearly enrollment limit is probably going away before it is used in
+        # any complex situations.
         if occurrence := Occurrence.objects.filter(event__event_group=self).first():
-            # Need to have at least one occurrence
             year = occurrence.time.year
+        elif (
+            external_ticket_system_event := self.events.exclude(published_at=None)
+            .exclude(ticket_system=Event.INTERNAL)
+            .first()
+        ):
+            year = external_ticket_system_event.published_at.year
         else:
+            # Need to have at least one occurrence or at least one external ticket
+            # system event
             return False
 
         if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
@@ -318,11 +330,16 @@ class Event(TimestampedModel, TranslatableModel):
         if not self.is_published():
             return False
 
-        if occurrence := self.occurrences.first():
-            # Need to have at least one occurrence
+        if self.ticket_system == Event.INTERNAL:
+            if not (occurrence := Occurrence.objects.filter(event=self).first()):
+                # Internal events need to have at least one occurrence
+                return False
             year = occurrence.time.year
         else:
-            return False
+            # For external ticket system events published_at field is used to determine
+            # the event's year. That is obviously not a perfect solution, but the best
+            # we can do with the current data, and most probably good enough.
+            year = self.published_at.year
 
         if self.event_group and not self.event_group.can_child_enroll(child):
             return False
@@ -742,10 +759,10 @@ class Enrolment(TimestampedModel):
 
 class TicketSystemPasswordQueryset(models.QuerySet):
     def free(self):
-        return self.filter(child=None)
+        return self.filter(assigned_at=None)
 
     def used(self):
-        return self.exclude(child=None)
+        return self.exclude(assigned_at=None)
 
     @transaction.atomic
     def assign(self, event: Event, child: Child) -> "TicketSystemPassword":

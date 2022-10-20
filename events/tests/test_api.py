@@ -2775,7 +2775,7 @@ def test_assign_ticket_system_password(snapshot, guardian_api_client):
         relationship__guardian__user=guardian_api_client.user.guardian.user
     )
     someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK"
+        event=event, value="FATAL LEAK", assigned_at=now()
     )
     free_password = TicketSystemPasswordFactory(
         event=event, child=None, value="the correct password"
@@ -2816,7 +2816,7 @@ def test_assign_ticket_system_password_no_free_passwords(
         relationship__guardian__user=guardian_api_client.user.guardian.user
     )
     someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK"
+        event=event, value="FATAL LEAK", assigned_at=now()
     )
 
     variables = {
