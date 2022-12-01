@@ -418,6 +418,8 @@ class OccurrenceNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
+        VenueTranslation = apps.get_model("venues", "VenueTranslation")
+
         return (
             queryset.user_can_view(info.context.user)
             .with_end_time()
@@ -425,6 +427,14 @@ class OccurrenceNode(DjangoObjectType):
             .with_attended_enrolment_count()
             .with_free_spot_notification_subscription_count()
             .order_by("time")
+            .select_related("event", "event__project", "venue", "venue__project")
+            .prefetch_related(
+                Prefetch(
+                    "venue__translations",
+                    queryset=VenueTranslation.objects.order_by("language_code"),
+                    to_attr="prefetched_translations",
+                )
+            )
         )
 
     @classmethod
