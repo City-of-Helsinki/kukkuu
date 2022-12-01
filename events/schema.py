@@ -19,6 +19,7 @@ from children.models import Child
 from children.schema import ChildNode
 from common.schema import ErrorType, LanguageEnum
 from common.utils import (
+    check_can_user_administer,
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
@@ -400,6 +401,8 @@ class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
     occurrence_language = LanguageEnum(required=True)
     enrolment_count = graphene.Int(required=True)
+    attended_enrolment_count = graphene.Int(required=True)
+    free_spot_notification_subscription_count = graphene.Int(required=True)
     capacity = graphene.Int()
     child_has_free_spot_notification_subscription = graphene.Boolean(
         child_id=graphene.ID()
@@ -417,7 +420,10 @@ class OccurrenceNode(DjangoObjectType):
     def get_queryset(cls, queryset, info):
         return (
             queryset.user_can_view(info.context.user)
-            .annotate(enrolment_count=Count("enrolments", distinct=True))
+            .with_end_time()
+            .with_enrolment_count()
+            .with_attended_enrolment_count()
+            .with_free_spot_notification_subscription_count()
             .order_by("time")
         )
 
@@ -431,6 +437,14 @@ class OccurrenceNode(DjangoObjectType):
 
     def resolve_enrolment_count(self, info, **kwargs):
         return self.get_enrolment_count()
+
+    def resolve_attended_enrolment_count(self, info, **kwargs):
+        check_can_user_administer(self, info.context.user)
+        return self.get_attended_enrolment_count()
+
+    def resolve_free_spot_notification_subscription_count(self, info, **kwargs):
+        check_can_user_administer(self, info.context.user)
+        return self.get_free_spot_notification_subscription_count()
 
     def resolve_capacity(self, info, **kwargs):
         return self.get_capacity()
