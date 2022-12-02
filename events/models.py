@@ -6,7 +6,7 @@ from typing import Optional
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import ExpressionWrapper, F, Q, UniqueConstraint
+from django.db.models import Count, ExpressionWrapper, F, Q, UniqueConstraint
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -425,6 +425,23 @@ class OccurrenceQueryset(models.QuerySet):
             ),
         )
 
+    def with_enrolment_count(self):
+        return self.annotate(enrolment_count=Count("enrolments", distinct=True))
+
+    def with_attended_enrolment_count(self):
+        return self.annotate(
+            attended_enrolment_count=Count(
+                "enrolments", Q(enrolments__attended=True), distinct=True
+            )
+        )
+
+    def with_free_spot_notification_subscription_count(self):
+        return self.annotate(
+            free_spot_notification_subscription_count=Count(
+                "free_spot_notification_subscriptions", distinct=True
+            )
+        )
+
 
 class Occurrence(TimestampedModel):
     time = models.DateTimeField(verbose_name=_("time"))
@@ -517,6 +534,20 @@ class Occurrence(TimestampedModel):
             return self.enrolment_count
         except AttributeError:
             return self.enrolments.count()
+
+    def get_attended_enrolment_count(self):
+        try:
+            # try to use an annotated value
+            return self.attended_enrolment_count
+        except AttributeError:
+            return self.enrolments.filter(attended=True).count()
+
+    def get_free_spot_notification_subscription_count(self):
+        try:
+            # try to use an annotated value
+            return self.free_spot_notification_subscription_count
+        except AttributeError:
+            return self.free_spot_notification_subscriptions.count()
 
     def get_capacity(self) -> Optional[int]:
         if self.capacity_override is not None:

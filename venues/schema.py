@@ -82,7 +82,10 @@ class VenueNode(DjangoObjectType):
         )
 
     def resolve_translations(self, info, **kwargs):
-        return self.translations.order_by("language_code")
+        try:
+            return self.prefetched_translations
+        except AttributeError:
+            return self.translations.order_by("language_code")
 
 
 class VenueTranslationsInput(graphene.InputObjectType):

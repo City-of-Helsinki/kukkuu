@@ -51,6 +51,7 @@ from kukkuu.schema import schema
 from kukkuu.views import DepthAnalysisBackend
 from projects.factories import ProjectFactory
 from projects.models import Project
+from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from venues.factories import VenueFactory
 
 
@@ -677,6 +678,54 @@ def test_occurrences_query_project_user(
     executed = project_user_api_client.execute(OCCURRENCES_QUERY)
 
     snapshot.assert_match(executed)
+
+
+OCCURRENCES_COUNTS_QUERY_TEMPLATE = """
+query Occurrences {
+  occurrences {
+    edges {
+      node {
+        enrolmentCount
+        %(occurrence_fields)s
+      }
+    }
+  }
+}
+"""
+
+NON_PUBLIC_COUNTS = [
+    "attendedEnrolmentCount",
+    "freeSpotNotificationSubscriptionCount",
+]
+
+
+@pytest.mark.parametrize("count_field", NON_PUBLIC_COUNTS)
+def test_occurrences_query_counts_normal_user(user_api_client, occurrence, count_field):
+    FreeSpotNotificationSubscriptionFactory(occurrence=occurrence)
+    EnrolmentFactory(occurrence=occurrence)
+    EnrolmentFactory(occurrence=occurrence, attended=True)
+
+    executed = user_api_client.execute(
+        OCCURRENCES_COUNTS_QUERY_TEMPLATE % {"occurrence_fields": count_field}
+    )
+
+    assert_permission_denied(executed)
+
+
+def test_occurrences_query_counts_project_user(project_user_api_client, occurrence):
+    FreeSpotNotificationSubscriptionFactory(occurrence=occurrence)
+    EnrolmentFactory(occurrence=occurrence)
+    EnrolmentFactory(occurrence=occurrence, attended=True)
+
+    executed = project_user_api_client.execute(
+        OCCURRENCES_COUNTS_QUERY_TEMPLATE
+        % {"occurrence_fields": "\n".join(NON_PUBLIC_COUNTS)}
+    )
+
+    data = executed["data"]["occurrences"]["edges"][0]["node"]
+    assert data["enrolmentCount"] == 2
+    assert data["attendedEnrolmentCount"] == 1
+    assert data["freeSpotNotificationSubscriptionCount"] == 1
 
 
 def test_occurrence_query_unauthenticated(api_client, occurrence):
