@@ -1,6 +1,26 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.16.0] - 8 Dec 2022
+
+### Added
+
+- Add horizontal pod autoscaler
+- Add Platta related configurations
+- Count ticket system passwords toward yearly enrolment limit
+- Add `assignTicketSystemPasswordMutation` & tests 
+- Add GraphQL query for fetching a child's all internal and external enrolments
+- Add import ticket system passwords mutation
+- Add ticket system password counts to event API
+- Add external ticket system event URL
+- Implement end time handling for external ticket system events 
+
+### Fixed
+
+- Fix child enrolment counting related to Ticketmaster events 
+- Fix `canChildEnroll` query related to Ticketmaster events
+- Fix free ticket system password detection 
+
 ## [1.15.1] - 27 May 2022
 
 ### Fixed
@@ -327,7 +347,8 @@ the version in kukkuu/__init.py__ -->
 - API to query, add, update and remove occurrences
 - API to query, add, update and remove venues
 
-[unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.15.1...HEAD
+[unreleased]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.16.0...HEAD
+[1.16.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.15.1...release-1.16.0
 [1.15.1]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.15.0...release-1.15.1
 [1.15.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.14.0...release-1.15.0
 [1.14.0]: https://github.com/City-of-Helsinki/kukkuu/compare/release-1.13.0...release-1.14.0
