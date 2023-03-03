@@ -1,9 +1,11 @@
 from copy import deepcopy
 from datetime import timedelta
+from unittest import mock
 
 import pytest
 from django.core import mail
 from django.core.management import call_command
+from django.db import Error
 from django.utils.timezone import now
 from freezegun import freeze_time
 from graphql_relay import to_global_id
@@ -164,6 +166,31 @@ def test_event_publish_notification(
     publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
 
     assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
+
+
+@pytest.mark.django_db
+def test_event_publish_notification_not_sent_when_publication_fails(
+    snapshot,
+    publisher_api_client,
+    notification_template_event_published_fi,
+    unpublished_event,
+    project,
+):
+    GuardianFactory(language="fi")
+    children = ChildWithGuardianFactory.create_batch(3, project=project)
+    children[1].guardians.set(GuardianFactory.create_batch(3, language="fi"))
+    ChildWithGuardianFactory.create_batch(2, project=ProjectFactory(year=2019))
+
+    event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
+
+    with mock.patch(
+        "events.models.Event.save",
+        side_effect=Error("Some error occured"),
+    ):
+        publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
+        # No mails sent because publication failed
+        assert len(mail.outbox) == 0
 
 
 @pytest.mark.django_db
