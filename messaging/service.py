@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.db import transaction
 from django.utils import timezone
 from django_ilmoitin.utils import Message as MailerMessage
 from django_ilmoitin.utils import send_all, send_mail
@@ -26,15 +25,14 @@ def send_message(message: "Message", *, force=False):
     message.sent_at = timezone.now()
     message.recipient_count = len(guardians)
 
-    with transaction.atomic():
-        message.save(update_fields=("sent_at", "recipient_count"))
+    message.save(update_fields=("sent_at", "recipient_count"))
 
-        for guardian in guardians:
-            with switch_language(message, guardian.language):
-                if message.protocol == Message.EMAIL:
-                    send_email_notification(guardian, message)
-                elif message.protocol == Message.SMS:
-                    send_sms_notification([guardian.phone_number], message.body_text)
+    for guardian in guardians:
+        with switch_language(message, guardian.language):
+            if message.protocol == Message.EMAIL:
+                send_email_notification(guardian, message)
+            elif message.protocol == Message.SMS:
+                send_sms_notification([guardian.phone_number], message.body_text)
 
     if not getattr(settings, "ILMOITIN_QUEUE_NOTIFICATIONS", False):
         MailerMessage.objects.retry_deferred()

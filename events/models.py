@@ -121,7 +121,7 @@ class EventGroup(TimestampedModel, TranslatableModel):
 
         return True
 
-    def publish(self):
+    def publish(self, send_notifications=True):
         unpublished_events = self.events.unpublished()
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
             raise ValidationError(
@@ -136,6 +136,7 @@ class EventGroup(TimestampedModel, TranslatableModel):
             for event in unpublished_events:
                 event.publish(send_notifications=False)
 
+        if send_notifications:
             send_event_group_notifications_to_guardians(
                 self,
                 NotificationType.EVENT_GROUP_PUBLISHED,
@@ -355,16 +356,16 @@ class Event(TimestampedModel, TranslatableModel):
 
         return True
 
-    @transaction.atomic
     def publish(self, send_notifications=True):
-        for occurrence in self.occurrences.all():
-            occurrence.clean()
+        with transaction.atomic():
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
 
-        self.published_at = timezone.now()
-        self.save()
+            self.published_at = timezone.now()
+            self.save()
 
-        for occurrence in self.occurrences.all():
-            occurrence.clean()
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
 
         if send_notifications:
             send_event_notifications_to_guardians(
