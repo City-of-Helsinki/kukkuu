@@ -20,7 +20,7 @@ from events.factories import (
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
-    TicketmasterEventFactory,
+    RandomExternalTicketSystemEventFactory,
     TicketSystemPasswordFactory,
 )
 from events.models import Event
@@ -811,26 +811,23 @@ def test_child_enrolment_count_with_ticket_system_passwords(
     this_year = timezone.now()
     next_year = timezone.now() + relativedelta(years=1)
 
-    last_year_event = EventFactory.create(
+    last_year_event = RandomExternalTicketSystemEventFactory.create(
         ticket_system_url="https://example.com",
         published_at=last_year,
-        ticket_system=Event.TICKETMASTER,
         ticket_system_end_time=last_year,
         capacity_per_occurrence=None,
     )
-    this_year_events = EventFactory.create_batch(
+    this_year_events = RandomExternalTicketSystemEventFactory.create_batch(
         2,
         ticket_system_url="https://example.com",
         published_at=this_year,
-        ticket_system=Event.TICKETMASTER,
         ticket_system_end_time=this_year,
         capacity_per_occurrence=None,
     )
 
-    next_year_event = EventFactory.create(
+    next_year_event = RandomExternalTicketSystemEventFactory.create(
         ticket_system_url="https://example.com",
         published_at=next_year,
-        ticket_system=Event.TICKETMASTER,
         ticket_system_end_time=next_year,
         capacity_per_occurrence=None,
     )
@@ -896,13 +893,15 @@ def test_child_past_enrolment_count_with_ticket_system_passwords(
 
     for i in range(past_enrolment_count):
         # some other past event
-        TicketmasterEventFactory(published_at=past)
+        RandomExternalTicketSystemEventFactory(published_at=past)
 
-        someone_else_enrolled_past_event = TicketmasterEventFactory(published_at=past)
+        someone_else_enrolled_past_event = RandomExternalTicketSystemEventFactory(
+            published_at=past
+        )
         TicketSystemPasswordFactory(event=someone_else_enrolled_past_event)
 
         # this should be counted
-        enrolled_past_event = TicketmasterEventFactory(
+        enrolled_past_event = RandomExternalTicketSystemEventFactory(
             published_at=past,
         )
         TicketSystemPasswordFactory(event=enrolled_past_event, child=child)
@@ -1131,8 +1130,7 @@ def test_get_past_events_including_external_ticket_system_events(
     EnrolmentFactory(child=child_with_user_guardian, occurrence=the_past_occurrence_2)
 
     # Enrolled Ticketmaster event in the past, should be visible as the second event
-    ticketmaster_event_1 = EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    ticketmaster_event_1 = RandomExternalTicketSystemEventFactory(
         published_at=timezone.now(),
         name="Expected as 2/4",
         ticket_system_end_time=ticket_master_event_past - timedelta(hours=2),
@@ -1143,8 +1141,7 @@ def test_get_past_events_including_external_ticket_system_events(
 
     # Enrolled Ticketmaster event in the future, event should NOT be
     # visible
-    ticketmaster_event_2 = EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    ticketmaster_event_2 = RandomExternalTicketSystemEventFactory(
         published_at=timezone.now(),
         name="ERROR: enrolled Ticketmaster event in the future",
         ticket_system_end_time=future,
@@ -1154,8 +1151,7 @@ def test_get_past_events_including_external_ticket_system_events(
     )
 
     # Unenrolled Ticketmaster event in the past, event should NOT be visible
-    ticketmaster_event_3 = EventFactory(  # noqa
-        ticket_system=Event.TICKETMASTER,
+    ticketmaster_event_3 = RandomExternalTicketSystemEventFactory(  # noqa
         published_at=timezone.now(),
         name="ERROR: unenrolled Ticketmaster event in the past",
         ticket_system_end_time=ticket_master_event_past,
@@ -1163,8 +1159,7 @@ def test_get_past_events_including_external_ticket_system_events(
 
     # Another enrolled Ticketmaster event in the past, should be visible as the fourth
     # event
-    ticketmaster_event_4 = EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    ticketmaster_event_4 = RandomExternalTicketSystemEventFactory(
         published_at=timezone.now(),
         name="Expected as 4/4",
         ticket_system_end_time=ticket_master_event_past,
@@ -1174,6 +1169,7 @@ def test_get_past_events_including_external_ticket_system_events(
     )
 
     executed = guardian_api_client.execute(CHILD_PAST_EVENTS_QUERY, variables=variables)
+    assert len(executed["data"]["child"]["pastEvents"]["edges"]) == 4
     snapshot.assert_match(executed)
 
     assign_perm("admin", guardian_api_client.user, project)
@@ -1541,25 +1537,23 @@ def test_upcoming_events_and_event_groups(
     )
 
     # Ticketmaster events
-    EventFactory(
+    RandomExternalTicketSystemEventFactory(
         ticket_system=Event.TICKETMASTER,
         published_at=now() + timedelta(minutes=40),
         name="This should be 3/8",
     )
-    EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    RandomExternalTicketSystemEventFactory(
+        ticket_system=Event.LIPPUPISTE,
         published_at=now() + timedelta(minutes=30),
         name="This should be 4/8",
         ticket_system_end_time=now() + timedelta(minutes=60),
     )
-    EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    RandomExternalTicketSystemEventFactory(
         published_at=now() + timedelta(minutes=10),
         name="ERROR: Event in the past",
         ticket_system_end_time=now() - timedelta(minutes=1),
     )
-    EventFactory(
-        ticket_system=Event.TICKETMASTER,
+    RandomExternalTicketSystemEventFactory(
         published_at=now() + timedelta(minutes=10),
         name="ERROR: Event from another project",
         ticket_system_end_time=now() + timedelta(minutes=1),

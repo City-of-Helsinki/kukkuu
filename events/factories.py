@@ -1,3 +1,5 @@
+import random
+
 import factory
 import pytz
 from django.utils import timezone
@@ -37,12 +39,25 @@ class EventFactory(factory.django.DjangoModelFactory):
         model = Event
 
 
-class TicketmasterEventFactory(EventFactory):
+def get_external_ticket_system():
+    "Return a random external ticket system from available choices"
+    return random.choice(list(zip(*Event.EXTERNAL_TICKET_SYSTEM_CHOICES))[0])
+
+
+class RandomExternalTicketSystemEventFactory(EventFactory):
     published_at = factory.LazyFunction(lambda: timezone.now())
-    ticket_system = Event.TICKETMASTER
+    ticket_system = factory.LazyFunction(get_external_ticket_system)
     ticket_system_url = factory.Faker("url")
     capacity_per_occurrence = None
     duration = None
+
+
+class TicketmasterEventFactory(RandomExternalTicketSystemEventFactory):
+    ticket_system = Event.TICKETMASTER
+
+
+class LippupisteEventFactory(RandomExternalTicketSystemEventFactory):
+    ticket_system = Event.LIPPUPISTE
 
 
 class OccurrenceFactory(factory.django.DjangoModelFactory):

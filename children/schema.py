@@ -135,7 +135,7 @@ class ChildNode(DjangoObjectType):
           * external ticket system Events the user has a password to and the Event's
             ticket_system_end_time is in the past at all.
         """
-        from events.schema import OccurrenceNode, TicketmasterEnrolmentNode  # noqa
+        from events.schema import ExternalTicketSystemEnrolmentNode, OccurrenceNode
 
         published_events = self.project.events.user_can_view(
             info.context.user
@@ -166,7 +166,7 @@ class ChildNode(DjangoObjectType):
         occurrences_and_passwords = sorted(
             (
                 *OccurrenceNode.get_queryset(past_enough_enrolled_occurrences, info),
-                *TicketmasterEnrolmentNode.get_queryset(
+                *ExternalTicketSystemEnrolmentNode.get_queryset(
                     past_ticket_system_passwords, info
                 ),
             ),
@@ -219,15 +219,16 @@ class ChildNode(DjangoObjectType):
         return self.occurrences.distinct()
 
     def resolve_active_internal_and_ticket_system_enrolments(self, info, **kwargs):
-        from events.schema import EnrolmentNode, TicketmasterEnrolmentNode  # noqa
+        from events.schema import EnrolmentNode, ExternalTicketSystemEnrolmentNode
 
         active_occurrences = Occurrence.objects.upcoming_with_ongoing()
         internal_enrolments = self.enrolments.filter(
             occurrence__in=active_occurrences
         ).annotate(
             # Technically to be 100% correct we should use the occurrence's end time
-            # instead of start time for sorting because for Ticketmaster enrolments the
-            # event's end time is used, but doing that would be way more complicated
+            # instead of start time for sorting because for external ticket system
+            # enrolments the event's end time is used,
+            # but doing that would be way more complicated
             # and the difference not matter at all in practice.
             time=F("occurrence__time"),
             published_at=F("occurrence__event__published_at"),
@@ -243,9 +244,12 @@ class ChildNode(DjangoObjectType):
         return sorted(
             (
                 *EnrolmentNode.get_queryset(internal_enrolments, info),
-                *TicketmasterEnrolmentNode.get_queryset(ticket_system_passwords, info),
+                *ExternalTicketSystemEnrolmentNode.get_queryset(
+                    ticket_system_passwords, info
+                ),
             ),
-            # Sort events by time with Ticketmaster events without an end time as last,
+            # Sort events by time with external ticket system events
+            # without an end time as last,
             # and sort those by published at to keep the ordering stable.
             key=lambda e: (e.time or datetime_max, e.published_at),
         )

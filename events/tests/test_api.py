@@ -107,6 +107,9 @@ query Events {
                 ... on TicketmasterOccurrenceTicketSystem {
                   url
                 }
+                ... on LippupisteOccurrenceTicketSystem {
+                  url
+                }
               }
             }
           }
@@ -161,6 +164,9 @@ query Event($id: ID!) {
           ticketSystem {
             type
             ... on TicketmasterOccurrenceTicketSystem {
+              url
+            }
+            ... on LippupisteOccurrenceTicketSystem {
               url
             }
           }
@@ -219,6 +225,9 @@ query Occurrences {
         ticketSystem {
           type
           ... on TicketmasterOccurrenceTicketSystem {
+            url
+          }
+          ... on LippupisteOccurrenceTicketSystem {
             url
           }
         }
@@ -289,6 +298,9 @@ query Occurrence($id: ID!) {
     ticketSystem {
       type
       ... on TicketmasterOccurrenceTicketSystem {
+        url
+      }
+      ... on LippupisteOccurrenceTicketSystem {
         url
       }
     }
