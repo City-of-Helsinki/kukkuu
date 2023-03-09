@@ -1,6 +1,12 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.16.1] - 9 Mar 2023
+
+### Fixed
+
+- Process notifications sending outside the atomic transaction of saving of events
+
 ## [1.16.0] - 8 Dec 2022
 
 ### Added
@@ -8,18 +14,18 @@ the version in kukkuu/__init.py__ -->
 - Add horizontal pod autoscaler
 - Add Platta related configurations
 - Count ticket system passwords toward yearly enrolment limit
-- Add `assignTicketSystemPasswordMutation` & tests 
+- Add `assignTicketSystemPasswordMutation` & tests
 - Add GraphQL query for fetching a child's all internal and external enrolments
 - Add import ticket system passwords mutation
 - Add ticket system password counts to event API
 - Add external ticket system event URL
-- Implement end time handling for external ticket system events 
+- Implement end time handling for external ticket system events
 
 ### Fixed
 
-- Fix child enrolment counting related to Ticketmaster events 
+- Fix child enrolment counting related to Ticketmaster events
 - Fix `canChildEnroll` query related to Ticketmaster events
-- Fix free ticket system password detection 
+- Fix free ticket system password detection
 
 ## [1.15.1] - 27 May 2022
 
