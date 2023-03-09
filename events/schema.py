@@ -143,7 +143,7 @@ class EventTicketSystem(graphene.Interface):
             raise Exception(f'Invalid ticket system "{instance.ticket_system}".')
 
 
-class TicketmasterEventTicketSystem(ObjectType):
+class ExternalEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID())
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
@@ -151,7 +151,7 @@ class TicketmasterEventTicketSystem(ObjectType):
     end_time = graphene.DateTime()
 
     class Meta:
-        interfaces = (EventTicketSystem,)
+        abstract = True
 
     def resolve_child_password(event: Event, info, **kwargs):
         try:
@@ -179,6 +179,16 @@ class TicketmasterEventTicketSystem(ObjectType):
 
     def resolve_end_time(event: Event, info, **kwargs):
         return event.ticket_system_end_time
+
+
+class TicketmasterEventTicketSystem(ExternalEventTicketSystem):
+    class Meta:
+        interfaces = (EventTicketSystem,)
+
+
+class LippupisteEventTicketSystem(ExternalEventTicketSystem):
+    class Meta:
+        interfaces = (EventTicketSystem,)
 
 
 class InternalEventTicketSystem(ObjectType):
@@ -378,18 +388,27 @@ class OccurrenceTicketSystem(graphene.Interface):
             return InternalOccurrenceTicketSystem
         elif ticket_system == Event.TICKETMASTER:
             return TicketmasterOccurrenceTicketSystem
+        elif ticket_system == Event.LIPPUPISTE:
+            return LippupisteOccurrenceTicketSystem
         else:
             raise Exception(f'Invalid ticket system "{ticket_system}".')
 
 
-class TicketmasterOccurrenceTicketSystem(ObjectType):
+class ExternalOccurrenceTicketSystem(ObjectType):
     url = graphene.String(required=True)
-
-    class Meta:
-        interfaces = (OccurrenceTicketSystem,)
 
     def resolve_url(self, info, **kwargs):
         return self.ticket_system_url
+
+
+class TicketmasterOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
+    class Meta:
+        interfaces = (OccurrenceTicketSystem,)
+
+
+class LippupisteOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
+    class Meta:
+        interfaces = (OccurrenceTicketSystem,)
 
 
 class InternalOccurrenceTicketSystem(ObjectType):
@@ -520,13 +539,11 @@ class EnrolmentNode(DjangoObjectType):
         return self.reference_id
 
 
-class TicketmasterEnrolmentNode(DjangoObjectType):
+class ExternalTicketSystemEnrolmentNode(DjangoObjectType):
     created_at = graphene.DateTime(required=True)
 
     class Meta:
-        model = TicketSystemPassword
-        interfaces = (relay.Node,)
-        fields = ("event", "created_at")
+        abstract = True
 
     @classmethod
     @login_required
@@ -540,9 +557,38 @@ class TicketmasterEnrolmentNode(DjangoObjectType):
         return self.assigned_at
 
 
+class TicketmasterEnrolmentNode(ExternalTicketSystemEnrolmentNode):
+    class Meta:
+        model = TicketSystemPassword
+        interfaces = (relay.Node,)
+        fields = ("event", "created_at")
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        q = super().get_queryset(queryset, info)
+        return q.filter(event__ticket_system=Event.TICKETMASTER)
+
+
+class LippupisteEnrolmentNode(ExternalTicketSystemEnrolmentNode):
+    class Meta:
+        model = TicketSystemPassword
+        interfaces = (relay.Node,)
+        fields = ("event", "created_at")
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return (
+            super()
+            .get_queryset(queryset, info)
+            .filter(event__ticket_system=Event.LIPPUPISTE)
+        )
+
+
 class InternalOrTicketSystemEnrolmentUnion(graphene.Union):
     class Meta:
-        types = (EnrolmentNode, TicketmasterEnrolmentNode)
+        types = (EnrolmentNode, TicketmasterEnrolmentNode, LippupisteEnrolmentNode)
 
 
 class InternalOrTicketSystemEnrolmentConnection(Connection):

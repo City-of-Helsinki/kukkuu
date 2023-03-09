@@ -11,6 +11,8 @@ import venues.schema
 from events.schema import (
     InternalEventTicketSystem,
     InternalOccurrenceTicketSystem,
+    LippupisteEventTicketSystem,
+    LippupisteOccurrenceTicketSystem,
     TicketmasterEventTicketSystem,
     TicketmasterOccurrenceTicketSystem,
 )
@@ -46,8 +48,10 @@ schema = graphene.Schema(
     mutation=Mutation,
     types=[
         TicketmasterEventTicketSystem,
+        LippupisteEventTicketSystem,
         InternalEventTicketSystem,
         TicketmasterOccurrenceTicketSystem,
+        LippupisteOccurrenceTicketSystem,
         InternalOccurrenceTicketSystem,
     ],
 )

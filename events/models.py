@@ -165,7 +165,8 @@ class EventQueryset(TranslatableQuerySet):
         return self.filter(
             Q(occurrences__time__gte=now)
             | (
-                Q(ticket_system=Event.TICKETMASTER)
+                # Not internal -> any of the external ticket systems
+                ~Q(ticket_system=Event.INTERNAL)
                 & (Q(ticket_system_end_time=None) | Q(ticket_system_end_time__gte=now))
             )
         ).distinct()
@@ -210,10 +211,12 @@ class Event(TimestampedModel, TranslatableModel):
 
     INTERNAL = "internal"
     TICKETMASTER = "ticketmaster"
-    TICKET_SYSTEM_CHOICES = (
-        (INTERNAL, _("Internal")),
+    LIPPUPISTE = "lippupiste"
+    EXTERNAL_TICKET_SYSTEM_CHOICES = (
         (TICKETMASTER, _("Ticketmaster")),
+        (LIPPUPISTE, _("Lippupiste")),
     )
+    TICKET_SYSTEM_CHOICES = ((INTERNAL, _("Internal")), *EXTERNAL_TICKET_SYSTEM_CHOICES)
 
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
@@ -280,6 +283,10 @@ class Event(TimestampedModel, TranslatableModel):
         published_text = _("published") if self.published_at else _("unpublished")
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
 
+    @property
+    def is_external_ticket_system_event(self):
+        return self.ticket_system in list(zip(*self.EXTERNAL_TICKET_SYSTEM_CHOICES))[0]
+
     def clean(self):
         if self.ticket_system == Event.INTERNAL:
             if self.capacity_per_occurrence is None:
@@ -290,12 +297,12 @@ class Event(TimestampedModel, TranslatableModel):
                     ),
                     code=DATA_VALIDATION_ERROR,
                 )
-        elif self.ticket_system == Event.TICKETMASTER:
+        elif self.is_external_ticket_system_event:
             if not self.ticket_system_url:
                 raise ValidationError(
                     _(
                         "Ticket system URL is required when ticket system is "
-                        "Ticketmaster."
+                        "any of the external ticket systems."
                     ),
                     code=TICKET_SYSTEM_URL_MISSING_ERROR,
                 )
@@ -495,13 +502,13 @@ class Occurrence(TimestampedModel):
     def clean(self):
         if (
             self.event.published_at
-            and self.event.ticket_system == Event.TICKETMASTER
+            and self.event.is_external_ticket_system_event
             and not self.ticket_system_url
         ):
             raise ValidationError(
                 _(
                     "Ticket system URL is required for all occurrences of a "
-                    "published Ticketmaster event."
+                    f"published {self.event.ticket_system} event."
                 ),
                 code=TICKET_SYSTEM_URL_MISSING_ERROR,
             )
