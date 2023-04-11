@@ -4,8 +4,8 @@
 #
 #    pip-compile requirements-dev.in
 #
-appnope==0.1.2
-    # via ipython
+asttokens==2.2.1
+    # via stack-data
 attrs==21.2.0
     # via
     #   -c requirements.txt
@@ -28,6 +28,8 @@ coverage[toml]==6.0.1
     # via pytest-cov
 decorator==5.1.0
     # via ipython
+executing==1.2.0
+    # via stack-data
 fastdiff==0.3.0
     # via snapshottest
 flake8==4.0.1
@@ -40,7 +42,7 @@ idna==3.2
     #   requests
 iniconfig==1.1.1
     # via pytest
-ipython==7.28.0
+ipython==8.10.0
     # via -r requirements-dev.in
 isort==5.9.3
     # via -r requirements-dev.in
@@ -68,10 +70,12 @@ platformdirs==2.5.2
     # via black
 pluggy==1.0.0
     # via pytest
-prompt-toolkit==3.0.20
+prompt-toolkit==3.0.38
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
+pure-eval==0.2.2
+    # via stack-data
 py==1.10.0
     # via pytest
 pycodestyle==2.8.0
@@ -111,20 +115,18 @@ six==1.16.0
     #   snapshottest
 snapshottest==0.6.0
     # via -r requirements-dev.in
+stack-data==0.6.2
+    # via ipython
 termcolor==1.1.0
     # via snapshottest
 toml==0.10.2
     # via pytest
 tomli==2.0.1
-    # via
-    #   black
-    #   coverage
+    # via coverage
 traitlets==5.1.0
     # via
     #   ipython
     #   matplotlib-inline
-typing-extensions==4.3.0
-    # via black
 urllib3==1.26.7
     # via
     #   -c requirements.txt
@@ -136,6 +138,3 @@ wasmer-compiler-cranelift==1.0.0
     # via fastdiff
 wcwidth==0.2.5
     # via prompt-toolkit
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
