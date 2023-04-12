@@ -151,7 +151,7 @@ elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
     if env("AZURE_BLOB_STORAGE_SAS_TOKEN"):
         SAS_TOKEN = env("AZURE_BLOB_STORAGE_SAS_TOKEN")
         AZURE_CONNECTION_STRING = f"BlobEndpoint=https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net;SharedAccessSignature={SAS_TOKEN};"
-    else :
+    else:
         AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
 
 
