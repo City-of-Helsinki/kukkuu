@@ -77,6 +77,15 @@ LANGUAGE_CHOICES = [
     ]
 )
 class ChildSerializer(serializers.ModelSerializer):
+    child_birthdate_postal_code_guardian_emails_hash = serializers.SerializerMethodField(  # noqa
+        help_text="Salted hash of child's birthdate, postal code and guardians' emails."
+    )
+    child_name_birthdate_postal_code_guardian_emails_hash = (
+        serializers.SerializerMethodField(
+            help_text="Salted hash of child's name (i.e. first name and last name), "
+            "birthdate, postal code and guardians' emails."
+        )
+    )
     registration_date = serializers.SerializerMethodField()
     birth_year = serializers.SerializerMethodField()
     contact_language = serializers.SerializerMethodField()
@@ -88,12 +97,29 @@ class ChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = Child
         fields = [
+            "child_birthdate_postal_code_guardian_emails_hash",
+            "child_name_birthdate_postal_code_guardian_emails_hash",
             "registration_date",
             "birth_year",
             "postal_code",
             "contact_language",
             "languages_spoken_at_home",
         ]
+
+    def get_child_birthdate_postal_code_guardian_emails_hash(self, child: Child) -> str:
+        """
+        Salted hash of child's birthdate, postal code and guardians' emails.
+        """
+        return child.birthdate_postal_code_guardian_emails_hash
+
+    def get_child_name_birthdate_postal_code_guardian_emails_hash(
+        self, child: Child
+    ) -> str:
+        """
+        Salted hash of child's name (i.e. first name and last name), birthdate, postal
+        code and guardians' emails.
+        """
+        return child.name_birthdate_postal_code_guardian_emails_hash
 
     def get_registration_date(self, obj: Child) -> date:
         return localdate(obj.created_at)
