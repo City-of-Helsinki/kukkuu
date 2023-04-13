@@ -1,3 +1,6 @@
+from datetime import date
+from typing import Union
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -5,10 +8,21 @@ from django.core import mail
 from events.factories import EnrolmentFactory, OccurrenceFactory
 from events.models import Enrolment
 
-from ..factories import ChildFactory, ChildWithGuardianFactory, RelationshipFactory
-from ..models import Child
+from ..factories import (
+    ChildFactory,
+    ChildWithGuardianFactory,
+    ChildWithTwoGuardiansFactory,
+    RelationshipFactory,
+)
+from ..models import Child, Guardian
 
 User = get_user_model()
+
+
+def _set_guardian_email(guardian: Guardian, email: str) -> Guardian:
+    guardian.email = email
+    guardian.save()
+    return guardian
 
 
 @pytest.mark.django_db
@@ -61,3 +75,88 @@ def test_enrolment_handling_when_child_deleted(
     assert another_child_future_enrolment.child == another_child
 
     assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_name,orig_field_value,later_field_value,should_change_hash",
+    [
+        ("first_name", "Peter", "Mary", False),
+        ("last_name", "Smith", "O'Brien", False),
+        ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
+        ("postal_code", "12345", "10100", True),
+    ],
+)
+def test_child_birthdate_postal_code_guardian_emails_hash(
+    field_name: str,
+    orig_field_value: Union[str, date],
+    later_field_value: Union[str, date],
+    should_change_hash: bool,
+):
+    child: Child = ChildWithGuardianFactory()
+    setattr(child, field_name, orig_field_value)
+    orig_hash = child.birthdate_postal_code_guardian_emails_hash
+    setattr(child, field_name, later_field_value)
+    later_hash = child.birthdate_postal_code_guardian_emails_hash
+    assert should_change_hash == (orig_hash != later_hash)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_name,orig_field_value,later_field_value,should_change_hash",
+    [
+        ("first_name", "Peter", "Mary", True),
+        ("last_name", "Smith", "O'Brien", True),
+        ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
+        ("postal_code", "12345", "10100", True),
+    ],
+)
+def test_child_name_birthdate_postal_code_guardian_emails_hash(
+    field_name: str,
+    orig_field_value: Union[str, date],
+    later_field_value: Union[str, date],
+    should_change_hash: bool,
+):
+    child = ChildWithGuardianFactory()
+    setattr(child, field_name, orig_field_value)
+    orig_hash = child.name_birthdate_postal_code_guardian_emails_hash
+    setattr(child, field_name, later_field_value)
+    later_hash = child.name_birthdate_postal_code_guardian_emails_hash
+    assert should_change_hash == (orig_hash != later_hash)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "hash_property_name",
+    [
+        "birthdate_postal_code_guardian_emails_hash",
+        "name_birthdate_postal_code_guardian_emails_hash",
+    ],
+)
+def test_child_hashes_email_change(hash_property_name: str):
+    child: Child = ChildWithTwoGuardiansFactory()
+    _set_guardian_email(child.guardians.first(), "a@example.org")
+    _set_guardian_email(child.guardians.last(), "b@example.org")
+    assert sorted(guardian.email for guardian in child.guardians.all()) == [
+        "a@example.org",
+        "b@example.org",
+    ]
+    assert child.guardians.first().email != child.guardians.last().email
+    hash1 = getattr(child, hash_property_name)
+    _set_guardian_email(child.guardians.first(), "c@example.org")
+    assert child.guardians.first().email == "c@example.org"
+    hash2 = getattr(child, hash_property_name)
+    assert hash1 != hash2
+    _set_guardian_email(child.guardians.last(), "d@example.org")
+    assert child.guardians.last().email == "d@example.org"
+    hash3 = getattr(child, hash_property_name)
+    assert hash2 != hash3
+    child.guardians.first().delete()
+    assert len(child.guardians.all()) == 1
+    hash4 = getattr(child, hash_property_name)
+    assert hash3 != hash4
+    child.guardians.last().delete()
+    assert len(child.guardians.all()) == 0
+    hash5 = getattr(child, hash_property_name)
+    assert hash4 != hash5
+    assert len({hash1, hash2, hash3, hash4, hash5}) == 5

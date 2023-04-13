@@ -1,5 +1,7 @@
-from typing import Optional
+from hashlib import sha256
+from typing import Iterable, Optional
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models, transaction
 from django.db.models import Q
@@ -103,6 +105,40 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
             + self.ticket_system_passwords.filter(ticket_system_filters)
             .distinct()
             .count()
+        )
+
+    @staticmethod
+    def _hash(values: Iterable[str]) -> str:
+        return sha256(",".join(values).encode("utf8")).hexdigest()
+
+    @property
+    def _salt_birthdate_postal_code_guardian_emails_list(self) -> list[str]:
+        """
+        List of salt, child's birthdate, postal code and guardians' emails.
+        """
+        return [
+            settings.KUKKUU_HASHID_SALT,
+            self.birthdate.isoformat(),
+            self.postal_code,
+            *sorted(guardian.email for guardian in self.guardians.all()),
+        ]
+
+    @property
+    def birthdate_postal_code_guardian_emails_hash(self) -> str:
+        """
+        Salted hash of child's birthdate, postal code and guardians' emails.
+        """
+        return self._hash(self._salt_birthdate_postal_code_guardian_emails_list)
+
+    @property
+    def name_birthdate_postal_code_guardian_emails_hash(self) -> str:
+        """
+        Salted hash of child's name (i.e. first name and last name), birthdate, postal
+        code and guardians' emails.
+        """
+        return self._hash(
+            [self.first_name, self.last_name]
+            + self._salt_birthdate_postal_code_guardian_emails_list
         )
 
 
