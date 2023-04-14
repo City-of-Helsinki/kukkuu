@@ -54,14 +54,11 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt -r requirements-dev.txt codecov
+          pip install -r requirements.txt -r requirements-dev.txt
       - name: Run tests
         run: pytest -ra -vv --doctest-modules --cov=.
         env:
           DATABASE_URL: postgres://kukkuu:kukkuu@localhost:5432/kukkuu
-
-      - name: Coverage
-        run: codecov
 
   coding-style:
     name: Coding style
