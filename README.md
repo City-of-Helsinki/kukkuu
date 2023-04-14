@@ -3,7 +3,6 @@
 :baby: Culture Kids (kulttuurin kummilapset) API :violin:
 
 [![status](https://travis-ci.com/City-of-Helsinki/kukkuu.svg)](https://github.com/City-of-Helsinki/kukkuu)
-[![codecov](https://codecov.io/gh/City-of-Helsinki/kukkuu/branch/develop/graph/badge.svg)](https://codecov.io/gh/City-of-Helsinki/kukkuu)
 
 ## Environments
 
