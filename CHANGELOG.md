@@ -1,6 +1,12 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.16.2] - 17 Apr 2023
+
+### Changed
+
+- Sastoken is used for Azure storage autentication
+
 ## [1.16.1] - 9 Mar 2023
 
 ### Fixed
