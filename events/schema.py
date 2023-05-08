@@ -124,6 +124,7 @@ class EventParticipantsPerInvite(graphene.Enum):
 class TicketSystem(graphene.Enum):
     INTERNAL = "internal"
     TICKETMASTER = "ticketmaster"
+    LIPPUPISTE = "lippupiste"
 
 
 class EventTicketSystem(graphene.Interface):
@@ -139,6 +140,8 @@ class EventTicketSystem(graphene.Interface):
             return InternalEventTicketSystem
         elif instance.ticket_system == Event.TICKETMASTER:
             return TicketmasterEventTicketSystem
+        elif instance.ticket_system == Event.LIPPUPISTE:
+            return LippupisteEventTicketSystem
         else:
             raise Exception(f'Invalid ticket system "{instance.ticket_system}".')
 
