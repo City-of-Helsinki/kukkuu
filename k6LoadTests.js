@@ -7,13 +7,13 @@ export const options = {
   vus: 100,
   //  vus: 1,
   thresholds: {
-    //avg is around ?100ms? on https://kukkuu.test.kuva.hel.ninja
+    //avg is around ?100ms? on https://kukkuu.api.test.hel.ninja
     http_req_duration: ['p(95)<5000'],
   },
 };
 
 export default () => {
-  let url = 'https://kukkuu.test.kuva.hel.ninja/graphql';
+  let url = 'https://kukkuu.api.test.hel.ninja/graphql';
   if (`${__ENV.K6_LOADTEST_ENV_URL}` != 'undefined') {
     url = `${__ENV.K6_LOADTEST_ENV_URL}`;
   }

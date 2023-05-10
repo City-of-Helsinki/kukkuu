@@ -12,7 +12,7 @@ Production environment:
 
 Testing environment:
 
-- https://kukkuu.test.kuva.hel.ninja/graphql
+- https://kukkuu.api.test.hel.ninja/graphql
 
 ## Development with Docker
 
