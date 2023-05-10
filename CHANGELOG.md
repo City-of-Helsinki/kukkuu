@@ -1,6 +1,12 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.17.0] - 10 May 2023
+
+### Added
+
+- Add Lippupiste as an external ticket system
+
 ## [1.16.2] - 17 Apr 2023
 
 ### Changed
