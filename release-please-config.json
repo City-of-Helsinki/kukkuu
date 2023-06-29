@@ -1,0 +1,11 @@
+{
+  "bootstrap-sha": "0e7c2805814b90c50ead968fe65a4e02423527f1",
+  "sequential-calls": true,
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "package-name": "kukkuu"
+    }
+  },
+  "plugins": ["sentence-case"]
+}
