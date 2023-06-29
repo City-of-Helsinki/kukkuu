@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.17.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.0...kukkuu-v1.17.1) (2023-06-29)
+
+
+### Bug Fixes
+
+* Netcat package update DEVOPS-541 ([#324](https://github.com/City-of-Helsinki/kukkuu/issues/324)) ([ffa68b9](https://github.com/City-of-Helsinki/kukkuu/commit/ffa68b9d3fb58652fb1fd0da0c76ca3bb05e19de))
+
 ## [1.17.0] - 10 May 2023
 
 ### Added
