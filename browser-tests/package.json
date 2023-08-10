@@ -1,0 +1,36 @@
+{
+  "name": "kukkuu-api-tests",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "TZ=Europe/Helsinki NODE_ICU_DATA=node_modules/full-icu react-scripts test --env=jsdom-fourteen",
+    "eject": "react-scripts eject",
+    "lint": "eslint --ext js,ts,tsx src",
+    "test:browser": "testcafe \"chrome --window-size='1920,1080'\" tests/ --live",
+    "test:browser:wsl2win": "testcafe 'path:`/mnt/c/Program Files/Google/Chrome/Application/chrome.exe`' tests/ --live --dev",
+    "test:browser:ci": "testcafe \"chrome:headless --disable-gpu --window-size='1920,1080'\" -s path=report,takeOnFails=true --video report --reporter spec,html:report/index.html tests/"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@testing-library/testcafe": "^5.0.0",
+    "testcafe": "^3.1.0",
+    "testcafe-reporter-html": "^1.4.6",
+    "dotenv": "^16.0.0"
+  }
+}
