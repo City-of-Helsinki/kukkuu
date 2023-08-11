@@ -22,8 +22,14 @@ export const testUserPassword = (): string => getOrError('BROWSER_TESTS_PWD');
 
 export const envUrl = (): string => getOrError('BROWSER_TESTS_ENV_URL');
 
+export const testUiUsername = (): string => getOrError('BROWSER_TESTS_USERNAME_UI');
+
+export const testUiUserPassword = (): string => getOrError('BROWSER_TESTS_PASSWORD_UI');
+
+
 export const testUnauthorizedUsername = (): string =>
   getOrError('BROWSER_TESTS_UNAUTHORIZED_UID');
 
 export const testUnauthorizedUserPassword = (): string =>
   getOrError('BROWSER_TESTS_UNAUTHORIZED_PWD');
+

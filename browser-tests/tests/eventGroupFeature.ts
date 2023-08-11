@@ -1,3 +1,4 @@
+import { screen } from '@testing-library/testcafe';
 import {
   testUsername,
   testUserPassword,
@@ -16,9 +17,22 @@ import {
   routeAdd as routeEventGroupAdd,
 } from './pages/eventGroup';
 import {
+  message,
+  messageAdd,
+  routeAdd as routeMessageAdd,
+} from './pages/message';
+import {
   checkProject,
   project,
 } from './pages/project';
+
+
+import {
+  user,
+  userExists,
+  routeAdd as routeUserAdd,
+} from './pages/user';
+
 import { login } from './utils/login';
 
 fixture`Event group feature`
@@ -33,7 +47,7 @@ fixture`Event group feature`
     await checkProject(t); 
   });
 
-test('As a admin user I want to add event and event group', async (t) => {
+test('Add initial data for ui and admin ui tests', async (t) => {
   // add event group
   await t.navigateTo(routeEventGroupAdd());
 
@@ -58,4 +72,21 @@ test('As a admin user I want to add event and event group', async (t) => {
   .typeText(eventAdd.duration, event.duration)
   .click(eventAdd.readyForPublish)
   .click(eventGroupAdd.saveButton);
+
+  // add message
+  await t.navigateTo(routeMessageAdd());
+
+  const eventOption = messageAdd.event.find('option');
+  const eventRegexp = new RegExp(event.name, "i");
+
+  await t
+  .click(messageAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
+  .typeText(messageAdd.subject, message.subject)
+  .typeText(messageAdd.body, message.body)
+  .click(messageAdd.recipientSelection).click(getDropdownOption(message.recipientSelection))
+  .click(messageAdd.event).click(eventOption.withText(eventRegexp))
+  .click(eventGroupAdd.saveButton);
+
+  // check ui user exists
+  await userExists(t); 
 });
