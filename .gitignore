@@ -80,3 +80,4 @@ venv/
 docker-compose.env.yaml
 
 .vscode/
+browser-tests/report
