@@ -2,12 +2,12 @@ import { screen } from '@testing-library/testcafe';
 import { envUrl } from '../utils/settings';
 
 export const event = {
-  name: `Event  ${new Date().toUTCString()}`,
+  name: `Test event ${new Date().toUTCString()}`,
   shortDescription: "event for testing",
   description: "event for testing",
-  capacity: '5',
+  capacity: '15',
   participants: 'Family',
-  duration: '20',
+  duration: '30',
 };
 
 export const eventAdd = {
@@ -20,6 +20,8 @@ export const eventAdd = {
   participants: screen.getByLabelText('Participants per invite:'),
   duration: screen.getByLabelText('Duration:'),
   readyForPublish: screen.getByLabelText('Ready for event group publishing'),
+  eventGroup: screen.getByLabelText('Event group:'),
+  
 };
 
 export const route = () => `${envUrl()}/admin/events/event`;

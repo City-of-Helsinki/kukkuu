@@ -16,20 +16,13 @@ function getOrError(variableName: string) {
   return variable;
 }
 
-export const testUsername = (): string => getOrError('BROWSER_TESTS_UID');
+export const testUsername = (): string => getOrError('BROWSER_TESTS_API_ADMIN_USER_NAME');
 
-export const testUserPassword = (): string => getOrError('BROWSER_TESTS_PWD');
+export const testUserPassword = (): string => getOrError('BROWSER_TESTS_API_ADMIN_PASSWORD');
 
-export const envUrl = (): string => getOrError('BROWSER_TESTS_ENV_URL');
+export const envUrl = (): string => getOrError('BROWSER_TESTS_API_URL');
 
-export const testUiUsername = (): string => getOrError('BROWSER_TESTS_USERNAME_UI');
+export const testUiUsername = (): string => getOrError('BROWSER_TESTS_USER_NAME');
 
-export const testUiUserPassword = (): string => getOrError('BROWSER_TESTS_PASSWORD_UI');
-
-
-export const testUnauthorizedUsername = (): string =>
-  getOrError('BROWSER_TESTS_UNAUTHORIZED_UID');
-
-export const testUnauthorizedUserPassword = (): string =>
-  getOrError('BROWSER_TESTS_UNAUTHORIZED_PWD');
+export const testUiUserPassword = (): string => getOrError('BROWSER_TESTS_USER_PASSWORD');
 

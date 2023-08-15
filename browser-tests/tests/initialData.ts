@@ -12,8 +12,12 @@ import {
   routeAdd as routeEventAdd,
 } from './pages/event';
 import {
+  createNewOccurence,
+} from './pages/occurence';
+import {
   eventGroup,
   eventGroupAdd,
+  publish as publishEventGroup,
   routeAdd as routeEventGroupAdd,
 } from './pages/eventGroup';
 import {
@@ -25,6 +29,10 @@ import {
   checkProject,
   project,
 } from './pages/project';
+import {
+  venue,
+  checkVenue,
+} from './pages/venue';
 
 
 import {
@@ -45,6 +53,7 @@ fixture`Event group feature`
     await t.wait(3000);
 
     await checkProject(t); 
+    await checkVenue(t); 
   });
 
 test('Add initial data for ui and admin ui tests', async (t) => {
@@ -62,6 +71,9 @@ test('Add initial data for ui and admin ui tests', async (t) => {
   // add event
   await t.navigateTo(routeEventAdd());
 
+  const eventGroupOption = eventAdd.eventGroup.find('option');
+  const eventGroupRegexp = new RegExp(eventGroup.name, "i");
+
   await t
   .click(eventAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
   .typeText(eventAdd.name, event.name)
@@ -71,7 +83,12 @@ test('Add initial data for ui and admin ui tests', async (t) => {
   .click(eventAdd.participants).click(getDropdownOption(event.participants))
   .typeText(eventAdd.duration, event.duration)
   .click(eventAdd.readyForPublish)
+  .click(eventAdd.eventGroup).click(eventGroupOption.withText(eventGroupRegexp))
   .click(eventGroupAdd.saveButton);
+
+  // add occurence
+  await createNewOccurence(t, event.name, venue.name);
+
 
   // add message
   await t.navigateTo(routeMessageAdd());
@@ -86,6 +103,9 @@ test('Add initial data for ui and admin ui tests', async (t) => {
   .click(messageAdd.recipientSelection).click(getDropdownOption(message.recipientSelection))
   .click(messageAdd.event).click(eventOption.withText(eventRegexp))
   .click(eventGroupAdd.saveButton);
+
+  // publish event group, event and occurence
+  await publishEventGroup(t);
 
   // check ui user exists
   await userExists(t); 
