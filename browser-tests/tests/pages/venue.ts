@@ -12,9 +12,9 @@ export const venue = {
   selectByName: Selector('tr').withText(venueName),
 };
 export const venueAdd = {
-  saveButton: screen.getByText('Save'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
   project: screen.getByLabelText('Project:'),
-  name: screen.getByLabelText('Name:'),
+  name: screen.getByLabelText(/Nimi:|Name:/i),
   description: screen.getByLabelText('Description:'),
 };
 
