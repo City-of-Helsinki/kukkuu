@@ -8,7 +8,7 @@ export const eventGroup = {
   description: "Test event group",
   action: screen.getByLabelText(/Toiminto:|Action:/i),
   actionPublish: "Publish",
-  goButton: screen.getByText(/Suorita valittu toiminto|Go/i),
+  goButton: Selector('button').withText(/Suorita|Go/i),
 };
 
 export const eventGroupAdd = {
