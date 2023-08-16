@@ -68,7 +68,8 @@ export const userExists = async (t: TestController) => {
   const userRow = user.selectByUsername.child();
   
   if (await userRow.exists) {
-    await tunnistamoUser(t);
+    // tunnistamo user accesses are cehck on ui and admin test sets
+    // await tunnistamoUser(t);
     return;
   }
 

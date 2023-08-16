@@ -3,9 +3,9 @@ import { envUrl } from '../utils/settings';
 import { Selector } from 'testcafe';
 
 export const occurence = {
-  name: `Event  ${new Date().toUTCString()}`,
-  shortDescription: "event for testing",
-  description: "event for testing",
+  name: `Test event occurence ${new Date().toUTCString()}`,
+  shortDescription: "occurence for testing",
+  description: "occurence for testing",
   capacity: '10',
 };
 
@@ -30,8 +30,8 @@ export const fillFormAdd = async (t: TestController, eventName: string, venueNam
   const today = new Date();
 
   await t
-  // .click(occurenceAdd.todayLink)
   .typeText(occurenceAdd.date, `${today.getFullYear()+1}-${today.getMonth()}-${today.getDate()}` )
+  .click(occurenceAdd.nowLink)
   .click(occurenceAdd.event).click(eventOption.withText(eventRegexp))
   .click(occurenceAdd.venue).click(venueOption.withText(venueRegexp))
   .typeText(occurenceAdd.capacityOverride, occurence.capacity);

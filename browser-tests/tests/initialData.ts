@@ -89,7 +89,6 @@ test('Add initial data for ui and admin ui tests', async (t) => {
   // add occurence
   await createNewOccurence(t, event.name, venue.name);
 
-
   // add message
   await t.navigateTo(routeMessageAdd());
 
@@ -100,7 +99,7 @@ test('Add initial data for ui and admin ui tests', async (t) => {
   .click(messageAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
   .typeText(messageAdd.subject, message.subject)
   .typeText(messageAdd.body, message.body)
-  .click(messageAdd.recipientSelection).click(getDropdownOption(message.recipientSelection))
+  .click(messageAdd.recipientSelection).click(messageAdd.recipientSelection.find('option').withAttribute('value', message.recipientSelection))
   .click(messageAdd.event).click(eventOption.withText(eventRegexp))
   .click(eventGroupAdd.saveButton);
 

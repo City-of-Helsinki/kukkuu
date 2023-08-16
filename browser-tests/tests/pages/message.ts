@@ -4,7 +4,7 @@ import { envUrl } from '../utils/settings';
 export const message = {
   subject: `Message  ${new Date().toUTCString()}`,
   body: "Message for testing",
-  recipientSelection: 'All',
+  recipientSelection: 'all',
 };
 
 export const messageAdd = {
