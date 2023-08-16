@@ -10,14 +10,14 @@ export const user = {
 };
 
 export const userAdd = {
-  saveButton: screen.getByText('Save'),
-  username: screen.getByLabelText('Username:'),
-  password: screen.getByLabelText('Password:'),
-  passwordConfirmation: screen.getByLabelText('Password confirmation:'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  username: screen.getByLabelText(/Käyttäjätunnus:|Username:/i),
+  password: screen.getByLabelText(/Salasana:|Password:/i),
+  passwordConfirmation: screen.getByLabelText(/Salasanan vahvistaminen:|Password confirmation:/i),
   // user change
-  staffStatus: screen.getByLabelText('Staff status'),
+  staffStatus: screen.getByLabelText(/Ylläpitäjä|Staff status/i),
   staffStatusCheckbox: Selector('#id_is_staff'),
-  superUserStatus: screen.getByLabelText('Superuser status'),
+  superUserStatus: screen.getByLabelText(/Pääkäyttäjä|Superuser status/i),
   superUserStatusCheckbox: Selector('#id_is_superuser'),
   chooseAllPermissions: Selector('#id_user_permissions_add_all_link'),
 };

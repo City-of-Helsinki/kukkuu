@@ -11,8 +11,8 @@ export const event = {
 };
 
 export const eventAdd = {
-  saveButton: screen.getByText('Save'),
-  name: screen.getByLabelText('Name:'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  name: screen.getByLabelText(/Nimi:|Name:/i),
   description: screen.getByLabelText('Description:'),
   shortDescription: screen.getByLabelText('Short description:'),
   project: screen.getByLabelText('Project:'),

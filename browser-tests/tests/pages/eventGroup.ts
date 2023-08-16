@@ -6,14 +6,14 @@ import  getDropdownOption from '../utils/getDropdownOption';
 export const eventGroup = {
   name: `testi ${new Date().toUTCString()}`,
   description: "Test event group",
-  action: screen.getByLabelText('Action:'),
+  action: screen.getByLabelText(/Toiminto:|Action:/i),
   actionPublish: "Publish",
-  goButton: screen.getByText('Go'),
+  goButton: screen.getByText(/Suorita|Go/i),
 };
 
 export const eventGroupAdd = {
-  saveButton: screen.getByText('Save'),
-  name: screen.getByLabelText('Name:'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  name: screen.getByLabelText(/Nimi:|Name:/i),
   description: screen.getByLabelText('Description:'),
   shortDescription: screen.getByLabelText('Short description:'),
   project: screen.getByLabelText('Project:'),

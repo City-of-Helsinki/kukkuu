@@ -10,8 +10,8 @@ export const project = {
   selectByYear: Selector('tr').withText(year.toString()),
 };
 export const projectAdd = {
-  saveButton: screen.getByText('Save'),
-  name: screen.getByLabelText('Name:'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  name: screen.getByLabelText(/Nimi:|Name:/i),
   year: screen.getByLabelText('Year:'),
 };
 

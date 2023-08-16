@@ -8,7 +8,7 @@ export const message = {
 };
 
 export const messageAdd = {
-  saveButton: screen.getByText('Save'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
   subject: screen.getByLabelText('Subject:'),
   body: screen.getByLabelText('Body plain text:'),
   project: screen.getByLabelText('Project:'),

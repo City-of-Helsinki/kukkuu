@@ -10,10 +10,9 @@ export const occurence = {
 };
 
 export const occurenceAdd = {
-  saveButton: screen.getByText('Save'),
-  todayLink: Selector('a').withText('Today'),
-  nowLink: Selector('a').withText('Now'),
-  date: Selector('p').withText('Date:'),
+  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  nowLink: Selector('a').withText(/Nyt|Now/i),
+  date: Selector('p').withText(/Pvm:|Date:/i),
   event: screen.getByLabelText('Event:'),
   venue: screen.getByLabelText('Venue:'),
   capacityOverride: screen.getByLabelText('Capacity override:'),
@@ -33,7 +32,6 @@ export const fillFormAdd = async (t: TestController, eventName: string, venueNam
   await t
   // .click(occurenceAdd.todayLink)
   .typeText(occurenceAdd.date, `${today.getFullYear()+1}-${today.getMonth()}-${today.getDate()}` )
-  .click(occurenceAdd.nowLink)
   .click(occurenceAdd.event).click(eventOption.withText(eventRegexp))
   .click(occurenceAdd.venue).click(venueOption.withText(venueRegexp))
   .typeText(occurenceAdd.capacityOverride, occurence.capacity);
