@@ -55,4 +55,4 @@ extends:
     configMap: # pod environment variables
       DEBUG: 1
       ADD_DEFAULT_LANGUAGES: 1
-      CREATE_SUPERUSER: 0
+      CREATE_SUPERUSER: 1
