@@ -1,111 +1,66 @@
-import { screen } from '@testing-library/testcafe';
 import {
   testUsername,
   testUserPassword,
 } from './utils/settings';
 
-import  getDropdownOption from './utils/getDropdownOption';
-
 import {
   event,
-  eventAdd,
-  routeAdd as routeEventAdd,
+  createNew as createNewEvent
 } from './pages/event';
 import {
-  createNewOccurence,
+  createNew as createNewOccurence,
 } from './pages/occurence';
 import {
   eventGroup,
-  eventGroupAdd,
   publish as publishEventGroup,
-  routeAdd as routeEventGroupAdd,
+  createNew as createNewEventGroup
 } from './pages/eventGroup';
 import {
-  message,
-  messageAdd,
-  routeAdd as routeMessageAdd,
-} from './pages/message';
-import {
-  checkProject,
+  projectExists,
   project,
 } from './pages/project';
 import {
   venue,
-  checkVenue,
+  venueExists,
 } from './pages/venue';
 
-
-import {
-  user,
-  userExists,
-  routeAdd as routeUserAdd,
-} from './pages/user';
+import { createNewMessage } from './pages/message';
+import { userExists } from './pages/user';
+import { route as routeHome } from './pages/home';
 
 import { login } from './utils/login';
 
 fixture`Event group feature`
-  .page(routeEventGroupAdd())
+  .page(routeHome())
   .beforeEach(async (t) => {
     await login(t, {
       username: testUsername(),
       password: testUserPassword(),
     });
-    await t.wait(3000);
+    await t.wait(1000);
 
-    await checkProject(t); 
-    await checkVenue(t); 
+    await projectExists(t);
+    await venueExists(t);
   });
 
 test('Add initial data for ui and admin ui tests', async (t) => {
-  // add event group
-  await t.navigateTo(routeEventGroupAdd());
+  const projectName = `${project.name} ${project.year}`;
 
-  await t
-  .click(eventGroupAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
-  .typeText(eventGroupAdd.name, eventGroup.name)
-  .typeText(eventGroupAdd.description, eventGroup.description);
+  // add new event group
+  await createNewEventGroup(t, projectName);
 
-  await t
-  .click(eventGroupAdd.saveButton);
+  // add new event
+  await createNewEvent(t, projectName, eventGroup.name);
 
-  // add event
-  await t.navigateTo(routeEventAdd());
-
-  const eventGroupOption = eventAdd.eventGroup.find('option');
-  const eventGroupRegexp = new RegExp(eventGroup.name, "i");
-
-  await t
-  .click(eventAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
-  .typeText(eventAdd.name, event.name)
-  .typeText(eventAdd.shortDescription, event.shortDescription)
-  .typeText(eventAdd.description, event.description)
-  .typeText(eventAdd.capacity, event.capacity)
-  .click(eventAdd.participants).click(getDropdownOption(event.participants))
-  .typeText(eventAdd.duration, event.duration)
-  .click(eventAdd.readyForPublish)
-  .click(eventAdd.eventGroup).click(eventGroupOption.withText(eventGroupRegexp))
-  .click(eventGroupAdd.saveButton);
-
-  // add occurence
+  // add new occurence
   await createNewOccurence(t, event.name, venue.name);
 
-  // add message
-  await t.navigateTo(routeMessageAdd());
-
-  const eventOption = messageAdd.event.find('option');
-  const eventRegexp = new RegExp(event.name, "i");
-
-  await t
-  .click(messageAdd.project).click(getDropdownOption(`${project.name} ${project.year}`))
-  .typeText(messageAdd.subject, message.subject)
-  .typeText(messageAdd.body, message.body)
-  .click(messageAdd.recipientSelection).click(messageAdd.recipientSelection.find('option').withAttribute('value', message.recipientSelection))
-  .click(messageAdd.event).click(eventOption.withText(eventRegexp))
-  .click(eventGroupAdd.saveButton);
+  // add new message
+  await createNewMessage(t, projectName, event.name);
 
   // publish event group, event and occurence
   await publishEventGroup(t);
 
   // check ui user exists
-  await userExists(t); 
+  await userExists(t);
 });

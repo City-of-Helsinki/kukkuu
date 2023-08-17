@@ -1,8 +1,8 @@
 import { Selector } from 'testcafe';
 import { screen } from '@testing-library/testcafe';
-import  getDropdownOption from '../utils/getDropdownOption';
+import getDropdownOption from '../utils/getDropdownOption';
 import { envUrl } from '../utils/settings';
-import { project} from '../pages/project';
+import { project } from '../pages/project';
 
 const venueName = "Testila";
 
@@ -31,11 +31,12 @@ export const addVenue = async (t: TestController) => {
     .click(venueAdd.saveButton);
 };
 
-export const checkVenue = async (t: TestController) => {
+export const venueExists = async (t: TestController) => {
   await t.navigateTo(route());
 
   const venueRow = venue.selectByName.child();
-  
+
+  // venue exists
   if (await venueRow.exists) {
     return;
   }

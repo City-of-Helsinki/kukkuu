@@ -27,11 +27,12 @@ export const addProject = async (t: TestController) => {
     .click(projectAdd.saveButton);
 };
 
-export const checkProject = async (t: TestController) => {
+export const projectExists = async (t: TestController) => {
   await t.navigateTo(route());
 
   const eventGroupRow = project.selectByYear.child();
-  
+
+  // project exists
   if (await eventGroupRow.exists) {
     return;
   }

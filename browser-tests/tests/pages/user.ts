@@ -5,6 +5,9 @@ import { envUrl, testUiUsername, testUiUserPassword } from '../utils/settings';
 export const user = {
   username: `${testUiUsername()}`,
   password: `${testUiUserPassword()}`,
+};
+
+export const userList = {
   selectByUsername: Selector('tr').withText(`${testUiUsername()}`),
   selectByEmail: Selector('.field-email').withText(`${testUiUsername()}`).sibling('.field-username').child('a'),
 };
@@ -31,22 +34,22 @@ export const addUser = async (t: TestController) => {
   // username & password page
   await t
     .typeText(userAdd.username, user.username)
-    .typeText(userAdd.password ,user.password)
-    .typeText(userAdd.passwordConfirmation ,user.password)
+    .typeText(userAdd.password, user.password)
+    .typeText(userAdd.passwordConfirmation, user.password)
     .click(userAdd.saveButton);
 
   // user details page
   await t
-  .click(userAdd.staffStatus)
-  .click(userAdd.superUserStatus)
-  .click(userAdd.chooseAllPermissions)
-  .click(userAdd.saveButton);
+    .click(userAdd.staffStatus)
+    .click(userAdd.superUserStatus)
+    .click(userAdd.chooseAllPermissions)
+    .click(userAdd.saveButton);
 };
 
 export const tunnistamoUser = async (t: TestController) => {
   await t.navigateTo(route());
 
-  await t.click(user.selectByEmail);
+  await t.click(userList.selectByEmail);
 
   // these needs to be checked
   if (! await userAdd.staffStatusCheckbox.checked) {
@@ -57,18 +60,18 @@ export const tunnistamoUser = async (t: TestController) => {
   }
 
   await t
-  .click(userAdd.chooseAllPermissions)
-  .click(userAdd.saveButton);
+    .click(userAdd.chooseAllPermissions)
+    .click(userAdd.saveButton);
 };
 
 
 export const userExists = async (t: TestController) => {
   await t.navigateTo(route());
 
-  const userRow = user.selectByUsername.child();
-  
+  const userRow = userList.selectByUsername.child();
+
   if (await userRow.exists) {
-    // tunnistamo user accesses are cehck on ui and admin test sets
+    // tunnistamo user accesses are checked on ui and admin test sets
     // await tunnistamoUser(t);
     return;
   }

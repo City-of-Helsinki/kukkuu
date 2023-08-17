@@ -30,14 +30,14 @@ export const fillFormAdd = async (t: TestController, eventName: string, venueNam
   const today = new Date();
 
   await t
-  .typeText(occurenceAdd.date, `${today.getFullYear()+1}-${today.getMonth()}-${today.getDate()}` )
-  .click(occurenceAdd.nowLink)
-  .click(occurenceAdd.event).click(eventOption.withText(eventRegexp))
-  .click(occurenceAdd.venue).click(venueOption.withText(venueRegexp))
-  .typeText(occurenceAdd.capacityOverride, occurence.capacity);
+    .typeText(occurenceAdd.date, `${today.getFullYear() + 1}-${today.getMonth()}-${today.getDate()}`)
+    .click(occurenceAdd.nowLink)
+    .click(occurenceAdd.event).click(eventOption.withText(eventRegexp))
+    .click(occurenceAdd.venue).click(venueOption.withText(venueRegexp))
+    .typeText(occurenceAdd.capacityOverride, occurence.capacity);
 };
 
-export const createNewOccurence = async (t: TestController, eventName: string, venueName: string) => {
+export const createNew = async (t: TestController, eventName: string, venueName: string) => {
   await t.navigateTo(routeAdd());
 
   await fillFormAdd(t, eventName, venueName);
