@@ -1,7 +1,10 @@
 # ==============================
 FROM registry.access.redhat.com/ubi8/python-39 as appbase
 # ==============================
+
 USER 0
+WORKDIR /app
+
 RUN mkdir /entrypoint
 
 COPY --chown=1001:1001 requirements.txt /app/requirements.txt
@@ -25,7 +28,7 @@ RUN pip install --no-cache-dir -r /app/requirements-dev.txt
 
 ENV DEV_SERVER=1
 
-COPY --chown=1001:1001 . /opt/app-root/src/
+COPY --chown=1001:1001 . /app/
 
 USER 1001
 EXPOSE 8081/tcp
@@ -34,7 +37,7 @@ EXPOSE 8081/tcp
 FROM appbase as production
 # ==============================
 
-COPY --chown=1001:1001 . /opt/app-root/src/
+COPY --chown=1001:1001 . /app/
 
 RUN SECRET_KEY="only-used-for-collectstatic" KUKKUU_HASHID_SALT="only-used-for-collectstatic" python manage.py collectstatic
 
