@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir -r /app/requirements-dev.txt
 
 ENV DEV_SERVER=1
 
-COPY --chown=1001:1001 . /app/
+COPY --chown=1001:1001 . /opt/app-root/src/
 
 USER 1001
 EXPOSE 8081/tcp
@@ -34,7 +34,7 @@ EXPOSE 8081/tcp
 FROM appbase as production
 # ==============================
 
-COPY --chown=1001:1001 . /app/
+COPY --chown=1001:1001 . /opt/app-root/src/
 
 RUN SECRET_KEY="only-used-for-collectstatic" KUKKUU_HASHID_SALT="only-used-for-collectstatic" python manage.py collectstatic
 
