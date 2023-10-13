@@ -1,6 +1,6 @@
-import { Selector } from 'testcafe';
-import { screen } from '@testing-library/testcafe';
-import { envUrl, testUiUsername, testUiUserPassword } from '../utils/settings';
+import { Selector } from "testcafe";
+import { screen } from "@testing-library/testcafe";
+import { envUrl, testUiUsername, testUiUserPassword } from "../utils/settings";
 
 export const user = {
   username: `${testUiUsername()}`,
@@ -8,21 +8,28 @@ export const user = {
 };
 
 export const userList = {
-  selectByUsername: Selector('tr').withText(`${testUiUsername()}`),
-  selectByEmail: Selector('.field-email').withText(`${testUiUsername()}`).sibling('.field-username').child('a'),
+  selectByUsername: Selector("tr").withText(`${testUiUsername()}`),
+  selectByEmail: Selector(".field-email")
+    .withText(`${testUiUsername()}`)
+    .sibling(".field-username")
+    .child("a"),
 };
 
 export const userAdd = {
-  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  saveButton: screen.getByRole("button", {
+    name: /Tallenna ja poistu|^Save$/i,
+  }),
   username: screen.getByLabelText(/Käyttäjätunnus:|Username:/i),
   password: screen.getByLabelText(/Salasana:|Password:/i),
-  passwordConfirmation: screen.getByLabelText(/Salasanan vahvistaminen:|Password confirmation:/i),
+  passwordConfirmation: screen.getByLabelText(
+    /Salasanan vahvistaminen:|Password confirmation:/i
+  ),
   // user change
   staffStatus: screen.getByLabelText(/Ylläpitäjä|Staff status/i),
-  staffStatusCheckbox: Selector('#id_is_staff'),
+  staffStatusCheckbox: Selector("#id_is_staff"),
   superUserStatus: screen.getByLabelText(/Pääkäyttäjä|Superuser status/i),
-  superUserStatusCheckbox: Selector('#id_is_superuser'),
-  chooseAllPermissions: Selector('#id_user_permissions_add_all_link'),
+  superUserStatusCheckbox: Selector("#id_is_superuser"),
+  chooseAllPermissions: Selector("#id_user_permissions_add_all_link"),
 };
 
 export const route = () => `${envUrl()}/admin/users/user/`;
@@ -52,18 +59,15 @@ export const tunnistamoUser = async (t: TestController) => {
   await t.click(userList.selectByEmail);
 
   // these needs to be checked
-  if (! await userAdd.staffStatusCheckbox.checked) {
-    await t.click(userAdd.staffStatus)
+  if (!(await userAdd.staffStatusCheckbox.checked)) {
+    await t.click(userAdd.staffStatus);
   }
-  if (! await userAdd.superUserStatusCheckbox.checked) {
-    await t.click(userAdd.superUserStatus)
+  if (!(await userAdd.superUserStatusCheckbox.checked)) {
+    await t.click(userAdd.superUserStatus);
   }
 
-  await t
-    .click(userAdd.chooseAllPermissions)
-    .click(userAdd.saveButton);
+  await t.click(userAdd.chooseAllPermissions).click(userAdd.saveButton);
 };
-
 
 export const userExists = async (t: TestController) => {
   await t.navigateTo(route());
