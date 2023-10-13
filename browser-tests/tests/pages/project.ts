@@ -1,18 +1,20 @@
-import { Selector } from 'testcafe';
-import { screen } from '@testing-library/testcafe';
-import { envUrl } from '../utils/settings';
+import { Selector } from "testcafe";
+import { screen } from "@testing-library/testcafe";
+import { envUrl } from "../utils/settings";
 
 const year = new Date().getFullYear();
 
 export const project = {
   name: "Testi",
   year: year.toString(),
-  selectByYear: Selector('tr').withText(year.toString()),
+  selectByYear: Selector("tr").withText(year.toString()),
 };
 export const projectAdd = {
-  saveButton: screen.getByText(/Tallenna ja poistu|Save/i),
+  saveButton: screen.getByRole("button", {
+    name: /Tallenna ja poistu|^Save$/i,
+  }),
   name: screen.getByLabelText(/Nimi:|Name:/i),
-  year: screen.getByLabelText('Year:'),
+  year: screen.getByLabelText("Year:"),
 };
 
 export const route = () => `${envUrl()}/admin/projects/project/`;
