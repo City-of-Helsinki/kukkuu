@@ -277,6 +277,7 @@ class Event(TimestampedModel, TranslatableModel):
     class Meta:
         verbose_name = _("event")
         verbose_name_plural = _("events")
+        ordering = ["created_at", "id"]
 
     def __str__(self):
         name = self.safe_translation_getter("name", super().__str__())
