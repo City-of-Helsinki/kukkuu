@@ -15,7 +15,6 @@ from graphene_django import DjangoConnectionField
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_relay import from_global_id
-from graphql_relay.connection.arrayconnection import offset_to_cursor
 
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
@@ -519,20 +518,12 @@ class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
 
     @classmethod
     def connection_resolver(cls, *args, **kwargs):
-        has_limit_or_offset = "limit" in kwargs or "offset" in kwargs
+        limit = kwargs.get("limit")
         has_cursor = any(arg in kwargs for arg in ("first", "last", "after", "before"))
-
-        if has_limit_or_offset:
+        if limit:
             if has_cursor:
                 raise ApiUsageError("Cannot use both offset and cursor pagination.")
-
-            limit = kwargs.get("limit")
-            if limit is not None:
-                kwargs["first"] = limit
-            offset = kwargs.get("offset")
-            if offset is not None:
-                kwargs["after"] = offset_to_cursor(offset - 1)
-
+            kwargs["first"] = limit
         return super().connection_resolver(*args, **kwargs)
 
 
