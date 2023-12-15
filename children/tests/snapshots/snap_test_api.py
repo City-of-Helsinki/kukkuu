@@ -154,30 +154,42 @@ snapshots["test_children_offset_pagination[10-None] 1"] = {
     "data": {
         "children": {
             "edges": [
-                {"node": {"lastName": "0"}},
                 {"node": {"lastName": "1"}},
                 {"node": {"lastName": "2"}},
                 {"node": {"lastName": "3"}},
                 {"node": {"lastName": "4"}},
+                {"node": {"lastName": "5"}},
             ]
         }
     }
 }
 
 snapshots["test_children_offset_pagination[2-2] 1"] = {
-    "data": {"children": {"edges": [{"node": {"lastName": "4"}}]}}
+    "data": {
+        "children": {
+            "edges": [{"node": {"lastName": "3"}}, {"node": {"lastName": "4"}}]
+        }
+    }
 }
 
 snapshots["test_children_offset_pagination[2-None] 1"] = {
     "data": {
         "children": {
-            "edges": [{"node": {"lastName": "0"}}, {"node": {"lastName": "1"}}]
+            "edges": [{"node": {"lastName": "1"}}, {"node": {"lastName": "2"}}]
         }
     }
 }
 
 snapshots["test_children_offset_pagination[None-2] 1"] = {
-    "data": {"children": {"edges": [{"node": {"lastName": "4"}}]}}
+    "data": {
+        "children": {
+            "edges": [
+                {"node": {"lastName": "3"}},
+                {"node": {"lastName": "4"}},
+                {"node": {"lastName": "5"}},
+            ]
+        }
+    }
 }
 
 snapshots["test_children_offset_pagination[None-5] 1"] = {

@@ -10,6 +10,7 @@ from django.utils.timezone import localtime, now
 from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
 from graphql_relay import to_global_id
+from graphql_relay.connection.arrayconnection import offset_to_cursor
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
@@ -1218,12 +1219,18 @@ def test_children_cursor_and_offset_pagination_cannot_be_combined(
 
 @pytest.mark.parametrize(
     "limit, offset",
-    ((None, 2), (2, None), (2, 2), (10, None), (None, 5)),
+    (
+        (None, 2),  # the 3 last ones, after 2nd -- 3,4,5
+        (2, None),  # only 2 from the start -- 1,2
+        (2, 2),  # only 2 after 2nd -- 3,4
+        (10, None),  # all from start -- 1,2,3,4,5
+        (None, 5),
+    ),  # none, because offset in the last one
 )
 def test_children_offset_pagination(
     snapshot, project_user_api_client, project, limit, offset
 ):
-    for i in range(5):
+    for i in range(1, 6):
         ChildWithGuardianFactory(last_name=i, project=project)
     variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
 
@@ -1233,6 +1240,148 @@ def test_children_offset_pagination(
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize(
+    "page, expected_item_count_in_page",
+    (
+        (1, 20),  # 1st page
+        (2, 20),  # 2nd page
+        (3, 20),  # 3rd page - a page that has been problematic earlier
+        (4, 10),  # 4th page - a page that should be halfly filled
+        (5, 0),  # 5th page - a page out of scope
+    ),
+)
+def test_children_pagination_result_set(
+    project_user_api_client, project, page, expected_item_count_in_page
+):
+    """
+    Check that the pages has right result set when there is a greater
+    amount of data.
+    NOTE: There has been problems when there has been
+    a greater amount of data (~70 items in KK-1049) and page size
+    has been over 20. Then the pages after 2nd page all failed.
+    """
+    # There should be tens of items of data and the last page should not be full.
+    total_count = 70
+    limit = 20  # There should be more than 2 pages.
+    offset = (page - 1) * limit
+
+    ChildWithGuardianFactory.create_batch(total_count, project=project)
+
+    variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
+    executed = project_user_api_client.execute(
+        CHILDREN_PAGINATION_QUERY,
+        variables=variables,
+    )
+
+    assert len(executed["data"]["children"]["edges"]) == expected_item_count_in_page
+
+
+@pytest.mark.parametrize("page", list(range(1, 5)))
+@pytest.mark.parametrize("limit", [2, 10, 20, 25])
+def test_children_pagination_cursor_works_the_same_with_offset_and_after(
+    project_user_api_client, project, page, limit
+):
+    """
+    Check that the query returns same results no matter which one
+    is used with the pagination,the combination of a limit and an offset
+    or a first and an after.
+    NOTE: There has been problems when there has been a greater amount of data
+    (~70 items in KK-1049) and page size has been over 20.
+    Then the pages after 2nd page all failed.
+    """
+    query = """
+    query Children($projectId: ID!, $limit: Int, $offset: Int, $after: String, $first: Int) {
+        children(projectId: $projectId, limit: $limit, offset: $offset, after: $after, first: $first) {
+            count
+            edges {
+            cursor
+            node {
+                lastName
+            }
+            }
+        }
+    }
+    """  # noqa: E501,
+
+    ChildWithGuardianFactory.create_batch(110, project=project)
+
+    offset = (page - 1) * limit
+    executed_with_offset = project_user_api_client.execute(
+        query,
+        variables={
+            "projectId": get_global_id(project),
+            "limit": limit,
+            "offset": offset,
+        },
+    )
+
+    # NOTE: There will be 1 result less in the after-query,
+    # because the after-parameter is read from the first result
+    # and the cursor set in after, is not included in the result set.
+    first = limit - 1
+    after = executed_with_offset["data"]["children"]["edges"][0]["cursor"]
+    executed_with_after = project_user_api_client.execute(
+        query,
+        variables={
+            "projectId": get_global_id(project),
+            "first": first,
+            "after": after,
+        },
+    )
+
+    assert len(executed_with_after["data"]["children"]["edges"]) == first
+    assert (
+        executed_with_after["data"]["children"]["edges"]
+        == executed_with_offset["data"]["children"]["edges"][1:]
+    )
+
+
+@pytest.mark.parametrize("page", list(range(1, 5)))
+@pytest.mark.parametrize("limit", [1, 2, 10, 20])
+def test_children_pagination_cursor_generation(
+    project_user_api_client, project, page, limit
+):
+    """
+    Test that the cursors are created as expected.
+    NOTE: There has been problems when there has been a greater amount of data
+    (~70 items in KK-1049) and page size has been over 20.
+    Then the pages after 2nd page all failed.
+    """
+    total_count = 100
+    offset = (page - 1) * limit
+
+    ChildWithGuardianFactory.create_batch(total_count, project=project)
+
+    query = """
+    query Children($projectId: ID!, $limit: Int, $offset: Int) {
+        children(projectId: $projectId, limit: $limit, offset: $offset) {
+            edges {
+                cursor
+            }
+        }
+    }
+    """  # noqa: E501
+
+    executed_with_offset = project_user_api_client.execute(
+        query,
+        variables={
+            "projectId": get_global_id(project),
+            "limit": limit,
+            "offset": offset,
+        },
+    )
+
+    cursors = [
+        edge["cursor"] for edge in executed_with_offset["data"]["children"]["edges"]
+    ]
+    assert len(cursors) == limit
+
+    expected_cursors = [
+        offset_to_cursor(offset + index) for index, _ in enumerate(cursors)
+    ]
+    assert cursors == expected_cursors
 
 
 @pytest.mark.parametrize("pagination", (None, "limit", "first"))
