@@ -1,6 +1,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [1.17.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.1...kukkuu-v1.17.2) (2023-12-15)
+
+
+### Bug Fixes
+
+* Dockerfile base on ubi image DEVOPS-560 ([#329](https://github.com/City-of-Helsinki/kukkuu/issues/329)) ([6c788ee](https://github.com/City-of-Helsinki/kukkuu/commit/6c788ee42e381eb10e5a359a73cc597e09634495))
+* Pagination of the DjangoFilterAndOffsetConnectionField and the Children-query ([526055d](https://github.com/City-of-Helsinki/kukkuu/commit/526055decaffa646784a1a3813d6c58d56236ebd))
+
 ## [1.17.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.0...kukkuu-v1.17.1) (2023-06-29)
 
 
