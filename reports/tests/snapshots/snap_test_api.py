@@ -38,7 +38,7 @@ snapshots["test_children_endpoint 1"] = [
         "birthyear": 2020,
         "child_birthyear_postal_code_guardian_emails_hash": "f1694b9c7d7a45c8606d9506f171025079940fcc97d5e125e1cc73495461f378",
         "child_name_birthyear_postal_code_guardian_emails_hash": "92d10305295a1210620ae3158c5aeecc24d9018be279042e8226d120cbfdb978",
-        "contact_language": "swe",
+        "contact_language": "eng",
         "languages_spoken_at_home": [],
         "postal_code": "44444",
         "registration_date": "2021-04-06",

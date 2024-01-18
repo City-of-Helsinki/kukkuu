@@ -439,7 +439,6 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
         name = graphene.String()
-        birthyear = graphene.Int()
         postal_code = graphene.String()
         relationship = RelationshipInput()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
