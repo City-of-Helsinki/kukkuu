@@ -651,6 +651,7 @@ UPDATE_CHILD_VARIABLES = {
 
 
 def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_guardian):
+    original_birthdate = child_with_user_guardian.birthdate
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
 
@@ -665,6 +666,7 @@ def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_gu
         guardian=guardian_api_client.user.guardian, child=child_with_user_guardian
     )
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
+    assert child_with_user_guardian.birthdate == original_birthdate
 
 
 def test_update_child_mutation_should_have_no_required_fields(
@@ -703,13 +705,15 @@ def test_update_child_mutation_postal_code_validation(
 def test_update_child_mutation_birthdate_validation(
     guardian_api_client, illegal_birthdate, child_with_user_guardian
 ):
+    """
+    Updating the birthdate is deprecated and not possible anymore:
+    The update of the field will be totally ignored.
+    """
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
     variables["input"]["birthdate"] = illegal_birthdate
-
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
-
-    assert "Illegal birthdate." in str(executed["errors"])
+    assert "errors" not in executed
 
 
 DELETE_CHILD_MUTATION = """

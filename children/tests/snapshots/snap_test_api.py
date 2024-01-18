@@ -695,7 +695,7 @@ snapshots["test_update_child_mutation 1"] = {
     "data": {
         "updateChild": {
             "child": {
-                "birthdate": "2020-01-01",
+                "birthdate": "2020-06-10",
                 "firstName": "Matti",
                 "lastName": "Mainio",
                 "postalCode": "00840",

@@ -306,19 +306,26 @@ class ChildInput(graphene.InputObjectType):
 
 
 def validate_child_data(child_data):
-    if "postal_code" in child_data:
-        try:
-            postal_code_validator(child_data["postal_code"])
-        except ValidationError as e:
-            raise DataValidationError(e.message)
-    if "birthdate" in child_data:
-        birth_year = child_data["birthdate"].year
-        if (
-            child_data["birthdate"] > localdate()
-            or not Project.objects.filter(year=birth_year).exists()
-        ):
-            raise DataValidationError("Illegal birthdate.")
-    return child_data
+    def _validate_postal_code(child_data):
+        if "postal_code" in child_data:
+            try:
+                postal_code_validator(child_data["postal_code"])
+            except ValidationError as e:
+                raise DataValidationError(e.message)
+        return child_data
+
+    def _validate_birthdate(child_data):
+        """@Deprecated: The birthdate should not be editable anymore"""
+        if "birthdate" in child_data and "id" not in child_data:
+            birth_year = child_data["birthdate"].year
+            if (
+                child_data["birthdate"] > localdate()
+                or not Project.objects.filter(year=birth_year).exists()
+            ):
+                raise DataValidationError("Illegal birthdate.")
+        return child_data
+
+    return _validate_birthdate(_validate_postal_code(child_data))
 
 
 class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
@@ -445,7 +452,9 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
         id = graphene.ID(required=True)
         first_name = graphene.String()
         last_name = graphene.String()
-        birthdate = graphene.Date()
+        birthdate = graphene.Date(
+            description="Deprecated: The birthdate field is not editable anymore!"
+        )
         postal_code = graphene.String()
         relationship = RelationshipInput()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
@@ -456,6 +465,9 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        kwargs.pop(
+            "birthdate", None
+        )  # The birthdate update should be ignored -- it's deprecated.
         validate_child_data(kwargs)
         user = info.context.user
         child_global_id = kwargs.pop("id")
