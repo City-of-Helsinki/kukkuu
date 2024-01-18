@@ -188,3 +188,7 @@ class Relationship(models.Model):
     class Meta:
         verbose_name = _("relationship")
         verbose_name_plural = _("relationships")
+        ordering = [
+            "guardian",
+            "child",
+        ]

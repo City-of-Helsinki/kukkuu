@@ -53,6 +53,23 @@ LANGUAGE_CHOICES = [
     (OTHER_LANGUAGE_API_NAME, "Other language"),
 ]
 
+CONTACT_LANGUAGE_TO_LANGUAGE = {
+    "fi": "fin",
+    "sv": "swe",
+    "en": "eng",
+}
+
+CONTACT_LANGUAGE_PRIORITIES = ["fi", "en", "sv"]
+
+
+def get_primary_contact_language(contact_languages: List[str]):
+    return [
+        contact_lang
+        for lang in CONTACT_LANGUAGE_PRIORITIES
+        for contact_lang in contact_languages
+        if contact_lang == lang
+    ][0]
+
 
 @extend_schema_serializer(
     examples=[
@@ -133,11 +150,11 @@ class ChildSerializer(serializers.ModelSerializer):
         )
     )
     def get_contact_language(self, obj: Child) -> str:
-        return {
-            "fi": "fin",
-            "sv": "swe",
-            "en": "eng",
-        }[obj.guardians.all()[0].language]
+        contact_languages = [
+            guardian.language for guardian in list(obj.guardians.all())
+        ]
+        primary_contact_lang = get_primary_contact_language(contact_languages)
+        return CONTACT_LANGUAGE_TO_LANGUAGE[primary_contact_lang]
 
     @extend_schema_field(
         serializers.ListField(child=serializers.ChoiceField(choices=LANGUAGE_CHOICES))
@@ -160,6 +177,7 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 to_attr="prefetched_languages_spoken_at_home",
             ),
         )
+        .prefetch_related("guardians")
         .order_by("last_name", "first_name")
     )
     serializer_class = ChildSerializer
