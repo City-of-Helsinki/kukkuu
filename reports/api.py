@@ -133,11 +133,12 @@ class ChildSerializer(serializers.ModelSerializer):
         )
     )
     def get_contact_language(self, obj: Child) -> str:
+        primary_contact_lang = obj.guardians.all().order_by("created_at")[0].language
         return {
             "fi": "fin",
             "sv": "swe",
             "en": "eng",
-        }[obj.guardians.all()[0].language]
+        }[primary_contact_lang]
 
     @extend_schema_field(
         serializers.ListField(child=serializers.ChoiceField(choices=LANGUAGE_CHOICES))

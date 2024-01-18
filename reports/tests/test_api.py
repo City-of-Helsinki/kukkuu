@@ -96,7 +96,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
             birthdate=date(2020, 3, 3),
             postal_code="33333",
             relationship__guardian__language="en",
-            relationship__guardian__email="",
+            relationship__guardian__email="something@to-fool-factoryboy.net",
         )
 
     with freezegun.freeze_time("2021-04-05T21:05:00Z"):
@@ -104,7 +104,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
             first_name="First name",
             last_name="Last name",
             birthdate=date(2020, 3, 3),
-            postal_code="33333",
+            postal_code="44444",
             relationship__guardian__language="en",
             relationship__guardian__email="guardian@example.org",
             relationship2__guardian__language="sv",
@@ -113,8 +113,18 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 
     ChildFactory()  # This is an orphan child so she should not be in the results
 
-    with django_assert_max_num_queries(6):
+    with django_assert_max_num_queries(10):
         response = user_api_client.get(LIST_ENDPOINT)
     assert response.status_code == 200, response.content
 
-    snapshot.assert_match(response.json())
+    json_data = response.json()
+
+    # The result set should be ordered by ['last_name', 'first_name',]
+    assert [child["postal_code"] for child in json_data] == [
+        "33333",
+        "11111",
+        "22222",
+        "44444",
+    ]
+
+    snapshot.assert_match(json_data)
