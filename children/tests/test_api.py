@@ -627,7 +627,6 @@ UPDATE_CHILD_VARIABLES = {
     "input": {
         # "id" needs to be added when actually using these in the mutation
         "name": "Matti",
-        "birthyear": 2020,
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     }
@@ -635,6 +634,7 @@ UPDATE_CHILD_VARIABLES = {
 
 
 def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_guardian):
+    original_birthyear = child_with_user_guardian.birthyear
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
 
@@ -649,6 +649,7 @@ def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_gu
         guardian=guardian_api_client.user.guardian, child=child_with_user_guardian
     )
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
+    assert child_with_user_guardian.birthyear == original_birthyear
 
 
 def test_update_child_mutation_should_have_no_required_fields(
@@ -684,7 +685,7 @@ def test_update_child_mutation_postal_code_validation(
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
-def test_update_child_mutation_birthyear_validation(
+def test_update_child_mutation_birthdate_validation_illegal_date(
     guardian_api_client, illegal_birthyear, child_with_user_guardian
 ):
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
@@ -693,7 +694,19 @@ def test_update_child_mutation_birthyear_validation(
 
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
-    assert "Illegal birthyear." in str(executed["errors"])
+    assert "GENERAL_ERROR" in str(executed["errors"])
+
+
+def test_update_child_mutation_birthdate_not_mutable_on_update(
+    guardian_api_client, child_with_user_guardian
+):
+    variables = deepcopy(UPDATE_CHILD_VARIABLES)
+    variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
+    variables["input"]["birthdate"] = "2020-01-01"
+
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+
+    assert "GENERAL_ERROR" in str(executed["errors"])
 
 
 DELETE_CHILD_MUTATION = """

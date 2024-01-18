@@ -602,7 +602,7 @@ snapshots["test_upcoming_events_and_event_groups 1"] = {
 snapshots["test_update_child_mutation 1"] = {
     "data": {
         "updateChild": {
-            "child": {"birthyear": 2020, "name": "Matti", "postalCode": "00840"}
+            "child": {"birthyear": 2021, "name": "Matti", "postalCode": "00840"}
         }
     }
 }
