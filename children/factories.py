@@ -7,7 +7,9 @@ from users.factories import GuardianFactory
 
 class ChildFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("name")
-    birthyear = factory.Faker("date_this_year", before_today=True, after_today=False)
+    birthyear = factory.Faker(
+        "random_int", min=2018, max=2023
+    )  # NOTE: Many of the tests are freezed to 2020
     postal_code = factory.Faker("postcode", locale="fi_FI")
     project = factory.LazyFunction(lambda: Project.objects.get(year=2020))
 
