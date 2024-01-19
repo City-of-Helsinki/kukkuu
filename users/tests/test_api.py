@@ -37,7 +37,7 @@ query Guardians {
               type
               child {
                 name
-                birthdate
+                birthyear
                 project {
                   year
                 }
@@ -119,7 +119,7 @@ query MyProfile {
           type
           child {
             name
-            birthdate
+            birthyear
             postalCode
           }
         }

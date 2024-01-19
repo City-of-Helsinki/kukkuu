@@ -82,11 +82,11 @@ def test_enrolment_handling_when_child_deleted(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
         ("name", "Peter", "Mary", False),
-        ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
+        ("birthyear", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],
 )
-def test_child_birthdate_postal_code_guardian_emails_hash(
+def test_child_birthyear_postal_code_guardian_emails_hash(
     field_name: str,
     orig_field_value: Union[str, date],
     later_field_value: Union[str, date],
@@ -94,9 +94,9 @@ def test_child_birthdate_postal_code_guardian_emails_hash(
 ):
     child: Child = ChildWithGuardianFactory()
     setattr(child, field_name, orig_field_value)
-    orig_hash = child.birthdate_postal_code_guardian_emails_hash
+    orig_hash = child.birthyear_postal_code_guardian_emails_hash
     setattr(child, field_name, later_field_value)
-    later_hash = child.birthdate_postal_code_guardian_emails_hash
+    later_hash = child.birthyear_postal_code_guardian_emails_hash
     assert should_change_hash == (orig_hash != later_hash)
 
 
@@ -105,11 +105,11 @@ def test_child_birthdate_postal_code_guardian_emails_hash(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
         ("name", "Peter", "Mary", True),
-        ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
+        ("birthyear", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],
 )
-def test_child_name_birthdate_postal_code_guardian_emails_hash(
+def test_child_name_birthyear_postal_code_guardian_emails_hash(
     field_name: str,
     orig_field_value: Union[str, date],
     later_field_value: Union[str, date],
@@ -117,9 +117,9 @@ def test_child_name_birthdate_postal_code_guardian_emails_hash(
 ):
     child = ChildWithGuardianFactory()
     setattr(child, field_name, orig_field_value)
-    orig_hash = child.name_birthdate_postal_code_guardian_emails_hash
+    orig_hash = child.name_birthyear_postal_code_guardian_emails_hash
     setattr(child, field_name, later_field_value)
-    later_hash = child.name_birthdate_postal_code_guardian_emails_hash
+    later_hash = child.name_birthyear_postal_code_guardian_emails_hash
     assert should_change_hash == (orig_hash != later_hash)
 
 
@@ -127,8 +127,8 @@ def test_child_name_birthdate_postal_code_guardian_emails_hash(
 @pytest.mark.parametrize(
     "hash_property_name",
     [
-        "birthdate_postal_code_guardian_emails_hash",
-        "name_birthdate_postal_code_guardian_emails_hash",
+        "birthyear_postal_code_guardian_emails_hash",
+        "name_birthyear_postal_code_guardian_emails_hash",
     ],
 )
 def test_child_hashes_email_change(hash_property_name: str):

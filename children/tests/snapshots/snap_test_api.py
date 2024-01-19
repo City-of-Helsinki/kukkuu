@@ -53,7 +53,7 @@ snapshots["test_active_internal_and_ticketmaster_enrolments 1"] = {
 snapshots["test_add_child_mutation 1"] = {
     "data": {
         "addChild": {
-            "child": {"birthdate": "2020-11-11", "name": "Pekka", "postalCode": "00820"}
+            "child": {"birthyear": "2020-11-11", "name": "Pekka", "postalCode": "00820"}
         }
     }
 }
@@ -96,7 +96,7 @@ snapshots["test_available_events_and_event_groups 1"] = {
 snapshots["test_child_query 1"] = {
     "data": {
         "child": {
-            "birthdate": "2020-04-06",
+            "birthyear": "2020-04-06",
             "name": "Richard Hayes",
             "postalCode": "57776",
             "relationships": {
@@ -121,7 +121,7 @@ snapshots["test_child_query 1"] = {
 snapshots["test_child_query_not_own_child_project_user 1"] = {
     "data": {
         "child": {
-            "birthdate": "2020-04-06",
+            "birthyear": "2020-04-06",
             "name": "Richard Hayes",
             "postalCode": "57776",
             "relationships": {
@@ -191,7 +191,7 @@ snapshots["test_children_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-04-06",
+                        "birthyear": "2020-04-06",
                         "name": "Richard Hayes",
                         "postalCode": "57776",
                         "relationships": {
@@ -239,7 +239,7 @@ snapshots["test_children_query_project_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-05-21",
+                        "birthyear": "2020-05-21",
                         "name": "Same project - Should be returned 1/1",
                         "postalCode": "73557",
                         "relationships": {
@@ -270,7 +270,7 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-08-09",
+                        "birthyear": "2020-08-09",
                         "name": "Not own child same project - Should be returned 3/3",
                         "postalCode": "27011",
                         "relationships": {
@@ -292,7 +292,7 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
                 },
                 {
                     "node": {
-                        "birthdate": "2020-06-08",
+                        "birthyear": "2020-06-08",
                         "name": "Own child another project - Should be returned 2/3",
                         "postalCode": "80346",
                         "relationships": {
@@ -314,7 +314,7 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
                 },
                 {
                     "node": {
-                        "birthdate": "2020-11-15",
+                        "birthyear": "2020-11-15",
                         "name": "Own child same project - Should be returned 1/3",
                         "postalCode": "50649",
                         "relationships": {
@@ -420,7 +420,7 @@ snapshots["test_submit_children_and_guardian 1"] = {
         "submitChildrenAndGuardian": {
             "children": [
                 {
-                    "birthdate": "2020-01-01",
+                    "birthyear": "2020-01-01",
                     "name": "Matti",
                     "postalCode": "00840",
                     "relationships": {
@@ -440,7 +440,7 @@ snapshots["test_submit_children_and_guardian 1"] = {
                     },
                 },
                 {
-                    "birthdate": "2020-02-02",
+                    "birthyear": "2020-02-02",
                     "name": "Jussi",
                     "postalCode": "00820",
                     "relationships": {
@@ -481,7 +481,7 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
         "submitChildrenAndGuardian": {
             "children": [
                 {
-                    "birthdate": "2020-01-01",
+                    "birthyear": "2020-01-01",
                     "name": "Matti",
                     "postalCode": "00840",
                     "relationships": {
@@ -501,7 +501,7 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                     },
                 },
                 {
-                    "birthdate": "2020-02-02",
+                    "birthyear": "2020-02-02",
                     "name": "Jussi",
                     "postalCode": "00820",
                     "relationships": {
@@ -602,7 +602,7 @@ snapshots["test_upcoming_events_and_event_groups 1"] = {
 snapshots["test_update_child_mutation 1"] = {
     "data": {
         "updateChild": {
-            "child": {"birthdate": "2020-01-01", "name": "Matti", "postalCode": "00840"}
+            "child": {"birthyear": "2020-01-01", "name": "Matti", "postalCode": "00840"}
         }
     }
 }
@@ -611,7 +611,7 @@ snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
     "data": {
         "updateChild": {
             "child": {
-                "birthdate": "2020-12-03",
+                "birthyear": "2020-12-03",
                 "name": "Derek Perry",
                 "postalCode": "27011",
             }

@@ -94,13 +94,13 @@ def get_primary_contact_language(contact_languages: List[str]):
     ]
 )
 class ChildSerializer(serializers.ModelSerializer):
-    child_birthdate_postal_code_guardian_emails_hash = serializers.SerializerMethodField(  # noqa
-        help_text="Salted hash of child's birthdate, postal code and guardians' emails."
+    child_birthyear_postal_code_guardian_emails_hash = serializers.SerializerMethodField(  # noqa
+        help_text="Salted hash of child's birthyear, postal code and guardians' emails."
     )
-    child_name_birthdate_postal_code_guardian_emails_hash = (
+    child_name_birthyear_postal_code_guardian_emails_hash = (
         serializers.SerializerMethodField(
             help_text="Salted hash of child's name (i.e. first name and last name), "
-            "birthdate, postal code and guardians' emails."
+            "birthyear, postal code and guardians' emails."
         )
     )
     registration_date = serializers.SerializerMethodField()
@@ -114,8 +114,8 @@ class ChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = Child
         fields = [
-            "child_birthdate_postal_code_guardian_emails_hash",
-            "child_name_birthdate_postal_code_guardian_emails_hash",
+            "child_birthyear_postal_code_guardian_emails_hash",
+            "child_name_birthyear_postal_code_guardian_emails_hash",
             "registration_date",
             "birth_year",
             "postal_code",
@@ -123,26 +123,26 @@ class ChildSerializer(serializers.ModelSerializer):
             "languages_spoken_at_home",
         ]
 
-    def get_child_birthdate_postal_code_guardian_emails_hash(self, child: Child) -> str:
+    def get_child_birthyear_postal_code_guardian_emails_hash(self, child: Child) -> str:
         """
-        Salted hash of child's birthdate, postal code and guardians' emails.
+        Salted hash of child's birthyear, postal code and guardians' emails.
         """
-        return child.birthdate_postal_code_guardian_emails_hash
+        return child.birthyear_postal_code_guardian_emails_hash
 
-    def get_child_name_birthdate_postal_code_guardian_emails_hash(
+    def get_child_name_birthyear_postal_code_guardian_emails_hash(
         self, child: Child
     ) -> str:
         """
-        Salted hash of child's name (i.e. first name and last name), birthdate, postal
+        Salted hash of child's name (i.e. first name and last name), birthyear, postal
         code and guardians' emails.
         """
-        return child.name_birthdate_postal_code_guardian_emails_hash
+        return child.name_birthyear_postal_code_guardian_emails_hash
 
     def get_registration_date(self, obj: Child) -> date:
         return localdate(obj.created_at)
 
     def get_birth_year(self, obj: Child) -> int:
-        return obj.birthdate.year
+        return obj.birthyear.year
 
     @extend_schema_field(
         serializers.ChoiceField(
