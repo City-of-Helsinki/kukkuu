@@ -13,7 +13,7 @@ snapshots["test_child_free_spot_notifications_query 1"] = {
                 "edges": [
                     {
                         "node": {
-                            "child": {"firstName": "Subscriber"},
+                            "child": {"name": "Subscriber"},
                             "createdAt": "2020-12-12T00:00:00+00:00",
                             "id": "RnJlZVNwb3ROb3RpZmljYXRpb25TdWJzY3JpcHRpb25Ob2RlOjE=",
                             "occurrence": {"time": "1971-11-04T13:17:08+00:00"},
@@ -59,7 +59,7 @@ snapshots["test_occurrences_has_child_free_spot_notification_query 1"] = {
 snapshots["test_subscribe_to_free_spot_notification 1"] = {
     "data": {
         "subscribeToFreeSpotNotification": {
-            "child": {"firstName": "Subscriber"},
+            "child": {"name": "Subscriber"},
             "occurrence": {"time": "2020-12-26T00:00:00+00:00"},
         }
     }
@@ -68,7 +68,7 @@ snapshots["test_subscribe_to_free_spot_notification 1"] = {
 snapshots["test_unsubscribe_from_free_spot_notification 1"] = {
     "data": {
         "unsubscribeFromFreeSpotNotification": {
-            "child": {"firstName": "Subscriber"},
+            "child": {"name": "Subscriber"},
             "occurrence": {"time": "1971-11-04T13:17:08+00:00"},
         }
     }

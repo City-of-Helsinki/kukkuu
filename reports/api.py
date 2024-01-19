@@ -178,6 +178,6 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             ),
         )
         .prefetch_related("guardians")
-        .order_by("first_name")
+        .order_by("name")
     )
     serializer_class = ChildSerializer

@@ -81,7 +81,7 @@ def test_enrolment_handling_when_child_deleted(
 @pytest.mark.parametrize(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
-        ("first_name", "Peter", "Mary", False),
+        ("name", "Peter", "Mary", False),
         ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],
@@ -104,7 +104,7 @@ def test_child_birthdate_postal_code_guardian_emails_hash(
 @pytest.mark.parametrize(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
-        ("first_name", "Peter", "Mary", True),
+        ("name", "Peter", "Mary", True),
         ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],

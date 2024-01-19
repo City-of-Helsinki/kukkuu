@@ -6,7 +6,7 @@ from users.factories import GuardianFactory
 
 
 class ChildFactory(factory.django.DjangoModelFactory):
-    first_name = factory.Faker("first_name")
+    name = factory.Faker("name")
     birthdate = factory.Faker("date_this_year", before_today=True, after_today=False)
     postal_code = factory.Faker("postcode", locale="fi_FI")
     project = factory.LazyFunction(lambda: Project.objects.get(year=2020))

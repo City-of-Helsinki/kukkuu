@@ -261,7 +261,7 @@ query Occurrence($id: ID!) {
         edges{
           node{
             child{
-              firstName
+              name
             }
           }
         }
@@ -539,7 +539,7 @@ mutation EnrolOccurrence($input: EnrolOccurrenceMutationInput!) {
   enrolOccurrence(input: $input) {
     enrolment{
       child{
-        firstName
+        name
       }
       occurrence {
         time
@@ -560,7 +560,7 @@ mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
         time
     }
     child{
-        firstName
+        name
     }
   }
 }
@@ -1763,12 +1763,12 @@ def test_enrolment_visibility_project_user(
     project_user_api_client, snapshot, project, another_project
 ):
     enrolment = EnrolmentFactory(
-        child__first_name="ME ME ME",
+        child__name="ME ME ME",
         child__project=project,
         occurrence__event__project=project,
     )
     EnrolmentFactory(
-        child__first_name="NOT me",
+        child__name="NOT me",
         child__project=another_project,
         occurrence__event__project=another_project,
     )
@@ -1782,7 +1782,7 @@ def test_enrolment_visibility_project_user(
               edges {
                 node {
                   child {
-                    firstName
+                    name
                   }
                 }
               }
@@ -2821,7 +2821,7 @@ mutation AssignTicketSystemPassword($input: AssignTicketSystemPasswordMutationIn
       name
     }
     child {
-      firstName
+      name
     }
     password
   }
