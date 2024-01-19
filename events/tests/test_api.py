@@ -2822,7 +2822,6 @@ mutation AssignTicketSystemPassword($input: AssignTicketSystemPasswordMutationIn
     }
     child {
       firstName
-      lastName
     }
     password
   }

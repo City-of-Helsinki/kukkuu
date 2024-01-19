@@ -116,7 +116,7 @@ snapshots["test_add_ticketmaster_event 1"] = {
 snapshots["test_assign_ticket_system_password 1"] = {
     "data": {
         "assignTicketSystemPassword": {
-            "child": {"firstName": "Joshua", "lastName": "Jensen"},
+            "child": {"firstName": "Joshua"},
             "event": {"name": "Dog hospital number."},
             "password": "the correct password",
         }
@@ -285,7 +285,7 @@ snapshots["test_event_group_events_filtering_by_available_for_child_id 2"] = {
                 "edges": [
                     {
                         "node": {
-                            "name": "Performance race story capital city sing himself."
+                            "name": "Beautiful if his their. Stuff election stay every."
                         }
                     },
                     {"node": {"name": "ME ME ME"}},
@@ -437,6 +437,12 @@ Agree room laugh prevent make. Our very television beat at success decade.""",
     }
 }
 
+snapshots["test_event_ticket_system_password_counts 1"] = {
+    "data": {
+        "event": {"ticketSystem": {"freePasswordCount": 3, "usedPasswordCount": 2}}
+    }
+}
+
 snapshots["test_event_ticket_system_password_own_child_password_exists 1"] = {
     "data": {
         "event": {
@@ -445,12 +451,6 @@ snapshots["test_event_ticket_system_password_own_child_password_exists 1"] = {
                 "type": "TICKETMASTER",
             }
         }
-    }
-}
-
-snapshots["test_event_ticket_system_password_counts 1"] = {
-    "data": {
-        "event": {"ticketSystem": {"freePasswordCount": 3, "usedPasswordCount": 2}}
     }
 }
 

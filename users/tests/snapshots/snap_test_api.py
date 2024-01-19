@@ -13,20 +13,19 @@ snapshots["test_guardians_query_normal_user 1"] = {
                 {
                     "node": {
                         "email": "michellewalker@example.net",
-                        "firstName": "Dustin",
-                        "lastName": "Smith",
-                        "phoneNumber": "001-117-159-1023x20281",
+                        "firstName": "Ashley",
+                        "lastName": "Castillo",
+                        "phoneNumber": "011.715.9102x320",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-03-01",
-                                            "firstName": "Jason",
-                                            "lastName": "Owens",
+                                            "birthdate": "2020-07-21",
+                                            "firstName": "Sandra",
                                             "project": {"year": 2020},
                                         },
-                                        "type": "PARENT",
+                                        "type": "ADVOCATE",
                                     }
                                 }
                             ]
@@ -53,9 +52,8 @@ snapshots["test_guardians_query_project_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-07-20",
+                                            "birthdate": "2020-04-02",
                                             "firstName": "Jennifer",
-                                            "lastName": "Allen",
                                             "project": {"year": 2020},
                                         },
                                         "type": "ADVOCATE",
@@ -76,12 +74,11 @@ snapshots["test_guardians_query_project_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-07-09",
+                                            "birthdate": "2020-09-11",
                                             "firstName": "Shawn",
-                                            "lastName": "Douglas",
                                             "project": {"year": 2030},
                                         },
-                                        "type": "PARENT",
+                                        "type": "ADVOCATE",
                                     }
                                 }
                             ]
@@ -185,9 +182,8 @@ snapshots["test_my_profile_query 1"] = {
                     {
                         "node": {
                             "child": {
-                                "birthdate": "2020-11-25",
+                                "birthdate": "2020-12-10",
                                 "firstName": "Andrew",
-                                "lastName": "Eaton",
                                 "postalCode": "17159",
                             },
                             "type": "PARENT",

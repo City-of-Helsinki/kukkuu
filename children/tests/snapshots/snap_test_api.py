@@ -56,7 +56,6 @@ snapshots["test_add_child_mutation 1"] = {
             "child": {
                 "birthdate": "2020-11-11",
                 "firstName": "Pekka",
-                "lastName": "Perälä",
                 "postalCode": "00820",
             }
         }
@@ -101,21 +100,20 @@ snapshots["test_available_events_and_event_groups 1"] = {
 snapshots["test_child_query 1"] = {
     "data": {
         "child": {
-            "birthdate": "2020-06-24",
+            "birthdate": "2020-10-30",
             "firstName": "Michael",
-            "lastName": "Patton",
-            "postalCode": "55777",
+            "postalCode": "73557",
             "relationships": {
                 "edges": [
                     {
                         "node": {
                             "guardian": {
                                 "email": "michellewalker@example.net",
-                                "firstName": "Samantha",
-                                "lastName": "Bryant",
-                                "phoneNumber": "240-675-0649",
+                                "firstName": "Todd",
+                                "lastName": "Sellers",
+                                "phoneNumber": "124.067.5064x976",
                             },
-                            "type": "ADVOCATE",
+                            "type": "OTHER_GUARDIAN",
                         }
                     }
                 ]
@@ -127,16 +125,15 @@ snapshots["test_child_query 1"] = {
 snapshots["test_child_query_not_own_child_project_user 1"] = {
     "data": {
         "child": {
-            "birthdate": "2020-06-24",
+            "birthdate": "2020-10-30",
             "firstName": "Michael",
-            "lastName": "Patton",
-            "postalCode": "55777",
+            "postalCode": "73557",
             "relationships": {
                 "edges": [
                     {
                         "node": {
                             "guardian": {
-                                "email": "funderwood@example.com",
+                                "email": "jessica67@example.com",
                                 "firstName": "Blake",
                                 "lastName": "Newton",
                                 "phoneNumber": "976-380-3466x9727",
@@ -154,11 +151,11 @@ snapshots["test_children_offset_pagination[10-None] 1"] = {
     "data": {
         "children": {
             "edges": [
-                {"node": {"lastName": "1"}},
-                {"node": {"lastName": "2"}},
-                {"node": {"lastName": "3"}},
-                {"node": {"lastName": "4"}},
-                {"node": {"lastName": "5"}},
+                {"node": {"firstName": "1"}},
+                {"node": {"firstName": "2"}},
+                {"node": {"firstName": "3"}},
+                {"node": {"firstName": "4"}},
+                {"node": {"firstName": "5"}},
             ]
         }
     }
@@ -167,7 +164,7 @@ snapshots["test_children_offset_pagination[10-None] 1"] = {
 snapshots["test_children_offset_pagination[2-2] 1"] = {
     "data": {
         "children": {
-            "edges": [{"node": {"lastName": "3"}}, {"node": {"lastName": "4"}}]
+            "edges": [{"node": {"firstName": "3"}}, {"node": {"firstName": "4"}}]
         }
     }
 }
@@ -175,7 +172,7 @@ snapshots["test_children_offset_pagination[2-2] 1"] = {
 snapshots["test_children_offset_pagination[2-None] 1"] = {
     "data": {
         "children": {
-            "edges": [{"node": {"lastName": "1"}}, {"node": {"lastName": "2"}}]
+            "edges": [{"node": {"firstName": "1"}}, {"node": {"firstName": "2"}}]
         }
     }
 }
@@ -184,9 +181,9 @@ snapshots["test_children_offset_pagination[None-2] 1"] = {
     "data": {
         "children": {
             "edges": [
-                {"node": {"lastName": "3"}},
-                {"node": {"lastName": "4"}},
-                {"node": {"lastName": "5"}},
+                {"node": {"firstName": "3"}},
+                {"node": {"firstName": "4"}},
+                {"node": {"firstName": "5"}},
             ]
         }
     }
@@ -198,11 +195,7 @@ snapshots["test_children_offset_pagination[None-5] 1"] = {
 
 snapshots["test_children_project_filter 1"] = {
     "data": {
-        "children": {
-            "edges": [
-                {"node": {"firstName": "Only I", "lastName": "Should be returned"}}
-            ]
-        }
+        "children": {"edges": [{"node": {"firstName": "Only I should be returned"}}]}
     }
 }
 
@@ -212,21 +205,20 @@ snapshots["test_children_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-06-24",
+                        "birthdate": "2020-10-30",
                         "firstName": "Michael",
-                        "lastName": "Patton",
-                        "postalCode": "55777",
+                        "postalCode": "73557",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "guardian": {
                                             "email": "michellewalker@example.net",
-                                            "firstName": "Samantha",
-                                            "lastName": "Bryant",
-                                            "phoneNumber": "240-675-0649",
+                                            "firstName": "Todd",
+                                            "lastName": "Sellers",
+                                            "phoneNumber": "124.067.5064x976",
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "OTHER_GUARDIAN",
                                     }
                                 }
                             ]
@@ -242,74 +234,42 @@ snapshots["test_children_query_ordering 1"] = {
     "data": {
         "children": {
             "edges": [
-                {
-                    "node": {
-                        "createdAt": "2020-11-11T00:00:00+00:00",
-                        "firstName": "",
-                        "lastName": "",
-                    }
-                },
-                {
-                    "node": {
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "",
-                        "lastName": "",
-                    }
-                },
+                {"node": {"createdAt": "2020-11-11T00:00:00+00:00", "firstName": ""}},
+                {"node": {"createdAt": "2020-12-12T00:00:00+00:00", "firstName": ""}},
                 {
                     "node": {
                         "createdAt": "2020-12-12T00:00:00+00:00",
                         "firstName": "Alpha",
-                        "lastName": "",
                     }
                 },
                 {
                     "node": {
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "Beta",
-                        "lastName": "",
+                        "firstName": "Bravo",
+                    }
+                },
+                {
+                    "node": {
+                        "createdAt": "2020-12-12T00:00:00+00:00",
+                        "firstName": "Bravo",
                     }
                 },
                 {
                     "node": {
                         "createdAt": "2020-11-11T00:00:00+00:00",
-                        "firstName": "",
-                        "lastName": "Korhonen",
+                        "firstName": "Charlie",
                     }
                 },
                 {
                     "node": {
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "",
-                        "lastName": "Korhonen",
+                        "firstName": "Charlie",
                     }
                 },
                 {
                     "node": {
                         "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "Beta",
-                        "lastName": "Korhonen",
-                    }
-                },
-                {
-                    "node": {
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "",
-                        "lastName": "Virtanen",
-                    }
-                },
-                {
-                    "node": {
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "Alpha",
-                        "lastName": "Virtanen",
-                    }
-                },
-                {
-                    "node": {
-                        "createdAt": "2020-12-12T00:00:00+00:00",
-                        "firstName": "Beta",
-                        "lastName": "Virtanen",
+                        "firstName": "Delta",
                     }
                 },
             ]
@@ -324,8 +284,7 @@ snapshots["test_children_query_project_user 1"] = {
                 {
                     "node": {
                         "birthdate": "2020-05-21",
-                        "firstName": "Same project",
-                        "lastName": "Should be returned 1/1",
+                        "firstName": "Same project - Should be returned 1/1",
                         "postalCode": "73557",
                         "relationships": {
                             "edges": [
@@ -355,19 +314,18 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
             "edges": [
                 {
                     "node": {
-                        "birthdate": "2020-11-15",
-                        "firstName": "Own child same project",
-                        "lastName": "Should be returned 1/3",
-                        "postalCode": "50649",
+                        "birthdate": "2020-08-09",
+                        "firstName": "Not own child same project - Should be returned 3/3",
+                        "postalCode": "27011",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "michellewalker@example.net",
-                                            "firstName": "Michael",
-                                            "lastName": "Patton",
-                                            "phoneNumber": "355.777.6712x406",
+                                            "email": "hernandezdennis@example.org",
+                                            "firstName": "Sandra",
+                                            "lastName": "Meyer",
+                                            "phoneNumber": "072.770.8981",
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -379,8 +337,7 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
                 {
                     "node": {
                         "birthdate": "2020-06-08",
-                        "firstName": "Own child another project",
-                        "lastName": "Should be returned 2/3",
+                        "firstName": "Own child another project - Should be returned 2/3",
                         "postalCode": "80346",
                         "relationships": {
                             "edges": [
@@ -401,19 +358,18 @@ snapshots["test_children_query_project_user_and_guardian 1"] = {
                 },
                 {
                     "node": {
-                        "birthdate": "2020-08-09",
-                        "firstName": "Not own child same project",
-                        "lastName": "Should be returned 3/3",
-                        "postalCode": "27011",
+                        "birthdate": "2020-11-15",
+                        "firstName": "Own child same project - Should be returned 1/3",
+                        "postalCode": "50649",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "guardian": {
-                                            "email": "hernandezdennis@example.org",
-                                            "firstName": "Sandra",
-                                            "lastName": "Meyer",
-                                            "phoneNumber": "072.770.8981",
+                                            "email": "michellewalker@example.net",
+                                            "firstName": "Michael",
+                                            "lastName": "Patton",
+                                            "phoneNumber": "355.777.6712x406",
                                         },
                                         "type": "ADVOCATE",
                                     }
@@ -510,7 +466,6 @@ snapshots["test_submit_children_and_guardian 1"] = {
                 {
                     "birthdate": "2020-01-01",
                     "firstName": "Matti",
-                    "lastName": "Mainio",
                     "postalCode": "00840",
                     "relationships": {
                         "edges": [
@@ -531,7 +486,6 @@ snapshots["test_submit_children_and_guardian 1"] = {
                 {
                     "birthdate": "2020-02-02",
                     "firstName": "Jussi",
-                    "lastName": "Juonio",
                     "postalCode": "00820",
                     "relationships": {
                         "edges": [
@@ -573,7 +527,6 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                 {
                     "birthdate": "2020-01-01",
                     "firstName": "Matti",
-                    "lastName": "Mainio",
                     "postalCode": "00840",
                     "relationships": {
                         "edges": [
@@ -594,7 +547,6 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                 {
                     "birthdate": "2020-02-02",
                     "firstName": "Jussi",
-                    "lastName": "Juonio",
                     "postalCode": "00820",
                     "relationships": {
                         "edges": [
@@ -697,7 +649,6 @@ snapshots["test_update_child_mutation 1"] = {
             "child": {
                 "birthdate": "2020-01-01",
                 "firstName": "Matti",
-                "lastName": "Mainio",
                 "postalCode": "00840",
             }
         }
@@ -708,10 +659,9 @@ snapshots["test_update_child_mutation_should_have_no_required_fields 1"] = {
     "data": {
         "updateChild": {
             "child": {
-                "birthdate": "2020-06-10",
+                "birthdate": "2020-04-13",
                 "firstName": "Brandon",
-                "lastName": "Adams",
-                "postalCode": "27011",
+                "postalCode": "69727",
             }
         }
     }

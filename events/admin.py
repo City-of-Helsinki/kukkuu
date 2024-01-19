@@ -310,7 +310,6 @@ class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
     list_filter = ("event", PasswordAssignedListFilter)
     search_fields = (
         "child__first_name",
-        "child__last_name",
         "child__guardians__first_name",
         "child__guardians__last_name",
         "child__guardians__email",

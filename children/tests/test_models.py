@@ -82,7 +82,6 @@ def test_enrolment_handling_when_child_deleted(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
         ("first_name", "Peter", "Mary", False),
-        ("last_name", "Smith", "O'Brien", False),
         ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],
@@ -106,7 +105,6 @@ def test_child_birthdate_postal_code_guardian_emails_hash(
     "field_name,orig_field_value,later_field_value,should_change_hash",
     [
         ("first_name", "Peter", "Mary", True),
-        ("last_name", "Smith", "O'Brien", True),
         ("birthdate", date(2021, 1, 1), date(2022, 2, 2), True),
         ("postal_code", "12345", "10100", True),
     ],
