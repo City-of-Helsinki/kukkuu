@@ -63,7 +63,7 @@ def illegal_birthdate(request):
 
 def assert_child_matches_data(child_obj, child_data):
     child_data = child_data or {}
-    for field_name in ("firstName", "birthDate", "postalCode"):
+    for field_name in ("name", "birthDate", "postalCode"):
         if field_name in child_data:
             assert (
                 str(getattr(child_obj, to_snake_case(field_name)))
@@ -102,7 +102,7 @@ SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
 mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
   submitChildrenAndGuardian(input: $input) {
     children {
-      firstName
+      name
       birthdate
       postalCode
       relationships {
@@ -138,13 +138,13 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
 
 CHILDREN_DATA = [
     {
-        "firstName": "Matti",
+        "name": "Matti",
         "birthdate": "2020-01-01",
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     },
     {
-        "firstName": "Jussi",
+        "name": "Jussi",
         "birthdate": "2020-02-02",
         "postalCode": "00820",
     },
@@ -291,7 +291,7 @@ query Children {
   children {
     edges {
       node {
-        firstName
+        name
         birthdate
         postalCode
         relationships {
@@ -334,10 +334,10 @@ def test_children_query_project_user(
     snapshot, project_user_api_client, project, another_project
 ):
     ChildWithGuardianFactory(
-        first_name="Same project - Should be returned 1/1", project=project
+        name="Same project - Should be returned 1/1", project=project
     )
     ChildWithGuardianFactory(
-        first_name="Another project - Should NOT be returned",
+        name="Another project - Should NOT be returned",
         project=another_project,
     )
 
@@ -352,21 +352,21 @@ def test_children_query_project_user_and_guardian(
     guardian = GuardianFactory(user=project_user_api_client.user)
 
     ChildWithGuardianFactory(
-        first_name="Own child same project - Should be returned 1/3",
+        name="Own child same project - Should be returned 1/3",
         project=project,
         relationship__guardian=guardian,
     )
     ChildWithGuardianFactory(
-        first_name="Own child another project - Should be returned 2/3",
+        name="Own child another project - Should be returned 2/3",
         project=project,
         relationship__guardian=guardian,
     )
     ChildWithGuardianFactory(
-        first_name="Not own child same project - Should be returned 3/3",
+        name="Not own child same project - Should be returned 3/3",
         project=project,
     )
     ChildWithGuardianFactory(
-        first_name="Not own child another project - Should NOT be returned",
+        name="Not own child another project - Should NOT be returned",
         project=another_project,
     )
 
@@ -380,7 +380,7 @@ query Children($projectId: ID!) {
   children(projectId: $projectId) {
     edges {
       node {
-        firstName
+        name
       }
     }
   }
@@ -391,9 +391,9 @@ query Children($projectId: ID!) {
 def test_children_project_filter(
     snapshot, two_project_user_api_client, project, another_project
 ):
-    ChildWithGuardianFactory(first_name="Only I should be returned", project=project)
+    ChildWithGuardianFactory(name="Only I should be returned", project=project)
     ChildWithGuardianFactory(
-        first_name="I certainly should NOT be returned",
+        name="I certainly should NOT be returned",
         project=another_project,
     )
     variables = {"projectId": get_global_id(project)}
@@ -408,7 +408,7 @@ def test_children_project_filter(
 CHILD_QUERY = """
 query Child($id: ID!) {
   child(id: $id) {
-    firstName
+    name
     birthdate
     postalCode
     relationships {
@@ -513,7 +513,7 @@ ADD_CHILD_MUTATION = """
 mutation AddChild($input: AddChildMutationInput!) {
   addChild(input: $input) {
     child {
-      firstName
+      name
       birthdate
       postalCode
     }
@@ -523,7 +523,7 @@ mutation AddChild($input: AddChildMutationInput!) {
 
 ADD_CHILD_VARIABLES = {
     "input": {
-        "firstName": "Pekka",
+        "name": "Pekka",
         "birthdate": "2020-11-11",
         "postalCode": "00820",
         "relationship": {"type": "PARENT"},
@@ -613,7 +613,7 @@ UPDATE_CHILD_MUTATION = """
 mutation UpdateChild($input: UpdateChildMutationInput!) {
   updateChild(input: $input) {
     child {
-      firstName
+      name
       birthdate
       postalCode
     }
@@ -624,7 +624,7 @@ mutation UpdateChild($input: UpdateChildMutationInput!) {
 UPDATE_CHILD_VARIABLES = {
     "input": {
         # "id" needs to be added when actually using these in the mutation
-        "firstName": "Matti",
+        "name": "Matti",
         "birthdate": "2020-01-01",
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
@@ -1172,7 +1172,7 @@ query Children($projectId: ID!, $limit: Int, $offset: Int, $after: String, $firs
   children(projectId: $projectId, limit: $limit, offset: $offset, after: $after, first: $first) {
     edges {
       node {
-        firstName
+        name
       }
     }
   }
@@ -1213,7 +1213,7 @@ def test_children_offset_pagination(
     snapshot, project_user_api_client, project, limit, offset
 ):
     for i in range(1, 6):
-        ChildWithGuardianFactory(first_name=i, project=project)
+        ChildWithGuardianFactory(name=i, project=project)
     variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
 
     executed = project_user_api_client.execute(
@@ -1280,7 +1280,7 @@ def test_children_pagination_cursor_works_the_same_with_offset_and_after(
             edges {
             cursor
             node {
-                firstName
+                name
             }
             }
         }
@@ -1391,15 +1391,15 @@ query Children($projectId: ID!, $limit: Int, $first: Int) {
 
 def test_children_query_ordering(snapshot, project, project_user_api_client):
     with freeze_time("2020-12-12"):
-        ChildWithGuardianFactory(first_name="Alpha", project=project)
-        ChildWithGuardianFactory(first_name="Bravo", project=project)
-        ChildWithGuardianFactory(first_name="Bravo", project=project)
-        ChildWithGuardianFactory(first_name="Delta", project=project)
-        ChildWithGuardianFactory(first_name="Charlie", project=project)
-        ChildWithGuardianFactory(first_name="", project=project)
+        ChildWithGuardianFactory(name="Alpha", project=project)
+        ChildWithGuardianFactory(name="Bravo", project=project)
+        ChildWithGuardianFactory(name="Bravo", project=project)
+        ChildWithGuardianFactory(name="Delta", project=project)
+        ChildWithGuardianFactory(name="Charlie", project=project)
+        ChildWithGuardianFactory(name="", project=project)
     with freeze_time("2020-11-11"):
-        ChildWithGuardianFactory(first_name="", project=project)
-        ChildWithGuardianFactory(first_name="Charlie", project=project)
+        ChildWithGuardianFactory(name="", project=project)
+        ChildWithGuardianFactory(name="Charlie", project=project)
 
     executed = project_user_api_client.execute(
         """
@@ -1408,7 +1408,7 @@ def test_children_query_ordering(snapshot, project, project_user_api_client):
         edges {
           node {
             createdAt
-            firstName
+            name
           }
         }
       }

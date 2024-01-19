@@ -37,9 +37,7 @@ postal_code_validator = RegexValidator(
 
 
 class Child(UUIDPrimaryKeyModel, TimestampedModel):
-    first_name = models.CharField(
-        verbose_name=_("first name"), max_length=64, blank=True
-    )
+    name = models.CharField(verbose_name=_("name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
     postal_code = models.CharField(
         verbose_name=_("postal code"),
@@ -71,10 +69,10 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     class Meta:
         verbose_name = _("child")
         verbose_name_plural = _("children")
-        ordering = ["birthdate", "first_name"]
+        ordering = ["birthdate", "name"]
 
     def __str__(self):
-        return f"{self.first_name} ({self.birthdate})"
+        return f"{self.name} ({self.birthdate})"
 
     @transaction.atomic()
     def delete(self, *args, **kwargs):
@@ -137,7 +135,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         code and guardians' emails.
         """
         return self._hash(
-            [self.first_name] + self._salt_birthdate_postal_code_guardian_emails_list
+            [self.name] + self._salt_birthdate_postal_code_guardian_emails_list
         )
 
 

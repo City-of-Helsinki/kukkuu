@@ -116,7 +116,7 @@ snapshots["test_add_ticketmaster_event 1"] = {
 snapshots["test_assign_ticket_system_password 1"] = {
     "data": {
         "assignTicketSystemPassword": {
-            "child": {"firstName": "Joshua"},
+            "child": {"name": "Luis Lawson"},
             "event": {"name": "Dog hospital number."},
             "password": "the correct password",
         }
@@ -127,7 +127,7 @@ snapshots["test_child_enrol_occurence_from_different_project 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandon"},
+                "child": {"name": "Derek Perry"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
                 "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
@@ -147,7 +147,7 @@ snapshots["test_enrol_limit_reached[False-0-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandon"},
+                "child": {"name": "Derek Perry"},
                 "createdAt": "2020-11-11T00:00:00+00:00",
                 "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
             }
@@ -159,7 +159,7 @@ snapshots["test_enrol_limit_reached[False-1-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandon"},
+                "child": {"name": "Derek Perry"},
                 "createdAt": "2020-11-11T00:00:00+00:00",
                 "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
             }
@@ -171,7 +171,7 @@ snapshots["test_enrol_limit_reached[True-0-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandon"},
+                "child": {"name": "Derek Perry"},
                 "createdAt": "2020-11-11T00:00:00+00:00",
                 "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
             }
@@ -183,7 +183,7 @@ snapshots["test_enrol_limit_reached[True-1-False] 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandon"},
+                "child": {"name": "Derek Perry"},
                 "createdAt": "2020-11-11T00:00:00+00:00",
                 "occurrence": {"time": "2020-11-11T00:00:00+00:00"},
             }
@@ -195,7 +195,7 @@ snapshots["test_enrol_occurrence 1"] = {
     "data": {
         "enrolOccurrence": {
             "enrolment": {
-                "child": {"firstName": "Brandy"},
+                "child": {"name": "Sandra Brown"},
                 "createdAt": "2020-12-12T00:00:00+00:00",
                 "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
             }
@@ -207,7 +207,7 @@ snapshots["test_enrolment_visibility 1"] = {
     "data": {
         "occurrence": {
             "enrolmentCount": 4,
-            "enrolments": {"edges": [{"node": {"child": {"firstName": "Brandy"}}}]},
+            "enrolments": {"edges": [{"node": {"child": {"name": "Sandra Brown"}}}]},
             "event": {
                 "capacityPerOccurrence": 25,
                 "duration": 1,
@@ -253,7 +253,7 @@ Never news behind. Beat at success decade either enter everything. Newspaper for
 snapshots["test_enrolment_visibility_project_user 1"] = {
     "data": {
         "occurrence": {
-            "enrolments": {"edges": [{"node": {"child": {"firstName": "ME ME ME"}}}]}
+            "enrolments": {"edges": [{"node": {"child": {"name": "ME ME ME"}}}]}
         }
     }
 }
@@ -283,11 +283,7 @@ snapshots["test_event_group_events_filtering_by_available_for_child_id 2"] = {
         "eventGroup": {
             "events": {
                 "edges": [
-                    {
-                        "node": {
-                            "name": "Beautiful if his their. Stuff election stay every."
-                        }
-                    },
+                    {"node": {"name": "Election stay every something base."}},
                     {"node": {"name": "ME ME ME"}},
                 ]
             }
@@ -1327,7 +1323,7 @@ snapshots["test_set_enrolment_attendance[True] 1"] = {
 snapshots["test_unenrol_occurrence 1"] = {
     "data": {
         "unenrolOccurrence": {
-            "child": {"firstName": "Robert"},
+            "child": {"name": "David Perry"},
             "occurrence": {"time": "2020-12-12T00:00:00+00:00"},
         }
     }

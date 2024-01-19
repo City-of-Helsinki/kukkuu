@@ -87,7 +87,7 @@ class ChildNode(DjangoObjectType):
             "id",
             "created_at",
             "updated_at",
-            "first_name",
+            "name",
             "postal_code",
             "birthdate",
             "guardians",
@@ -105,9 +105,7 @@ class ChildNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by(
-            "first_name", "created_at"
-        )
+        return queryset.user_can_view(info.context.user).order_by("name", "created_at")
 
     @classmethod
     @login_required
@@ -296,7 +294,7 @@ class GuardianInput(graphene.InputObjectType):
 
 
 class ChildInput(graphene.InputObjectType):
-    first_name = graphene.String()
+    name = graphene.String()
     birthdate = graphene.Date(required=True)
     postal_code = graphene.String(required=True)
     relationship = RelationshipInput()
@@ -394,7 +392,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
 class AddChildMutation(graphene.relay.ClientIDMutation):
     class Input:
-        first_name = graphene.String()
+        name = graphene.String()
         birthdate = graphene.Date(required=True)
         postal_code = graphene.String(required=True)
         relationship = RelationshipInput()
@@ -440,7 +438,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
 class UpdateChildMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
-        first_name = graphene.String()
+        name = graphene.String()
         birthdate = graphene.Date()
         postal_code = graphene.String()
         relationship = RelationshipInput()

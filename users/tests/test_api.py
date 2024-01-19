@@ -36,7 +36,7 @@ query Guardians {
             node {
               type
               child {
-                firstName
+                name
                 birthdate
                 project {
                   year
@@ -82,7 +82,7 @@ def test_guardians_query_project_user(
     )
     RelationshipFactory(
         guardian=guardian_1,
-        child__first_name="Second child from another project - Should NOT be visible",
+        child__name="Second child from another project - Should NOT be visible",
         child__project=another_project,
     )
 
@@ -118,7 +118,7 @@ query MyProfile {
         node {
           type
           child {
-            firstName
+            name
             birthdate
             postalCode
           }

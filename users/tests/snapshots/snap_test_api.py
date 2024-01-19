@@ -13,16 +13,16 @@ snapshots["test_guardians_query_normal_user 1"] = {
                 {
                     "node": {
                         "email": "michellewalker@example.net",
-                        "firstName": "Ashley",
-                        "lastName": "Castillo",
-                        "phoneNumber": "011.715.9102x320",
+                        "firstName": "Dustin",
+                        "lastName": "Smith",
+                        "phoneNumber": "001-117-159-1023x20281",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-07-21",
-                                            "firstName": "Sandra",
+                                            "birthdate": "2020-09-11",
+                                            "name": "John Moore",
                                             "project": {"year": 2020},
                                         },
                                         "type": "ADVOCATE",
@@ -52,8 +52,8 @@ snapshots["test_guardians_query_project_user 1"] = {
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-04-02",
-                                            "firstName": "Jennifer",
+                                            "birthdate": "2020-04-01",
+                                            "name": "Cynthia Holmes",
                                             "project": {"year": 2020},
                                         },
                                         "type": "ADVOCATE",
@@ -68,17 +68,17 @@ snapshots["test_guardians_query_project_user 1"] = {
                         "email": "michellewalker@example.net",
                         "firstName": "Another project own guardian",
                         "lastName": "Should be visible 2/2",
-                        "phoneNumber": "+1-102-320-2813x072",
+                        "phoneNumber": "2320281307",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthdate": "2020-09-11",
-                                            "firstName": "Shawn",
+                                            "birthdate": "2020-07-09",
+                                            "name": "Jodi Douglas",
                                             "project": {"year": 2030},
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "PARENT",
                                     }
                                 }
                             ]
@@ -182,9 +182,9 @@ snapshots["test_my_profile_query 1"] = {
                     {
                         "node": {
                             "child": {
-                                "birthdate": "2020-12-10",
-                                "firstName": "Andrew",
-                                "postalCode": "17159",
+                                "birthdate": "2020-02-04",
+                                "name": "Stephen Charles",
+                                "postalCode": "71591",
                             },
                             "type": "PARENT",
                         }

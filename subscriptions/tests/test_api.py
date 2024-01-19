@@ -30,7 +30,7 @@ query ChildFreeSpotNotificationSubscriptionsQuery($id: ID!) {
           createdAt
           id
           child {
-            firstName
+            name
           }
           occurrence {
             time
@@ -67,7 +67,7 @@ query OccurrencesHasChildFreeSpotNotificationSubscription($childId: ID!) {
 @pytest.fixture
 def guardian_child(guardian_api_client):
     return ChildWithGuardianFactory(
-        first_name="Subscriber",
+        name="Subscriber",
         relationship__guardian__user=guardian_api_client.user,
     )
 
@@ -110,7 +110,7 @@ SUBSCRIBE_TO_FREE_SPOT_NOTIFICATION_MUTATION = """
 mutation SubscribeToFreeSpotNotification($input: SubscribeToFreeSpotNotificationMutationInput!) {
   subscribeToFreeSpotNotification(input: $input) {
     child {
-      firstName
+      name
     }
     occurrence {
       time
@@ -164,7 +164,7 @@ def test_cannot_subscribe_to_free_spot_notification_with_someone_elses_child(
     occurrence = OccurrenceFactory(
         event__published_at=now(), time=now() + timedelta(days=14)
     )
-    child = ChildWithGuardianFactory(first_name="Subscriber")
+    child = ChildWithGuardianFactory(name="Subscriber")
 
     executed = guardian_api_client.execute(
         SUBSCRIBE_TO_FREE_SPOT_NOTIFICATION_MUTATION,
@@ -205,7 +205,7 @@ UNSUBSCRIBE_FROM_FREE_SPOT_NOTIFICATION_MUTATION = """
 mutation UnsubscribeFromFreeSpotNotification($input: UnsubscribeFromFreeSpotNotificationMutationInput!) {
   unsubscribeFromFreeSpotNotification(input: $input) {
     child {
-      firstName
+      name
     }
     occurrence {
       time
@@ -240,7 +240,7 @@ def test_unsubscribe_from_free_spot_notification(
 def test_cannot_unsubscribe_from_free_spot_notification_with_someone_elses_child(
     guardian_api_client,
 ):
-    child = ChildWithGuardianFactory(first_name="Subscriber")
+    child = ChildWithGuardianFactory(name="Subscriber")
     subscription = FreeSpotNotificationSubscriptionFactory(child=child)
 
     executed = guardian_api_client.execute(
