@@ -69,8 +69,7 @@ def test_children_endpoint_no_permission(user_api_client):
 def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_queries):
     with freezegun.freeze_time("2021-02-02T12:00:00Z"):
         ChildWithGuardianFactory(
-            first_name="John",
-            last_name="Doe",
+            first_name="Doe John",
             birthdate=date(2021, 1, 1),
             postal_code="11111",
             relationship__guardian__language="fi",
@@ -80,8 +79,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 
     with freezegun.freeze_time("2021-03-03T01:00:00Z"):
         ChildWithGuardianFactory(
-            first_name="Isabella",
-            last_name="Garcia",
+            first_name="Garcia Isabella",
             birthdate=date(2021, 2, 2),
             postal_code="22222",
             relationship__guardian__language="sv",
@@ -92,8 +90,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
     # This guy's registration date should be 2021-04-05 in Helsinki time
     with freezegun.freeze_time("2021-04-04T23:00:00Z"):
         ChildWithGuardianFactory(
-            first_name="Jane",
-            last_name="Doe",
+            first_name="Doe Jane",
             birthdate=date(2020, 3, 3),
             postal_code="33333",
             relationship__guardian__language="en",
@@ -102,8 +99,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 
     with freezegun.freeze_time("2021-04-05T21:05:00Z"):
         ChildWithTwoGuardiansFactory(
-            first_name="First name",
-            last_name="Last name",
+            first_name="Last name First name",
             birthdate=date(2020, 3, 3),
             postal_code="44444",
             relationship__guardian__language="en",
@@ -120,7 +116,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 
     json_data = response.json()
 
-    # The result set should be ordered by ['last_name', 'first_name',]
+    # The result set should be ordered by 'first_name'
     assert [child["postal_code"] for child in json_data] == [
         "33333",
         "11111",

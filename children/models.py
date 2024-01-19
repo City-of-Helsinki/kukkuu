@@ -40,7 +40,6 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     first_name = models.CharField(
         verbose_name=_("first name"), max_length=64, blank=True
     )
-    last_name = models.CharField(verbose_name=_("last name"), max_length=64, blank=True)
     birthdate = models.DateField(verbose_name=_("birthdate"))
     postal_code = models.CharField(
         verbose_name=_("postal code"),
@@ -72,10 +71,10 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     class Meta:
         verbose_name = _("child")
         verbose_name_plural = _("children")
-        ordering = ["birthdate", "last_name", "first_name"]
+        ordering = ["birthdate", "first_name"]
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.birthdate})"
+        return f"{self.first_name} ({self.birthdate})"
 
     @transaction.atomic()
     def delete(self, *args, **kwargs):
@@ -134,12 +133,11 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     @property
     def name_birthdate_postal_code_guardian_emails_hash(self) -> str:
         """
-        Salted hash of child's name (i.e. first name and last name), birthdate, postal
+        Salted hash of child's name, birthdate, postal
         code and guardians' emails.
         """
         return self._hash(
-            [self.first_name, self.last_name]
-            + self._salt_birthdate_postal_code_guardian_emails_list
+            [self.first_name] + self._salt_birthdate_postal_code_guardian_emails_list
         )
 
 

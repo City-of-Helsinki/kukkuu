@@ -58,7 +58,6 @@ class ChildAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "first_name",
-        "last_name",
         "birthdate",
         "postal_code",
         "get_project",
@@ -66,10 +65,9 @@ class ChildAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    fields = ("project", "first_name", "last_name", "birthdate", "postal_code")
+    fields = ("project", "first_name", "birthdate", "postal_code")
     search_fields = (
         "first_name",
-        "last_name",
         "birthdate",
         "guardians__first_name",
         "guardians__last_name",
