@@ -52,7 +52,7 @@ def invalid_postal_code(request):
 
 
 @pytest.fixture(params=[0, 1])
-def illegal_birthdate(request):
+def illegal_birthyear(request):
     # these dates cannot be set to params directly because now() would not be
     # the faked one
     return (
@@ -63,7 +63,7 @@ def illegal_birthdate(request):
 
 def assert_child_matches_data(child_obj, child_data):
     child_data = child_data or {}
-    for field_name in ("name", "birthDate", "postalCode"):
+    for field_name in ("name", "birthyear", "postalCode"):
         if field_name in child_data:
             assert (
                 str(getattr(child_obj, to_snake_case(field_name)))
@@ -103,7 +103,7 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
   submitChildrenAndGuardian(input: $input) {
     children {
       name
-      birthdate
+      birthyear
       postalCode
       relationships {
         edges {
@@ -139,13 +139,13 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
 CHILDREN_DATA = [
     {
         "name": "Matti",
-        "birthdate": "2020-01-01",
+        "birthyear": "2020-01-01",
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     },
     {
         "name": "Jussi",
-        "birthdate": "2020-02-02",
+        "birthyear": "2020-02-02",
         "postalCode": "00820",
     },
 ]
@@ -187,7 +187,7 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages, proj
     assert_guardian_matches_data(guardian, variables["input"]["guardian"])
 
     for child, child_data in zip(
-        Child.objects.order_by("birthdate"), variables["input"]["children"]
+        Child.objects.order_by("birthyear"), variables["input"]["children"]
     ):
         assert_child_matches_data(child, child_data)
         relationship = Relationship.objects.get(guardian=guardian, child=child)
@@ -234,18 +234,18 @@ def test_submit_children_and_guardian_postal_code_validation(
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
-def test_submit_children_and_guardian_birthdate_validation(
-    user_api_client, illegal_birthdate
+def test_submit_children_and_guardian_birthyear_validation(
+    user_api_client, illegal_birthyear
 ):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
-    variables["input"]["children"][0]["birthdate"] = illegal_birthdate
+    variables["input"]["children"][0]["birthyear"] = illegal_birthyear
 
     executed = user_api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
     )
 
     assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-    assert "Illegal birthdate." in str(executed["errors"])
+    assert "Illegal birthyear." in str(executed["errors"])
 
 
 def test_submit_children_and_guardian_can_be_done_only_once(guardian_api_client):
@@ -292,7 +292,7 @@ query Children {
     edges {
       node {
         name
-        birthdate
+        birthyear
         postalCode
         relationships {
           edges {
@@ -409,7 +409,7 @@ CHILD_QUERY = """
 query Child($id: ID!) {
   child(id: $id) {
     name
-    birthdate
+    birthyear
     postalCode
     relationships {
       edges {
@@ -514,7 +514,7 @@ mutation AddChild($input: AddChildMutationInput!) {
   addChild(input: $input) {
     child {
       name
-      birthdate
+      birthyear
       postalCode
     }
   }
@@ -524,7 +524,7 @@ mutation AddChild($input: AddChildMutationInput!) {
 ADD_CHILD_VARIABLES = {
     "input": {
         "name": "Pekka",
-        "birthdate": "2020-11-11",
+        "birthyear": "2020-11-11",
         "postalCode": "00820",
         "relationship": {"type": "PARENT"},
     }
@@ -549,14 +549,14 @@ def test_add_child_mutation(snapshot, guardian_api_client, project):
     )
 
 
-def test_add_child_mutation_birthdate_required(guardian_api_client):
+def test_add_child_mutation_birthyear_required(guardian_api_client):
     variables = deepcopy(ADD_CHILD_VARIABLES)
-    variables["input"].pop("birthdate")
+    variables["input"].pop("birthyear")
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
     # GraphQL input error for missing required fields
     assert_match_error_code(executed, GENERAL_ERROR)
-    assert "birthdate" in str(executed["errors"])
+    assert "birthyear" in str(executed["errors"])
     assert Child.objects.count() == 0
 
 
@@ -573,15 +573,15 @@ def test_add_child_mutation_postal_code_validation(
     assert Child.objects.count() == 0
 
 
-def test_add_child_mutation_birthdate_validation(
-    guardian_api_client, illegal_birthdate
+def test_add_child_mutation_birthyear_validation(
+    guardian_api_client, illegal_birthyear
 ):
     variables = deepcopy(ADD_CHILD_VARIABLES)
-    variables["input"]["birthdate"] = illegal_birthdate
+    variables["input"]["birthyear"] = illegal_birthyear
 
     executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
     assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-    assert "Illegal birthdate." in str(executed["errors"])
+    assert "Illegal birthyear." in str(executed["errors"])
 
 
 def test_add_child_mutation_requires_guardian(user_api_client):
@@ -614,7 +614,7 @@ mutation UpdateChild($input: UpdateChildMutationInput!) {
   updateChild(input: $input) {
     child {
       name
-      birthdate
+      birthyear
       postalCode
     }
   }
@@ -625,7 +625,7 @@ UPDATE_CHILD_VARIABLES = {
     "input": {
         # "id" needs to be added when actually using these in the mutation
         "name": "Matti",
-        "birthdate": "2020-01-01",
+        "birthyear": "2020-01-01",
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     }
@@ -682,16 +682,16 @@ def test_update_child_mutation_postal_code_validation(
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
-def test_update_child_mutation_birthdate_validation(
-    guardian_api_client, illegal_birthdate, child_with_user_guardian
+def test_update_child_mutation_birthyear_validation(
+    guardian_api_client, illegal_birthyear, child_with_user_guardian
 ):
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
-    variables["input"]["birthdate"] = illegal_birthdate
+    variables["input"]["birthyear"] = illegal_birthyear
 
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
-    assert "Illegal birthdate." in str(executed["errors"])
+    assert "Illegal birthyear." in str(executed["errors"])
 
 
 DELETE_CHILD_MUTATION = """

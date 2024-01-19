@@ -38,7 +38,7 @@ postal_code_validator = RegexValidator(
 
 class Child(UUIDPrimaryKeyModel, TimestampedModel):
     name = models.CharField(verbose_name=_("name"), max_length=64, blank=True)
-    birthdate = models.DateField(verbose_name=_("birthdate"))
+    birthyear = models.DateField(verbose_name=_("birthyear"))
     postal_code = models.CharField(
         verbose_name=_("postal code"),
         max_length=5,
@@ -69,10 +69,10 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     class Meta:
         verbose_name = _("child")
         verbose_name_plural = _("children")
-        ordering = ["birthdate", "name"]
+        ordering = ["birthyear", "name"]
 
     def __str__(self):
-        return f"{self.name} ({self.birthdate})"
+        return f"{self.name} ({self.birthyear})"
 
     @transaction.atomic()
     def delete(self, *args, **kwargs):
@@ -110,32 +110,32 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         return sha256(",".join(values).encode("utf8")).hexdigest()
 
     @property
-    def _salt_birthdate_postal_code_guardian_emails_list(self) -> list[str]:
+    def _salt_birthyear_postal_code_guardian_emails_list(self) -> list[str]:
         """
-        List of salt, child's birthdate, postal code and guardians' emails.
+        List of salt, child's birthyear, postal code and guardians' emails.
         """
         return [
             settings.KUKKUU_HASHID_SALT,
-            self.birthdate.isoformat(),
+            self.birthyear.isoformat(),
             self.postal_code,
             *sorted(guardian.email for guardian in self.guardians.all()),
         ]
 
     @property
-    def birthdate_postal_code_guardian_emails_hash(self) -> str:
+    def birthyear_postal_code_guardian_emails_hash(self) -> str:
         """
-        Salted hash of child's birthdate, postal code and guardians' emails.
+        Salted hash of child's birthyear, postal code and guardians' emails.
         """
-        return self._hash(self._salt_birthdate_postal_code_guardian_emails_list)
+        return self._hash(self._salt_birthyear_postal_code_guardian_emails_list)
 
     @property
-    def name_birthdate_postal_code_guardian_emails_hash(self) -> str:
+    def name_birthyear_postal_code_guardian_emails_hash(self) -> str:
         """
-        Salted hash of child's name, birthdate, postal
+        Salted hash of child's name, birthyear, postal
         code and guardians' emails.
         """
         return self._hash(
-            [self.name] + self._salt_birthdate_postal_code_guardian_emails_list
+            [self.name] + self._salt_birthyear_postal_code_guardian_emails_list
         )
 
 

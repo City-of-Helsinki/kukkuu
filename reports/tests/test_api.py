@@ -70,7 +70,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
     with freezegun.freeze_time("2021-02-02T12:00:00Z"):
         ChildWithGuardianFactory(
             name="Doe John",
-            birthdate=date(2021, 1, 1),
+            birthyear=date(2021, 1, 1),
             postal_code="11111",
             relationship__guardian__language="fi",
             relationship__guardian__languages_spoken_at_home=["fin", None],
@@ -80,7 +80,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
     with freezegun.freeze_time("2021-03-03T01:00:00Z"):
         ChildWithGuardianFactory(
             name="Garcia Isabella",
-            birthdate=date(2021, 2, 2),
+            birthyear=date(2021, 2, 2),
             postal_code="22222",
             relationship__guardian__language="sv",
             relationship__guardian__languages_spoken_at_home=[None],
@@ -91,7 +91,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
     with freezegun.freeze_time("2021-04-04T23:00:00Z"):
         ChildWithGuardianFactory(
             name="Doe Jane",
-            birthdate=date(2020, 3, 3),
+            birthyear=date(2020, 3, 3),
             postal_code="33333",
             relationship__guardian__language="en",
             relationship__guardian__email="something@to-fool-factoryboy.net",
@@ -100,7 +100,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
     with freezegun.freeze_time("2021-04-05T21:05:00Z"):
         ChildWithTwoGuardiansFactory(
             name="Last name First name",
-            birthdate=date(2020, 3, 3),
+            birthyear=date(2020, 3, 3),
             postal_code="44444",
             relationship__guardian__language="en",
             relationship__guardian__email="guardian@example.org",
