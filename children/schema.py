@@ -295,7 +295,7 @@ class GuardianInput(graphene.InputObjectType):
 
 class ChildInput(graphene.InputObjectType):
     name = graphene.String()
-    birthyear = graphene.Date(required=True)
+    birthyear = graphene.Int(required=True)
     postal_code = graphene.String(required=True)
     relationship = RelationshipInput()
     languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
@@ -308,9 +308,9 @@ def validate_child_data(child_data):
         except ValidationError as e:
             raise DataValidationError(e.message)
     if "birthyear" in child_data:
-        birth_year = child_data["birthyear"].year
+        birth_year = child_data["birthyear"]
         if (
-            child_data["birthyear"] > localdate()
+            child_data["birthyear"] > localdate().year
             or not Project.objects.filter(year=birth_year).exists()
         ):
             raise DataValidationError("Illegal birthyear.")
@@ -363,7 +363,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             relationship_data = child_data.pop("relationship", {})
             child_data["project_id"] = Project.objects.get(
-                year=child_data["birthyear"].year
+                year=child_data["birthyear"]
             ).pk
             languages = child_data.pop("languages_spoken_at_home", [])
 
@@ -393,7 +393,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 class AddChildMutation(graphene.relay.ClientIDMutation):
     class Input:
         name = graphene.String()
-        birthyear = graphene.Date(required=True)
+        birthyear = graphene.Int(required=True)
         postal_code = graphene.String(required=True)
         relationship = RelationshipInput()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
@@ -417,7 +417,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
 
         validate_child_data(kwargs)
 
-        kwargs["project_id"] = Project.objects.get(year=kwargs["birthyear"].year).pk
+        kwargs["project_id"] = Project.objects.get(year=kwargs["birthyear"]).pk
         user = info.context.user
         relationship_data = kwargs.pop("relationship", {})
         languages = kwargs.pop("languages_spoken_at_home", [])
@@ -439,7 +439,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.ID(required=True)
         name = graphene.String()
-        birthyear = graphene.Date()
+        birthyear = graphene.Int()
         postal_code = graphene.String()
         relationship = RelationshipInput()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))

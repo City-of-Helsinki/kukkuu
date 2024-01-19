@@ -32,25 +32,25 @@ snapshots["test_feedback_notification 1"] = [
         Event FI: Answer entire increase thank certainly again thought.
         Guardian FI: (60, 15) I Should Receive A Notification (tonya77@example.com)
         Occurrence: 2020-12-11 23:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-11 23:00:00+00:00""",
     """kukkuu@example.com|['jennifer00@example.com']|Feedback FI|
         Event FI: Difficult special respond.
         Guardian FI: (30, 15) I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-11 23:30:00+00:00
-        Child: Jason Williams (2020-06-11)
+        Child: Jason Williams (2021)
         Enrolment: 2020-12-11 23:30:00+00:00""",
     """kukkuu@example.com|['aaronlee@example.org']|Feedback FI|
         Event FI: History ahead well herself consider fight.
         Guardian FI: (135, None) I Should Receive A Notification (aaronlee@example.org)
         Occurrence: 2020-12-11 21:45:00+00:00
-        Child: Lindsey Baker (2020-11-04)
+        Child: Lindsey Baker (2022)
         Enrolment: 2020-12-11 21:45:00+00:00""",
     """kukkuu@example.com|['christine87@example.com']|Feedback FI|
         Event FI: Sort clearly happy peace really brother.
         Guardian FI: (10080, 15) I Should Receive A Notification (christine87@example.com)
         Occurrence: 2020-12-05 00:00:00+00:00
-        Child: Dana Smith (2020-10-13)
+        Child: Dana Smith (2023)
         Enrolment: 2020-12-05 00:00:00+00:00""",
 ]
 
@@ -59,7 +59,7 @@ snapshots["test_feedback_notification_instance_checks[False] 1"] = [
         Event FI: Respond draw military dog hospital number.
         Guardian FI: Samantha Bryant (tonya77@example.com)
         Occurrence: 2020-12-11 00:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-11 00:00:00+00:00"""
 ]
 
@@ -68,13 +68,13 @@ snapshots["test_feedback_notification_instance_checks[True] 1"] = [
         Event FI: Respond draw military dog hospital number.
         Guardian FI: Samantha Bryant (tonya77@example.com)
         Occurrence: 2020-12-11 00:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-11 00:00:00+00:00""",
     """kukkuu@example.com|['jennifer00@example.com']|Feedback FI|
         Event FI: Special respond positive cold.
         Guardian FI: Danielle Reese (jennifer00@example.com)
         Occurrence: 2020-12-17 00:00:00+00:00
-        Child: Jason Williams (2020-06-11)
+        Child: Jason Williams (2021)
         Enrolment: 2020-12-17 00:00:00+00:00""",
 ]
 
@@ -83,7 +83,7 @@ snapshots["test_occurrence_cancelled_notification[False] 1"] = [
         Event FI: Our very television beat at success decade.
         Guardian FI: I Should Receive A Notification Bryant (michellewalker@example.net)
         Occurrence: 2020-12-12 01:00:00+00:00
-        Child: Richard Hayes (2020-04-06)"""
+        Child: Richard Hayes (2019)"""
 ]
 
 snapshots["test_occurrence_cancelled_notification[True] 1"] = [
@@ -91,7 +91,7 @@ snapshots["test_occurrence_cancelled_notification[True] 1"] = [
         Event FI: Our very television beat at success decade.
         Guardian FI: I Should Receive A Notification Bryant (michellewalker@example.net)
         Occurrence: 2020-12-12 01:00:00+00:00
-        Child: Richard Hayes (2020-04-06)"""
+        Child: Richard Hayes (2019)"""
 ]
 
 snapshots["test_occurrence_enrolment_notifications_on_model_level[None] 1"] = [
@@ -99,7 +99,7 @@ snapshots["test_occurrence_enrolment_notifications_on_model_level[None] 1"] = [
         Event FI: Poor lawyer treat free heart significant.
         Guardian FI: April Stewart (michellewalker@example.net)
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Michael Pierce (2020-05-20)
+        Child: Michael Pierce (2020)
         Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
 ]
 
@@ -110,7 +110,7 @@ snapshots[
         Event FI: Poor lawyer treat free heart significant.
         Guardian FI: April Stewart (michellewalker@example.net)
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Michael Pierce (2020-05-20)
+        Child: Michael Pierce (2020)
         Occurrence URL: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjU0NWM1ZmU1LTIzNWItNDZmZC1hYTJhLWNkNWRlNmZkZDBmYw==/occurrence/T2NjdXJyZW5jZU5vZGU6NzQ="""
 ]
 
@@ -119,13 +119,13 @@ snapshots["test_occurrence_reminder_notification[None] 1"] = [
         Event FI: Answer entire increase thank certainly again thought.
         Guardian FI: I Should Receive A Notification (tonya77@example.com)
         Occurrence: 2020-12-19 00:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-19 00:00:00+00:00""",
     """kukkuu@example.com|['jennifer00@example.com']|Occurrence reminder FI|
         Event FI: Difficult special respond.
         Guardian FI: I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-13 00:00:00+00:00
-        Child: Jason Williams (2020-06-11)
+        Child: Jason Williams (2021)
         Enrolment: 2020-12-13 00:00:00+00:00""",
 ]
 
@@ -136,13 +136,13 @@ snapshots[
         Event FI: Answer entire increase thank certainly again thought.
         Guardian FI: I Should Receive A Notification (tonya77@example.com)
         Occurrence: 2020-12-19 00:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-19 00:00:00+00:00""",
     """kukkuu@example.com|['jennifer00@example.com']|Occurrence reminder FI|
         Event FI: Difficult special respond.
         Guardian FI: I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-13 00:00:00+00:00
-        Child: Jason Williams (2020-06-11)
+        Child: Jason Williams (2021)
         Enrolment: 2020-12-13 00:00:00+00:00""",
 ]
 
@@ -153,13 +153,13 @@ snapshots["test_reminder_notification_instance_checks[True] 1"] = [
         Event FI: Respond draw military dog hospital number.
         Guardian FI: Samantha Bryant (tonya77@example.com)
         Occurrence: 2020-12-04 00:00:00+00:00
-        Child: Jose Kerr (2020-08-13)
+        Child: Jose Kerr (2022)
         Enrolment: 2020-12-04 00:00:00+00:00""",
     """kukkuu@example.com|['jennifer00@example.com']|Occurrence reminder FI|
         Event FI: Special respond positive cold.
         Guardian FI: Danielle Reese (jennifer00@example.com)
         Occurrence: 2020-12-11 00:00:00+00:00
-        Child: Jason Williams (2020-06-11)
+        Child: Jason Williams (2021)
         Enrolment: 2020-12-11 00:00:00+00:00""",
 ]
 
@@ -168,5 +168,5 @@ snapshots["test_unenrol_occurrence_notification 1"] = [
         Event FI: Detail audience campaign college career fight data.
         Guardian FI: Kari Wolf (pjenkins@example.net)
         Occurrence: 2020-12-12 00:00:00+00:00
-        Child: Sandra Brown (2020-10-12)"""
+        Child: Sandra Brown (2023)"""
 ]

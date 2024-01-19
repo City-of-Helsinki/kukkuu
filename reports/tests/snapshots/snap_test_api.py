@@ -9,8 +9,8 @@ snapshots = Snapshot()
 snapshots["test_children_endpoint 1"] = [
     {
         "birth_year": 2020,
-        "child_birthyear_postal_code_guardian_emails_hash": "3b31e6ff1604056d31986fb1bca8897f7bcbb391d79790aa051d0a89d62b5834",
-        "child_name_birthyear_postal_code_guardian_emails_hash": "4069c997d8143d91d7f118bff0b82f1b2883ddb16481c65f56ef9c57439374db",
+        "child_birthyear_postal_code_guardian_emails_hash": "3b78fc2b60381829414bd2bd9ea53e90123d9cd7faeb35f86f5038d669dd96e0",
+        "child_name_birthyear_postal_code_guardian_emails_hash": "bd94f9a87d842f6889f10aa72528a273c27fb864fe7b14b7b38b2b37a59b615a",
         "contact_language": "eng",
         "languages_spoken_at_home": [],
         "postal_code": "33333",
@@ -18,8 +18,8 @@ snapshots["test_children_endpoint 1"] = [
     },
     {
         "birth_year": 2021,
-        "child_birthyear_postal_code_guardian_emails_hash": "72fa21cf7750f88d4085086b143a56ec6ba196c98693f1e4e7f39b76f9e2803e",
-        "child_name_birthyear_postal_code_guardian_emails_hash": "e58f738060e22e10d91ab2c8b92ba59cbba4a131b989006b3c505542e42cd7f1",
+        "child_birthyear_postal_code_guardian_emails_hash": "d9653e3210babd7c8d6094f069ddfbf790d6b16d368d0b14e0d4f9d1d2eed8aa",
+        "child_name_birthyear_postal_code_guardian_emails_hash": "cde8b66cfb17f9dd1e3a27b34ced099567555c09ac53ab8d96eb6f108b481a78",
         "contact_language": "fin",
         "languages_spoken_at_home": ["fin", "__OTHER__"],
         "postal_code": "11111",
@@ -27,8 +27,8 @@ snapshots["test_children_endpoint 1"] = [
     },
     {
         "birth_year": 2021,
-        "child_birthyear_postal_code_guardian_emails_hash": "db91f2de11ce26e8e49e179cd27e77805acc984af98aabab9d45987cc45c255c",
-        "child_name_birthyear_postal_code_guardian_emails_hash": "e44d5dbee7e5f8d81fad5b9940da627a0844fce197f2b737b7476a38718acf21",
+        "child_birthyear_postal_code_guardian_emails_hash": "73471fad7bbcffa243a695f211ffd2c0ddb89531d747548709c3677ecbe4a0cc",
+        "child_name_birthyear_postal_code_guardian_emails_hash": "c056d2e1b6ca2ab0189ce068567cb6d3951928283e8ebbb384ec20d3a85f632e",
         "contact_language": "swe",
         "languages_spoken_at_home": ["__OTHER__"],
         "postal_code": "22222",
@@ -36,9 +36,9 @@ snapshots["test_children_endpoint 1"] = [
     },
     {
         "birth_year": 2020,
-        "child_birthyear_postal_code_guardian_emails_hash": "fe3aac27294ec2fa750bdf5eb4807c04224f1cc7863485e58a6941546261613f",
-        "child_name_birthyear_postal_code_guardian_emails_hash": "f3c34690d0ab00f7f367e8ff44dd94529c50916bb4088e23f23501b2d8085790",
-        "contact_language": "swe",
+        "child_birthyear_postal_code_guardian_emails_hash": "f1694b9c7d7a45c8606d9506f171025079940fcc97d5e125e1cc73495461f378",
+        "child_name_birthyear_postal_code_guardian_emails_hash": "92d10305295a1210620ae3158c5aeecc24d9018be279042e8226d120cbfdb978",
+        "contact_language": "eng",
         "languages_spoken_at_home": [],
         "postal_code": "44444",
         "registration_date": "2021-04-06",

@@ -142,7 +142,7 @@ class ChildSerializer(serializers.ModelSerializer):
         return localdate(obj.created_at)
 
     def get_birth_year(self, obj: Child) -> int:
-        return obj.birthyear.year
+        return obj.birthyear
 
     @extend_schema_field(
         serializers.ChoiceField(

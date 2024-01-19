@@ -38,7 +38,7 @@ postal_code_validator = RegexValidator(
 
 class Child(UUIDPrimaryKeyModel, TimestampedModel):
     name = models.CharField(verbose_name=_("name"), max_length=64, blank=True)
-    birthyear = models.DateField(verbose_name=_("birthyear"))
+    birthyear = models.IntegerField(verbose_name=_("birthyear"))
     postal_code = models.CharField(
         verbose_name=_("postal code"),
         max_length=5,
@@ -116,7 +116,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
         """
         return [
             settings.KUKKUU_HASHID_SALT,
-            self.birthyear.isoformat(),
+            str(self.birthyear),
             self.postal_code,
             *sorted(guardian.email for guardian in self.guardians.all()),
         ]

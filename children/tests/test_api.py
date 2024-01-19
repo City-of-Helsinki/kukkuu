@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import pytest
 import pytz
@@ -56,8 +56,8 @@ def illegal_birthyear(request):
     # these dates cannot be set to params directly because now() would not be
     # the faked one
     return (
-        date(2019, 10, 10),  # wrong year
-        localtime(now()).date() + timedelta(days=1),  # in the future
+        2019,  # wrong year
+        localtime(now()).year + 1,  # in the future
     )[request.param]
 
 
@@ -65,9 +65,11 @@ def assert_child_matches_data(child_obj, child_data):
     child_data = child_data or {}
     for field_name in ("name", "birthyear", "postalCode"):
         if field_name in child_data:
+            value = getattr(child_obj, to_snake_case(field_name))
             assert (
-                str(getattr(child_obj, to_snake_case(field_name)))
-                == child_data[field_name]
+                value
+                if field_name == "birthyear"
+                else str(value) == child_data[field_name]
             )
 
 
@@ -139,13 +141,13 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
 CHILDREN_DATA = [
     {
         "name": "Matti",
-        "birthyear": "2020-01-01",
+        "birthyear": 2020,
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     },
     {
         "name": "Jussi",
-        "birthyear": "2020-02-02",
+        "birthyear": 2020,
         "postalCode": "00820",
     },
 ]
@@ -524,7 +526,7 @@ mutation AddChild($input: AddChildMutationInput!) {
 ADD_CHILD_VARIABLES = {
     "input": {
         "name": "Pekka",
-        "birthyear": "2020-11-11",
+        "birthyear": 2020,
         "postalCode": "00820",
         "relationship": {"type": "PARENT"},
     }
@@ -625,7 +627,7 @@ UPDATE_CHILD_VARIABLES = {
     "input": {
         # "id" needs to be added when actually using these in the mutation
         "name": "Matti",
-        "birthyear": "2020-01-01",
+        "birthyear": 2020,
         "postalCode": "00840",
         "relationship": {"type": "OTHER_GUARDIAN"},
     }
