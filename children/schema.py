@@ -308,10 +308,10 @@ def validate_child_data(child_data):
         except ValidationError as e:
             raise DataValidationError(e.message)
     if "birthyear" in child_data:
-        birth_year = child_data["birthyear"]
+        birthyear = child_data["birthyear"]
         if (
             child_data["birthyear"] > localdate().year
-            or not Project.objects.filter(year=birth_year).exists()
+            or not Project.objects.filter(year=birthyear).exists()
         ):
             raise DataValidationError("Illegal birthyear.")
     return child_data
