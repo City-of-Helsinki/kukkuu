@@ -1,6 +1,32 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [2.0.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.2...kukkuu-v2.0.0) (2024-01-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* child update mutation input should not have birthdate field
+* reporter API's birth_year renamed to birthyear
+* change birthyear type from date to integer
+* rename the birthdate field of the child model to be birthyear
+* rename the  first name field of the child model to "name"
+* remove the last name field from the Child model
+
+### Features
+
+* Change birthyear type from date to integer ([e1b6fc2](https://github.com/City-of-Helsinki/kukkuu/commit/e1b6fc28f66cf8e8a1ca643a641d9caf6b5bf8ba))
+* Child update mutation input should not have birthdate field ([2005529](https://github.com/City-of-Helsinki/kukkuu/commit/20055297510ec123a39da61ee47080ecc179f2cc))
+* Remove the last name field from the Child model ([aca4664](https://github.com/City-of-Helsinki/kukkuu/commit/aca4664869705922d4a782597cba81c7c3bfbdda))
+* Rename the  first name field of the child model to "name" ([1b5c7ed](https://github.com/City-of-Helsinki/kukkuu/commit/1b5c7edd482eb5af85fbddabbe69b0c789fecc8f))
+* Rename the birthdate field of the child model to be birthyear ([d9f5b17](https://github.com/City-of-Helsinki/kukkuu/commit/d9f5b17ffcd3d87056baa3b81b641523b1f566f3))
+* Reporter API's birth_year renamed to birthyear ([b712e73](https://github.com/City-of-Helsinki/kukkuu/commit/b712e733dc03e0cf23d23f5ad866f72d61fb6056))
+
+
+### Bug Fixes
+
+* Make more consistent querysets and test for children reports API ([c771380](https://github.com/City-of-Helsinki/kukkuu/commit/c771380e1e5a5bda84f7df9606935aa0664375a1))
+
 ## [1.17.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.1...kukkuu-v1.17.2) (2023-12-15)
 
 
