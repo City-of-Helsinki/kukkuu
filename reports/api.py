@@ -78,13 +78,13 @@ def get_primary_contact_language(contact_languages: List[str]):
             value=[
                 {
                     "registration_date": "2021-02-18",
-                    "birth_year": 2021,
+                    "birthyear": 2021,
                     "contact_language": "fin",
                     "languages_spoken_at_home": ["fin", "nor", "__OTHER__"],
                 },
                 {
                     "registration_date": "2021-03-18",
-                    "birth_year": 2020,
+                    "birthyear": 2020,
                     "contact_language": "eng",
                     "languages_spoken_at_home": [],
                 },
@@ -104,7 +104,7 @@ class ChildSerializer(serializers.ModelSerializer):
         )
     )
     registration_date = serializers.SerializerMethodField()
-    birth_year = serializers.SerializerMethodField()
+    birthyear = serializers.SerializerMethodField()
     contact_language = serializers.SerializerMethodField()
     languages_spoken_at_home = serializers.SerializerMethodField(
         help_text="Array of ISO 639-3 (language) or ISO 639-5 (language family) "
@@ -117,7 +117,7 @@ class ChildSerializer(serializers.ModelSerializer):
             "child_birthyear_postal_code_guardian_emails_hash",
             "child_name_birthyear_postal_code_guardian_emails_hash",
             "registration_date",
-            "birth_year",
+            "birthyear",
             "postal_code",
             "contact_language",
             "languages_spoken_at_home",
@@ -141,7 +141,7 @@ class ChildSerializer(serializers.ModelSerializer):
     def get_registration_date(self, obj: Child) -> date:
         return localdate(obj.created_at)
 
-    def get_birth_year(self, obj: Child) -> int:
+    def get_birthyear(self, obj: Child) -> int:
         return obj.birthyear
 
     @extend_schema_field(
