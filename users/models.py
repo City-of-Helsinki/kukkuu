@@ -55,6 +55,14 @@ class User(AbstractUser):
             "projects.manage_event_groups"
         )
 
+    def get_active_verification_tokens(self, verification_type=None):
+        """Filter active verification tokens"""
+        from verification_tokens.models import VerificationToken
+
+        return VerificationToken.objects.filter_active_tokens(
+            self, verification_type=verification_type, user=self
+        )
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):
