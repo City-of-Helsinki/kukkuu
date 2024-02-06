@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
 from users.models import Guardian
+from verification_tokens.factories import UserEmailVerificationTokenFactory
+from verification_tokens.models import VerificationToken
 
 from ..factories import GuardianFactory, UserFactory
 
@@ -70,3 +72,29 @@ def test_children_deleted_when_guardian_deleted(test_queryset):
 
     child_having_also_another_guardian.refresh_from_db()
     outsider.refresh_from_db()
+
+
+@pytest.mark.django_db
+def test_get_active_verification_tokens():
+    UserEmailVerificationTokenFactory.create_batch(10)
+    verification_token = UserEmailVerificationTokenFactory(
+        is_active=True,
+        verification_type=VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION,
+    )
+    user = verification_token.user
+    UserEmailVerificationTokenFactory.create_batch(
+        2,
+        user=user,
+        is_active=False,
+    )
+    assert VerificationToken.objects.count() == 13
+    assert VerificationToken.objects.filter(user=user).count() == 3
+    assert (
+        list(user.get_active_verification_tokens())
+        == list(
+            user.get_active_verification_tokens(
+                verification_type=VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION
+            )
+        )
+        == [verification_token]
+    )
