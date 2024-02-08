@@ -203,6 +203,10 @@ snapshots["test_my_profile_query_email[guardian@example.com] 1"] = {
     "data": {"myProfile": {"email": "guardian@example.com"}}
 }
 
+snapshots["test_update_my_email_mutation[changed-email@kummilapset.fi-True] 1"] = {
+    "data": {"updateMyEmail": {"myProfile": {"email": "changed-email@kummilapset.fi"}}}
+}
+
 snapshots["test_update_my_profile_mutation 1"] = {
     "data": {
         "updateMyProfile": {

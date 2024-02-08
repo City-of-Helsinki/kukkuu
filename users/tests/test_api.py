@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pytest
+from django.utils import timezone
 from guardian.shortcuts import assign_perm
 
 from children.factories import RelationshipFactory
@@ -11,45 +12,22 @@ from children.tests.test_api import (
 from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
-from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR
+from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 from users.models import Guardian
+from users.tests.mutations import UPDATE_MY_EMAIL_MUTATION, UPDATE_MY_PROFILE_MUTATION
+from users.tests.queries import (
+    GUARDIANS_QUERY,
+    MY_ADMIN_PROFILE_QUERY,
+    MY_PROFILE_QUERY,
+)
+from verification_tokens.factories import UserEmailVerificationTokenFactory
 
 
 @pytest.fixture(autouse=True)
 def autouse_db(db):
     pass
-
-
-GUARDIANS_QUERY = """
-query Guardians {
-  guardians {
-    edges {
-      node {
-        firstName
-        lastName
-        phoneNumber
-        email
-        relationships {
-          edges {
-            node {
-              type
-              child {
-                name
-                birthyear
-                project {
-                  year
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 
 def test_guardians_query_unauthenticated(api_client):
@@ -106,56 +84,6 @@ def test_guardians_query_project_user(
     snapshot.assert_match(executed)
 
 
-MY_PROFILE_QUERY = """
-query MyProfile {
-  myProfile {
-    firstName
-    lastName
-    phoneNumber
-    email
-    relationships {
-      edges {
-        node {
-          type
-          child {
-            name
-            birthyear
-            postalCode
-          }
-        }
-      }
-    }
-    language
-    languagesSpokenAtHome {
-      edges {
-        node {
-          alpha3Code
-        }
-      }
-    }
-  }
-}
-"""
-
-MY_ADMIN_PROFILE_QUERY = """
-query MyAdminProfle{
-  myAdminProfile{
-    projects {
-      edges {
-        node {
-          name
-          myPermissions {
-            publish
-            manageEventGroups
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-
 def test_my_profile_query_unauthenticated(api_client):
     GuardianFactory()
 
@@ -205,26 +133,6 @@ def test_my_profile_no_profile(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-UPDATE_MY_PROFILE_MUTATION = """
-mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
-  updateMyProfile(input: $input) {
-    myProfile {
-      firstName
-      lastName
-      phoneNumber
-      language
-      languagesSpokenAtHome {
-        edges {
-          node {
-            alpha3Code
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
 UPDATE_MY_PROFILE_VARIABLES = {
     "input": {
         "firstName": "Updated First Name",
@@ -258,6 +166,90 @@ def test_update_my_profile_mutation(snapshot, user_api_client, languages):
     assert_guardian_matches_data(guardian, variables["input"])
 
 
+@pytest.mark.parametrize(
+    "new_email, is_valid",
+    [
+        ("changed-email@kummilapset.fi", True),
+        ("INVALID_EMAIL", False),
+        ("", False),
+        (None, False),
+    ],
+)
+def test_update_my_email_mutation(snapshot, user_api_client, new_email, is_valid):
+    initial_email = "initial-email@kummilapset.fi"
+    user = user_api_client.user
+    GuardianFactory(user=user, email=initial_email)
+    verification_token = UserEmailVerificationTokenFactory(user=user)
+    variables = {
+        "input": {"email": new_email, "verificationToken": verification_token.key}
+    }
+    executed = user_api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    guardian = Guardian.objects.get(user=user)
+    if is_valid:
+        snapshot.assert_match(executed)
+        assert guardian.email == new_email
+    elif new_email is None:
+        assert len(executed["errors"]) == 1
+        assert 'Variable "$input" got invalid value' in executed["errors"][0]["message"]
+    else:
+        assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
+        assert guardian.email == initial_email
+
+
+def test_update_my_email_mutation_with_invalid_token(user_api_client):
+    user = user_api_client.user
+    initial_email = "initial-email@kummilapset.fi"
+    GuardianFactory(user=user, email=initial_email)
+    UserEmailVerificationTokenFactory(user=user)
+    variables = {
+        "input": {
+            "email": "changed-email@kummilapset.fi",
+            "verificationToken": "invalid-key",
+        }
+    }
+    executed = user_api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_match_error_code(executed, VERIFICATION_TOKEN_INVALID_ERROR)
+    guardian = Guardian.objects.get(user=user)
+    assert guardian.email == initial_email
+
+
+def test_update_my_email_mutation_with_expired_token(user_api_client, settings):
+    settings.VERIFICATION_TOKEN_VALID_MINUTES = 10
+    user = user_api_client.user
+    initial_email = "initial-email@kummilapset.fi"
+    GuardianFactory(user=user, email=initial_email)
+    date_expired = timezone.now() - timezone.timedelta(
+        minutes=(settings.VERIFICATION_TOKEN_VALID_MINUTES + 1)
+    )
+    assert date_expired < timezone.now()
+    verification_token = UserEmailVerificationTokenFactory(
+        user=user,
+        expiry_date=date_expired,
+    )
+    variables = {
+        "input": {
+            "email": "changed-email@kummilapset.fi",
+            "verificationToken": verification_token.key,
+        }
+    }
+    executed = user_api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_match_error_code(executed, VERIFICATION_TOKEN_INVALID_ERROR)
+    guardian = Guardian.objects.get(user=user)
+    assert guardian.email == initial_email
+
+
+def test_update_my_email_mutation_unauthenticated(api_client):
+    variables = {
+        "input": {
+            "email": "changed-email@kummilapset.fi",
+            "verificationToken": "something",
+        }
+    }
+    executed = api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+
+# TODO: Remove since it is replaced with UPDATE_MY_EMAIL_MUTATION.
 @pytest.mark.parametrize(
     "guardian_email, is_valid",
     [

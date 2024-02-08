@@ -41,6 +41,7 @@ from kukkuu.consts import (
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
+    VERIFICATION_TOKEN_INVALID_ERROR,
 )
 from kukkuu.exceptions import (
     AlreadySubscribedError,
@@ -70,6 +71,7 @@ from kukkuu.exceptions import (
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
     TicketSystemUrlMissingError,
+    VerificationTokenInvalidError,
 )
 
 error_codes_shared = {
@@ -109,6 +111,7 @@ error_codes_kukkuu = {
     ),
     AuthenticationError: AUTHENTICATION_ERROR,
     AuthenticationExpiredError: AUTHENTICATION_EXPIRED_ERROR,
+    VerificationTokenInvalidError: VERIFICATION_TOKEN_INVALID_ERROR,
 }
 
 sentry_ignored_errors = (
