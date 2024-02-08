@@ -270,44 +270,6 @@ def test_request_email_change_token_mutation_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-# TODO: Remove since it is replaced with UPDATE_MY_EMAIL_MUTATION.
-@pytest.mark.parametrize(
-    "guardian_email, is_valid",
-    [
-        ("guardian_updated@example.com", True),
-        ("INVALID_EMAIL", False),
-        ("", False),
-        (None, False),
-    ],
-)
-def test_update_my_profile_mutation_email(snapshot, guardian_email, is_valid):
-    guardian = GuardianFactory(
-        email="guardian_original@example.com", user__email="user@example.com"
-    )
-    api_client = create_api_client_with_user(guardian.user)
-
-    executed = api_client.execute(
-        """
-mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
-  updateMyProfile(input: $input) {
-    myProfile {
-      email
-    }
-  }
-}
-""",
-        variables={"input": {"email": guardian_email}},
-    )
-
-    guardian.refresh_from_db()
-    if is_valid:
-        snapshot.assert_match(executed)
-        assert guardian.email == guardian_email
-    else:
-        assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
-        assert guardian.email == "guardian_original@example.com"
-
-
 def test_my_admin_profile_unauthenticated(api_client):
     executed = api_client.execute(MY_ADMIN_PROFILE_QUERY)
     assert_permission_denied(executed)
