@@ -27,3 +27,12 @@ mutation UpdateMyEmail($input: UpdateMyEmailMutationInput!) {
   }
 }
 """
+
+REQUEST_EMAIL_CHANGE_TOKEN_MUTATION = """
+mutation RequestEmailUpdateToken {
+    requestEmailUpdateToken {
+        email
+        emailUpdateTokenRequested
+    }
+}
+"""

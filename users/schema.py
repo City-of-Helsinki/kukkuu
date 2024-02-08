@@ -9,10 +9,12 @@ from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
+from verification_tokens.models import VerificationToken
 
 from .models import Guardian
 from .utils import (
     send_guardian_email_changed_notification,
+    send_guardian_email_update_token_notification,
     validate_email_verification_token,
     validate_guardian_data,
     validate_guardian_email,
@@ -137,6 +139,31 @@ class UpdateMyEmailMutation(graphene.relay.ClientIDMutation):
         return UpdateMyEmailMutation(my_profile=guardian)
 
 
+class RequestEmailUpdateTokenMutation(graphene.Mutation):
+
+    emailUpdateTokenRequested = graphene.Boolean()
+    email = graphene.String()
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate(cls, root, info, **kwargs):
+        user = info.context.user
+        try:
+            guardian = user.guardian
+        except Guardian.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+
+        verification_token = VerificationToken.objects.deactivate_and_create_token(
+            user, user, VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION
+        )
+        send_guardian_email_update_token_notification(guardian, verification_token.key)
+
+        return RequestEmailUpdateTokenMutation(
+            emailUpdateTokenRequested=True, email=guardian.email
+        )
+
+
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
@@ -161,3 +188,4 @@ class Query:
 class Mutation:
     update_my_profile = UpdateMyProfileMutation.Field()
     update_my_email = UpdateMyEmailMutation.Field()
+    request_email_update_token = RequestEmailUpdateTokenMutation.Field()
