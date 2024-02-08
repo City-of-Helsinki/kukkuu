@@ -130,3 +130,7 @@ class TicketSystemPasswordNothingToImportError(KukkuuGraphQLError):
 
 class AuthenticationExpiredError(KukkuuGraphQLError):
     """Authentication expired."""
+
+
+class VerificationTokenInvalidError(KukkuuGraphQLError):
+    """Verification token is not active, is expired or is not available for the user"""
