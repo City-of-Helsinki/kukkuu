@@ -16,7 +16,11 @@ from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 from users.models import Guardian
-from users.tests.mutations import UPDATE_MY_EMAIL_MUTATION, UPDATE_MY_PROFILE_MUTATION
+from users.tests.mutations import (
+    REQUEST_EMAIL_CHANGE_TOKEN_MUTATION,
+    UPDATE_MY_EMAIL_MUTATION,
+    UPDATE_MY_PROFILE_MUTATION,
+)
 from users.tests.queries import (
     GUARDIANS_QUERY,
     MY_ADMIN_PROFILE_QUERY,
@@ -246,6 +250,23 @@ def test_update_my_email_mutation_unauthenticated(api_client):
         }
     }
     executed = api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_permission_denied(executed)
+
+
+def test_request_email_change_token_mutation(snapshot, user_api_client):
+    GuardianFactory(user=user_api_client.user)
+    executed = user_api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
+    snapshot.assert_match(executed)
+
+
+def test_request_email_change_token_mutation_without_Guardian(user_api_client):
+    executed = user_api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
+    assert len(executed["errors"]) == 1
+    assert "User has no guardian." in executed["errors"][0]["message"]
+
+
+def test_request_email_change_token_mutation_unauthenticated(api_client):
+    executed = api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
     assert_permission_denied(executed)
 
 

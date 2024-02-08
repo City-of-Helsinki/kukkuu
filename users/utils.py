@@ -4,17 +4,29 @@ from django.core.validators import validate_email
 from django_ilmoitin.utils import send_notification
 
 from kukkuu.exceptions import InvalidEmailFormatError, VerificationTokenInvalidError
+from users.models import Guardian
 from users.notifications import NotificationType
 from verification_tokens.models import VerificationToken
 
 User = get_user_model()
 
 
-def send_guardian_email_changed_notification(guardian):
+def send_guardian_email_changed_notification(guardian: Guardian):
     send_notification(
         guardian.email,
         NotificationType.GUARDIAN_EMAIL_CHANGED,
         context={"guardian": guardian},
+        language=guardian.language,
+    )
+
+
+def send_guardian_email_update_token_notification(
+    guardian: Guardian, verification_token_key: str
+):
+    send_notification(
+        guardian.email,
+        NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
+        context={"guardian": guardian, "verification_token": verification_token_key},
         language=guardian.language,
     )
 
