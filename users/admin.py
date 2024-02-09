@@ -83,12 +83,6 @@ class UserInline(admin.StackedInline):
     model = get_user_model().groups.through
     extra = 0
 
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == "user":
-            formfield.queryset = formfield.queryset.possible_admins()
-        return formfield
-
 
 @admin.register(Group)
 class GroupAdmin(PermissionFilterMixin, DjangoGroupAdmin):
