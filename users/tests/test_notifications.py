@@ -9,7 +9,11 @@ from common.tests.utils import (
 )
 from users.factories import GuardianFactory
 from users.notifications import NotificationType
-from users.tests.mutations import REQUEST_EMAIL_CHANGE_TOKEN_MUTATION
+from users.tests.mutations import (
+    REQUEST_EMAIL_CHANGE_TOKEN_MUTATION,
+    UPDATE_MY_EMAIL_MUTATION,
+)
+from verification_tokens.factories import UserEmailVerificationTokenFactory
 
 
 @pytest.fixture
@@ -39,23 +43,14 @@ def notification_template_guardian_email_change_requested_fi():
 def test_guardian_changed_email_notification(
     snapshot, new_email, notification_template_guardian_email_changed_fi
 ):
-    guardian = GuardianFactory(
-        first_name="Black", last_name="Guardian", email="old.email@example.com"
-    )
+    guardian = GuardianFactory(email="old.email@example.com")
+    verification_token = UserEmailVerificationTokenFactory(user=guardian.user)
     api_client = create_api_client_with_user(guardian.user)
-    params = {"email": new_email} if new_email else {}
-
     api_client.execute(
-        """
-    mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
-      updateMyProfile(input: $input) {
-        myProfile {
-          email
-        }
-      }
-    }
-    """,
-        variables={"input": {"firstName": "White", **params}},
+        UPDATE_MY_EMAIL_MUTATION,
+        variables={
+            "input": {"email": new_email, "verificationToken": verification_token.key}
+        },
     )
 
     assert_mails_match_snapshot(snapshot)

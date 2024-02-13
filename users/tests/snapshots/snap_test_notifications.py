@@ -13,7 +13,7 @@ snapshots["test_guardian_change_email_token_requested_notification 1"] = [
 snapshots["test_guardian_changed_email_notification[None] 1"] = []
 
 snapshots["test_guardian_changed_email_notification[new.email@example.com] 1"] = [
-    "kukkuu@example.com|['new.email@example.com']|Guardian email changed FI|Guardian FI: White Guardian (new.email@example.com)"
+    "kukkuu@example.com|['new.email@example.com']|Guardian email changed FI|Guardian FI: Michael Patton (new.email@example.com)"
 ]
 
 snapshots["test_guardian_changed_email_notification[old.email@example.com] 1"] = []
