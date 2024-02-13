@@ -68,11 +68,6 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         last_name = graphene.String()
         phone_number = graphene.String()
         language = LanguageEnum()
-        # TODO: Remove this feature
-        # replace with the UpdateMyEmailMutation that includes token verification.
-        email = graphene.String(
-            description="Deprecated: Use the UpdateMyEmailMutation instead."
-        )
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
 
     my_profile = graphene.Field(GuardianNode)
@@ -89,16 +84,12 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
             raise ObjectDoesNotExistError(e)
 
         languages_spoken_at_home = kwargs.pop("languages_spoken_at_home", [])
-        validate_guardian_data(kwargs)
+        validate_guardian_data(
+            kwargs
+        )  # NOTE: doesn't actually do anything, since it validates only an email.
 
-        old_email = guardian.email
         update_object(guardian, kwargs)
         set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
-
-        # TODO: Remove this feature
-        # replace with the UpdateMyEmailMutation that includes token verification.
-        if guardian.email != old_email:
-            send_guardian_email_changed_notification(guardian)
 
         return UpdateMyProfileMutation(my_profile=guardian)
 

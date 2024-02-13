@@ -234,11 +234,3 @@ snapshots["test_update_my_profile_mutation 1"] = {
         }
     }
 }
-
-snapshots[
-    "test_update_my_profile_mutation_email[guardian_updated@example.com-True] 1"
-] = {
-    "data": {
-        "updateMyProfile": {"myProfile": {"email": "guardian_updated@example.com"}}
-    }
-}
