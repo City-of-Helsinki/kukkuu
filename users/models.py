@@ -99,8 +99,12 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         verbose_name_plural = _("guardians")
         ordering = ["-created_at", "last_name", "first_name"]
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.email})"
+        return f"{self.full_name} ({self.email})"
 
     def save(self, *args, **kwargs):
         if not self.email:

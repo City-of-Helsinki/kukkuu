@@ -67,6 +67,8 @@ env = environ.Env(
     KUKKUU_REMINDER_DAYS_IN_ADVANCE=(int, 1),
     KUKKUU_FEEDBACK_NOTIFICATION_DELAY=(int, 15),
     KUKKUU_NOTIFICATIONS_SHEET_ID=(str, ""),
+    VERIFICATION_TOKEN_VALID_MINUTES=(int, 15),
+    VERIFICATION_TOKEN_LENGTH=(int, 8),
 )
 
 if os.path.exists(env_file):
@@ -197,6 +199,7 @@ INSTALLED_APPS = [
     "messaging",
     "importers",
     "reports",
+    "verification_tokens",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
