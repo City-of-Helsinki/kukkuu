@@ -206,7 +206,7 @@ snapshots["test_my_profile_query_email[guardian@example.com] 1"] = {
 snapshots["test_request_email_change_token_mutation 1"] = {
     "data": {
         "requestEmailUpdateToken": {
-            "email": "michellewalker@example.net",
+            "email": "new-email@kummilapset.fi",
             "emailUpdateTokenRequested": True,
         }
     }
