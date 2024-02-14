@@ -1,6 +1,28 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.0.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v2.0.0...kukkuu-v3.0.0) (2024-02-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* prevented email changing with the update my profile mutation
+
+### Features
+
+* Get active verification tokens for user ([8205b26](https://github.com/City-of-Helsinki/kukkuu/commit/8205b263adddbbc8043c997604d14a2c8227b2d3))
+* Prevented email changing with the update my profile mutation ([e545b06](https://github.com/City-of-Helsinki/kukkuu/commit/e545b068416adee1a681be8215a7d7fb3b9a464c))
+* Request email change token from the graphql-api ([dc81c71](https://github.com/City-of-Helsinki/kukkuu/commit/dc81c71b6e89c08b9eca86c580e64f349d24316c))
+* Send the email change verification token to the new email ([bfa37cf](https://github.com/City-of-Helsinki/kukkuu/commit/bfa37cf5be16558f9e332b47189e512f880fc1b1))
+* Update my email mutation ([af91c7f](https://github.com/City-of-Helsinki/kukkuu/commit/af91c7f93de6d496744b49ad108d74efa5928503))
+* Verification tokens for user email verification ([e806cf6](https://github.com/City-of-Helsinki/kukkuu/commit/e806cf6db19fee751f60f47da2640e8d29b5c175))
+
+
+### Bug Fixes
+
+* Admin site user-group-relationship shouldn't be filtered for admins only ([141d308](https://github.com/City-of-Helsinki/kukkuu/commit/141d30849767cfb55d60d0cee0b56e0e47ed7cbe))
+* Build issues in CI environment ([93c3a32](https://github.com/City-of-Helsinki/kukkuu/commit/93c3a32854b418c217abb768e3c00ed460df0b7e))
+
 ## [2.0.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v1.17.2...kukkuu-v2.0.0) (2024-01-22)
 
 
