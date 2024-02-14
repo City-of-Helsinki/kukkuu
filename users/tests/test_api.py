@@ -183,7 +183,7 @@ def test_update_my_email_mutation(snapshot, user_api_client, new_email, is_valid
     initial_email = "initial-email@kummilapset.fi"
     user = user_api_client.user
     GuardianFactory(user=user, email=initial_email)
-    verification_token = UserEmailVerificationTokenFactory(user=user)
+    verification_token = UserEmailVerificationTokenFactory(user=user, email=new_email)
     variables = {
         "input": {"email": new_email, "verificationToken": verification_token.key}
     }
@@ -203,11 +203,12 @@ def test_update_my_email_mutation(snapshot, user_api_client, new_email, is_valid
 def test_update_my_email_mutation_with_invalid_token(user_api_client):
     user = user_api_client.user
     initial_email = "initial-email@kummilapset.fi"
+    new_email = "changed-email@kummilapset.fi"
     GuardianFactory(user=user, email=initial_email)
-    UserEmailVerificationTokenFactory(user=user)
+    UserEmailVerificationTokenFactory(user=user, email=new_email)
     variables = {
         "input": {
-            "email": "changed-email@kummilapset.fi",
+            "email": new_email,
             "verificationToken": "invalid-key",
         }
     }
@@ -242,6 +243,38 @@ def test_update_my_email_mutation_with_expired_token(user_api_client, settings):
     assert guardian.email == initial_email
 
 
+def test_update_my_email_mutation_with_wrong_email(user_api_client):
+    user = user_api_client.user
+    initial_email = "initial-email@kummilapset.fi"
+    new_email = "changed-email@kummilapset.fi"
+    GuardianFactory(user=user, email=initial_email)
+
+    verification_token_with_old_email = UserEmailVerificationTokenFactory(
+        user=user, email=user.guardian.email
+    )
+    variables = {
+        "input": {
+            "email": new_email,
+            "verificationToken": verification_token_with_old_email.key,
+        }
+    }
+    executed = user_api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_match_error_code(executed, VERIFICATION_TOKEN_INVALID_ERROR)
+
+    verification_token_with_old_email = UserEmailVerificationTokenFactory(user=user)
+    variables = {
+        "input": {
+            "email": new_email,
+            "verificationToken": verification_token_with_old_email.key,
+        }
+    }
+    executed = user_api_client.execute(UPDATE_MY_EMAIL_MUTATION, variables=variables)
+    assert_match_error_code(executed, VERIFICATION_TOKEN_INVALID_ERROR)
+
+    guardian = Guardian.objects.get(user=user)
+    assert guardian.email == initial_email
+
+
 def test_update_my_email_mutation_unauthenticated(api_client):
     variables = {
         "input": {
@@ -255,18 +288,27 @@ def test_update_my_email_mutation_unauthenticated(api_client):
 
 def test_request_email_change_token_mutation(snapshot, user_api_client):
     GuardianFactory(user=user_api_client.user)
-    executed = user_api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
+    variables = {"input": {"email": "new-email@kummilapset.fi"}}
+    executed = user_api_client.execute(
+        REQUEST_EMAIL_CHANGE_TOKEN_MUTATION, variables=variables
+    )
     snapshot.assert_match(executed)
 
 
 def test_request_email_change_token_mutation_without_guardian(user_api_client):
-    executed = user_api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
+    variables = {"input": {"email": "new-email@kummilapset.fi"}}
+    executed = user_api_client.execute(
+        REQUEST_EMAIL_CHANGE_TOKEN_MUTATION, variables=variables
+    )
     assert len(executed["errors"]) == 1
     assert "User has no guardian." in executed["errors"][0]["message"]
 
 
 def test_request_email_change_token_mutation_unauthenticated(api_client):
-    executed = api_client.execute(REQUEST_EMAIL_CHANGE_TOKEN_MUTATION)
+    variables = {"input": {"email": "new-email@kummilapset.fi"}}
+    executed = api_client.execute(
+        REQUEST_EMAIL_CHANGE_TOKEN_MUTATION, variables=variables
+    )
     assert_permission_denied(executed)
 
 

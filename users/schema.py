@@ -117,7 +117,7 @@ class UpdateMyEmailMutation(graphene.relay.ClientIDMutation):
 
         # Validate
         validate_guardian_email(new_email)
-        validate_email_verification_token(user, verification_token)
+        validate_email_verification_token(user, new_email, verification_token)
 
         # Set new value
         guardian.email = new_email
@@ -130,15 +130,18 @@ class UpdateMyEmailMutation(graphene.relay.ClientIDMutation):
         return UpdateMyEmailMutation(my_profile=guardian)
 
 
-class RequestEmailUpdateTokenMutation(graphene.Mutation):
+class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        email = graphene.String(required=True)
 
-    emailUpdateTokenRequested = graphene.Boolean()
+    email_update_token_requested = graphene.Boolean()
     email = graphene.String()
 
     @classmethod
     @login_required
     @transaction.atomic
-    def mutate(cls, root, info, **kwargs):
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        new_email = kwargs["email"]
         user = info.context.user
         try:
             guardian = user.guardian
@@ -146,12 +149,18 @@ class RequestEmailUpdateTokenMutation(graphene.Mutation):
             raise ObjectDoesNotExistError(e)
 
         verification_token = VerificationToken.objects.deactivate_and_create_token(
-            user, user, VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION
+            user,
+            user,
+            VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION,
+            new_email,
         )
-        send_guardian_email_update_token_notification(guardian, verification_token.key)
+        send_guardian_email_update_token_notification(
+            guardian, new_email, verification_token.key
+        )
 
         return RequestEmailUpdateTokenMutation(
-            emailUpdateTokenRequested=True, email=guardian.email
+            email_update_token_requested=True,
+            email=new_email,
         )
 
 
