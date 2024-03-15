@@ -365,7 +365,6 @@ def test_occurrence_reminder_notification(
 
     # time frozen so that the Enrolments will get created_at in the past
     with freeze_time(actual_now - timedelta(days=8)):
-
         # occurrences 7 and 1 days away (and reminder not sent already),
         # both should create a reminder notification
         for delta in (timedelta(days=7), timedelta(days=1)):

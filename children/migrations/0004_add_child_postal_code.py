@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("children", "0003_change_relationship_point_to_guardian")]
 
     operations = [

@@ -6,7 +6,6 @@ import users.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("users", "0007_add_guardian_languages_spoken_at_home"),
     ]

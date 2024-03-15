@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0003_upgrade_to_parler_2"),
         ("events", "0015_add_enrolment_reminder_sent_at"),

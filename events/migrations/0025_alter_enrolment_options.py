@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("events", "0024_add_enrolment_feedback_notification_sent_at"),
     ]

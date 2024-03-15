@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("children", "0006_add_languages_spoken_at_home"),
         ("events", "0021_nullable_capacity_per_occurrence"),

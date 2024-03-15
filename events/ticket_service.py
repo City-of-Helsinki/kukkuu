@@ -17,7 +17,7 @@ def check_ticket_validity(enrolment_reference_id: str) -> Tuple[Enrolment, bool]
     enrolment_id = Enrolment.decode_reference_id(enrolment_reference_id)
     try:
         enrolment = Enrolment.objects.with_end_time().get(pk=enrolment_id)
-    except (Enrolment.DoesNotExist):
+    except Enrolment.DoesNotExist:
         raise EnrolmentReferenceIdDoesNotExist(
             "The decoded reference id does not match to any of the existing enrolments"
         )

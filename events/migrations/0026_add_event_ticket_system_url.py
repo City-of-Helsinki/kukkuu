@@ -22,7 +22,6 @@ def populate_ticket_system_url(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("events", "0025_alter_enrolment_options"),
     ]
