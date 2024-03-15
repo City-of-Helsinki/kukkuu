@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("events", "0003_modify_events_and_occurrences_table"),
     ]

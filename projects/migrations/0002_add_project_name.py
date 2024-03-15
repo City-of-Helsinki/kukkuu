@@ -28,7 +28,6 @@ def populate_name_for_year_2020(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0001_initial"),
     ]

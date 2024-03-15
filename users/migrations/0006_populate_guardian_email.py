@@ -11,7 +11,6 @@ def populate_guardian_email(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("users", "0005_add_guardian_email"),
     ]

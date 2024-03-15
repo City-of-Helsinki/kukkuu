@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("events", "0020_add_occurrence_ticket_system_url"),
     ]

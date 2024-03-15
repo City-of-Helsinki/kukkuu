@@ -137,7 +137,6 @@ def test_verification_token_create_token_with_manager():
 
 @pytest.mark.django_db
 def test_verification_token_deactivate_and_create_token():
-
     user = UserFactory()
     token1 = VerificationToken.objects.create_token(
         user, user, VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION

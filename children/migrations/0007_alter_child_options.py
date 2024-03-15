@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("children", "0006_add_languages_spoken_at_home"),
     ]

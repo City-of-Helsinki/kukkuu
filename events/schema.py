@@ -60,7 +60,6 @@ EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
 def validate_enrolment(child, occurrence):
-
     if not occurrence.event.is_published():
         raise EventNotPublishedError("Event is not published")
 
@@ -525,7 +524,6 @@ class OccurrenceNode(DjangoObjectType):
 
 
 class EnrolmentNode(DjangoObjectType):
-
     reference_id = graphene.String(description="An unique encoded reference id")
 
     class Meta:
