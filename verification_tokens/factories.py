@@ -20,6 +20,7 @@ class VerificationTokenFactory(factory.django.DjangoModelFactory):
     is_active = True
 
     class Meta:
+        model = VerificationToken
         exclude = ["content_object"]
         abstract = True
 
@@ -28,5 +29,7 @@ class UserEmailVerificationTokenFactory(VerificationTokenFactory):
     content_object = factory.LazyAttribute(lambda o: o.user)
     verification_type = VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION
 
-    class Meta:
-        model = VerificationToken
+
+class UserSubscriptionsAuthVerificationTokenFactory(VerificationTokenFactory):
+    content_object = factory.LazyAttribute(lambda o: o.user)
+    verification_type = VerificationToken.VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH

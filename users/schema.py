@@ -9,7 +9,6 @@ from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
-from verification_tokens.models import VerificationToken
 
 from .models import Guardian
 from .utils import (
@@ -148,11 +147,8 @@ class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
-        verification_token = VerificationToken.objects.deactivate_and_create_token(
-            user,
-            user,
-            VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION,
-            new_email,
+        verification_token = user.deactivate_and_create_email_verification_token(
+            new_email
         )
         send_guardian_email_update_token_notification(
             guardian, new_email, verification_token.key

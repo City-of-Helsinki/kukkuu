@@ -5,15 +5,22 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from users.factories import UserFactory
-from verification_tokens.factories import UserEmailVerificationTokenFactory
+from verification_tokens.factories import (
+    UserEmailVerificationTokenFactory,
+    UserSubscriptionsAuthVerificationTokenFactory,
+)
 from verification_tokens.models import VerificationToken
 
 User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_enrolment_verification_token_creation():
-    verification_token = UserEmailVerificationTokenFactory()
+@pytest.mark.parametrize(
+    "Factory",
+    [UserEmailVerificationTokenFactory, UserSubscriptionsAuthVerificationTokenFactory],
+)
+def test_verification_token_creation(Factory):
+    verification_token = Factory()
     assert VerificationToken.objects.count() == 1
     assert verification_token.content_object.__class__ == User
     assert verification_token.key is not None
