@@ -29,12 +29,15 @@ class VerificationTokenManager(models.Manager):
         verification_type,
         email=None,
         expiry_minutes=getattr(settings, "VERIFICATION_TOKEN_VALID_MINUTES", 15),
+        token_length=getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8),
     ):
         """
         Deactivate old tokens (of a type) and create a new one.
         """
         self.deactivate_token(obj, verification_type=verification_type, user=user)
-        return self.create_token(obj, user, verification_type, email, expiry_minutes)
+        return self.create_token(
+            obj, user, verification_type, email, expiry_minutes, token_length
+        )
 
     def create_token(
         self,
@@ -43,8 +46,9 @@ class VerificationTokenManager(models.Manager):
         verification_type,
         email=None,
         expiry_minutes=getattr(settings, "VERIFICATION_TOKEN_VALID_MINUTES", 15),
+        token_length=getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8),
     ):
-        key = self.model.generate_key()
+        key = self.model.generate_key(token_length=token_length)
 
         if expiry_minutes:
             expiry_date = timezone.now() + timedelta(minutes=expiry_minutes)
@@ -106,9 +110,14 @@ class VerificationTokenManager(models.Manager):
 
 class VerificationToken(models.Model):
     VERIFICATION_TYPE_EMAIL_VERIFICATION = "EMAIL_VERIFICATION"
+    VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH = "SUBSCRIPTIONS_AUTH"
 
     VERIFICATION_TOKEN_TYPE_CHOICES = [
         (VERIFICATION_TYPE_EMAIL_VERIFICATION, _("Email verification")),
+        (
+            VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH,
+            _("Subscriptions management authorization"),
+        ),
     ]
 
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
@@ -131,9 +140,11 @@ class VerificationToken(models.Model):
     objects = VerificationTokenManager()
 
     @classmethod
-    def generate_key(cls):
+    def generate_key(
+        cls, token_length=getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8)
+    ):
         """Generates a new key for a verification token."""
-        return token_urlsafe(getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8))
+        return token_urlsafe(token_length)
 
     def is_valid(self):
         """Validates token state."""

@@ -69,6 +69,8 @@ env = environ.Env(
     KUKKUU_NOTIFICATIONS_SHEET_ID=(str, ""),
     VERIFICATION_TOKEN_VALID_MINUTES=(int, 15),
     VERIFICATION_TOKEN_LENGTH=(int, 8),
+    SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES=(int, 30 * 24 * 60),  # 30 days
+    SUBSCRIPTIONS_AUTH_TOKEN_LENGTH=(int, 16),
 )
 
 if os.path.exists(env_file):
@@ -152,8 +154,12 @@ elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
     AZURE_CONTAINER = env("AZURE_CONTAINER")
     if env("AZURE_BLOB_STORAGE_SAS_TOKEN"):
         SAS_TOKEN = env("AZURE_BLOB_STORAGE_SAS_TOKEN")
-        AZURE_ENDP = f"BlobEndpoint=https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
-        AZURE_CONNECTION_STRING = f"{AZURE_ENDP};SharedAccessSignature={SAS_TOKEN};"
+        AZURE_ENDP = (
+            f"BlobEndpoint=https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net"  # noqa
+        )
+        AZURE_CONNECTION_STRING = (
+            f"{AZURE_ENDP};SharedAccessSignature={SAS_TOKEN};"  # noqa
+        )
     else:
         AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
 

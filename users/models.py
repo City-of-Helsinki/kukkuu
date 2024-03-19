@@ -1,3 +1,6 @@
+import logging
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import UserManager as OriginalUserManager
@@ -10,6 +13,11 @@ from helusers.models import AbstractUser
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from languages.models import Language
+
+if TYPE_CHECKING:
+    from verification_tokens.models import VerificationToken
+
+logger = logging.getLogger(__name__)
 
 
 class UserQuerySet(models.QuerySet):
@@ -55,12 +63,58 @@ class User(AbstractUser):
             "projects.manage_event_groups"
         )
 
-    def get_active_verification_tokens(self, verification_type=None):
+    def get_active_verification_tokens(
+        self, verification_type: "VerificationToken.verification_type" = None
+    ) -> list["VerificationToken"]:
         """Filter active verification tokens"""
         from verification_tokens.models import VerificationToken
 
         return VerificationToken.objects.filter_active_tokens(
             self, verification_type=verification_type, user=self
+        )
+
+    def deactivate_and_create_email_verification_token(
+        self, email: str
+    ) -> "VerificationToken":
+        from verification_tokens.models import VerificationToken
+
+        return VerificationToken.objects.deactivate_and_create_token(
+            self,
+            self,
+            VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION,
+            email,
+        )
+
+    def create_subscriptions_management_auth_token(self):
+        """
+        Create a new token that has an expiration date
+        and can be used to as an authorization token to manage
+        the user's subscriptions to notifications.
+        """
+        from verification_tokens.models import VerificationToken
+
+        # NOTE: Should the email be left empty?
+        # The only value the email gives here is that it is denormalized to db
+        try:
+            email = self.guardian.email
+            if not email:
+                email = self.email
+        except Guardian.DoesNotExist:
+            email = self.email
+
+        # NOTE: Should this get_or_create never expiring tokens instead?
+        # It would be worse in security perspective, because 1 token would
+        # serve forever, but it would be better in usability, because
+        # then the token would be the same in every email every time, forever.
+        return VerificationToken.objects.create_token(
+            self,
+            self,
+            VerificationToken.VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH,
+            email=email,
+            expiry_minutes=getattr(
+                settings, "SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES", 30 * 24 * 60
+            ),  # 30 days
+            token_length=getattr(settings, "SUBSCRIPTIONS_AUTH_TOKEN_LENGTH", 16),
         )
 
 

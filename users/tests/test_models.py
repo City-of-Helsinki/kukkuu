@@ -98,3 +98,20 @@ def test_get_active_verification_tokens():
         )
         == [verification_token]
     )
+
+
+@pytest.mark.django_db
+def test_create_subscriptions_management_auth_token(user):
+    assert VerificationToken.objects.filter(user=user).count() == 0
+    user.create_subscriptions_management_auth_token()
+    assert VerificationToken.objects.filter(user=user).count() == 1
+    token = VerificationToken.objects.first()
+    assert token.user == user
+    assert token.content_object == user
+    assert (
+        token.verification_type
+        == VerificationToken.VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH
+    )
+    assert token.email == user.email
+    assert token.expiry_date is not None
+    assert len(token.key) >= 16  # the bare minimum for security reasons
