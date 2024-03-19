@@ -9,6 +9,7 @@ from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
+from verification_tokens.decorators import user_from_auth_verification_token_when_denied
 
 from .models import Guardian
 from .utils import (
@@ -68,10 +69,22 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         phone_number = graphene.String()
         language = LanguageEnum()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+        has_accepted_marketing = graphene.Boolean()
+        auth_token = graphene.String(
+            description="Auth token can be used to authorize the action "
+            "without logging in as an user."
+        )
 
     my_profile = graphene.Field(GuardianNode)
 
     @classmethod
+    # When the login_required raises a PermissionDenied exception,
+    # use the auth_token from the input variables
+    # to populate the context.user with the token related user
+    # and then try again.
+    @user_from_auth_verification_token_when_denied(
+        get_token=lambda variables: variables.get("auth_token", None)
+    )
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
@@ -82,13 +95,17 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
+        should_update_languages_spoken_at_home = "languages_spoken_at_home" in kwargs
         languages_spoken_at_home = kwargs.pop("languages_spoken_at_home", [])
+
         validate_guardian_data(
             kwargs
         )  # NOTE: doesn't actually do anything, since it validates only an email.
 
         update_object(guardian, kwargs)
-        set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
+
+        if should_update_languages_spoken_at_home:
+            set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
 
         return UpdateMyProfileMutation(my_profile=guardian)
 
