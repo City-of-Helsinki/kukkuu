@@ -44,12 +44,19 @@ class GuardianAdmin(admin.ModelAdmin):
         "user",
         "first_name",
         "last_name",
+        "email",
         "phone_number",
         "language",
         "created_at",
         "updated_at",
     )
-    search_fields = ("first_name", "last_name", "user__email")
+    search_fields = (
+        "first_name",
+        "last_name",
+        "email",
+        "user__email",
+        "user__username",
+    )
     exclude = ("languages_spoken_at_home",)
     form = GuardianForm
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
