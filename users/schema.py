@@ -54,7 +54,7 @@ class AdminNode(DjangoObjectType):
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("projects",)
+        fields = ("projects", "username", "email")
 
     @staticmethod
     def resolve_projects(parent, info, **kwargs):
