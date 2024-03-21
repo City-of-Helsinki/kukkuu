@@ -59,7 +59,7 @@ query MyProfile {
 """
 
 MY_ADMIN_PROFILE_QUERY = """
-query MyAdminProfle{
+query MyAdminProfile{
   myAdminProfile{
     projects {
       edges {
@@ -72,6 +72,17 @@ query MyAdminProfle{
         }
       }
     }
+  }
+}
+"""
+
+MY_MARKETING_SUBSCRIPTIONS_QUERY = """
+query MyMarketingSubscriptions($authToken: String){
+  myMarketingSubscriptions(authToken: $authToken){
+    firstName
+    lastName
+    language
+    hasAcceptedMarketing
   }
 }
 """

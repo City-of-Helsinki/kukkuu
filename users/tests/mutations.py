@@ -36,3 +36,19 @@ mutation RequestEmailUpdateToken($input: RequestEmailUpdateTokenMutationInput!) 
     }
 }
 """
+
+
+UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION = """
+mutation UpdateMyMarketingSubscriptions(
+  $input: UpdateMyMarketingSubscriptionsMutationInput!
+) {
+  updateMyMarketingSubscriptions(input: $input) {
+    guardian {
+      firstName,
+      lastName
+      language,
+      hasAcceptedMarketing
+    }
+  }
+}
+"""

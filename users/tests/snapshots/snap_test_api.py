@@ -166,6 +166,28 @@ snapshots["test_my_admin_profile_project_admin[no_model_perm] 1"] = {
     }
 }
 
+snapshots["test_my_marketing_subscriptions_query_as_logged_in 1"] = {
+    "data": {
+        "myMarketingSubscriptions": {
+            "firstName": "Michael",
+            "hasAcceptedMarketing": False,
+            "language": "fi",
+            "lastName": "Patton",
+        }
+    }
+}
+
+snapshots["test_my_marketing_subscriptions_query_with_auth_verification_token 1"] = {
+    "data": {
+        "myMarketingSubscriptions": {
+            "firstName": "Michael",
+            "hasAcceptedMarketing": True,
+            "language": "fi",
+            "lastName": "Patton",
+        }
+    }
+}
+
 snapshots["test_my_profile_no_profile 1"] = {"data": {"myProfile": None}}
 
 snapshots["test_my_profile_query 1"] = {
@@ -214,6 +236,100 @@ snapshots["test_request_email_change_token_mutation 1"] = {
 
 snapshots["test_update_my_email_mutation[changed-email@kummilapset.fi-True] 1"] = {
     "data": {"updateMyEmail": {"myProfile": {"email": "changed-email@kummilapset.fi"}}}
+}
+
+snapshots["test_update_my_marketing_subscriptions_as_logged_in[False] 1"] = {
+    "data": {
+        "updateMyMarketingSubscriptions": {
+            "guardian": {
+                "firstName": "Michael",
+                "hasAcceptedMarketing": True,
+                "language": "fi",
+                "lastName": "Patton",
+            }
+        }
+    }
+}
+
+snapshots["test_update_my_marketing_subscriptions_as_logged_in[True] 1"] = {
+    "data": {
+        "updateMyMarketingSubscriptions": {
+            "guardian": {
+                "firstName": "Michael",
+                "hasAcceptedMarketing": False,
+                "language": "fi",
+                "lastName": "Patton",
+            }
+        }
+    }
+}
+
+snapshots[
+    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables0] 1"
+] = {
+    "errors": [
+        {
+            "extensions": {"code": "GENERAL_ERROR"},
+            "locations": [{"column": 3, "line": 3}],
+            "message": """Variable "$input" got invalid value {}.
+In field "hasAcceptedMarketing": Expected "Boolean!", found null.""",
+        }
+    ]
+}
+
+snapshots[
+    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables1] 1"
+] = {
+    "errors": [
+        {
+            "extensions": {"code": "GENERAL_ERROR"},
+            "locations": [{"column": 3, "line": 3}],
+            "message": 'Variable "$input" of required type "UpdateMyMarketingSubscriptionsMutationInput!" was not provided.',
+        }
+    ]
+}
+
+snapshots[
+    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables2] 1"
+] = {
+    "errors": [
+        {
+            "extensions": {"code": "GENERAL_ERROR"},
+            "locations": [{"column": 3, "line": 3}],
+            "message": """Variable "$input" got invalid value {"authToken": "what ever"}.
+In field "hasAcceptedMarketing": Expected "Boolean!", found null.""",
+        }
+    ]
+}
+
+snapshots[
+    "test_update_my_marketing_subscriptions_with_auth_verification_token[False] 1"
+] = {
+    "data": {
+        "updateMyMarketingSubscriptions": {
+            "guardian": {
+                "firstName": "Michael",
+                "hasAcceptedMarketing": True,
+                "language": "fi",
+                "lastName": "Patton",
+            }
+        }
+    }
+}
+
+snapshots[
+    "test_update_my_marketing_subscriptions_with_auth_verification_token[True] 1"
+] = {
+    "data": {
+        "updateMyMarketingSubscriptions": {
+            "guardian": {
+                "firstName": "Michael",
+                "hasAcceptedMarketing": False,
+                "language": "fi",
+                "lastName": "Patton",
+            }
+        }
+    }
 }
 
 snapshots["test_update_my_profile_mutation 1"] = {

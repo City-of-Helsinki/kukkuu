@@ -9,7 +9,7 @@ from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
-from verification_tokens.decorators import user_from_auth_verification_token_when_denied
+from verification_tokens.decorators import user_from_auth_verification_token
 
 from .models import Guardian
 from .utils import (
@@ -35,9 +35,10 @@ class GuardianNode(DjangoObjectType):
             "user",
             "first_name",
             "last_name",
-            "phone_number",
             "language",
+            "phone_number",
             "email",
+            "has_accepted_marketing",
             "children",
             "relationships",
             "languages_spoken_at_home",
@@ -47,6 +48,27 @@ class GuardianNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
+
+
+class GuardianMarketingSubscriptionsNode(DjangoObjectType):
+    class Meta:
+        model = Guardian
+        fields = (
+            "id",
+            "first_name",
+            "last_name",
+            "language",
+            "has_accepted_marketing",
+        )
+        # Skip the registry, or this GuardianMarketingSubscriptionsNode
+        # would overlap with the GuardianNode, which would then lead to
+        # situations where a wrong node type is used in wrong places.
+        skip_registry = True
+        interfaces = (relay.Node,)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset.user_can_view(info.context.user)
 
 
 class AdminNode(DjangoObjectType):
@@ -70,21 +92,10 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         language = LanguageEnum()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
         has_accepted_marketing = graphene.Boolean()
-        auth_token = graphene.String(
-            description="Auth token can be used to authorize the action "
-            "without logging in as an user."
-        )
 
     my_profile = graphene.Field(GuardianNode)
 
     @classmethod
-    # When the login_required raises a PermissionDenied exception,
-    # use the auth_token from the input variables
-    # to populate the context.user with the token related user
-    # and then try again.
-    @user_from_auth_verification_token_when_denied(
-        get_token=lambda variables: variables.get("auth_token", None)
-    )
     @login_required
     @transaction.atomic
     def mutate_and_get_payload(cls, root, info, **kwargs):
@@ -177,10 +188,50 @@ class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
         )
 
 
+class UpdateMyMarketingSubscriptionsMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        has_accepted_marketing = graphene.Boolean(required=True)
+        auth_token = graphene.String(
+            description="Auth token can be used to authorize the action "
+            "without logging in as an user."
+        )
+
+    guardian = graphene.Field(GuardianMarketingSubscriptionsNode)
+
+    @classmethod
+    # When the login_required raises a PermissionDenied exception,
+    # use the auth_token from the input variables
+    # to populate the context.user with the token related user
+    # and then try again.
+    @user_from_auth_verification_token(
+        get_token=lambda variables: variables.get("auth_token", None),
+        use_only_when_first_denied=True,
+    )
+    @login_required
+    def mutate_and_get_payload(cls, root, info, has_accepted_marketing, **kwargs):
+        user = info.context.user
+        try:
+            guardian = user.guardian
+        except Guardian.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+
+        guardian.has_accepted_marketing = has_accepted_marketing
+        guardian.save()
+
+        return UpdateMyMarketingSubscriptionsMutation(guardian=guardian)
+
+
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
     my_admin_profile = graphene.Field(AdminNode)
+    my_marketing_subscriptions = graphene.Field(
+        GuardianMarketingSubscriptionsNode,
+        auth_token=graphene.String(
+            description="Auth token can be used to authorize the action "
+            "without logging in as an user."
+        ),
+    )
 
     @staticmethod
     @login_required
@@ -197,8 +248,22 @@ class Query:
     def resolve_my_admin_profile(parent, info, **kwargs):
         return info.context.user
 
+    @staticmethod
+    # When the login_required raises a PermissionDenied exception,
+    # use the auth_token from the input variables
+    # to populate the context.user with the token related user
+    # and then try again.
+    @user_from_auth_verification_token(
+        get_token=lambda variables: variables.get("auth_token", None),
+        use_only_when_first_denied=True,
+    )
+    @login_required
+    def resolve_my_marketing_subscriptions(parent, info, **kwargs):
+        return info.context.user.guardian
+
 
 class Mutation:
     update_my_profile = UpdateMyProfileMutation.Field()
     update_my_email = UpdateMyEmailMutation.Field()
     request_email_update_token = RequestEmailUpdateTokenMutation.Field()
+    update_my_marketing_subscriptions = UpdateMyMarketingSubscriptionsMutation.Field()
