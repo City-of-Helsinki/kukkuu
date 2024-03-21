@@ -291,6 +291,7 @@ class GuardianInput(graphene.InputObjectType):
     language = LanguageEnum(required=True)
     email = graphene.String()
     languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+    has_accepted_marketing = graphene.Boolean()
 
 
 class ChildInput(graphene.InputObjectType):
@@ -354,6 +355,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             phone_number=guardian_data.get("phone_number", ""),
             language=guardian_data["language"],
             email=guardian_data.get("email", ""),
+            has_accepted_marketing=guardian_data.get("has_accepted_marketing", False),
         )
         set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
 
