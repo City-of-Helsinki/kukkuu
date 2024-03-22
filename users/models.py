@@ -192,6 +192,9 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         related_name="guardians",
         blank=True,
     )
+    has_accepted_marketing = models.BooleanField(
+        _("accepts marketing"), null=False, default=False
+    )
 
     objects = GuardianQuerySet.as_manager()
 
