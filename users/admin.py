@@ -49,6 +49,7 @@ class GuardianAdmin(admin.ModelAdmin):
         "language",
         "created_at",
         "updated_at",
+        "has_accepted_marketing",
     )
     search_fields = (
         "first_name",
@@ -60,7 +61,7 @@ class GuardianAdmin(admin.ModelAdmin):
     exclude = ("languages_spoken_at_home",)
     form = GuardianForm
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
-    list_filter = ("children__project",)
+    list_filter = ("children__project", "has_accepted_marketing")
 
 
 class PermissionFilterMixin:
