@@ -7,13 +7,14 @@ from common.utils import context
 from verification_tokens.models import VerificationToken
 
 
-def user_from_auth_verification_token_when_denied(
-    get_token: Callable[[dict], Optional[str]]
+def user_from_auth_verification_token(
+    get_token: Callable[[dict], Optional[str]], use_only_when_first_denied: bool = False
 ):
     """Sets the related auth token user to the context
     (in place of the logged in user; ``context.user``),
-    if the wrapped function throws a permission denied error and then retries
-    the wrapped function.
+    if the ``use_only_when_first_denied`` is set to ``True``
+    or if the wrapped function throws a permission denied error.
+    It then runs (or retries) the wrapped function.
 
     This decorator is implemented to be used with the ``@login_required`` decorator
     in the GraphQL endpoint's handler.
@@ -46,8 +47,11 @@ def user_from_auth_verification_token_when_denied(
     ... }
 
     Args:
-        get_token ((dict) -> str | None): a (lambda) function that
-                returns an auth token from the input variables # noqa
+        get_token ((dict) -> str | None): a (lambda) function that
+            returns an auth token from the input variables
+        use_only_when_first_denied (bool, optional): if set to True,
+            the decorator adds the user in the context only when
+            PermissionDenied is raised first. Defaults to False.
     """
 
     def _get_verification_token(**kwargs):
@@ -57,23 +61,29 @@ def user_from_auth_verification_token_when_denied(
                 verification_type=VerificationToken.VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH,  # noqa E501
             ).first()
 
-    def _set_user_to_context(context, user):
-        context.user = user
+    def _use_auth_token(
+        context,
+        permissionDeniedError=PermissionDenied(
+            "You do not have permission to perform this action"
+        ),
+        **kwargs,
+    ):
+        if auth_verification_token := _get_verification_token(**kwargs):
+            context.user = auth_verification_token.content_object
+        else:
+            raise permissionDeniedError
 
     def decorator(func):
         @wraps(func)
         @context(func)
         def wrapper(context, *args, **kwargs):
             try:
+                if not use_only_when_first_denied:
+                    _use_auth_token(context, **kwargs)
                 return func(*args, **kwargs)
             except PermissionDenied as permissionDeniedError:
-                if auth_verification_token := _get_verification_token(**kwargs):
-                    _set_user_to_context(
-                        context, auth_verification_token.content_object
-                    )
-                    return func(*args, **kwargs)
-                else:
-                    raise permissionDeniedError
+                _use_auth_token(context, permissionDeniedError, **kwargs)
+                return func(*args, **kwargs)
 
         return wrapper
 
