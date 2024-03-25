@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -15,6 +15,8 @@ from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from languages.models import Language
 
 if TYPE_CHECKING:
+    from children.models import Child
+    from subscriptions.models import FreeSpotNotificationSubscription
     from verification_tokens.models import VerificationToken
 
 logger = logging.getLogger(__name__)
@@ -84,6 +86,37 @@ class User(AbstractUser):
             VerificationToken.VERIFICATION_TYPE_EMAIL_VERIFICATION,
             email,
         )
+
+    def get_subscriptions(
+        self, child: Optional["Child"] = None
+    ) -> Union[models.QuerySet, list["FreeSpotNotificationSubscription"]]:
+        """
+        Get all the user's subscriptions.
+        If a child argument is given, only the subscriptions that are linked
+        to that given child are returned.
+        """
+        from subscriptions.models import FreeSpotNotificationSubscription
+
+        return FreeSpotNotificationSubscription.objects.user_subscriptions(self, child)
+
+    def unsubscribe_all_notification_subscriptions(
+        self, child: Optional["Child"] = None
+    ):
+        """
+        Unsubscribe user's all notification subsriptions.
+        If a child argument is given, the unsubscribing is done only
+        to subscriptions that are linked to the given child that
+        the user is a guardian to.
+        """
+        subscriptions = self.get_subscriptions(child=child)
+        count = subscriptions.count()
+        subscriptions.delete()
+        logger.info(
+            f"User {self.uuid} unsubscribed all ({count}) "
+            "subscriptions they had active%s"
+            % (f" for child {child.id}." if child else ".")
+        )
+        return count
 
     def create_subscriptions_management_auth_token(self):
         """

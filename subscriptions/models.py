@@ -1,3 +1,5 @@
+from typing import Optional, TYPE_CHECKING, Union
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, UniqueConstraint
@@ -9,9 +11,39 @@ from events.utils import send_event_notifications_to_guardians
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 from subscriptions.consts import NotificationType
 
+if TYPE_CHECKING:
+    from users.models import User
 
-class FreeSpotNotificationSubscriptionQueryset(models.QuerySet):
-    def user_can_view(self, user):
+
+class FreeSpotNotificationSubscriptionQuerySet(models.QuerySet):
+    def user_subscriptions(
+        self, user: "User", child: Optional[Child] = None
+    ) -> Union[models.QuerySet, list["FreeSpotNotificationSubscription"]]:
+        """Get user's free spot notification subcriptions
+
+        Args:
+            user (User): an user instance
+            child (Optional[Child], optional): a child instance. Defaults to None.
+
+        Raises:
+            ValueError: if the user is not a guardian for the child.
+
+        Returns:
+            QuerySet: list of user's FreeSpotNotificationSubscription instances,
+                filtered with a child if the child arg is given.
+        """
+        qs = self.filter(child__guardians__user=user)
+        if child:
+            if user.id not in [
+                entry["user_id"] for entry in child.guardians.values("user_id")
+            ]:
+                raise ValueError(
+                    f"The user {user.uuid} is not a guardian for the child {child.id}"
+                )
+            return qs.filter(child=child)
+        return qs
+
+    def user_can_view(self, user: "User"):
         return self.filter(
             Q(child__guardians__user=user)
             | Q(child__project__in=user.administered_projects)
@@ -48,7 +80,7 @@ class FreeSpotNotificationSubscription(models.Model):
         on_delete=models.CASCADE,
     )
 
-    objects = FreeSpotNotificationSubscriptionQueryset.as_manager()
+    objects = FreeSpotNotificationSubscriptionQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("free spot notification subscription")

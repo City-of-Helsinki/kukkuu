@@ -10,6 +10,7 @@ from events.factories import (
     OccurrenceFactory,
 )
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from subscriptions.models import FreeSpotNotificationSubscription
 from subscriptions.tests.utils import assert_child_has_subscriptions
 
 
@@ -70,3 +71,39 @@ def test_enrolling_deletes_same_event_group_free_spot_subscriptions(child):
     EnrolmentFactory(child=child, occurrence=occurrence)
 
     assert_child_has_subscriptions(child, other_group_subscription)
+
+
+@pytest.mark.django_db
+def test_user_subscriptions(child):
+    guardian = child.guardians.first()
+    user = guardian.user
+
+    user_child_subscriptions = list(
+        FreeSpotNotificationSubscriptionFactory.create_batch(5, child=child)
+    )
+    users_other_subscriptions = list(
+        FreeSpotNotificationSubscriptionFactory.create_batch(5)
+    )
+    for subscription in users_other_subscriptions:
+        subscription.child.guardians.set([guardian])
+    users_subscriptions = user_child_subscriptions + users_other_subscriptions
+
+    # Other users subscriptions in database
+    FreeSpotNotificationSubscriptionFactory.create_batch(10)
+
+    # when user_subscriptions is called without args
+    results_without_args = FreeSpotNotificationSubscription.objects.user_subscriptions(
+        user
+    )
+    # then it should match with the list of user's all subscriptions,
+    # no matter the child
+    assert len(users_subscriptions) == len(results_without_args) == 10
+    assert all(s in results_without_args for s in users_subscriptions)
+
+    # when user_subscriptions is called with child arg
+    results_with_child_arg = (
+        FreeSpotNotificationSubscription.objects.user_subscriptions(user, child)
+    )
+    # then it should match with the list of user's subscriptions for the child
+    assert len(results_with_child_arg) == len(user_child_subscriptions) == 5
+    assert all(s in results_with_child_arg for s in user_child_subscriptions)
