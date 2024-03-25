@@ -35,3 +35,5 @@ To manage the subscriptions without logging in, for example clicking a link from
 > NOTE: This is very much needed when the user cannot log in to his own account anymore, which could be due to the fact that Tunnistamo does not support any duplicated accounts (multiple accounts for the same email) nor Facebook authentication (anymore).
 
 The [VerificationToken model from the Verification tokens app](../verification_tokens/models.py) can be used to create tokens and link them to the subscription object.
+
+There is also a [`user_from_auth_verification_token` -decorator](../verification_tokens/decorators.py) that sets the user linked to the authorization verification token to the request context and it can also be used along side with the `@login_required` decorator.
