@@ -48,6 +48,7 @@ def notification_template_event_published_fi():
         Event FI: {{ event.name }}
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -66,6 +67,7 @@ def notification_template_event_group_published_fi():
         {% for event in events %}
             {{ event.obj.name}} {{ event.obj.published_at }} {{ event.event_url }}
         {% endfor %}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -82,6 +84,7 @@ def notification_template_occurrence_enrolment_fi():
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
         Occurrence URL: {{ occurrence_url }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -97,6 +100,7 @@ def notification_template_occurrence_unenrolment_fi():
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -112,6 +116,7 @@ def notification_template_occurrence_cancelled_fi():
         Guardian FI: {{ guardian }}
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -128,6 +133,7 @@ def notification_template_occurrence_reminder_fi():
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
         Enrolment: {{ enrolment.occurrence.time }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -144,6 +150,7 @@ def notification_template_occurrence_feedback_fi():
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
         Enrolment: {{ enrolment.occurrence.time }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -155,6 +162,7 @@ def test_event_publish_notification(
     notification_template_event_published_fi,
     unpublished_event,
     project,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     GuardianFactory(language="fi")
     children = ChildWithGuardianFactory.create_batch(3, project=project)
@@ -173,6 +181,7 @@ def test_event_publish_notification_not_sent_when_publication_fails(
     snapshot,
     publisher_api_client,
     notification_template_event_published_fi,
+    mock_user_create_subscriptions_management_auth_token,
     unpublished_event,
     project,
 ):
@@ -198,6 +207,7 @@ def test_event_group_publish_notification(
     snapshot,
     notification_template_event_published_fi,
     notification_template_event_group_published_fi,
+    mock_user_create_subscriptions_management_auth_token,
     project,
     another_project,
 ):
@@ -215,6 +225,7 @@ def test_event_group_republish_notification(
     snapshot,
     notification_template_event_published_fi,
     notification_template_event_group_published_fi,
+    mock_user_create_subscriptions_management_auth_token,
     project,
     another_project,
     past,
@@ -251,6 +262,7 @@ def test_occurrence_enrolment_notifications_on_model_level(
     user_api_client,
     notification_template_occurrence_unenrolment_fi,
     notification_template_occurrence_enrolment_fi,
+    mock_user_create_subscriptions_management_auth_token,
     project,
 ):
     settings.KUKKUU_TICKET_VERIFICATION_URL = ticket_verification_url_setting
@@ -284,6 +296,7 @@ def test_unenrol_occurrence_notification(
     project,
     occurrence,
     notification_template_occurrence_unenrolment_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user,
@@ -311,6 +324,7 @@ def test_occurrence_cancelled_notification(
     snapshot,
     user_api_client,
     notification_template_occurrence_cancelled_fi,
+    mock_user_create_subscriptions_management_auth_token,
     project,
     is_queryset,
 ):
@@ -357,6 +371,7 @@ def test_occurrence_reminder_notification(
     settings,
     snapshot,
     notification_template_occurrence_reminder_fi,
+    mock_user_create_subscriptions_management_auth_token,
     project,
 ):
     settings.KUKKUU_TICKET_VERIFICATION_URL = ticket_verification_url_setting
@@ -447,6 +462,7 @@ def test_occurrence_reminder_notification(
 def test_feedback_notification_instance_checks(
     snapshot,
     notification_template_occurrence_feedback_fi,
+    mock_user_create_subscriptions_management_auth_token,
     force,
 ):
     enrolment_already_in_past = EnrolmentFactory(
@@ -468,6 +484,7 @@ def test_feedback_notification_instance_checks(
 def test_feedback_notification(
     snapshot,
     notification_template_occurrence_feedback_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     seven_days_in_minutes = 60 * 24 * 7
 
@@ -526,6 +543,7 @@ def test_feedback_notification(
 def test_reminder_notification_instance_checks(
     snapshot,
     notification_template_occurrence_reminder_fi,
+    mock_user_create_subscriptions_management_auth_token,
     force,
 ):
     too_old_enrolment = EnrolmentFactory(

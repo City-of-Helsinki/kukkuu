@@ -21,6 +21,7 @@ from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import Project
 from users.factories import GuardianFactory, UserFactory
+from users.models import User
 from venues.factories import VenueFactory
 
 
@@ -215,4 +216,28 @@ def create_api_client_with_user(user):
 def sms_notification():
     return SMSNotificationService(
         api_token="topsecret", api_url="http://send-sms.test.localhost"
+    )
+
+
+@pytest.fixture
+def mock_user_create_subscriptions_management_auth_token(monkeypatch):
+    """
+    Always return a fixed authorization verification token from
+    ``User.create_subscriptions_management_auth_token()``.
+    """
+    original_func = User.create_subscriptions_management_auth_token
+
+    def get_mocked_function(auth_key: str):
+        def mocked_create_subscriptions_management_auth_token(self):
+            auth_verification_token = original_func(self)
+            auth_verification_token.key = auth_key
+            auth_verification_token.save()
+            return auth_verification_token
+
+        return mocked_create_subscriptions_management_auth_token
+
+    monkeypatch.setattr(
+        User,
+        "create_subscriptions_management_auth_token",
+        get_mocked_function(auth_key="a1b2c3d4e5f6g7h8"),
     )

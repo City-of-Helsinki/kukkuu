@@ -23,6 +23,7 @@ from events.utils import (
 )
 from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
+    DEFAULT_LANGUAGE,
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
@@ -478,7 +479,7 @@ class Occurrence(TimestampedModel):
         max_length=10,
         choices=settings.LANGUAGES,
         verbose_name=_("occurrence language"),
-        default=settings.LANGUAGES[0][0],
+        default=DEFAULT_LANGUAGE,
     )
     capacity_override = models.PositiveSmallIntegerField(
         verbose_name=_("capacity override"),
