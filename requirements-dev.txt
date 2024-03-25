@@ -30,7 +30,7 @@ decorator==5.1.0
     # via ipython
 fastdiff==0.3.0
     # via snapshottest
-flake8==6.0.0
+flake8==6.1.0
     # via -r requirements-dev.in
 freezegun==1.1.0
     # via -r requirements-dev.in
@@ -75,9 +75,9 @@ ptyprocess==0.7.0
     # via pexpect
 py==1.10.0
     # via pytest
-pycodestyle==2.10.0
+pycodestyle==2.11.1
     # via flake8
-pyflakes==3.0.1
+pyflakes==3.1.0
     # via flake8
 pygments==2.10.0
     # via ipython

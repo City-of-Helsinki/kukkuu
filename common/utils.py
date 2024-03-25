@@ -66,7 +66,7 @@ def check_can_user_administer(obj, user):
 
 def get_obj_from_global_id(info, global_id, expected_obj_type):
     obj = Node.get_node_from_global_id(info, global_id)
-    if not obj or type(obj) != expected_obj_type:
+    if not obj or type(obj) is not expected_obj_type:
         raise ObjectDoesNotExistError(
             f"{expected_obj_type.__name__} with ID {global_id} does not exist."
         )
