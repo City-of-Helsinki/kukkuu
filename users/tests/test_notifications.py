@@ -22,7 +22,7 @@ def notification_template_guardian_email_changed_fi():
         NotificationType.GUARDIAN_EMAIL_CHANGED,
         "fi",
         subject="Guardian email changed FI",
-        body_text="Guardian FI: {{ guardian }}",
+        body_text="Guardian FI: {{ guardian }}. Unsubscribe: {{unsubscribe_url}}",
     )
 
 
@@ -32,7 +32,10 @@ def notification_template_guardian_email_change_requested_fi():
         NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
         "fi",
         subject="Guardian email change verification token requested FI",
-        body_text="Guardian FI: {{ guardian }}. Token: {{ verification_token }}",
+        body_text="""Guardian FI: {{ guardian }}.
+        Token: {{ verification_token }}.
+        Unsubscribe: {{unsubscribe_url}}
+        """,
     )
 
 
@@ -41,7 +44,10 @@ def notification_template_guardian_email_change_requested_fi():
 )
 @pytest.mark.django_db
 def test_guardian_changed_email_notification(
-    snapshot, new_email, notification_template_guardian_email_changed_fi
+    snapshot,
+    new_email,
+    notification_template_guardian_email_changed_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     guardian = GuardianFactory(email="old.email@example.com")
     verification_token = UserEmailVerificationTokenFactory(
@@ -68,6 +74,7 @@ def test_guardian_change_email_token_requested_notification(
     new_email,
     snapshot,
     notification_template_guardian_email_change_requested_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     # patch the return value for snapshot testing
     mock_generate_key.return_value = "abc123+-"

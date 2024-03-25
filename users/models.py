@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING, Union
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import UserManager as OriginalUserManager
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
@@ -12,6 +13,7 @@ from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from kukkuu.consts import DEFAULT_LANGUAGE
 from languages.models import Language
 
 if TYPE_CHECKING:
@@ -138,7 +140,7 @@ class User(AbstractUser):
             email = self.guardian.email
             if not email:
                 email = self.email
-        except Guardian.DoesNotExist:
+        except ObjectDoesNotExist:
             email = self.email
 
         # NOTE: Should this get_or_create never expiring tokens instead?
@@ -179,7 +181,7 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
         verbose_name=_("phone number"), max_length=64, blank=True
     )
     language = models.CharField(
-        verbose_name=_("language"), max_length=10, default=settings.LANGUAGES[0][0]
+        verbose_name=_("language"), max_length=10, default=DEFAULT_LANGUAGE
     )
     email = models.EmailField(
         _("email address"),

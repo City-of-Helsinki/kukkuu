@@ -26,6 +26,7 @@ def notification_template_signup_fi():
 SIGNUP-notifikaation sisältö tekstimuodossa.
 Lapset: {{ children }}
 Huoltaja: {{ guardian }}
+Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
@@ -40,13 +41,17 @@ def notification_template_signup_en():
 SIGNUP notification body text.
 Children: {{ children }}
 Guardian: {{ guardian }}
+Unsubscribe: {{unsubscribe_url}}
 """,
     )
 
 
 @pytest.mark.django_db
 def test_signup_notification(
-    snapshot, user_api_client, notification_template_signup_fi
+    snapshot,
+    user_api_client,
+    notification_template_signup_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     user_api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
@@ -58,7 +63,10 @@ def test_signup_notification(
 
 @pytest.mark.django_db
 def test_signup_notification_guardian_exists(
-    snapshot, user_api_client, notification_template_signup_fi
+    snapshot,
+    user_api_client,
+    notification_template_signup_fi,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     GuardianFactory(user=user_api_client.user)
 
@@ -78,6 +86,7 @@ def test_signup_notification_language(
     language,
     notification_template_signup_fi,
     notification_template_signup_en,
+    mock_user_create_subscriptions_management_auth_token,
 ):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["language"] = language

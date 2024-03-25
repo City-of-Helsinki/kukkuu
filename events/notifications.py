@@ -20,7 +20,9 @@ from events.utils import (
 )
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
+from users.utils import get_marketing_unsubscribe_ui_url
 from venues.factories import VenueFactory
+from verification_tokens.factories import UserSubscriptionsAuthVerificationTokenFactory
 
 notifications.register(NotificationType.EVENT_PUBLISHED, _("event published"))
 notifications.register(
@@ -43,6 +45,9 @@ guardian = GuardianFactory.build()
 child = ChildWithGuardianFactory.build(relationship__guardian=guardian, project=project)
 occurrence = OccurrenceFactory.build(event=event, venue=venue)
 enrolment = EnrolmentFactory.build(occurrence=occurrence, child=child)
+auth_verification_token = UserSubscriptionsAuthVerificationTokenFactory.build(
+    user=guardian.user
+)
 
 common_event_context = {
     "event": event,
@@ -51,6 +56,9 @@ common_event_context = {
     "event_url": get_event_ui_url(event, child, guardian.language),
     "localtime": timezone.template_localtime,
     "get_global_id": get_global_id,
+    "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+        guardian, guardian.language, auth_verification_token
+    ),
 }
 
 common_occurrence_context = {
@@ -85,6 +93,9 @@ dummy_context.update(
             ],
             "localtime": timezone.template_localtime,
             "get_global_id": get_global_id,
+            "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+                guardian, guardian.language, auth_verification_token
+            ),
         },
     }
 )

@@ -13,7 +13,11 @@ from subscriptions.tests.utils import assert_child_has_subscriptions
 @pytest.mark.django_db
 @pytest.mark.parametrize("final_occurrence_capacity", (4, None))
 def test_free_spot_notification_occurrence_capacity_changes(
-    snapshot, notification_template_free_spot, child, final_occurrence_capacity
+    snapshot,
+    notification_template_free_spot,
+    mock_user_create_subscriptions_management_auth_token,
+    child,
+    final_occurrence_capacity,
 ):
     occurrence = OccurrenceFactory(
         id=777,
@@ -47,7 +51,10 @@ def test_free_spot_notification_occurrence_capacity_changes(
 
 @pytest.mark.django_db
 def test_free_spot_notification_event_capacity_changes(
-    snapshot, notification_template_free_spot, child
+    snapshot,
+    notification_template_free_spot,
+    mock_user_create_subscriptions_management_auth_token,
+    child,
 ):
     occurrence = OccurrenceFactory(
         id=777,
@@ -81,7 +88,10 @@ def test_free_spot_notification_event_capacity_changes(
 
 @pytest.mark.django_db
 def test_free_spot_notification_someone_unenrols(
-    snapshot, notification_template_free_spot, child
+    snapshot,
+    notification_template_free_spot,
+    mock_user_create_subscriptions_management_auth_token,
+    child,
 ):
     occurrence = OccurrenceFactory(
         id=777,

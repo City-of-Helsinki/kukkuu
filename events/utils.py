@@ -9,6 +9,7 @@ from django_ilmoitin.utils import send_notification
 from parler.utils.context import switch_language
 
 from common.utils import get_global_id
+from users.utils import get_marketing_unsubscribe_ui_url
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ def send_event_notifications_to_guardians(
                     "event_url": get_event_ui_url(event, child, guardian.language),
                     "localtime": timezone.template_localtime,
                     "get_global_id": get_global_id,
+                    "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+                        guardian, guardian.language
+                    ),
                     **kwargs,
                 }
                 occurrence = kwargs.get("occurrence")
@@ -95,6 +99,9 @@ def send_event_group_notifications_to_guardians(
                         }
                         for event in event_group.events.language(guardian.language)
                     ],
+                    "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+                        guardian, guardian.language
+                    ),
                     **kwargs,
                 }
 

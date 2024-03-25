@@ -26,5 +26,6 @@ def notification_template_free_spot():
         Child: {{ child }}
         Occurrence enrol URL: {{ occurrence_enrol_url }}
         Subscription created at: {{ subscription.created_at }}
+        Unsubscribe: {{unsubscribe_url}}
 """,
     )

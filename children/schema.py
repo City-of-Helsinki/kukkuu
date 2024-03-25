@@ -30,6 +30,7 @@ from languages.schema import LanguageNode
 from projects.models import Project
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
+from users.utils import get_marketing_unsubscribe_ui_url
 
 from .models import Child, postal_code_validator, Relationship
 
@@ -385,7 +386,13 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         send_notification(
             guardian.email,
             NotificationType.SIGNUP,
-            {"children": children, "guardian": guardian},
+            {
+                "children": children,
+                "guardian": guardian,
+                "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+                    guardian, guardian.language
+                ),
+            },
             guardian.language,
         )
 
