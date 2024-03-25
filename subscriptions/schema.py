@@ -17,6 +17,8 @@ from kukkuu.exceptions import (
     OccurrenceIsNotFullError,
 )
 from subscriptions.models import FreeSpotNotificationSubscription
+from users.schema import GuardianNode
+from verification_tokens.decorators import user_from_auth_verification_token_when_denied
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +92,8 @@ class SubscribeToFreeSpotNotificationMutation(graphene.relay.ClientIDMutation):
         )
 
         logger.info(
-            f"user {user.uuid} subscribed child {child.pk} to occurrence "
-            f"{occurrence} free spot notification"
+            f"User {user.uuid} subscribed child {child.pk} to occurrence "
+            f"{occurrence} free spot notification."
         )
 
         return SubscribeToFreeSpotNotificationMutation(
@@ -123,12 +125,51 @@ class UnsubscribeFromFreeSpotNotificationMutation(graphene.relay.ClientIDMutatio
         subscription.delete()
 
         logger.info(
-            f"user {user.uuid} unsubscribed child {child.pk} from occurrence "
-            f"{occurrence} free spot notification"
+            f"User {user.uuid} unsubscribed child {child.pk} from occurrence "
+            f"{occurrence} free spot notification."
         )
 
         return UnsubscribeFromFreeSpotNotificationMutation(
             child=child, occurrence=occurrence
+        )
+
+
+class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
+    """
+    Unsubscribe user from all the notifications.
+
+    NOTE: This mutation deletes the user's FreeSpotNotifications,
+    which are linked to a Child and Occurrence instances.
+    **It should be noted that the current model architecture allows
+    that a child can have multiple guardians, so unsubscribe can delete
+    some notifications from other users as well. However, the UI apps
+    has never allowed more than 1 guardian for a child.**
+    """
+
+    class Input:
+        auth_token = graphene.String(
+            description="Auth token can be used to authorize the action "
+            "without logging in as an user."
+        )
+
+    guardian = graphene.Field(GuardianNode)
+    unsubscribed = graphene.Boolean()
+
+    @classmethod
+    # When the login_required raises a PermissionDenied exception,
+    # use the auth_token from the input variables
+    # to populate the context.user with the token related user
+    # and then try again.
+    @user_from_auth_verification_token_when_denied(
+        get_token=lambda variables: variables.get("auth_token", None)
+    )
+    @login_required
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        user.unsubscribe_all_notification_subscriptions()
+        logger.info(f"User {user.uuid} unsubscribed from all notifications." "")
+        return UnsubscribeFromAllNotificationsMutation(
+            guardian=user.guardian, unsubscribed=True
         )
 
 
@@ -139,3 +180,4 @@ class Mutation:
     unsubscribe_from_free_spot_notification = (
         UnsubscribeFromFreeSpotNotificationMutation.Field()
     )
+    unsubscribe_from_all_notifications = UnsubscribeFromAllNotificationsMutation.Field()
