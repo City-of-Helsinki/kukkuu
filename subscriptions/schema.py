@@ -18,7 +18,7 @@ from kukkuu.exceptions import (
 )
 from subscriptions.models import FreeSpotNotificationSubscription
 from users.schema import GuardianNode
-from verification_tokens.decorators import user_from_auth_verification_token_when_denied
+from verification_tokens.decorators import user_from_auth_verification_token
 
 logger = logging.getLogger(__name__)
 
@@ -160,8 +160,9 @@ class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
     # use the auth_token from the input variables
     # to populate the context.user with the token related user
     # and then try again.
-    @user_from_auth_verification_token_when_denied(
-        get_token=lambda variables: variables.get("auth_token", None)
+    @user_from_auth_verification_token(
+        get_token=lambda variables: variables.get("auth_token", None),
+        use_only_when_first_denied=True,
     )
     @login_required
     def mutate_and_get_payload(cls, root, info, **kwargs):
