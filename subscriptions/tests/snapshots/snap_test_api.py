@@ -65,6 +65,46 @@ snapshots["test_subscribe_to_free_spot_notification 1"] = {
     }
 }
 
+snapshots["test_unsubscribe_from_all_notifications 1"] = {
+    "data": {
+        "unsubscribeFromAllNotifications": {
+            "guardian": {"user": {"username": "blake64"}},
+            "unsubscribed": True,
+        }
+    }
+}
+
+snapshots["test_unsubscribe_from_all_notifications_using_auth_verification_token 1"] = {
+    "data": {
+        "unsubscribeFromAllNotifications": {
+            "guardian": {"user": {"username": "blake64"}},
+            "unsubscribed": True,
+        }
+    }
+}
+
+snapshots[
+    "test_unsubscribe_from_all_notifications_using_auth_verification_token_as_logged_in 1"
+] = {
+    "data": {
+        "unsubscribeFromAllNotifications": {
+            "guardian": {"user": {"username": "blake64"}},
+            "unsubscribed": True,
+        }
+    }
+}
+
+snapshots[
+    "test_unsubscribe_from_all_notifications_when_logged_in_user_not_auth_token_user 1"
+] = {
+    "data": {
+        "unsubscribeFromAllNotifications": {
+            "guardian": {"user": {"username": "jeffersonkimberly"}},
+            "unsubscribed": True,
+        }
+    }
+}
+
 snapshots["test_unsubscribe_from_free_spot_notification 1"] = {
     "data": {
         "unsubscribeFromFreeSpotNotification": {

@@ -107,6 +107,12 @@ class User(AbstractUser):
         If a child argument is given, the unsubscribing is done only
         to subscriptions that are linked to the given child that
         the user is a guardian to.
+
+        NOTE: This function deletes the FreeSpotNotifications, which are linked to
+        a Child and Occurrence instances. **It should be noted that the current
+        model architecture allows that a child can have multiple guardians,
+        so unsubscribe can delete some notifications from other users as well.
+        However, the UI apps has never allowed more than 1 guardian for a child.**
         """
         subscriptions = self.get_subscriptions(child=child)
         count = subscriptions.count()
