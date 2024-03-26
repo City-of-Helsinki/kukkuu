@@ -26,17 +26,17 @@ class VerificationTokenAdmin(admin.ModelAdmin):
         "is_active",
     )
     list_display_links = ("key",)
-    list_filter = (
-        "created_at",
-        "is_active",
-        "verification_type",
-    )
+    list_filter = ("created_at", "is_active", "verification_type", "content_type")
+    autocomplete_fields = ("user",)
+    date_hierarchy = "created_at"
     search_fields = (
         "key__exact",
         "content_type__model__exact",
         "object_id__exact",
-        "user__guardian__firstname__exact",
-        "user__guardian__lastname__exact",
+        "user__guardian__first_name__exact",
+        "user__guardian__last_name__exact",
+        "user__username",
+        "user__email__exact",
         "email__exact",
     )
     ordering = (
