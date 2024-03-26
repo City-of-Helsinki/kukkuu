@@ -14,9 +14,7 @@ from projects.factories import ProjectFactory
 from subscriptions.consts import NotificationType
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from users.factories import GuardianFactory
-from users.utils import get_marketing_unsubscribe_ui_url
 from venues.factories import VenueFactory
-from verification_tokens.factories import UserSubscriptionsAuthVerificationTokenFactory
 
 notifications.register(NotificationType.FREE_SPOT, _("free spot"))
 
@@ -29,10 +27,7 @@ occurrence = OccurrenceFactory.build(event=event, venue=venue)
 subscription = FreeSpotNotificationSubscriptionFactory.build(
     child=child, occurrence=occurrence
 )
-auth_verification_token = UserSubscriptionsAuthVerificationTokenFactory.build(
-    user=guardian.user
-)
-
+unsubscribe_url = "https://kukkuu-ui-domain/fi/profile/subscriptions?authToken=abc123"
 dummy_context.update(
     {
         NotificationType.FREE_SPOT: {
@@ -49,9 +44,7 @@ dummy_context.update(
             ),
             "subscription": subscription,
             "localtime": timezone.template_localtime,
-            "unsubscribe_url": get_marketing_unsubscribe_ui_url(
-                guardian, guardian.language, auth_verification_token
-            ),
+            "unsubscribe_url": unsubscribe_url,
         },
     }
 )
