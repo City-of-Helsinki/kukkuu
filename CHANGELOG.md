@@ -1,6 +1,34 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.1.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.0.0...kukkuu-v3.1.0) (2024-03-27)
+
+
+### Features
+
+* Add "has accepted marketing" -field to the guardian model ([90cc46c](https://github.com/City-of-Helsinki/kukkuu/commit/90cc46c62cf7a02f9b8df883ef1303e54008d21d))
+* Add "has accepted marketing" field to the GuadianInput ([46fe887](https://github.com/City-of-Helsinki/kukkuu/commit/46fe887c2d824bec6a21e9e58b1c6cde21e852e9))
+* Add accept marketing field to my profile mutation with auth token decoration ([826f254](https://github.com/City-of-Helsinki/kukkuu/commit/826f254b1ca82e37c4ccd8cf5b0fa0d3585c3ea8))
+* Add query and mutation for guardian marketing subscriptions ([45a50be](https://github.com/City-of-Helsinki/kukkuu/commit/45a50be4b24adfa8b521a0234640e72782857582))
+* Add unsubscribe links to the sendings of the notifications ([7d54dfb](https://github.com/City-of-Helsinki/kukkuu/commit/7d54dfba61fdbae0b40620ab5a87fdaeda7d437c))
+* Auth verification token ([2ea2635](https://github.com/City-of-Helsinki/kukkuu/commit/2ea263507fe2feb43243ae9d0cfd5ea91aef4550))
+* Decorator that populates context's user from auth token given as an input ([242cff0](https://github.com/City-of-Helsinki/kukkuu/commit/242cff04eb0885f92b1742696084d81b78b9de10))
+* Graphql api for user to unsubscribe from all notifications ([7a44a4a](https://github.com/City-of-Helsinki/kukkuu/commit/7a44a4a394eeac828e019f7703f209740f668913))
+* User can unsubscribe from all the notifications at once ([26ebc3e](https://github.com/City-of-Helsinki/kukkuu/commit/26ebc3efee15e79286b5738c4ab38107c4dacbf0))
+* Username and email available from AdminNode ([6b8f90f](https://github.com/City-of-Helsinki/kukkuu/commit/6b8f90f2fdcb481beb3b8ef017700a3e88e74de2))
+
+
+### Bug Fixes
+
+* **admin:** Search and filter guardians with guardian and user emails ([e218f09](https://github.com/City-of-Helsinki/kukkuu/commit/e218f090ddd0b86614699379692c7ab7d7655e28))
+* Build in CI fails because of factory usage during build time ([e64fb28](https://github.com/City-of-Helsinki/kukkuu/commit/e64fb281c767795d4fca41d08f9b373c827e8f83))
+
+
+### Documentation
+
+* Subscriptions ([222eaea](https://github.com/City-of-Helsinki/kukkuu/commit/222eaeac0803ada3f5910bf92218b65ba1732491))
+* Users schema ([04f8448](https://github.com/City-of-Helsinki/kukkuu/commit/04f8448da37fbbd3c3d4344eab5c41d746264410))
+
 ## [3.0.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v2.0.0...kukkuu-v3.0.0) (2024-02-14)
 
 
