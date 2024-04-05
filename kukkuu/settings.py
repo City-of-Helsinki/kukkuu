@@ -71,6 +71,8 @@ env = environ.Env(
     VERIFICATION_TOKEN_LENGTH=(int, 8),
     SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES=(int, 30 * 24 * 60),  # 30 days
     SUBSCRIPTIONS_AUTH_TOKEN_LENGTH=(int, 16),
+    GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
+    GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
 )
 
 if os.path.exists(env_file):
@@ -333,6 +335,16 @@ LOGGING = {
     },
     "loggers": {"": {"handlers": ["console"], "level": "INFO"}},
 }
+
+# GDPR API DOCS - See https://profile-api.dev.hel.ninja/docs/gdpr-api/.
+GDPR_API_MODEL = "users.User"
+GDPR_API_QUERY_SCOPE = env("GDPR_API_QUERY_SCOPE")
+GDPR_API_DELETE_SCOPE = env("GDPR_API_DELETE_SCOPE")
+GDPR_API_MODEL_LOOKUP = "uuid"
+GDPR_API_URL_PATTERN = "v1/user/<uuid:uuid>"
+GDPR_API_USER_PROVIDER = "gdpr.service.get_user"
+GDPR_API_DELETER = "gdpr.service.clear_data"
+
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.

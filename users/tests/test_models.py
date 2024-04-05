@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
+from gdpr.consts import CLEARED_VALUE
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from subscriptions.models import FreeSpotNotificationSubscription
 from users.models import Guardian
@@ -180,3 +181,36 @@ def test_create_subscriptions_management_auth_token(user):
     assert token.email == user.email
     assert token.expiry_date is not None
     assert len(token.key) >= 16  # the bare minimum for security reasons
+
+
+@pytest.mark.django_db
+def test_user_clear_gdpr_sensitive_data_fields():
+    original_password = "readabletestpassword"
+    user = UserFactory(password=original_password)
+    assert user.first_name != ""
+    assert user.last_name != ""
+    assert user.email != ""
+    assert user.password == original_password
+    user.clear_gdpr_sensitive_data_fields()
+    user.refresh_from_db()
+    assert user.first_name == ""
+    assert user.last_name == ""
+    assert user.email == ""
+    assert user.username == f"{CLEARED_VALUE}-{user.uuid}"
+    assert user.is_active is False
+    assert user.password != original_password
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("user_email", ["user@kukkuu.hel.fi", ""])
+def test_guardian_clear_gdpr_sensitive_data_fields(user_email):
+    guardian_email = "guardian@kukkuu.hel.fi"
+    guardian = GuardianFactory(email=guardian_email, user__email=user_email)
+    assert guardian.email == guardian_email
+    assert guardian.phone_number != ""
+    guardian.clear_gdpr_sensitive_data_fields()
+    guardian.refresh_from_db()
+    assert guardian.first_name == CLEARED_VALUE
+    assert guardian.last_name == CLEARED_VALUE
+    assert guardian.email == guardian.user.email
+    assert guardian.phone_number == ""

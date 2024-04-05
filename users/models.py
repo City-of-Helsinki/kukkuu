@@ -11,8 +11,11 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
 from helusers.models import AbstractUser
+from typing_extensions import override
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from gdpr.consts import CLEARED_VALUE
+from gdpr.models import GDPRModel
 from kukkuu.consts import DEFAULT_LANGUAGE
 from languages.models import Language
 
@@ -40,8 +43,10 @@ class UserManager(OriginalUserManager.from_queryset(UserQuerySet)):
     pass
 
 
-class User(AbstractUser):
+class User(AbstractUser, GDPRModel):
     objects = UserManager()
+
+    gdpr_sensitive_data_fields = ["first_name", "last_name", "email"]
 
     class Meta:
         verbose_name = _("user")
@@ -158,6 +163,14 @@ class User(AbstractUser):
             token_length=getattr(settings, "SUBSCRIPTIONS_AUTH_TOKEN_LENGTH", 16),
         )
 
+    @override
+    def clear_gdpr_sensitive_data_fields(self):
+        super().clear_gdpr_sensitive_data_fields()
+        self.is_active = False
+        self.username = f"{CLEARED_VALUE}-{self.uuid}"
+        self.set_unusable_password()
+        self.save()
+
 
 class GuardianQuerySet(models.QuerySet):
     def user_can_view(self, user):
@@ -171,7 +184,7 @@ class GuardianQuerySet(models.QuerySet):
             child.delete()
 
 
-class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
+class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel):
     user = models.OneToOneField(
         get_user_model(), verbose_name=_("user"), on_delete=models.CASCADE
     )
@@ -199,6 +212,8 @@ class Guardian(UUIDPrimaryKeyModel, TimestampedModel):
     )
 
     objects = GuardianQuerySet.as_manager()
+
+    gdpr_sensitive_data_fields = ["first_name", "last_name", "phone_number", "email"]
 
     class Meta:
         verbose_name = _("guardian")
