@@ -3,6 +3,8 @@ from typing import Optional, TYPE_CHECKING
 
 from helsinki_gdpr.types import ErrorResponse
 
+from subscriptions.models import FreeSpotNotificationSubscription
+
 if TYPE_CHECKING:
     from users.models import User as UserType
 
@@ -38,8 +40,6 @@ def clear_data(user: "UserType", dry_run: bool) -> Optional[ErrorResponse]:
     the related data will be anonymised.
     The GDPR API package will run this within a transaction.
 
-    This is an alternative for ``delete_data``.
-
     Args:
         user (UserType): the User instance to be deleted along with related GDPR data
         dry_run (bool): a boolean telling if this is a dry run of the function or not
@@ -60,6 +60,7 @@ def clear_data(user: "UserType", dry_run: bool) -> Optional[ErrorResponse]:
         user.guardian.clear_gdpr_sensitive_data_fields()
         for child in user.guardian.children.all():
             child.clear_gdpr_sensitive_data_fields()
+            FreeSpotNotificationSubscription.objects.filter(child=child).delete()
 
     except Guardian.DoesNotExist:
         logger.warn(

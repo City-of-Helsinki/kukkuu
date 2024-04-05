@@ -91,9 +91,9 @@ def test_event_group_can_child_enroll_already_enrolled(
     OccurrenceFactory(
         time=future,
         event__published_at=now(),
-        event__ticket_system=Event.TICKETMASTER
-        if use_ticket_system_passwords
-        else Event.INTERNAL,
+        event__ticket_system=(
+            Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+        ),
         event__event_group=event_group,
     )
     enrolled_occurrence = OccurrenceFactory(
@@ -173,9 +173,9 @@ def test_event_group_can_child_enroll_project_limit_reached(
         enrolled_occurrence = OccurrenceFactory(
             time=future,
             event__published_at=now(),
-            event__ticket_system=Event.TICKETMASTER
-            if use_ticket_system_passwords
-            else Event.INTERNAL,
+            event__ticket_system=(
+                Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+            ),
             event__event_group=enrolled_event_group,
         )
 
@@ -276,9 +276,9 @@ def test_event_can_child_enroll_project_limit_reached(
         enrolled_occurrence = OccurrenceFactory(
             time=future,
             event__published_at=now(),
-            event__ticket_system=Event.TICKETMASTER
-            if use_ticket_system_passwords
-            else Event.INTERNAL,
+            event__ticket_system=(
+                Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+            ),
             event__event_group=enrolled_event_group,
         )
 
@@ -316,9 +316,9 @@ def test_event_can_child_enroll_already_enrolled(
     enrolled_occurrence = OccurrenceFactory(
         time=future,
         event__published_at=now(),
-        event__ticket_system=Event.TICKETMASTER
-        if use_ticket_system_passwords
-        else Event.INTERNAL,
+        event__ticket_system=(
+            Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+        ),
         event__event_group=event_group,
     )
     if use_ticket_system_passwords:

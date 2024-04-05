@@ -2,6 +2,7 @@ import binascii
 from copy import deepcopy
 from functools import wraps
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import Node
@@ -110,3 +111,20 @@ login_required = user_passes_test(lambda u: u.is_authenticated)
 project_user_required = user_passes_test(
     lambda u: u.is_authenticated and u.administered_projects
 )
+
+
+def get_translations_dict(obj, field_name):
+    """
+    Returns a dict of translations for a given field of a model instance.
+
+    :param obj: The model instance
+    :param field_name: The name of the field
+    :return: A dict with language codes as keys and translations as values
+    """
+
+    return {
+        lang_code: getattr(
+            obj.translations.filter(language_code=lang_code).first(), field_name, ""
+        )
+        for lang_code, _ in settings.LANGUAGES
+    }

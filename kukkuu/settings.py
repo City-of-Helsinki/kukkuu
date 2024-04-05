@@ -71,8 +71,15 @@ env = environ.Env(
     VERIFICATION_TOKEN_LENGTH=(int, 8),
     SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES=(int, 30 * 24 * 60),  # 30 days
     SUBSCRIPTIONS_AUTH_TOKEN_LENGTH=(int, 16),
-    GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
-    GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
+    # NOTE: TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX sets a prefix
+    # for `GDPR_API_QUERY_SCOPE` and `GDPR_API_DELETE_SCOPE`.
+    GDPR_API_QUERY_SCOPE=(str, "kukkuu.gdprquery"),
+    GDPR_API_DELETE_SCOPE=(str, "kukkuu.gdprdelete"),
+    # NOTE: For a Keycloak, the following variables might be needed
+    # TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
+    # TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
+    # GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
+    # GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
 )
 
 if os.path.exists(env_file):

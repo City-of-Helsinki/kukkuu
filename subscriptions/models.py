@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils.translation import gettext_lazy as _
+from helsinki_gdpr.models import SerializableMixin
 
 from children.models import Child
 from events.models import Occurrence
@@ -65,7 +66,7 @@ class FreeSpotNotificationSubscriptionQuerySet(models.QuerySet):
             )
 
 
-class FreeSpotNotificationSubscription(models.Model):
+class FreeSpotNotificationSubscription(SerializableMixin, models.Model):
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
     child = models.ForeignKey(
         Child,
@@ -80,7 +81,15 @@ class FreeSpotNotificationSubscription(models.Model):
         on_delete=models.CASCADE,
     )
 
-    objects = FreeSpotNotificationSubscriptionQuerySet.as_manager()
+    serialize_fields = [
+        {"name": "created_at", "accessor": lambda t: t.isoformat() if t else None},
+        {"name": "child", "accessor": lambda c: str(c)},
+        {"name": "occurrence", "accessor": lambda o: str(o)},
+    ]
+
+    objects = SerializableMixin.SerializableManager.from_queryset(
+        FreeSpotNotificationSubscriptionQuerySet
+    )()
 
     class Meta:
         verbose_name = _("free spot notification subscription")

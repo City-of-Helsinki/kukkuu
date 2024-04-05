@@ -2,11 +2,18 @@ from datetime import date
 from typing import Union
 
 import pytest
+from click import UUID
 from django.contrib.auth import get_user_model
 from django.core import mail
+from freezegun import freeze_time
 
-from events.factories import EnrolmentFactory, OccurrenceFactory
+from events.factories import (
+    EnrolmentFactory,
+    OccurrenceFactory,
+    TicketSystemPasswordFactory,
+)
 from events.models import Enrolment
+from users.factories import GuardianFactory
 
 from ..factories import (
     ChildFactory,
@@ -166,3 +173,20 @@ def test_child_clear_gdpr_sensitive_data_fields():
     child.clear_gdpr_sensitive_data_fields()
     child.refresh_from_db()
     assert child.name == ""
+
+
+@pytest.mark.django_db
+@freeze_time("2020-11-11 12:00:00")
+def test_child_serialize(snapshot, project):
+    guardian = GuardianFactory(
+        id=UUID("8dff3da4-a329-4b81-971a-bc509df679b1"),
+        user__uuid=UUID("fa354000-3c0c-11eb-86c5-acde48001122"),
+    )
+    user = guardian.user
+    user.administered_projects = [project]
+    user.save()
+    child = ChildWithGuardianFactory(relationship__guardian=guardian)
+    EnrolmentFactory.create_batch(5, child=child)
+    TicketSystemPasswordFactory.create_batch(5, child=child)
+    user.refresh_from_db()
+    snapshot.assert_match(user.serialize())
