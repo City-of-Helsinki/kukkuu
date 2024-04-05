@@ -158,3 +158,11 @@ def test_child_hashes_email_change(hash_property_name: str):
     hash5 = getattr(child, hash_property_name)
     assert hash4 != hash5
     assert len({hash1, hash2, hash3, hash4, hash5}) == 5
+
+
+@pytest.mark.django_db
+def test_child_clear_gdpr_sensitive_data_fields():
+    child: Child = ChildFactory(name="Initial Name")
+    child.clear_gdpr_sensitive_data_fields()
+    child.refresh_from_db()
+    assert child.name == ""

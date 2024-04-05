@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from gdpr.models import GDPRModel
 from languages.models import Language
 from users.models import Guardian
 
@@ -36,7 +37,7 @@ postal_code_validator = RegexValidator(
 )
 
 
-class Child(UUIDPrimaryKeyModel, TimestampedModel):
+class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel):
     name = models.CharField(verbose_name=_("name"), max_length=64, blank=True)
     birthyear = models.IntegerField(verbose_name=_("birthyear"))
     postal_code = models.CharField(
@@ -65,6 +66,10 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel):
     )
 
     objects = ChildQuerySet.as_manager()
+
+    gdpr_sensitive_data_fields = [
+        "name",
+    ]
 
     class Meta:
         verbose_name = _("child")
