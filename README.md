@@ -115,6 +115,26 @@ To use the SMS notification functionality, you have to acquire the API_KEY from 
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at [localhost:8081](http://localhost:8081)
 
+## GDPR API data export
+
+Django model hierarchy used in GDPR API data export (This graph is based on the Django models' `serialize_fields` values):
+```mermaid
+erDiagram
+    User ||--o{ Project : "administers"
+    User ||--|| Guardian : "is"
+      Guardian ||--o{ Child : "has"
+        Child ||--|| Enrolment : "has"
+          Enrolment ||--o{ Occurrence : "has"
+            Occurrence ||--|| Event : "is for"
+              Event ||--o{ EventGroup : "is part of"
+                EventGroup ||--|| Project : "is for"
+              Event ||--|| Project : "is for"
+            Occurrence ||--|| Venue : "is at"
+        Child ||--o{ TicketSystemPassword : "has"
+          TicketSystemPassword ||--|| Event : "is for"
+        Child ||--o{ FreeSpotNotificationSubscription : "has"
+```
+
 ## GraphQL API Documentation
 
 To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section
