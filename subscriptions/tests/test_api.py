@@ -350,7 +350,7 @@ def test_unsubscribe_from_all_notifications_using_auth_verification_token_as_log
     logged_in_guardian = guardian_api_client.user.guardian
     child_guardian = guardian_child.guardians.first()
 
-    assert logged_in_guardian == child_guardian
+    assert logged_in_guardian.id == child_guardian.id
 
     user = child_guardian.user
     FreeSpotNotificationSubscriptionFactory(child=guardian_child)

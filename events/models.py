@@ -10,11 +10,13 @@ from django.db.models import Count, ExpressionWrapper, F, Q, UniqueConstraint
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from helsinki_gdpr.models import SerializableMixin
 from parler.models import TranslatedFields
 
 import events.notification_service as notification_service
 from children.models import Child
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
+from common.utils import get_translations_dict
 from events.consts import NotificationType
 from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
 from events.utils import (
@@ -47,7 +49,7 @@ class EventGroupQueryset(TranslatableQuerySet):
         return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
 
 
-class EventGroup(TimestampedModel, TranslatableModel):
+class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         short_description=models.TextField(
@@ -69,12 +71,18 @@ class EventGroup(TimestampedModel, TranslatableModel):
         on_delete=models.CASCADE,
     )
 
-    objects = EventGroupQueryset.as_manager()
+    serialize_fields = [{"name": "name_with_translations"}, {"name": "project"}]
+
+    objects = SerializableMixin.SerializableManager.from_queryset(EventGroupQueryset)()
 
     class Meta:
         verbose_name = _("event group")
         verbose_name_plural = _("event groups")
         ordering = ("id",)
+
+    @property
+    def name_with_translations(self):
+        return get_translations_dict(self, "name")
 
     def __str__(self):
         name = self.safe_translation_getter("name", super().__str__())
@@ -200,7 +208,7 @@ class EventQueryset(TranslatableQuerySet):
         )
 
 
-class Event(TimestampedModel, TranslatableModel):
+class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     CHILD_AND_GUARDIAN = "child_and_guardian"
     CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
     FAMILY = "family"
@@ -273,7 +281,14 @@ class Event(TimestampedModel, TranslatableModel):
         verbose_name=_("ticket system end time"), blank=True, null=True
     )
 
-    objects = EventQueryset.as_manager()
+    serialize_fields = (
+        {"name": "name_with_translations"},
+        {"name": "event_group"},
+        {"name": "project"},
+        {"name": "ticket_system"},
+    )
+
+    objects = SerializableMixin.SerializableManager.from_queryset(EventQueryset)()
 
     class Meta:
         verbose_name = _("event")
@@ -284,6 +299,10 @@ class Event(TimestampedModel, TranslatableModel):
         name = self.safe_translation_getter("name", super().__str__())
         published_text = _("published") if self.published_at else _("unpublished")
         return f"{name} ({self.pk}) ({self.project.year}) ({published_text})"
+
+    @property
+    def name_with_translations(self):
+        return get_translations_dict(self, "name")
 
     @property
     def is_external_ticket_system_event(self):
@@ -453,7 +472,7 @@ class OccurrenceQueryset(models.QuerySet):
         )
 
 
-class Occurrence(TimestampedModel):
+class Occurrence(TimestampedModel, SerializableMixin):
     time = models.DateTimeField(verbose_name=_("time"))
     event = models.ForeignKey(
         Event,
@@ -492,7 +511,13 @@ class Occurrence(TimestampedModel):
     )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
 
-    objects = OccurrenceQueryset.as_manager()
+    serialize_fields = (
+        {"name": "time", "accessor": lambda t: t.isoformat() if t else None},
+        {"name": "event"},
+        {"name": "venue"},
+    )
+
+    objects = SerializableMixin.SerializableManager.from_queryset(OccurrenceQueryset)()
 
     class Meta:
         verbose_name = _("occurrence")
@@ -654,7 +679,7 @@ class EnrolmentQueryset(models.QuerySet):
         return len(enrolments)
 
 
-class Enrolment(TimestampedModel):
+class Enrolment(TimestampedModel, SerializableMixin):
     child = models.ForeignKey(
         Child,
         related_name="enrolments",
@@ -677,7 +702,12 @@ class Enrolment(TimestampedModel):
         verbose_name=_("feedback notification sent at"), null=True, blank=True
     )
 
-    objects = EnrolmentQueryset.as_manager()
+    serialize_fields = (
+        {"name": "child", "accessor": lambda c: str(c)},
+        {"name": "occurrence"},
+    )
+
+    objects = SerializableMixin.SerializableManager.from_queryset(EnrolmentQueryset)()
 
     class Meta:
         verbose_name = _("enrolment")
@@ -830,7 +860,7 @@ class TicketSystemPasswordQueryset(models.QuerySet):
         )
 
 
-class TicketSystemPassword(models.Model):
+class TicketSystemPassword(SerializableMixin, models.Model):
     created_at = models.DateTimeField(verbose_name=_("created at"), auto_now_add=True)
     assigned_at = models.DateTimeField(
         verbose_name=_("assigned at"), blank=True, null=True
@@ -851,7 +881,16 @@ class TicketSystemPassword(models.Model):
         on_delete=models.CASCADE,
     )
 
-    objects = TicketSystemPasswordQueryset.as_manager()
+    serialize_fields = [
+        {"name": "assigned_at", "accessor": lambda t: t.isoformat() if t else None},
+        {"name": "value"},
+        {"name": "event"},
+        {"name": "child", "accessor": lambda c: str(c)},
+    ]
+
+    objects = SerializableMixin.SerializableManager.from_queryset(
+        TicketSystemPasswordQueryset
+    )()
 
     class Meta:
         verbose_name = _("ticket system password")

@@ -8,7 +8,7 @@ class GDPRModel(models.Model):
         super().__init__(*args, **kwargs)
         # raise a NotImplementedError
         # immediately on launch of an app
-        # if `the gdpr_sensitive_data_fields`` is not defined.
+        # if the `gdpr_sensitive_data_fields` is not defined.
         self.gdpr_sensitive_data_fields
 
     class Meta:

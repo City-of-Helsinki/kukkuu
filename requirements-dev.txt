@@ -97,7 +97,10 @@ python-dateutil==2.8.2
 requests==2.26.0
     # via
     #   -c requirements.txt
+    #   requests-mock
     #   responses
+requests-mock==1.12.1
+    # via -r requirements-dev.in
 responses==0.14.0
     # via -r requirements-dev.in
 six==1.16.0

@@ -115,6 +115,10 @@ To use the SMS notification functionality, you have to acquire the API_KEY from 
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at [localhost:8081](http://localhost:8081)
 
+## GDPR API data export
+
+The [GDPR API data export and API tester documentation](./gdpr/README.MD).
+
 ## GraphQL API Documentation
 
 To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section

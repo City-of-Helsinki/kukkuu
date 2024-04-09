@@ -10,8 +10,8 @@ from django.db.models import Q
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
+from helsinki_gdpr.models import SerializableMixin
 from helusers.models import AbstractUser
-from typing_extensions import override
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from gdpr.consts import CLEARED_VALUE
@@ -39,11 +39,29 @@ class UserQuerySet(models.QuerySet):
 
 
 # This is needed when using a custom User queryset
-class UserManager(OriginalUserManager.from_queryset(UserQuerySet)):
+class UserManager(
+    OriginalUserManager.from_queryset(UserQuerySet),
+    SerializableMixin.SerializableManager,
+):
     pass
 
 
-class User(AbstractUser, GDPRModel):
+class User(AbstractUser, GDPRModel, SerializableMixin):
+    serialize_fields = (
+        {"name": "uuid", "accessor": lambda uuid: str(uuid)},
+        {"name": "username"},
+        {"name": "first_name"},
+        {"name": "last_name"},
+        {"name": "email"},
+        {
+            "name": "administered_projects",
+            "accessor": lambda projects: [p.serialize() for p in projects],
+        },
+        {"name": "last_login", "accessor": lambda t: t.isoformat() if t else None},
+        {"name": "date_joined", "accessor": lambda t: t.isoformat() if t else None},
+        {"name": "guardian"},
+    )
+
     objects = UserManager()
 
     gdpr_sensitive_data_fields = ["first_name", "last_name", "email"]
@@ -163,7 +181,6 @@ class User(AbstractUser, GDPRModel):
             token_length=getattr(settings, "SUBSCRIPTIONS_AUTH_TOKEN_LENGTH", 16),
         )
 
-    @override
     def clear_gdpr_sensitive_data_fields(self):
         super().clear_gdpr_sensitive_data_fields()
         self.is_active = False
@@ -184,7 +201,7 @@ class GuardianQuerySet(models.QuerySet):
             child.delete()
 
 
-class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel):
+class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMixin):
     user = models.OneToOneField(
         get_user_model(), verbose_name=_("user"), on_delete=models.CASCADE
     )
@@ -211,7 +228,18 @@ class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel):
         _("accepts marketing"), null=False, default=False
     )
 
-    objects = GuardianQuerySet.as_manager()
+    serialize_fields = (
+        {"name": "id", "accessor": lambda uuid: str(uuid)},
+        {"name": "user", "accessor": lambda u: str(u)},
+        {"name": "first_name"},
+        {"name": "last_name"},
+        {"name": "email"},
+        {"name": "phone_number"},
+        {"name": "has_accepted_marketing"},
+        {"name": "children"},
+    )
+
+    objects = SerializableMixin.SerializableManager.from_queryset(GuardianQuerySet)()
 
     gdpr_sensitive_data_fields = ["first_name", "last_name", "phone_number", "email"]
 
