@@ -1,8 +1,12 @@
+from uuid import UUID
+
 import pytest
 from django.contrib.auth import get_user_model
+from freezegun import freeze_time
 
 from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
+from events.factories import EnrolmentFactory, TicketSystemPasswordFactory
 from gdpr.consts import CLEARED_VALUE
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from subscriptions.models import FreeSpotNotificationSubscription
@@ -214,3 +218,30 @@ def test_guardian_clear_gdpr_sensitive_data_fields(user_email):
     assert guardian.last_name == CLEARED_VALUE
     assert guardian.email == guardian.user.email
     assert guardian.phone_number == ""
+
+
+@pytest.mark.django_db
+@freeze_time("2020-11-11 12:00:00")
+def test_user_serialize(snapshot, project):
+    guardian = GuardianFactory(
+        id=UUID("8dff3da4-a329-4b81-971a-bc509df679b1"),
+        user__uuid=UUID("fa354000-3c0c-11eb-86c5-acde48001122"),
+    )
+    user = guardian.user
+    user.administered_projects = [project]
+    user.save()
+    [
+        child_with_many_enrolments,
+        child_with_one_enrolment,
+        child_without_enrolments,
+    ] = ChildWithGuardianFactory.create_batch(3, relationship__guardian=guardian)
+    FreeSpotNotificationSubscriptionFactory(child=child_without_enrolments)
+    FreeSpotNotificationSubscriptionFactory(child=child_with_one_enrolment)
+    EnrolmentFactory.create_batch(5, child=child_with_many_enrolments)
+    TicketSystemPasswordFactory.create_batch(5, child=child_with_many_enrolments)
+    EnrolmentFactory(child=child_with_one_enrolment)
+    TicketSystemPasswordFactory(child=child_with_one_enrolment)
+    assert child_without_enrolments.enrolments.count() == 0
+    assert child_without_enrolments.ticket_system_passwords.count() == 0
+    user.refresh_from_db()
+    snapshot.assert_match(user.serialize())

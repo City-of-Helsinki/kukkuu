@@ -1,11 +1,13 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from helsinki_gdpr.models import SerializableMixin
 from parler.models import TranslatedFields
 
 from common.models import TimestampedModel, TranslatableModel
+from common.utils import get_translations_dict
 
 
-class Venue(TimestampedModel, TranslatableModel):
+class Venue(TimestampedModel, TranslatableModel, SerializableMixin):
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         description=models.TextField(verbose_name=_("description"), blank=True),
@@ -31,9 +33,22 @@ class Venue(TimestampedModel, TranslatableModel):
         on_delete=models.CASCADE,
     )
 
+    serialize_fields = [
+        {"name": "name_with_translations"},
+        {"name": "address_with_translations"},
+    ]
+
     class Meta:
         verbose_name = _("venue")
         verbose_name_plural = _("venues")
+
+    @property
+    def name_with_translations(self):
+        return get_translations_dict(self, "name")
+
+    @property
+    def address_with_translations(self):
+        return get_translations_dict(self, "address")
 
     def __str__(self):
         name = self.safe_translation_getter("name", super().__str__())

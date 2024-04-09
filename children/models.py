@@ -7,6 +7,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from helsinki_gdpr.models import SerializableMixin
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from gdpr.models import GDPRModel
@@ -37,7 +38,7 @@ postal_code_validator = RegexValidator(
 )
 
 
-class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel):
+class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin):
     name = models.CharField(verbose_name=_("name"), max_length=64, blank=True)
     birthyear = models.IntegerField(verbose_name=_("birthyear"))
     postal_code = models.CharField(
@@ -65,7 +66,16 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel):
         blank=True,
     )
 
-    objects = ChildQuerySet.as_manager()
+    objects = SerializableMixin.SerializableManager.from_queryset(ChildQuerySet)()
+
+    serialize_fields = (
+        {"name": "name"},
+        {"name": "birthyear"},
+        {"name": "postal_code"},
+        {"name": "enrolments"},
+        {"name": "ticket_system_passwords"},
+        {"name": "free_spot_notification_subscriptions"},
+    )
 
     gdpr_sensitive_data_fields = [
         "name",

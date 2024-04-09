@@ -1,10 +1,13 @@
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from helsinki_gdpr.models import SerializableMixin
 from parler.models import TranslatableModel, TranslatedFields
 
+from common.utils import get_translations_dict
 
-class Project(TranslatableModel):
+
+class Project(TranslatableModel, SerializableMixin):
     year = models.PositiveSmallIntegerField(verbose_name=_("year"), unique=True)
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255)
@@ -23,6 +26,13 @@ class Project(TranslatableModel):
         default=settings.KUKKUU_DEFAULT_ENROLMENT_LIMIT,
     )
 
+    serialize_fields = [
+        {"name": "year"},
+        {"name": "name_with_translations"},
+    ]
+
+    objects = SerializableMixin.SerializableManager()
+
     class Meta:
         verbose_name = _("project")
         verbose_name_plural = _("projects")
@@ -32,6 +42,10 @@ class Project(TranslatableModel):
             ("publish", _("Can publish events and event groups")),
             ("manage_event_groups", _("Can create, update and delete event groups")),
         )
+
+    @property
+    def name_with_translations(self):
+        return get_translations_dict(self, "name")
 
     @classmethod
     def get_permission_codenames(cls):

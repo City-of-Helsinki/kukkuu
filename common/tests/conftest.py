@@ -241,3 +241,13 @@ def mock_user_create_subscriptions_management_auth_token(monkeypatch):
         "create_subscriptions_management_auth_token",
         get_mocked_function(auth_key="a1b2c3d4e5f6g7h8"),
     )
+
+
+@pytest.fixture(params=["true", "True", "TRUE", "1", 1, True])
+def true_value(request):
+    return request.param
+
+
+@pytest.fixture(params=["false", "False", "FALSE", "0", 0, False])
+def false_value(request):
+    return request.param
