@@ -79,7 +79,7 @@ class PermissionFilterMixin:
 
 @admin.register(get_user_model())
 class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
-    list_display = DjangoUserAdmin.list_display + ("uuid",)
+    list_display = DjangoUserAdmin.list_display + ("id", "uuid")
     fieldsets = DjangoUserAdmin.fieldsets + (("UUID", {"fields": ("uuid",)}),)
     readonly_fields = ("uuid",)
 
