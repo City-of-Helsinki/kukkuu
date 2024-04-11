@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from helsinki_gdpr.models import SerializableMixin
 from parler.models import TranslatableModel, TranslatedFields
 
+from common.models import TranslatableQuerySet
 from common.utils import get_translations_dict
 
 
@@ -31,7 +32,9 @@ class Project(TranslatableModel, SerializableMixin):
         {"name": "name_with_translations"},
     ]
 
-    objects = SerializableMixin.SerializableManager()
+    objects = SerializableMixin.SerializableManager().from_queryset(
+        TranslatableQuerySet
+    )()
 
     class Meta:
         verbose_name = _("project")
