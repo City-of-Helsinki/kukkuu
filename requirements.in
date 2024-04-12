@@ -2,7 +2,7 @@ Django
 django-cors-headers
 django-environ
 # when helusers is upgraded, check if the expired token thingy in kukkuu.graphene.JWTMiddleware could be improved (and does it even still work)
-django-helusers==0.7.0
+django-helusers==0.11.0
 django-ilmoitin
 django-parler
 django-cleanup
