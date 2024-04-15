@@ -23,7 +23,7 @@ class FreeSpotNotificationSubscriptionQuerySet(models.QuerySet):
         """Get user's free spot notification subcriptions
 
         Args:
-            user (User): an user instance
+            user (User): a user instance
             child (Optional[Child], optional): a child instance. Defaults to None.
 
         Raises:

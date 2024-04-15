@@ -24,7 +24,7 @@ def user_from_auth_verification_token(
     In this example, the decorator first executes the ``@login_required``,
     and then if it raises the ``PermissionDenied`` error,
     the ``"auth_token"`` is used from the input variables to find
-    an authorization verification token that links to an user that
+    an authorization verification token that links to a user that
     the token represents
     >>> # doctest: +SKIP
     ... # When the login_required raises a PermissionDenied exception,

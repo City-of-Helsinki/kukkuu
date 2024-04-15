@@ -78,6 +78,6 @@ var/
 venv/
 .pytest_cache/
 docker-compose.env.yaml
-
+pyrightconfig.json
 .vscode/
 browser-tests/report
