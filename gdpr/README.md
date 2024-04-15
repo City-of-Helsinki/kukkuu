@@ -1,3 +1,7 @@
+# How to integrate the Culture Kids to Helsinki-Profile GDPR API
+
+As background information and instructions for integrating the service with Helsinki-Profile, see the documentation for [How to integrate to Helsinki-Profile through Tunnistamo](./docs/how-to-integrate-to-Helsinki-profile-with-Tunnistamo.md).
+
 # GDPR API data export
 
 Django model hierarchy used in GDPR API data export (This graph is based on the Django models' `serialize_fields` values):

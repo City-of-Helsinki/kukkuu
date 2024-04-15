@@ -149,7 +149,7 @@ class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
     class Input:
         auth_token = graphene.String(
             description="Auth token can be used to authorize the action "
-            "without logging in as an user."
+            "without logging in as a user."
         )
 
     guardian = graphene.Field(GuardianNode)

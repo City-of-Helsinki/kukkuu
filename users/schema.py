@@ -193,7 +193,7 @@ class UpdateMyMarketingSubscriptionsMutation(graphene.relay.ClientIDMutation):
         has_accepted_marketing = graphene.Boolean(required=True)
         auth_token = graphene.String(
             description="Auth token can be used to authorize the action "
-            "without logging in as an user."
+            "without logging in as a user."
         )
 
     guardian = graphene.Field(GuardianMarketingSubscriptionsNode)
@@ -229,7 +229,7 @@ class Query:
         GuardianMarketingSubscriptionsNode,
         auth_token=graphene.String(
             description="Auth token can be used to authorize the action "
-            "without logging in as an user."
+            "without logging in as a user."
         ),
     )
 
