@@ -44,10 +44,10 @@ env = environ.Env(
     SENTRY_ENVIRONMENT=(str, ""),
     CORS_ORIGIN_WHITELIST=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
-    TOKEN_AUTH_ACCEPTED_AUDIENCE=(str, "https://api.hel.fi/auth/kukkuu"),
     TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, "kukkuu"),
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
-    TOKEN_AUTH_AUTHSERVER_URL=(str, "https://tunnistamo.test.hel.ninja/openid"),
+    TOKEN_AUTH_ACCEPTED_AUDIENCE=(list, ["https://api.hel.fi/auth/kukkuu"]),
+    TOKEN_AUTH_AUTHSERVER_URL=(list, ["https://tunnistamo.test.hel.ninja/openid"]),
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, True),
     DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
@@ -80,6 +80,7 @@ env = environ.Env(
     # TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
     # GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
     # GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
+    HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED=(bool, False),
 )
 
 if os.path.exists(env_file):
@@ -262,9 +263,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 ANONYMOUS_USER_NAME = None  # we don't need django-guardian's AnonymousUser
 
 OIDC_API_TOKEN_AUTH = {
-    "AUDIENCE": env.str("TOKEN_AUTH_ACCEPTED_AUDIENCE"),
+    "AUDIENCE": env.list("TOKEN_AUTH_ACCEPTED_AUDIENCE"),
     "API_SCOPE_PREFIX": env.str("TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX"),
-    "ISSUER": env.str("TOKEN_AUTH_AUTHSERVER_URL"),
+    "ISSUER": env.list("TOKEN_AUTH_AUTHSERVER_URL"),
     "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
 }
 
@@ -352,6 +353,7 @@ GDPR_API_URL_PATTERN = "v1/user/<uuid:uuid>"
 GDPR_API_USER_PROVIDER = "gdpr.service.get_user"
 GDPR_API_DELETER = "gdpr.service.clear_data"
 
+HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
