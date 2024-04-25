@@ -115,6 +115,16 @@ To use the SMS notification functionality, you have to acquire the API_KEY from 
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at [localhost:8081](http://localhost:8081)
 
+## Authorization
+
+The user profiles authenticates themselves in a centralized authentication server of the city of Helsinki. For long it has been [Tunnistamo](https://github.com/City-of-Helsinki/tunnistamo), but in the summer of the year 2024, it should be changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile) service environment.
+
+The Tunnistamo can be configured to be used [locally](./docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](./docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
+
+The Keycloak test environment can also be configured to be used [locally](./docs/setup-keycloak.md).
+
+> NOTE: Also check the [GDPR API documentation](./gdpr/README.md) because there is much more detailed instructions how to setup the Tunnistamo and the Helsinki-Profile!
+
 ## GDPR API data export
 
 The [GDPR API data export and API tester documentation](./gdpr/README.MD).
@@ -181,10 +191,6 @@ Or you can use [`pre-commit`](https://pre-commit.com/) to quickly format your co
    - `pre-commit install`
 
 After that, formatting hooks will run against all changed files before committing
-
-## Contact infomation
-
-@tuomas777 @quyenlq
 
 ## Issues board
 
