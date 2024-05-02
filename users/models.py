@@ -62,6 +62,18 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
         {"name": "guardian"},
     )
 
+    is_obsolete = models.BooleanField(
+        _("obsoleted"),
+        null=False,
+        default=False,
+        help_text=_(
+            "Designates whether the user account is obsoleted "
+            "and cannot be anymore accessed, "
+            "e.g. after an auth service change process "
+            "(when the Tunnistamo is changed to a Keycloak service)."
+        ),
+    )
+
     objects = UserManager()
 
     gdpr_sensitive_data_fields = ["first_name", "last_name", "email"]
