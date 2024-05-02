@@ -110,6 +110,9 @@ class ChildSerializer(serializers.ModelSerializer):
         help_text="Array of ISO 639-3 (language) or ISO 639-5 (language family) "
         "alpha-3 codes. Value `__OTHER__` means any other language."  # noqa
     )
+    is_obsolete = serializers.SerializerMethodField(
+        help_text="Is all the child's guardian users instances marked as obsolete?"
+    )
 
     class Meta:
         model = Child
@@ -121,6 +124,7 @@ class ChildSerializer(serializers.ModelSerializer):
             "postal_code",
             "contact_language",
             "languages_spoken_at_home",
+            "is_obsolete",
         ]
 
     def get_child_birthyear_postal_code_guardian_emails_hash(self, child: Child) -> str:
@@ -164,6 +168,9 @@ class ChildSerializer(serializers.ModelSerializer):
             l.alpha_3_code or OTHER_LANGUAGE_API_NAME
             for l in obj.guardians.all()[0].prefetched_languages_spoken_at_home
         ]
+
+    def get_is_obsolete(self, obj: Child) -> bool:
+        return obj.is_obsolete
 
 
 @extend_schema_view(list=extend_schema(description="Get all children data."))

@@ -153,6 +153,21 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
             [self.name] + self._salt_birthyear_postal_code_guardian_emails_list
         )
 
+    @property
+    def is_obsolete(self) -> bool:
+        """Checks the child guardians' related user' is_obsolete status.
+
+        The user account might have been obsoleted and
+        cannot be accessed anymore,
+        e.g. after an auth service change process
+        (when the Tunnistamo is changed to a Keycloak service).
+
+        Returns:
+            bool: returns True, if all the users are marked as obsoleted,
+            otherwise False.
+        """
+        return all([guardian.user.is_obsolete for guardian in self.guardians.all()])
+
 
 class RelationshipQuerySet(models.QuerySet):
     def user_can_view(self, user):
