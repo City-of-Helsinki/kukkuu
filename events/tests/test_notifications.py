@@ -49,6 +49,7 @@ def notification_template_event_published_fi():
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -68,6 +69,7 @@ def notification_template_event_group_published_fi():
             {{ event.obj.name}} {{ event.obj.published_at }} {{ event.event_url }}
         {% endfor %}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -85,6 +87,7 @@ def notification_template_occurrence_enrolment_fi():
         Child: {{ child }}
         Occurrence URL: {{ occurrence_url }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -101,6 +104,7 @@ def notification_template_occurrence_unenrolment_fi():
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -117,6 +121,7 @@ def notification_template_occurrence_cancelled_fi():
         Occurrence: {{ occurrence.time }}
         Child: {{ child }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -134,6 +139,7 @@ def notification_template_occurrence_reminder_fi():
         Child: {{ child }}
         Enrolment: {{ enrolment.occurrence.time }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
@@ -151,6 +157,7 @@ def notification_template_occurrence_feedback_fi():
         Child: {{ child }}
         Enrolment: {{ enrolment.occurrence.time }}
         Unsubscribe: {{unsubscribe_url}}
+        Obsoleted: {{is_obsoleted}}
 """,
     )
 
