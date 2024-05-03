@@ -190,3 +190,74 @@ def test_child_serialize(snapshot, project):
     TicketSystemPasswordFactory.create_batch(5, child=child)
     user.refresh_from_db()
     snapshot.assert_match(user.serialize())
+
+
+@pytest.mark.django_db
+def test_child_is_obsolete_property_no_guardians():
+    child = ChildFactory()
+    assert child.is_obsolete
+
+
+@pytest.mark.django_db
+def test_child_is_obsolete_property_with_guardians():
+    # when a child with a guardian is created
+    child = ChildWithGuardianFactory()
+    # then the child is not obsoleted
+    assert not child.is_obsolete
+    # when the guardian is obsoleted
+    guardian = child.guardians.first()
+    guardian.user.is_obsolete = True
+    guardian.user.save()
+    # then the child is obsoleted too
+    assert child.is_obsolete
+    # when another guardian who is not obsoleted is added
+    not_obsoleted_guardian = GuardianFactory()
+    child.guardians.add(not_obsoleted_guardian)
+    child.save()
+    # then the child is not obsoleted
+    assert not child.is_obsolete
+    # when all the guardians are obsoleted
+    not_obsoleted_guardian.user.is_obsolete = True
+    not_obsoleted_guardian.user.save()
+    # then the child is obsolete (again)
+    assert child.is_obsolete
+
+
+@pytest.mark.django_db
+def test_child_obsoleted_queryset():
+    ChildFactory()
+    ChildWithGuardianFactory()
+    ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=True)
+    # when querying for obsoleted children
+    queryset = Child.objects.obsoleted(is_obsolete=True)
+    # then the children of the obsoleted guardian user
+    # and children with no guardians should be returned
+    assert queryset.count() == 2
+    assert all(child.is_obsolete for child in queryset)
+    # when querying for not obsoleted children
+    queryset = Child.objects.obsoleted(is_obsolete=False)
+    # then the children of the non-obsoleted guardian user
+    # should be returned.
+    assert queryset.count() == 1
+    assert all(not child.is_obsolete for child in queryset)
+
+
+@pytest.mark.django_db
+def test_child_obsoleted_queryset_when_not_all_the_guardians_are_obsoleted():
+    """Test that the obsoleted queryset works correctly
+    when a child has multiple guardians. When querying for obsoleted children,
+    the child should be considered obsoleted if all the guardians are obsoleted
+    or the child does not have any guardians.
+
+    NOTE: There should not be any children with multiple guardians in the database,
+    because the UI has never allowed it, but the database schema allows it.
+    """
+    not_obsoleted_guardian = GuardianFactory()
+    child = ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=True)
+    child.guardians.add(not_obsoleted_guardian)
+    child.save()
+    assert child.guardians.count() == 2
+    assert child.guardians.filter(user__is_obsolete=True).count() == 1
+    assert child.guardians.filter(user__is_obsolete=False).count() == 1
+    queryset = Child.objects.obsoleted()
+    assert queryset.count() == 0

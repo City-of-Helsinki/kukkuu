@@ -13,6 +13,7 @@ from drf_spectacular.utils import (
 from rest_framework import mixins, serializers, viewsets
 
 from children.models import Child
+from common.utils import strtobool
 from languages.models import Language
 
 OTHER_LANGUAGE_API_NAME = "__OTHER__"
@@ -110,6 +111,9 @@ class ChildSerializer(serializers.ModelSerializer):
         help_text="Array of ISO 639-3 (language) or ISO 639-5 (language family) "
         "alpha-3 codes. Value `__OTHER__` means any other language."  # noqa
     )
+    is_obsolete = serializers.SerializerMethodField(
+        help_text="Are all the child's guardian user instances marked as obsolete?"
+    )
 
     class Meta:
         model = Child
@@ -121,6 +125,7 @@ class ChildSerializer(serializers.ModelSerializer):
             "postal_code",
             "contact_language",
             "languages_spoken_at_home",
+            "is_obsolete",
         ]
 
     def get_child_birthyear_postal_code_guardian_emails_hash(self, child: Child) -> str:
@@ -165,6 +170,9 @@ class ChildSerializer(serializers.ModelSerializer):
             for l in obj.guardians.all()[0].prefetched_languages_spoken_at_home
         ]
 
+    def get_is_obsolete(self, obj: Child) -> bool:
+        return obj.is_obsolete
+
 
 @extend_schema_view(list=extend_schema(description="Get all children data."))
 class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -178,6 +186,16 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             ),
         )
         .prefetch_related("guardians")
+        .prefetch_related("guardians__user")
         .order_by("name")
     )
     serializer_class = ChildSerializer
+
+    def get_queryset(self):
+        filters = {}
+        if is_obsolete := self.request.query_params.get("is_obsolete"):
+            try:
+                filters["guardians__user__is_obsolete"] = bool(strtobool(is_obsolete))
+            except ValueError:
+                pass
+        return super().get_queryset().filter(**filters)

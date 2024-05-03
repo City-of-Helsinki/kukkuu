@@ -109,7 +109,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 
     ChildFactory()  # This is an orphan child so she should not be in the results
 
-    with django_assert_max_num_queries(6):
+    with django_assert_max_num_queries(7):
         response = user_api_client.get(LIST_ENDPOINT)
     assert response.status_code == 200, response.content
 
@@ -140,3 +140,27 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
 @pytest.mark.django_db
 def test_get_primary_contact_language(contact_languages, language):
     assert get_primary_contact_language(contact_languages) == language
+
+
+@pytest.mark.django_db
+def test_filter_by_is_obsolete(user_api_client):
+    ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=False)
+    ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=True)
+
+    # Test filtering by is_obsolete=True, to fetch all child that are obsolete
+    response = user_api_client.get(LIST_ENDPOINT + "?is_obsolete=true")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["is_obsolete"] is True
+
+    # Test filtering by is_obsolete=False
+    response = user_api_client.get(LIST_ENDPOINT + "?is_obsolete=false")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["is_obsolete"] is False
+
+    response = user_api_client.get(LIST_ENDPOINT)
+    assert response.status_code == 200
+    assert len(response.json()) == 2

@@ -77,11 +77,42 @@ class PermissionFilterMixin:
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
+@admin.action(description="Mark selected users as obsoleted")
+def make_obsoleted(modeladmin, request, queryset):
+    queryset.update(is_obsolete=True)
+
+
 @admin.register(get_user_model())
 class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
-    list_display = DjangoUserAdmin.list_display + ("id", "uuid")
-    fieldsets = DjangoUserAdmin.fieldsets + (("UUID", {"fields": ("uuid",)}),)
+    list_display = (
+        "username",
+        "id",
+        "uuid",
+        "email",
+        "first_name",
+        "last_name",
+        "is_staff",
+        "is_obsolete",
+        "date_joined",
+        "last_login",
+    )
+    fieldsets = DjangoUserAdmin.fieldsets + (
+        ("UUID", {"fields": ("uuid",)}),
+        ("Auth", {"fields": ("is_obsolete",)}),
+    )
     readonly_fields = ("uuid",)
+    list_filter = (
+        "is_staff",
+        "is_superuser",
+        "is_active",
+        "is_obsolete",
+        "groups",
+        "date_joined",
+        "last_login",
+    )
+    search_fields = DjangoUserAdmin.search_fields + ("uuid",)
+    date_hierarchy = "date_joined"
+    actions = [make_obsoleted]
 
 
 admin.site.unregister(Group)
