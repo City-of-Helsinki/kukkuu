@@ -1,5 +1,4 @@
 from datetime import date
-from distutils.util import strtobool
 from typing import List, Optional
 
 from django.db.models import Prefetch
@@ -14,6 +13,7 @@ from drf_spectacular.utils import (
 from rest_framework import mixins, serializers, viewsets
 
 from children.models import Child
+from common.utils import strtobool
 from languages.models import Language
 
 OTHER_LANGUAGE_API_NAME = "__OTHER__"
@@ -112,7 +112,7 @@ class ChildSerializer(serializers.ModelSerializer):
         "alpha-3 codes. Value `__OTHER__` means any other language."  # noqa
     )
     is_obsolete = serializers.SerializerMethodField(
-        help_text="Is all the child's guardian users instances marked as obsolete?"
+        help_text="Are all the child's guardian user instances marked as obsolete?"
     )
 
     class Meta:
@@ -194,5 +194,8 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def get_queryset(self):
         filters = {}
         if is_obsolete := self.request.query_params.get("is_obsolete"):
-            filters["guardians__user__is_obsolete"] = bool(strtobool(is_obsolete))
+            try:
+                filters["guardians__user__is_obsolete"] = bool(strtobool(is_obsolete))
+            except ValueError:
+                pass
         return super().get_queryset().filter(**filters)

@@ -244,7 +244,7 @@ def test_child_obsoleted_queryset():
 
 @pytest.mark.django_db
 def test_child_obsoleted_queryset_when_not_all_the_guardians_are_obsoleted():
-    """Test that the is_obsoleted queryset works correctly
+    """Test that the obsoleted queryset works correctly
     when a child has multiple guardians. When querying for obsoleted children,
     the child should be considered obsoleted if all the guardians are obsoleted
     or the child does not have any guardians.

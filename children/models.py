@@ -34,7 +34,7 @@ class ChildQuerySet(models.QuerySet):
 
         Args:
             is_obsolete (bool, optional): filter by the obsolete
-            or non-obosolete children. Defaults to True.
+            or non-obsolete children. Defaults to True.
 
         Returns:
             QuerySet: a list of obsoleted or non-obsoleted children
@@ -173,7 +173,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
 
     @property
     def is_obsolete(self) -> bool:
-        """The child is obsoleted if they doesn't have any guardians or
+        """The child is obsoleted if they don't have any guardians or
         all the related user objects of the guardians are obsoleted.
 
         The user account might have been obsoleted and
@@ -187,7 +187,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
             otherwise False.
         """
         return self.guardians.count() == 0 or all(
-            [guardian.user.is_obsolete for guardian in self.guardians.all()]
+            guardian.user.is_obsolete for guardian in self.guardians.all()
         )
 
 
