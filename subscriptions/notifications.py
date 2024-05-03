@@ -45,7 +45,7 @@ dummy_context.update(
             "subscription": subscription,
             "localtime": timezone.template_localtime,
             "unsubscribe_url": unsubscribe_url,
-            "is_obsoleted": True,
+            "is_obsolete": True,
         },
     }
 )

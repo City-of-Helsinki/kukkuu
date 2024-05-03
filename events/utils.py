@@ -35,7 +35,7 @@ def send_event_notifications_to_guardians(
                     "unsubscribe_url": get_marketing_unsubscribe_ui_url(
                         guardian, guardian.language
                     ),
-                    "is_obsoleted": child.is_obsolete,
+                    "is_obsolete": child.is_obsolete,
                     **kwargs,
                 }
                 occurrence = kwargs.get("occurrence")
@@ -103,7 +103,7 @@ def send_event_group_notifications_to_guardians(
                     "unsubscribe_url": get_marketing_unsubscribe_ui_url(
                         guardian, guardian.language
                     ),
-                    "is_obsoleted": child.is_obsolete,
+                    "is_obsolete": child.is_obsolete,
                     **kwargs,
                 }
 
