@@ -27,6 +27,24 @@ class ChildQuerySet(models.QuerySet):
     def user_can_delete(self, user):
         return self.filter(guardians__user=user)
 
+    def obsoleted(self, is_obsolete: bool = True):
+        """The child is considered obsoleted
+        if the child does not have any guardians or
+        all the guardian users linked to it are obsoleted.
+
+        Args:
+            is_obsolete (bool, optional): filter by the obsolete
+            or non-obosolete children. Defaults to True.
+
+        Returns:
+            QuerySet: a list of obsoleted or non-obsoleted children
+        """
+        if is_obsolete:
+            return self.filter(
+                ~Q(guardians__user__is_obsolete=False) | Q(guardians=None)
+            )
+        return self.filter(guardians__user__is_obsolete=False)
+
     @transaction.atomic()
     def delete(self):
         for child in self:
@@ -155,7 +173,8 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
 
     @property
     def is_obsolete(self) -> bool:
-        """Checks the child guardians' related user' is_obsolete status.
+        """The child is obsoleted if they doesn't have any guardians or
+        all the related user objects of the guardians are obsoleted.
 
         The user account might have been obsoleted and
         cannot be accessed anymore,
@@ -163,10 +182,13 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         (when the Tunnistamo is changed to a Keycloak service).
 
         Returns:
-            bool: returns True, if all the users are marked as obsoleted,
+            bool: returns True, if there are no guardians or
+            all the users are marked as obsoleted,
             otherwise False.
         """
-        return all([guardian.user.is_obsolete for guardian in self.guardians.all()])
+        return self.guardians.count() == 0 or all(
+            [guardian.user.is_obsolete for guardian in self.guardians.all()]
+        )
 
 
 class RelationshipQuerySet(models.QuerySet):
