@@ -1,4 +1,5 @@
 from datetime import date
+from distutils.util import strtobool
 from typing import List, Optional
 
 from django.db.models import Prefetch
@@ -185,6 +186,13 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             ),
         )
         .prefetch_related("guardians")
+        .prefetch_related("guardians__user")
         .order_by("name")
     )
     serializer_class = ChildSerializer
+
+    def get_queryset(self):
+        filters = {}
+        if is_obsolete := self.request.query_params.get("is_obsolete"):
+            filters["guardians__user__is_obsolete"] = bool(strtobool(is_obsolete))
+        return super().get_queryset().filter(**filters)
