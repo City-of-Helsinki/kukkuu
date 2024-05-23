@@ -681,10 +681,6 @@ Daniellechester, KS 04855""",
                                     "children": [],
                                     "key": "FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS",
                                 },
-                                {
-                                    "key": "NOTES",
-                                    "value": "GDPR sensitive test notes for child",
-                                },
                             ],
                             "key": "CHILD",
                         }
