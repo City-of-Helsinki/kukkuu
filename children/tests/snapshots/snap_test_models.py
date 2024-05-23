@@ -58,7 +58,7 @@ snapshots["test_child_serialize 1"] = {
                                                     "children": [
                                                         {
                                                             "key": "TIME",
-                                                            "value": "1986-01-08T08:26:19+00:00",
+                                                            "value": "1988-02-22T23:02:01+00:00",
                                                         },
                                                         {
                                                             "children": [
@@ -66,7 +66,7 @@ snapshots["test_child_serialize 1"] = {
                                                                     "key": "NAME_WITH_TRANSLATIONS",
                                                                     "value": {
                                                                         "en": "",
-                                                                        "fi": "Hospital number lose least then. Beyond than trial western.",
+                                                                        "fi": "Increase thank certainly again thought summer.",
                                                                         "sv": "",
                                                                     },
                                                                 },
@@ -695,6 +695,7 @@ Daniellechester, KS 04855""",
                                     "children": [],
                                     "key": "FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS",
                                 },
+                                {"key": "NOTES", "value": ""},
                             ],
                             "key": "CHILD",
                         }

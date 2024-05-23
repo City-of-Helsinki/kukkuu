@@ -3,7 +3,11 @@ from django_ilmoitin.models import NotificationTemplate
 from parler.utils.context import switch_language
 from requests.exceptions import HTTPError
 
-from kukkuu.consts import PERMISSION_DENIED_ERROR
+from kukkuu.consts import GENERAL_ERROR, PERMISSION_DENIED_ERROR
+
+
+def assert_general_error(response):
+    assert_match_error_code(response, GENERAL_ERROR)
 
 
 def assert_permission_denied(response):
@@ -18,6 +22,10 @@ def assert_mails_match_snapshot(snapshot):
 
 def assert_match_error_code(response, error_code):
     assert response["errors"][0].get("extensions").get("code") == error_code
+
+
+def assert_error_message(response, error_message):
+    assert response["errors"][0].get("message") == error_message
 
 
 def create_notification_template_in_language(

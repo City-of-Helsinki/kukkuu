@@ -13,8 +13,8 @@ snapshots["test_guardians_query_normal_user 1"] = {
                 {
                     "node": {
                         "email": "michellewalker@example.net",
-                        "firstName": "Dustin",
-                        "lastName": "Smith",
+                        "firstName": "Steve",
+                        "lastName": "Hutchinson",
                         "phoneNumber": "001-117-159-1023x20281",
                         "relationships": {
                             "edges": [
@@ -25,7 +25,7 @@ snapshots["test_guardians_query_normal_user 1"] = {
                                             "name": "John Moore",
                                             "project": {"year": 2020},
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "PARENT",
                                     }
                                 }
                             ]
@@ -56,7 +56,7 @@ snapshots["test_guardians_query_project_user 1"] = {
                                             "name": "Cynthia Holmes",
                                             "project": {"year": 2020},
                                         },
-                                        "type": "ADVOCATE",
+                                        "type": "PARENT",
                                     }
                                 }
                             ]
@@ -68,17 +68,17 @@ snapshots["test_guardians_query_project_user 1"] = {
                         "email": "michellewalker@example.net",
                         "firstName": "Another project own guardian",
                         "lastName": "Should be visible 2/2",
-                        "phoneNumber": "2320281307",
+                        "phoneNumber": "202.813.0727",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
-                                            "birthyear": 2021,
-                                            "name": "Jodi Douglas",
+                                            "birthyear": 2022,
+                                            "name": "Sara Johnson",
                                             "project": {"year": 2030},
                                         },
-                                        "type": "PARENT",
+                                        "type": "OTHER_RELATION",
                                     }
                                 }
                             ]
@@ -208,7 +208,7 @@ snapshots["test_my_profile_query 1"] = {
                                 "name": "Stephen Charles",
                                 "postalCode": "71591",
                             },
-                            "type": "PARENT",
+                            "type": "OTHER_GUARDIAN",
                         }
                     }
                 ]

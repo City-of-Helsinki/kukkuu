@@ -65,7 +65,7 @@ class ChildAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    fields = ("project", "name", "birthyear", "postal_code")
+    fields = ("project", "name", "birthyear", "postal_code", "notes")
     search_fields = (
         "name",
         "birthyear",

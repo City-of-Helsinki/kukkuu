@@ -144,7 +144,9 @@ def test_get_profile_data_from_gdpr_api(
         id=uuid.UUID("8dff3da4-a329-4b81-971a-bc509df679b1"),
         user__uuid=uuid.UUID("fa354000-3c0c-11eb-86c5-acde48001122"),
     )
-    child = ChildWithGuardianFactory(relationship__guardian=guardian)
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian, notes="GDPR sensitive test notes for child"
+    )
     EnrolmentFactory.create_batch(5, child=child)
     TicketSystemPasswordFactory.create_batch(5, child=child)
     guardian = child.guardians.first()
