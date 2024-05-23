@@ -14,7 +14,12 @@ from graphql_relay.connection.arrayconnection import offset_to_cursor
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
-from common.tests.utils import assert_match_error_code, assert_permission_denied
+from common.tests.utils import (
+    assert_error_message,
+    assert_general_error,
+    assert_match_error_code,
+    assert_permission_denied,
+)
 from common.utils import get_global_id, get_node_id_from_global_id
 from events.factories import (
     EnrolmentFactory,
@@ -39,6 +44,22 @@ from users.factories import GuardianFactory
 from users.models import Guardian
 
 from ..models import Child, Relationship
+
+CHILD_MODEL_FIELDS = [field.name for field in Child._meta.get_fields()]
+
+CHILD_MODEL_FIELDS_WITHOUT_ID_OR_NOTES = [
+    field for field in CHILD_MODEL_FIELDS if field not in ["id", "notes"]
+]
+
+EXTRA_CHILD_NOTES_FIELDS = CHILD_MODEL_FIELDS_WITHOUT_ID_OR_NOTES + ["inexistent_field"]
+
+
+@pytest.fixture(params=EXTRA_CHILD_NOTES_FIELDS)
+def extra_child_notes_field_name(request):
+    """
+    Field names that can't be queried in the child notes query.
+    """
+    return request.param
 
 
 @pytest.fixture(autouse=True)
@@ -194,6 +215,7 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages, proj
         assert_child_matches_data(child, child_data)
         relationship = Relationship.objects.get(guardian=guardian, child=child)
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
+        assert child.notes == ""
 
 
 def test_submit_children_and_guardian_with_email(snapshot, user_api_client, project):
@@ -549,6 +571,7 @@ def test_add_child_mutation(snapshot, guardian_api_client, project):
     assert_relationship_matches_data(
         relationship, ADD_CHILD_VARIABLES["input"]["relationship"]
     )
+    assert child.notes == ""
 
 
 def test_add_child_mutation_birthyear_required(guardian_api_client):
@@ -634,6 +657,7 @@ UPDATE_CHILD_VARIABLES = {
 
 
 def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_guardian):
+    original_notes = child_with_user_guardian.notes
     original_birthyear = child_with_user_guardian.birthyear
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
@@ -650,6 +674,7 @@ def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_gu
     )
     assert_relationship_matches_data(relationship, variables["input"]["relationship"])
     assert child_with_user_guardian.birthyear == original_birthyear
+    assert child_with_user_guardian.notes == original_notes
 
 
 def test_update_child_mutation_should_have_no_required_fields(
@@ -738,6 +763,353 @@ def test_delete_child_mutation_wrong_user(
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert Child.objects.count() == 1
+
+
+UPDATE_CHILD_NOTES_MUTATION_TEMPLATE = """
+mutation UpdateChildNotes($input: UpdateChildNotesMutationInput!) {
+  updateChildNotes(input: $input) {
+    childNotes {
+      childId
+      notes
+      %(extra_field_name)s
+    }
+  }
+}
+"""
+
+UPDATE_CHILD_NOTES_MUTATION = UPDATE_CHILD_NOTES_MUTATION_TEMPLATE % {
+    "extra_field_name": ""
+}
+
+
+def test_update_child_notes_mutation_unauthenticated(
+    api_client, child_with_random_guardian
+):
+    variables = {
+        "input": {
+            "childId": to_global_id("ChildNode", child_with_random_guardian.id),
+            "notes": "Test notes",
+        }
+    }
+
+    executed = api_client.execute(UPDATE_CHILD_NOTES_MUTATION, variables=variables)
+
+    assert_permission_denied(executed)
+
+
+def test_update_child_notes_mutation_wrong_user(
+    guardian_api_client, child_with_random_guardian
+):
+    """
+    Test that UpdateChildNotes mutation can not find the child,
+    if the user is not a guardian of the child.
+    """
+    variables = {
+        "input": {
+            "childId": to_global_id("ChildNode", child_with_random_guardian.id),
+            "notes": "Test notes",
+        }
+    }
+
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_NOTES_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+    assert_error_message(executed, "Child matching query does not exist.")
+
+
+@pytest.mark.parametrize("orig_notes", ["", "Notes", "Alternative notes"])
+def test_update_child_notes_mutation(
+    guardian_api_client, child_with_user_guardian, orig_notes
+):
+    """
+    Test that UpdateChildNotes mutation updates the child's notes and nothing else.
+
+    NOTE: Using shallow equality check when checking that other than the "notes"
+          field didn't change, deep equality check would be more comprehensive.
+    """
+    child = child_with_user_guardian  # alias for brevity
+
+    # Set up notes to a known value
+    child.notes = orig_notes
+    child.save()
+    child.refresh_from_db()
+
+    # Save original values
+    orig_child_id = child.id
+    orig_name = child.name
+    orig_birthyear = child.birthyear
+    orig_postal_code = child.postal_code
+    orig_guardian_ids = sorted(child.guardians.values_list("id", flat=True))
+    orig_languages_spoken_at_home_ids = sorted(
+        child.languages_spoken_at_home.values_list("id", flat=True)
+    )
+    orig_project_id = child.project_id
+
+    variables = {
+        "input": {
+            "childId": to_global_id("ChildNode", child.id),
+            "notes": "Updated child notes",
+        }
+    }
+
+    assert child.notes == orig_notes
+
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_NOTES_MUTATION, variables=variables
+    )
+
+    child.refresh_from_db()
+    assert child.notes == "Updated child notes"
+
+    assert executed == {
+        "data": {
+            "updateChildNotes": {
+                "childNotes": {
+                    "childId": str(orig_child_id),
+                    "notes": "Updated child notes",
+                }
+            }
+        }
+    }
+
+    # Check that fields stayed the same
+    new_guardian_ids = sorted(child.guardians.values_list("id", flat=True))
+    new_languages_spoken_at_home_ids = sorted(
+        child.languages_spoken_at_home.values_list("id", flat=True)
+    )
+    assert child.name == orig_name
+    assert child.birthyear == orig_birthyear
+    assert child.postal_code == orig_postal_code
+    assert new_guardian_ids == orig_guardian_ids
+    assert new_languages_spoken_at_home_ids == orig_languages_spoken_at_home_ids
+    assert child.project_id == orig_project_id
+
+
+def test_update_child_notes_mutation_no_extra_fields(
+    guardian_api_client, child_with_user_guardian, extra_child_notes_field_name
+):
+    """
+    Test that UpdateChildNotes mutation gives an error, if extra fields are requested.
+    """
+    extra_field_name = extra_child_notes_field_name  # alias for brevity
+    variables = {
+        "input": {
+            "childId": to_global_id("ChildNode", child_with_user_guardian.id),
+            "notes": "Updated child notes",
+        }
+    }
+
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_NOTES_MUTATION_TEMPLATE % {"extra_field_name": extra_field_name},
+        variables=variables,
+    )
+
+    assert_general_error(executed)
+    assert_error_message(
+        executed, f'Cannot query field "{extra_field_name}" on type "ChildNotesNode".'
+    )
+
+
+CHILD_NOTES_QUERY_TEMPLATE = """
+query ChildNotes($id: ID!) {
+  childNotes(id: $id) {
+    childId
+    notes
+    %(extra_field_name)s
+  }
+}
+"""
+
+CHILD_NOTES_QUERY = CHILD_NOTES_QUERY_TEMPLATE % {"extra_field_name": ""}
+
+
+def test_child_notes_query_unauthenticated(api_client, child_with_random_guardian):
+    """
+    Test that ChildNotes query gives permission denied error,
+    if the user is not authenticated.
+    """
+    variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
+
+    executed = api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert_permission_denied(executed)
+
+
+@pytest.mark.parametrize("orig_notes", ["", "Notes", "Alternative notes"])
+def test_child_notes_query(user_api_client, project, orig_notes):
+    """
+    Test that ChildNotes query returns the child's ID and notes,
+    if the user is a guardian of the child.
+    """
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user,
+        project=project,
+        notes=orig_notes,
+    )
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert executed == {
+        "data": {
+            "childNotes": {
+                "childId": str(child.id),
+                "notes": orig_notes,
+            }
+        }
+    }
+
+
+def test_child_notes_query_with_incorrect_id_type(
+    user_api_client, child_with_random_guardian
+):
+    """
+    Test that ChildNotes query gives API usage error, if ID is of incorrect type.
+    """
+    variables = {"id": to_global_id("ChildNotesNode", child_with_random_guardian.id)}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert_error_message(
+        executed,
+        "childNotes must be queried using ChildNode type ID, "
+        + "was queried with ChildNotesNode type ID",
+    )
+
+
+def test_child_notes_query_with_plain_id(user_api_client, child_with_random_guardian):
+    """
+    Test that ChildNotes query gives API usage error, if using plain UUID as ID.
+    """
+    variables = {"id": child_with_random_guardian.id}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert_error_message(
+        executed,
+        "Unable to decode child ID in childNotes query, "
+        + 'please use "ChildNode:<uuid>" encoded as base64.',
+    )
+
+
+@pytest.mark.parametrize("input_id", ["123", "ChildNode:123", 123])
+def test_child_notes_query_with_incorrect_id(
+    user_api_client, child_with_random_guardian, input_id
+):
+    """
+    Test that ChildNotes query gives API usage error, if using incorrect ID.
+    """
+    variables = {"id": input_id}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert_error_message(
+        executed,
+        "Unable to decode child ID in childNotes query, "
+        + 'please use "ChildNode:<uuid>" encoded as base64.',
+    )
+
+
+def test_child_notes_query_with_null_id(user_api_client, child_with_random_guardian):
+    """
+    Test that ChildNotes query gives API usage error, if id is None.
+    """
+    variables = {"id": None}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert_general_error(executed)
+    assert_error_message(
+        executed, 'Variable "$id" of required type "ID!" was not provided.'
+    )
+
+
+def test_child_notes_query_not_own_child(user_api_client, child_with_random_guardian):
+    """
+    Test that ChildNotes query returns None, if the user is not a guardian of the child.
+    """
+    variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
+
+    executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert executed == {"data": {"childNotes": None}}
+
+
+def test_child_notes_query_not_own_child_but_project_admin(
+    project_user_api_client, child_with_random_guardian
+):
+    """
+    Test that ChildNotes query returns the child's ID and notes,
+    if the user is an administrator of the child's project.
+    """
+    assert project_user_api_client.user.has_perm(
+        "admin", child_with_random_guardian.project
+    )
+    orig_notes = child_with_random_guardian.notes
+    variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
+
+    executed = project_user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
+
+    assert executed == {
+        "data": {
+            "childNotes": {
+                "childId": str(child_with_random_guardian.id),
+                "notes": orig_notes,
+            }
+        }
+    }
+
+
+def test_child_notes_query_no_extra_fields(
+    user_api_client, project, extra_child_notes_field_name
+):
+    """
+    Test that ChildNotes query gives an error, if extra fields are requested.
+    """
+    extra_field_name = extra_child_notes_field_name  # alias for brevity
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=user_api_client.user, project=project
+    )
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = user_api_client.execute(
+        CHILD_NOTES_QUERY_TEMPLATE % {"extra_field_name": extra_field_name},
+        variables=variables,
+    )
+
+    assert_general_error(executed)
+    assert_error_message(
+        executed, f'Cannot query field "{extra_field_name}" on type "ChildNotesNode".'
+    )
+
+
+CHILD_NOTES_QUERY_WITHOUT_ID_PARAMETER = """
+query ChildNotes {
+  childNotes {
+    childId
+    notes
+  }
+}
+"""
+
+
+def test_child_notes_query_without_id_parameter_fails(
+    project_user_api_client, child_with_random_guardian
+):
+    """
+    Test that ChildNotes query gives an error, if the "id" parameter is missing.
+    """
+    executed = project_user_api_client.execute(CHILD_NOTES_QUERY_WITHOUT_ID_PARAMETER)
+    assert_general_error(executed)
+    assert_error_message(
+        executed,
+        'Field "childNotes" argument "id" of type "ID!" is required but not provided.',
+    )
 
 
 CHILD_ENROLMENT_COUNT_QUERY = """

@@ -1,3 +1,4 @@
+import binascii
 import logging
 from datetime import datetime, timedelta
 
@@ -47,6 +48,35 @@ class ChildrenConnection(graphene.Connection):
 
     def resolve_count(self, info, **kwargs):
         return self.length
+
+
+class ChildNotesNode(DjangoObjectType):
+    """
+    Node for handling child's notes separately from their other data.
+    """
+
+    class Meta:
+        model = Child
+        interfaces = (relay.Node,)
+        fields = ("notes",)
+
+    child_id = graphene.ID()
+
+    def resolve_child_id(self: Child, info, **kwargs):
+        return self.id
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return queryset.user_can_view(info.context.user).order_by("id")
+
+    @classmethod
+    @login_required
+    def get_node(cls, info, id):
+        try:
+            return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
+        except cls._meta.model.DoesNotExist:
+            return None
 
 
 class ChildNode(DjangoObjectType):
@@ -295,12 +325,39 @@ class GuardianInput(graphene.InputObjectType):
     has_accepted_marketing = graphene.Boolean()
 
 
-class ChildInput(graphene.InputObjectType):
+class BaseChildInput:
+    """
+    A base class for input fields shared by all Child inputs
+    """
+
     name = graphene.String()
-    birthyear = graphene.Int(required=True)
-    postal_code = graphene.String(required=True)
     relationship = RelationshipInput()
     languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+
+
+class BaseNewChildInput(BaseChildInput):
+    """
+    A base class for new Child input
+    """
+
+    birthyear = graphene.Int(required=True)
+    postal_code = graphene.String(required=True)
+
+
+class BaseUpdateChildInput(BaseChildInput):
+    """
+    A base class for update Child input
+    """
+
+    id = graphene.ID(required=True)
+    # birthyear is missing on purpose, it can not be edited
+    postal_code = graphene.String()
+
+
+class ChildInput(BaseNewChildInput, graphene.InputObjectType):
+    """
+    A new Child input
+    """
 
 
 def validate_child_data(child_data):
@@ -400,12 +457,10 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
 
 class AddChildMutation(graphene.relay.ClientIDMutation):
-    class Input:
-        name = graphene.String()
-        birthyear = graphene.Int(required=True)
-        postal_code = graphene.String(required=True)
-        relationship = RelationshipInput()
-        languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+    class Input(BaseNewChildInput):
+        """
+        A new Child input (ClientIDMutation adds InputObjectType as base)
+        """
 
     child = graphene.Field(ChildNode)
 
@@ -445,12 +500,10 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
 
 
 class UpdateChildMutation(graphene.relay.ClientIDMutation):
-    class Input:
-        id = graphene.ID(required=True)
-        name = graphene.String()
-        postal_code = graphene.String()
-        relationship = RelationshipInput()
-        languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+    class Input(BaseUpdateChildInput):
+        """
+        An update Child input (ClientIDMutation adds InputObjectType as base)
+        """
 
     child = graphene.Field(ChildNode)
 
@@ -512,6 +565,34 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
         return DeleteChildMutation()
 
 
+class UpdateChildNotesMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        child_id = graphene.ID(required=True)
+        notes = graphene.String(required=True)
+
+    child_notes = graphene.Field(ChildNotesNode)
+
+    @classmethod
+    @login_required
+    @transaction.atomic
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
+        child_global_id = kwargs.pop("child_id")
+
+        try:
+            child = Child.objects.user_can_update(user).get(
+                pk=from_global_id(child_global_id)[1]
+            )
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+
+        update_object(child, kwargs)
+
+        logger.info(f"user {user.uuid} updated child {child.pk} notes")
+
+        return UpdateChildNotesMutation(child_notes=child)
+
+
 class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
     def __init__(self, type, *args, **kwargs):
         kwargs.setdefault("limit", graphene.Int())
@@ -532,6 +613,23 @@ class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
 class Query:
     children = DjangoFilterAndOffsetConnectionField(ChildNode, projectId=graphene.ID())
     child = relay.Node.Field(ChildNode)
+    child_notes = graphene.Field(ChildNotesNode, id=graphene.ID(required=True))
+
+    def resolve_child_notes(self, info, id):
+        try:
+            id_type, child_id = from_global_id(id)
+        except (binascii.Error, UnicodeDecodeError, ValueError):
+            raise ApiUsageError(
+                "Unable to decode child ID in childNotes query, "
+                + 'please use "ChildNode:<uuid>" encoded as base64.'
+            )
+
+        if id_type != "ChildNode":
+            raise ApiUsageError(
+                "childNotes must be queried using ChildNode type ID, "
+                + f"was queried with {id_type} type ID"
+            )
+        return ChildNotesNode.get_node(info, child_id)
 
 
 class Mutation:
@@ -545,3 +643,4 @@ class Mutation:
     )
     update_child = UpdateChildMutation.Field()
     delete_child = DeleteChildMutation.Field()
+    update_child_notes = UpdateChildNotesMutation.Field()

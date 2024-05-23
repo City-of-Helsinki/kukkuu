@@ -43,9 +43,9 @@ snapshots["test_user_serialize 1"] = {
                     "children": [
                         {
                             "children": [
-                                {"key": "NAME", "value": "Shane Smith"},
+                                {"key": "NAME", "value": "Dalton Castaneda"},
                                 {"key": "BIRTHYEAR", "value": 2019},
-                                {"key": "POSTAL_CODE", "value": "02813"},
+                                {"key": "POSTAL_CODE", "value": "30727"},
                                 {"children": [], "key": "ENROLMENTS"},
                                 {"children": [], "key": "TICKET_SYSTEM_PASSWORDS"},
                                 {
@@ -58,11 +58,11 @@ snapshots["test_user_serialize 1"] = {
                                                 },
                                                 {
                                                     "key": "CHILD",
-                                                    "value": "Shane Smith (2019)",
+                                                    "value": "Dalton Castaneda (2019)",
                                                 },
                                                 {
                                                     "key": "OCCURRENCE",
-                                                    "value": "2001-10-04 22:36:50+00:00 (589)",
+                                                    "value": "2007-10-07 00:42:30+00:00 (589)",
                                                 },
                                             ],
                                             "key": "FREESPOTNOTIFICATIONSUBSCRIPTION",
@@ -70,21 +70,26 @@ snapshots["test_user_serialize 1"] = {
                                     ],
                                     "key": "FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS",
                                 },
+                                {
+                                    "key": "NOTES",
+                                    "value": """Longer test notes
+with multiple lines.""",
+                                },
                             ],
                             "key": "CHILD",
                         },
                         {
                             "children": [
-                                {"key": "NAME", "value": "James Duncan"},
-                                {"key": "BIRTHYEAR", "value": 2021},
-                                {"key": "POSTAL_CODE", "value": "70117"},
+                                {"key": "NAME", "value": "Jason Berg"},
+                                {"key": "BIRTHYEAR", "value": 2019},
+                                {"key": "POSTAL_CODE", "value": "01171"},
                                 {
                                     "children": [
                                         {
                                             "children": [
                                                 {
                                                     "key": "CHILD",
-                                                    "value": "James Duncan (2021)",
+                                                    "value": "Jason Berg (2019)",
                                                 },
                                                 {
                                                     "children": [
@@ -207,7 +212,7 @@ Yorkview, OK 06572""",
                                                 },
                                                 {
                                                     "key": "CHILD",
-                                                    "value": "James Duncan (2021)",
+                                                    "value": "Jason Berg (2019)",
                                                 },
                                             ],
                                             "key": "TICKETSYSTEMPASSWORD",
@@ -225,7 +230,7 @@ Yorkview, OK 06572""",
                                                 },
                                                 {
                                                     "key": "CHILD",
-                                                    "value": "James Duncan (2021)",
+                                                    "value": "Jason Berg (2019)",
                                                 },
                                                 {
                                                     "key": "OCCURRENCE",
@@ -237,6 +242,7 @@ Yorkview, OK 06572""",
                                     ],
                                     "key": "FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS",
                                 },
+                                {"key": "NOTES", "value": "Alternative test notes"},
                             ],
                             "key": "CHILD",
                         },
@@ -894,6 +900,7 @@ Jamestown, MT 39374""",
                                     "children": [],
                                     "key": "FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS",
                                 },
+                                {"key": "NOTES", "value": ""},
                             ],
                             "key": "CHILD",
                         },

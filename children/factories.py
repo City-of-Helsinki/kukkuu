@@ -12,6 +12,15 @@ class ChildFactory(factory.django.DjangoModelFactory):
     )  # NOTE: Many of the tests are freezed to 2020
     postal_code = factory.Faker("postcode", locale="fi_FI")
     project = factory.LazyFunction(lambda: Project.objects.get(year=2020))
+    notes = factory.Faker(
+        "random_element",
+        elements=[
+            "",
+            "Test notes",
+            "Alternative test notes",
+            "Longer test notes\nwith multiple lines.",
+        ],
+    )
 
     class Meta:
         model = Child

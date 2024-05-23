@@ -83,6 +83,11 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         related_name="children",
         blank=True,
     )
+    notes = models.TextField(
+        verbose_name=_("notes"),
+        blank=True,
+        default="",
+    )
 
     objects = SerializableMixin.SerializableManager.from_queryset(ChildQuerySet)()
 
@@ -93,10 +98,12 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         {"name": "enrolments"},
         {"name": "ticket_system_passwords"},
         {"name": "free_spot_notification_subscriptions"},
+        {"name": "notes"},
     )
 
     gdpr_sensitive_data_fields = [
         "name",
+        "notes",  # Free text without enforced structure -> GDPR sensitive
     ]
 
     class Meta:
