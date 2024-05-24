@@ -1,3 +1,4 @@
+import threading
 from copy import deepcopy
 from datetime import timedelta
 from unittest import mock
@@ -31,6 +32,19 @@ from events.tests.test_api import (
 )
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
+
+
+def _wait_until_thread_terminates(thread_name: str, ignore_errors=False):
+    # The notifications are sent in another thread
+    # and the mailer outbox is not seeable here.
+    try:
+        event_notification_sender_thread = next(
+            (thread for thread in threading.enumerate() if thread.name == thread_name),
+        )
+        event_notification_sender_thread.join()
+    except StopIteration:
+        if not ignore_errors:
+            raise
 
 
 @pytest.fixture(autouse=True)
@@ -162,7 +176,7 @@ def notification_template_occurrence_feedback_fi():
     )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)  # transaction=True for threading
 def test_event_publish_notification(
     snapshot,
     publisher_api_client,
@@ -178,12 +192,15 @@ def test_event_publish_notification(
 
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
+
     publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
+
+    _wait_until_thread_terminates("event-notification-sender")
 
     assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)  # transaction=True for threading
 def test_event_publish_notification_not_sent_when_publication_fails(
     snapshot,
     publisher_api_client,
@@ -205,11 +222,18 @@ def test_event_publish_notification_not_sent_when_publication_fails(
         side_effect=Error("Some error occured"),
     ):
         publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=event_variables)
+
+        # Even if it would try to send,
+        # then the notification sender thread needs to be joined.
+        _wait_until_thread_terminates(
+            "eventgroup-notification-sender", ignore_errors=True
+        )
+
         # No mails sent because publication failed
         assert len(mail.outbox) == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)  # transaction=True for threading
 def test_event_group_publish_notification(
     snapshot,
     notification_template_event_published_fi,
@@ -224,10 +248,12 @@ def test_event_group_publish_notification(
 
     event.event_group.publish()
 
+    _wait_until_thread_terminates("eventgroup-notification-sender")
+
     assert_mails_match_snapshot(snapshot)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)  # transaction=True for threading
 def test_event_group_republish_notification(
     snapshot,
     notification_template_event_published_fi,
@@ -253,6 +279,8 @@ def test_event_group_republish_notification(
     )
 
     event_group.publish()
+
+    _wait_until_thread_terminates("eventgroup-notification-sender")
 
     assert_mails_match_snapshot(snapshot)
 
