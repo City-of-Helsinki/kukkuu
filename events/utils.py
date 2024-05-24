@@ -1,9 +1,10 @@
 import logging
 from collections.abc import Iterable
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING, Union
 
 from django.conf import settings
+from django.db.models import QuerySet
 from django.utils import timezone
 from django_ilmoitin.utils import send_notification
 from parler.utils.context import switch_language
@@ -11,11 +12,20 @@ from parler.utils.context import switch_language
 from common.utils import get_global_id
 from users.utils import get_marketing_unsubscribe_ui_url
 
+if TYPE_CHECKING:
+    from children.models import Child
+    from events.consts import NotificationType
+    from events.models import Event, EventGroup
+
 logger = logging.getLogger(__name__)
 
 
 def send_event_notifications_to_guardians(
-    event, notification_type, children, attachments: Optional[List] = None, **kwargs
+    event: "Event",
+    notification_type: "NotificationType",
+    children: Union[QuerySet, List["Child"]],
+    attachments: Optional[List] = None,
+    **kwargs,
 ):
     if not isinstance(children, Iterable):
         children = [children]
@@ -74,7 +84,10 @@ def send_event_notifications_to_guardians(
 
 
 def send_event_group_notifications_to_guardians(
-    event_group, notification_type, children, **kwargs
+    event_group: "EventGroup",
+    notification_type: "NotificationType",
+    children: Union[QuerySet, List["Child"]],
+    **kwargs,
 ):
     if not isinstance(children, Iterable):
         children = [children]

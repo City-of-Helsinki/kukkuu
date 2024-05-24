@@ -15,6 +15,7 @@ from parler.models import TranslatedFields
 
 import events.notification_service as notification_service
 from children.models import Child
+from common.decorators import execute_in_background
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from common.utils import get_translations_dict
 from events.consts import NotificationType
@@ -130,6 +131,16 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
 
         return True
 
+    @execute_in_background(thread_name="eventgroup-notification-sender", daemonic=False)
+    def _send_event_group_notifications_to_guardians_in_background(
+        self, *args, **kwargs
+    ):
+        logger.info(
+            "The sending of the event group publishing notification "
+            "will be executed in background!"
+        )
+        send_event_group_notifications_to_guardians(*args, **kwargs)
+
     def publish(self, send_notifications=True):
         unpublished_events = self.events.unpublished()
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
@@ -144,12 +155,16 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
 
             for event in unpublished_events:
                 event.publish(send_notifications=False)
+            logger.debug(
+                "The atomic transaction to mark events of the group published "
+                "has now finished."
+            )
 
         if send_notifications:
-            send_event_group_notifications_to_guardians(
+            self._send_event_group_notifications_to_guardians_in_background(
                 self,
                 NotificationType.EVENT_GROUP_PUBLISHED,
-                self.project.children.prefetch_related("guardians"),
+                list(self.project.children.prefetch_related("guardians")),
             )
 
     def is_published(self):
@@ -384,6 +399,14 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
         return True
 
+    @execute_in_background(thread_name="event-notification-sender", daemonic=False)
+    def _send_event_notifications_to_guardians_in_background(self, *args, **kwargs):
+        logger.info(
+            "The sending of the event publishing notification "
+            "will be executed in background!"
+        )
+        send_event_notifications_to_guardians(*args, **kwargs)
+
     def publish(self, send_notifications=True):
         with transaction.atomic():
             for occurrence in self.occurrences.all():
@@ -394,12 +417,15 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
             for occurrence in self.occurrences.all():
                 occurrence.clean()
+            logger.debug(
+                "The atomic transaction to mark events published has now finished."
+            )
 
         if send_notifications:
-            send_event_notifications_to_guardians(
+            self._send_event_notifications_to_guardians_in_background(
                 self,
                 NotificationType.EVENT_PUBLISHED,
-                self.project.children.prefetch_related("guardians"),
+                list(self.project.children.prefetch_related("guardians")),
             )
 
     def is_published(self):
