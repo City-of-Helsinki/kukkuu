@@ -3,10 +3,8 @@ from copy import deepcopy
 import pytest
 from django.core import mail
 
-from children.tests.test_api import (
-    SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
-    SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES,
-)
+from children.tests.mutations import SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION
+from children.tests.test_api import SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES
 from common.tests.utils import (
     assert_mails_match_snapshot,
     create_notification_template_in_language,

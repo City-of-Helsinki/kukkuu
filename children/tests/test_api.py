@@ -14,6 +14,29 @@ from graphql_relay.connection.arrayconnection import offset_to_cursor
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
+from children.tests.mutations import (
+    ADD_CHILD_MUTATION,
+    DELETE_CHILD_MUTATION,
+    SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION,
+    UPDATE_CHILD_MUTATION,
+    UPDATE_CHILD_NOTES_MUTATION,
+    UPDATE_CHILD_NOTES_MUTATION_TEMPLATE,
+)
+from children.tests.queries import (
+    CHILD_ACTIVE_INTERNAL_AND_TICKETMASTER_ENROLMENTS_QUERY,
+    CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY,
+    CHILD_ENROLMENT_COUNT_QUERY,
+    CHILD_EVENTS_QUERY,
+    CHILD_NOTES_QUERY,
+    CHILD_NOTES_QUERY_TEMPLATE,
+    CHILD_NOTES_QUERY_WITHOUT_ID_PARAMETER,
+    CHILD_PAST_EVENTS_QUERY,
+    CHILD_QUERY,
+    CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY,
+    CHILDREN_FILTER_QUERY,
+    CHILDREN_PAGINATION_QUERY,
+    CHILDREN_QUERY,
+)
 from common.tests.utils import (
     assert_error_message,
     assert_general_error,
@@ -120,44 +143,6 @@ def assert_guardian_matches_data(guardian_obj, guardian_data):
             Language.objects.filter(id__in=language_ids)
         )
 
-
-SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION = """
-mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInput!) {
-  submitChildrenAndGuardian(input: $input) {
-    children {
-      name
-      birthyear
-      postalCode
-      relationships {
-        edges {
-          node {
-            type
-            guardian {
-              firstName
-              lastName
-              phoneNumber
-              email
-            }
-          }
-        }
-      }
-    }
-    guardian {
-      firstName
-      lastName
-      phoneNumber
-      email
-      languagesSpokenAtHome {
-        edges {
-          node {
-            alpha3Code
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 CHILDREN_DATA = [
     {
@@ -310,34 +295,6 @@ def test_submit_children_and_guardian_email_validation(user_api_client, guardian
     assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
 
 
-CHILDREN_QUERY = """
-query Children {
-  children {
-    edges {
-      node {
-        name
-        birthyear
-        postalCode
-        relationships {
-          edges {
-            node {
-              type
-              guardian {
-                firstName
-                lastName
-                phoneNumber
-                email
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-
 def test_children_query_unauthenticated(api_client):
     executed = api_client.execute(CHILDREN_QUERY)
 
@@ -399,19 +356,6 @@ def test_children_query_project_user_and_guardian(
     snapshot.assert_match(executed)
 
 
-CHILDREN_FILTER_QUERY = """
-query Children($projectId: ID!) {
-  children(projectId: $projectId) {
-    edges {
-      node {
-        name
-      }
-    }
-  }
-}
-"""
-
-
 def test_children_project_filter(
     snapshot, two_project_user_api_client, project, another_project
 ):
@@ -427,73 +371,6 @@ def test_children_project_filter(
     )
 
     snapshot.assert_match(executed)
-
-
-CHILD_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    name
-    birthyear
-    postalCode
-    relationships {
-      edges {
-        node {
-          type
-          guardian {
-            firstName
-            lastName
-            phoneNumber
-            email
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-CHILD_EVENTS_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    availableEvents{
-      edges{
-        node{
-          createdAt
-          occurrences{
-            edges{
-              node{
-                remainingCapacity
-              }
-            }
-          }
-        }
-      }
-    }
-    pastEvents{
-      edges{
-        node{
-          createdAt
-          name
-          occurrences{
-            edges{
-              node{
-                remainingCapacity
-              }
-            }
-          }
-        }
-      }
-    }
-    occurrences {
-      edges {
-        node {
-          time
-        }
-      }
-    }
-  }
-}
-"""
 
 
 def test_child_query_unauthenticated(snapshot, api_client, child_with_random_guardian):
@@ -532,18 +409,6 @@ def test_child_query_not_own_child_project_user(
 
     snapshot.assert_match(executed)
 
-
-ADD_CHILD_MUTATION = """
-mutation AddChild($input: AddChildMutationInput!) {
-  addChild(input: $input) {
-    child {
-      name
-      birthyear
-      postalCode
-    }
-  }
-}
-"""
 
 ADD_CHILD_VARIABLES = {
     "input": {
@@ -634,18 +499,6 @@ def test_add_child_mutation_children_limit(guardian_api_client, settings, projec
     assert_match_error_code(executed, MAX_NUMBER_OF_CHILDREN_PER_GUARDIAN_ERROR)
 
 
-UPDATE_CHILD_MUTATION = """
-mutation UpdateChild($input: UpdateChildMutationInput!) {
-  updateChild(input: $input) {
-    child {
-      name
-      birthyear
-      postalCode
-    }
-  }
-}
-"""
-
 UPDATE_CHILD_VARIABLES = {
     "input": {
         # "id" needs to be added when actually using these in the mutation
@@ -734,13 +587,6 @@ def test_update_child_mutation_birthdate_not_mutable_on_update(
     assert "GENERAL_ERROR" in str(executed["errors"])
 
 
-DELETE_CHILD_MUTATION = """
-mutation DeleteChild($input: DeleteChildMutationInput!) {
-  deleteChild(input: $input) {__typename}
-}
-"""
-
-
 def test_delete_child_mutation(snapshot, guardian_api_client, child_with_user_guardian):
     variables = {
         "input": {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
@@ -763,23 +609,6 @@ def test_delete_child_mutation_wrong_user(
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert Child.objects.count() == 1
-
-
-UPDATE_CHILD_NOTES_MUTATION_TEMPLATE = """
-mutation UpdateChildNotes($input: UpdateChildNotesMutationInput!) {
-  updateChildNotes(input: $input) {
-    childNotes {
-      childId
-      notes
-      %(extra_field_name)s
-    }
-  }
-}
-"""
-
-UPDATE_CHILD_NOTES_MUTATION = UPDATE_CHILD_NOTES_MUTATION_TEMPLATE % {
-    "extra_field_name": ""
-}
 
 
 def test_update_child_notes_mutation_unauthenticated(
@@ -910,19 +739,6 @@ def test_update_child_notes_mutation_no_extra_fields(
     assert_error_message(
         executed, f'Cannot query field "{extra_field_name}" on type "ChildNotesNode".'
     )
-
-
-CHILD_NOTES_QUERY_TEMPLATE = """
-query ChildNotes($id: ID!) {
-  childNotes(id: $id) {
-    childId
-    notes
-    %(extra_field_name)s
-  }
-}
-"""
-
-CHILD_NOTES_QUERY = CHILD_NOTES_QUERY_TEMPLATE % {"extra_field_name": ""}
 
 
 def test_child_notes_query_unauthenticated(api_client, child_with_random_guardian):
@@ -1088,16 +904,6 @@ def test_child_notes_query_no_extra_fields(
     )
 
 
-CHILD_NOTES_QUERY_WITHOUT_ID_PARAMETER = """
-query ChildNotes {
-  childNotes {
-    childId
-    notes
-  }
-}
-"""
-
-
 def test_child_notes_query_without_id_parameter_fails(
     project_user_api_client, child_with_random_guardian
 ):
@@ -1110,16 +916,6 @@ def test_child_notes_query_without_id_parameter_fails(
         executed,
         'Field "childNotes" argument "id" of type "ID!" is required but not provided.',
     )
-
-
-CHILD_ENROLMENT_COUNT_QUERY = """
-query Child($id: ID!, $year: Int) {
-  child(id: $id) {
-    enrolmentCount(year: $year)
-    pastEnrolmentCount
-  }
-}
-"""
 
 
 @freeze_time("2021-02-02T12:00:00Z")
@@ -1348,21 +1144,6 @@ def test_get_available_events(
     )
 
 
-CHILD_PAST_EVENTS_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    pastEvents {
-      edges {
-        node {
-          name
-        }
-      }
-    }
-  }
-}
-"""
-
-
 def test_get_past_events(
     snapshot, guardian_api_client, child_with_user_guardian, project, venue
 ):
@@ -1552,19 +1333,6 @@ def test_get_past_events_including_external_ticket_system_events(
         executed2["data"]["child"]["pastEvents"]
         == executed["data"]["child"]["pastEvents"]
     )
-
-
-CHILDREN_PAGINATION_QUERY = """
-query Children($projectId: ID!, $limit: Int, $offset: Int, $after: String, $first: Int) {
-  children(projectId: $projectId, limit: $limit, offset: $offset, after: $after, first: $first) {
-    edges {
-      node {
-        name
-      }
-    }
-  }
-}
-"""  # noqa: E501
 
 
 def test_children_cursor_and_offset_pagination_cannot_be_combined(
@@ -1806,28 +1574,6 @@ def test_children_query_ordering(snapshot, project, project_user_api_client):
     snapshot.assert_match(executed)
 
 
-CHILD_AVAILABLE_EVENTS_AND_EVENT_GROUPS_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    availableEventsAndEventGroups{
-      edges {
-        node {
-          ... on EventNode {
-            name
-            __typename
-          }
-          ... on EventGroupNode {
-            name
-            __typename
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-
 def test_available_events_and_event_groups(
     snapshot,
     guardian_api_client,
@@ -1926,30 +1672,6 @@ def test_available_events_and_event_groups(
         executed2["data"]["child"]["availableEventsAndEventGroups"]
         == executed["data"]["child"]["availableEventsAndEventGroups"]
     )
-
-
-CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    upcomingEventsAndEventGroups{
-      edges {
-        node {
-          ... on EventNode {
-            name
-            canChildEnroll(childId: $id)
-            __typename
-          }
-          ... on EventGroupNode {
-            name
-            canChildEnroll(childId: $id)
-            __typename
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 
 def test_upcoming_events_and_event_groups(
@@ -2153,35 +1875,6 @@ def test_test_upcoming_events_and_event_groups_yearly_enrolment_limit(
 
     for node in nodes:
         assert node["node"]["canChildEnroll"] is False
-
-
-CHILD_ACTIVE_INTERNAL_AND_TICKETMASTER_ENROLMENTS_QUERY = """
-query Child($id: ID!) {
-  child(id: $id) {
-    activeInternalAndTicketSystemEnrolments{
-      edges {
-        node {
-          ... on EnrolmentNode {
-            occurrence {
-              event {
-                name
-              }
-            }
-            __typename
-          }
-          ... on TicketmasterEnrolmentNode {
-            createdAt
-            event {
-              name
-            }
-            __typename
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 
 def test_active_internal_and_ticketmaster_enrolments(

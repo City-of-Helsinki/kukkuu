@@ -23,6 +23,44 @@ from events.factories import (
     TicketSystemPasswordFactory,
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from events.tests.mutations import (
+    ADD_EVENT_GROUP_MUTATION,
+    ADD_EVENT_MUTATION,
+    ADD_OCCURRENCE_MUTATION,
+    ADD_TICKETMASTER_EVENT_MUTATION,
+    ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
+    DELETE_EVENT_GROUP_MUTATION,
+    DELETE_EVENT_MUTATION,
+    DELETE_OCCURRENCE_MUTATION,
+    ENROL_OCCURRENCE_MUTATION,
+    IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION,
+    PUBLISH_EVENT_GROUP_MUTATION,
+    PUBLISH_EVENT_MUTATION,
+    SET_ENROLMENT_ATTENDANCE_MUTATION,
+    UNENROL_OCCURRENCE_MUTATION,
+    UPDATE_EVENT_GROUP_MUTATION,
+    UPDATE_EVENT_MUTATION,
+    UPDATE_OCCURRENCE_MUTATION,
+    UPDATE_TICKETMASTER_EVENT_MUTATION,
+)
+from events.tests.queries import (
+    CAN_CHILD_ENROLL_EVENT_QUERY,
+    EVENT_GROUP_EVENTS_FILTER_QUERY,
+    EVENT_GROUP_QUERY,
+    EVENT_QUERY,
+    EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
+    EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+    EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
+    EVENTS_FILTER_QUERY,
+    EVENTS_QUERY,
+    GET_ENROLMENT_REFERENCE_ID_QUERY,
+    OCCURRENCE_QUERY,
+    OCCURRENCE_TICKET_SYSTEM_QUERY,
+    OCCURRENCES_COUNTS_QUERY_TEMPLATE,
+    OCCURRENCES_FILTER_QUERY,
+    OCCURRENCES_QUERY,
+    VERIFY_TICKET_QUERY,
+)
 from events.ticket_service import check_ticket_validity
 from kukkuu.consts import (
     CHILD_ALREADY_JOINED_EVENT_ERROR,
@@ -60,295 +98,6 @@ def autouse_db(db):
     pass
 
 
-EVENTS_QUERY = """
-query Events {
-  events {
-    edges {
-      node {
-        translations{
-          name
-          description
-          shortDescription
-          imageAltText
-          languageCode
-        }
-        project{
-          year
-        }
-        name
-        description
-        shortDescription
-        duration
-        image
-        imageAltText
-        participantsPerInvite
-        capacityPerOccurrence
-        publishedAt
-        createdAt
-        updatedAt
-        ticketSystem {
-          type
-        }
-        occurrences {
-          edges {
-            node {
-              remainingCapacity
-              enrolmentCount
-              time
-              venue {
-                translations{
-                  name
-                  description
-                  languageCode
-                }
-              }
-              ticketSystem {
-                type
-                ... on TicketmasterOccurrenceTicketSystem {
-                  url
-                }
-                ... on LippupisteOccurrenceTicketSystem {
-                  url
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-"""
-
-EVENT_QUERY = """
-query Event($id: ID!) {
-  event(id: $id) {
-    translations{
-      name
-      shortDescription
-      description
-      imageAltText
-      languageCode
-    }
-    project{
-      year
-    }
-    name
-    description
-    shortDescription
-    image
-    imageAltText
-    participantsPerInvite
-    capacityPerOccurrence
-    publishedAt
-    createdAt
-    updatedAt
-    duration
-    ticketSystem {
-      type
-    }
-    occurrences{
-      edges{
-        node{
-          time
-          remainingCapacity
-          enrolmentCount
-          venue{
-            translations{
-              name
-              description
-              languageCode
-            }
-          }
-          ticketSystem {
-            type
-            ... on TicketmasterOccurrenceTicketSystem {
-              url
-            }
-            ... on LippupisteOccurrenceTicketSystem {
-              url
-            }
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-EVENTS_FILTER_QUERY = """
-query Events($projectId: ID, $upcoming: Boolean) {
-  events(projectId: $projectId, upcoming: $upcoming) {
-    edges {
-      node {
-        name
-      }
-    }
-  }
-}
-"""
-
-OCCURRENCES_QUERY = """
-query Occurrences {
-  occurrences {
-    edges {
-      node {
-        time
-        remainingCapacity
-        enrolmentCount
-        event {
-          translations {
-            name
-            shortDescription
-            description
-            languageCode
-          }
-          image
-          participantsPerInvite
-          capacityPerOccurrence
-          publishedAt
-          duration
-        }
-        venue{
-          translations{
-            name
-            description
-            address
-            accessibilityInfo
-            arrivalInstructions
-            additionalInfo
-            wwwUrl
-            languageCode
-          }
-        }
-        ticketSystem {
-          type
-          ... on TicketmasterOccurrenceTicketSystem {
-            url
-          }
-          ... on LippupisteOccurrenceTicketSystem {
-            url
-          }
-        }
-      }
-    }
-  }
-}
-"""
-
-OCCURRENCES_FILTER_QUERY = """
-query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $occurrenceLanguage: String, $projectId: String,
-                  $upcomingWithLeeway: Boolean, $upcomingWithOngoing: Boolean) {
-  occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage,
-              projectId: $projectId, upcomingWithLeeway: $upcomingWithLeeway,
-              upcomingWithOngoing: $upcomingWithOngoing) {
-    edges {
-      node {
-        time
-      }
-    }
-  }
-}
-"""
-
-OCCURRENCE_QUERY = """
-query Occurrence($id: ID!) {
-  occurrence(id: $id){
-    enrolments{
-        edges{
-          node{
-            child{
-              name
-            }
-          }
-        }
-    }
-    time
-    remainingCapacity
-    enrolmentCount
-    occurrenceLanguage
-    event {
-      translations {
-        name
-        shortDescription
-        description
-        languageCode
-      }
-      image
-      participantsPerInvite
-      capacityPerOccurrence
-      publishedAt
-      duration
-    }
-    venue{
-      translations{
-        name
-        description
-        address
-        accessibilityInfo
-        arrivalInstructions
-        additionalInfo
-        wwwUrl
-        languageCode
-      }
-    }
-    ticketSystem {
-      type
-      ... on TicketmasterOccurrenceTicketSystem {
-        url
-      }
-      ... on LippupisteOccurrenceTicketSystem {
-        url
-      }
-    }
-  }
-}
-"""
-
-ADD_EVENT_MUTATION = """
-mutation AddEvent($input: AddEventMutationInput!) {
-  addEvent(input: $input) {
-    event {
-      translations{
-        languageCode
-        name
-        description
-        imageAltText
-        shortDescription
-      }
-      project{
-        year
-      }
-      duration
-      image
-      imageAltText
-      participantsPerInvite
-      capacityPerOccurrence
-      publishedAt
-      readyForEventGroupPublishing
-      ticketSystem {
-        type
-      }
-    }
-  }
-}
-"""
-
-ADD_TICKETMASTER_EVENT_MUTATION = """
-mutation AddTicketmasterEvent($input: AddEventMutationInput!) {
-  addEvent(input: $input) {
-    event {
-      ticketSystem {
-        type
-      }
-    }
-  }
-}
-"""
-
 ADD_EVENT_VARIABLES = {
     "input": {
         "translations": [
@@ -367,49 +116,6 @@ ADD_EVENT_VARIABLES = {
     }
 }
 
-UPDATE_EVENT_MUTATION = """
-mutation UpdateEvent($input: UpdateEventMutationInput!) {
-  updateEvent(input: $input) {
-    event {
-      translations{
-        name
-        shortDescription
-        description
-        imageAltText
-        languageCode
-      }
-      image
-      imageAltText
-      participantsPerInvite
-      capacityPerOccurrence
-      duration
-      ticketSystem {
-        type
-      }
-      occurrences{
-        edges{
-          node{
-            time
-          }
-        }
-      }
-      readyForEventGroupPublishing
-    }
-  }
-}
-"""
-
-UPDATE_TICKETMASTER_EVENT_MUTATION = """
-mutation UpdateTicketmasterEvent($input: UpdateEventMutationInput!) {
-  updateEvent(input: $input) {
-    event {
-      ticketSystem {
-        type
-      }
-    }
-  }
-}
-"""
 
 UPDATE_EVENT_VARIABLES = {
     "input": {
@@ -436,83 +142,13 @@ UPDATE_EVENT_VARIABLES = {
     }
 }
 
-PUBLISH_EVENT_MUTATION = """
-mutation PublishEvent($input: PublishEventMutationInput!) {
-  publishEvent(input: $input) {
-    event {
-      publishedAt
-    }
-  }
-}
-"""
 
 PUBLISH_EVENT_VARIABLES = {"input": {"id": ""}}
-
-DELETE_EVENT_MUTATION = """
-mutation DeleteEvent($input: DeleteEventMutationInput!) {
-  deleteEvent(input: $input) {
-    __typename
-  }
-}
-"""
-
-ADD_OCCURRENCE_MUTATION = """
-mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
-  addOccurrence(input: $input) {
-    occurrence{
-      event{
-        createdAt
-      }
-      venue {
-        createdAt
-      }
-      time
-      occurrenceLanguage
-      capacity
-      capacityOverride
-      ticketSystem {
-        type
-        ... on TicketmasterOccurrenceTicketSystem {
-          url
-        }
-      }
-    }
-  }
-}
-
-"""
 
 ADD_OCCURRENCE_VARIABLES = {
     "input": {"eventId": "", "venueId": "", "time": "1986-12-12T16:40:48+00:00"}
 }
 
-UPDATE_OCCURRENCE_MUTATION = """
-mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
-  updateOccurrence(input: $input) {
-    occurrence{
-      event{
-        createdAt
-      }
-      venue {
-        createdAt
-      }
-      time
-      occurrenceLanguage
-      enrolmentCount
-      remainingCapacity
-      capacity
-      capacityOverride
-      ticketSystem {
-        type
-        ... on TicketmasterOccurrenceTicketSystem {
-          url
-        }
-      }
-    }
-  }
-}
-
-"""
 
 UPDATE_OCCURRENCE_VARIABLES = {
     "input": {
@@ -525,60 +161,11 @@ UPDATE_OCCURRENCE_VARIABLES = {
     }
 }
 
-DELETE_OCCURRENCE_MUTATION = """
-mutation DeleteOccurrence($input: DeleteOccurrenceMutationInput!) {
-  deleteOccurrence(input: $input) {
-    __typename
-  }
-}
-
-"""
-
-ENROL_OCCURRENCE_MUTATION = """
-mutation EnrolOccurrence($input: EnrolOccurrenceMutationInput!) {
-  enrolOccurrence(input: $input) {
-    enrolment{
-      child{
-        name
-      }
-      occurrence {
-        time
-      }
-      createdAt
-    }
-  }
-}
-
-"""
 
 ENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
 
-UNENROL_OCCURRENCE_MUTATION = """
-mutation UnenrolOccurrence($input: UnenrolOccurrenceMutationInput!) {
-  unenrolOccurrence(input: $input) {
-    occurrence{
-        time
-    }
-    child{
-        name
-    }
-  }
-}
-
-"""
 
 UNENROL_OCCURRENCE_VARIABLES = {"input": {"occurrenceId": "", "childId": ""}}
-
-SET_ENROLMENT_ATTENDANCE_MUTATION = """
-mutation SetEnrolmentAttendance($input: SetEnrolmentAttendanceMutationInput!) {
-  setEnrolmentAttendance(input: $input) {
-    enrolment {
-      attended
-    }
-  }
-}
-
-"""
 
 
 def test_events_query_unauthenticated(api_client):
@@ -620,16 +207,6 @@ def test_event_query_normal_user(snapshot, user_api_client, event, venue):
     executed = user_api_client.execute(EVENT_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
-
-
-CAN_CHILD_ENROLL_EVENT_QUERY = """
-query Event($id: ID!, $childId: ID!) {
-  event(id: $id) {
-    name
-    canChildEnroll(childId: $childId)
-  }
-}
-"""
 
 
 @pytest.mark.parametrize("enrolment_in_future", [True, False])
@@ -691,19 +268,6 @@ def test_occurrences_query_project_user(
 
     snapshot.assert_match(executed)
 
-
-OCCURRENCES_COUNTS_QUERY_TEMPLATE = """
-query Occurrences {
-  occurrences {
-    edges {
-      node {
-        enrolmentCount
-        %(occurrence_fields)s
-      }
-    }
-  }
-}
-"""
 
 NON_PUBLIC_COUNTS = [
     "attendedEnrolmentCount",
@@ -2004,40 +1568,6 @@ def test_occurrence_capacity(
     snapshot.assert_match(executed)
 
 
-EVENT_GROUP_QUERY = """
-query EventGroup($id: ID!) {
-  eventGroup(id: $id) {
-    translations{
-      name
-      shortDescription
-      description
-      imageAltText
-      languageCode
-    }
-    project {
-      year
-    }
-    name
-    description
-    shortDescription
-    image
-    imageAltText
-    publishedAt
-    createdAt
-    updatedAt
-    events {
-      edges {
-        node {
-          __typename
-          name
-        }
-      }
-    }
-  }
-}
-"""
-
-
 @pytest.mark.parametrize("published", (False, True))
 def test_event_group_query_normal_user_and_project_user(
     snapshot, user_api_client, project_user_api_client, published
@@ -2062,26 +1592,6 @@ def test_event_group_query_wrong_project(
     )
 
     snapshot.assert_match(executed)
-
-
-EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY = """
-query EventsAndEventGroups($projectId: ID, $upcoming: Boolean) {
-  eventsAndEventGroups(projectId: $projectId, upcoming: $upcoming) {
-    edges {
-      node {
-        ... on EventNode {
-          __typename
-          name
-        }
-        ... on EventGroupNode {
-          __typename
-          name
-        }
-      }
-    }
-  }
-}
-"""
 
 
 def test_events_and_event_groups_query_normal_user(snapshot, guardian_api_client):
@@ -2182,28 +1692,6 @@ def test_events_and_event_groups_query_upcoming_filter(
     snapshot.assert_match(executed)
 
 
-ADD_EVENT_GROUP_MUTATION = """
-mutation AddEventGroup($input: AddEventGroupMutationInput!) {
-  addEventGroup(input: $input) {
-    eventGroup {
-      translations{
-        languageCode
-        name
-        description
-        imageAltText
-        shortDescription
-      }
-      project{
-        year
-      }
-      image
-      imageAltText
-      publishedAt
-    }
-  }
-}
-"""
-
 ADD_EVENT_GROUP_VARIABLES = {
     "input": {
         "translations": [
@@ -2247,23 +1735,6 @@ def test_add_event_group(snapshot, event_group_manager_api_client, project):
     )
     snapshot.assert_match(executed)
 
-
-UPDATE_EVENT_GROUP_MUTATION = """
-mutation UpdateEventGroup($input: UpdateEventGroupMutationInput!) {
-  updateEventGroup(input: $input) {
-    eventGroup {
-      translations{
-        name
-        shortDescription
-        description
-        imageAltText
-        languageCode
-      }
-      image
-    }
-  }
-}
-"""
 
 UPDATE_EVENT_GROUP_VARIABLES = {
     "input": {
@@ -2315,15 +1786,6 @@ def test_update_event_group(snapshot, event_group_manager_api_client, event_grou
     snapshot.assert_match(executed)
 
 
-DELETE_EVENT_GROUP_MUTATION = """
-mutation DeleteEventGroup($input: DeleteEventGroupMutationInput!) {
-  deleteEventGroup(input: $input) {
-    __typename
-  }
-}
-"""
-
-
 def test_delete_event_group_permission_denied(
     api_client, user_api_client, project_user_api_client, event_group
 ):
@@ -2349,23 +1811,6 @@ def test_delete_event_group(snapshot, event_group_manager_api_client, event_grou
     snapshot.assert_match(executed)
     assert EventGroup.objects.count() == 0
 
-
-PUBLISH_EVENT_GROUP_MUTATION = """
-mutation PublishEventGroup($input: PublishEventGroupMutationInput!) {
-  publishEventGroup(input: $input) {
-    eventGroup {
-      publishedAt
-      events {
-        edges {
-          node {
-            publishedAt
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
 
@@ -2466,21 +1911,6 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
         assert not new_event.published_at
 
 
-EVENT_GROUP_EVENTS_FILTER_QUERY = """
-query EventGroup($id: ID!, $availableForChild: String) {
-  eventGroup(id: $id) {
-    events(availableForChild: $availableForChild) {
-      edges {
-        node {
-          name
-        }
-      }
-    }
-  }
-}
-"""
-
-
 def test_event_group_events_filtering_by_available_for_child_id(
     snapshot, guardian_api_client, user_api_client, event_group, past, future
 ):
@@ -2526,20 +1956,6 @@ def test_add_single_event_when_single_events_disallowed(
     assert_match_error_code(executed, SINGLE_EVENTS_DISALLOWED_ERROR)
 
 
-OCCURRENCE_TICKET_SYSTEM_QUERY = """
-query Occurrence($id: ID!) {
-  occurrence(id: $id) {
-    ticketSystem {
-      type
-      ... on TicketmasterOccurrenceTicketSystem {
-        url
-      }
-    }
-  }
-}
-"""
-
-
 def test_occurrence_ticket_system(snapshot, guardian_api_client):
     occurrence = OccurrenceFactory(
         ticket_system_url="https://example.com",
@@ -2552,20 +1968,6 @@ def test_occurrence_ticket_system(snapshot, guardian_api_client):
     )
 
     snapshot.assert_match(executed)
-
-
-EVENT_TICKET_SYSTEM_PASSWORD_QUERY = """
-query TicketSystemChildPassword($eventId: ID!, $childId: ID!) {
-  event(id: $eventId) {
-    ticketSystem {
-      type
-      ... on TicketmasterEventTicketSystem {
-        childPassword(childId: $childId)
-      }
-    }
-  }
-}
-"""
 
 
 def test_event_ticket_system_password_own_child_password_exists(
@@ -2628,20 +2030,6 @@ def test_event_ticket_system_password_not_own_child(guardian_api_client):
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
 
 
-EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY = """
-query TicketSystemPasswordCounts($eventId: ID!) {
-  event(id: $eventId) {
-    ticketSystem {
-      ... on TicketmasterEventTicketSystem {
-        freePasswordCount
-        usedPasswordCount
-      }
-    }
-  }
-}
-"""
-
-
 def test_event_ticket_system_password_counts(snapshot, project_user_api_client):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
 
@@ -2680,25 +2068,6 @@ def test_event_ticket_system_password_counts_no_permission(guardian_api_client):
     )
 
     assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
-
-
-IMPORT_TICKET_SYSTEM_PASSWORDS_MUTATION = """
-mutation ImportTicketSystemPasswordsMutation(
-    $input: ImportTicketSystemPasswordsMutationInput!
-) {
-  importTicketSystemPasswords(input: $input) {
-    event {
-      name
-    }
-    passwords
-    errors {
-        field
-        message
-        value
-    }
-  }
-}
-"""
 
 
 def test_import_ticket_system_passwords(snapshot, project_user_api_client):
@@ -2814,21 +2183,6 @@ def test_import_ticket_system_passwords_invalid_permissions(guardian_api_client)
     assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
 
 
-ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION = """
-mutation AssignTicketSystemPassword($input: AssignTicketSystemPasswordMutationInput!) {
-  assignTicketSystemPassword(input: $input) {
-    event {
-      name
-    }
-    child {
-      name
-    }
-    password
-  }
-}
-"""
-
-
 def test_assign_ticket_system_password(snapshot, guardian_api_client):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
@@ -2913,18 +2267,6 @@ def test_assign_ticket_system_password_not_own_child(guardian_api_client):
     assert not another_child.ticket_system_passwords.filter(event=event).exists()
 
 
-VERIFY_TICKET_QUERY = """
-  query VerifyTicket($referenceId: String!){
-    verifyTicket(referenceId:$referenceId){
-      occurrenceTime
-      eventName
-      venueName
-      validity
-    }
-  }
-"""
-
-
 # NOTE: api_client is for anonymous users
 def test_verify_valid_ticket(api_client, snapshot):
     upcoming_occurrence = OccurrenceFactory(time=timezone.now())
@@ -2964,21 +2306,6 @@ def test_erroneous_ticket_verification(api_client, snapshot):
     assert executed["errors"][0]["message"] == "Could not decode the enrolment id"
     assert executed["data"]["verifyTicket"] is None
     snapshot.assert_match(executed)
-
-
-GET_ENROLMENT_REFERENCE_ID_QUERY = """
-  query getChildEnrolments($id: ID!) {
-    child(id: $id){
-      enrolments {
-        edges {
-          node {
-            referenceId
-          }
-        }
-      }
-    }
-  }
-"""
 
 
 def test_get_enrolment_reference_id_with_authorized_guardian(
