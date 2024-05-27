@@ -34,11 +34,11 @@ The guardian email field can be updated with the `UpdateMyEmailMutation`. The em
 
 The `UpdateMyEmailMutation` usage always requires an email verification token. The token can be requested with the `RequestEmailUpdateTokenMutation`. A successful request to the `RequestEmailUpdateTokenMutation` should send an email to the email box that the user is updating the field value to. A request to the `UpdateMyEmailMutation` can only be successful with that provided token as an input.
 
-###### Manage marketing subscriptions
+###### Manage communication subscriptions
 
-The guardian model also has (some or at least one) fields that are used to allow or disallow sending of some marketing letters and notifications to the user. The user can accept or reject the permissions to receive those notifications through the `UpdateMyMarketingSubscriptionsMutation`.
+The guardian model also has (some or at least one) fields that are used to allow or disallow sending of some notifications to the user. The user can accept or reject the permissions to receive those notifications through the `UpdateMyCommunicationSubscriptionsMutation`.
 
-The marketing subscriptions management is a bit special feature in sense that it is something that relates to a user (or to my profile), but is also something that needs to be accessible also when the user is not able to login. In some cases, a guardian user may receive some notifications in their inbox because they have at some point allowed notifications to be sent to them, but at some point they would still like to unsubscribe from those marketing letters. However, user may no longer be able to access his account, so user needs another way to get authorization for his information. The Verification tokens app provides a [verification token model](../verification_tokens/models.py) with specific types for just that.
+The communication subscriptions management is a bit special feature in sense that it is something that relates to a user (or to my profile), but is also something that needs to be accessible also when the user is not able to login. In some cases, a guardian user may receive some notifications in their inbox because they have at some point allowed notifications to be sent to them, but at some point they would still like to unsubscribe from those notifications. However, user may no longer be able to access his account, so user needs another way to get authorization for his information. The Verification tokens app provides a [verification token model](../verification_tokens/models.py) with specific types for just that.
 
 The `VerificationToken` with a type `VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH` can be linked to a guardian user and that token key can be included in the unsubscribe link provided in each mail that are sent to the user's email box.
 

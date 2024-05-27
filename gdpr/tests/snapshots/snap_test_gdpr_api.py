@@ -24,7 +24,7 @@ snapshots["test_get_profile_data_from_gdpr_api 1"] = {
                 {"key": "LAST_NAME", "value": "Patton"},
                 {"key": "EMAIL", "value": "michellewalker@example.net"},
                 {"key": "PHONE_NUMBER", "value": "355.777.6712x406"},
-                {"key": "HAS_ACCEPTED_MARKETING", "value": False},
+                {"key": "HAS_ACCEPTED_COMMUNICATION", "value": False},
                 {
                     "children": [
                         {

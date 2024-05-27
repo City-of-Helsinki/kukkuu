@@ -236,8 +236,11 @@ class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMix
         related_name="guardians",
         blank=True,
     )
-    has_accepted_marketing = models.BooleanField(
-        _("accepts marketing"), null=False, default=False
+    # NOTE: All guardians are initialized to have has_accepted_communication=True
+    # in users/migrations/0013_replace_has_accepted_marketing_with_communication.py,
+    # before they have implicitly accepted it when they have created an account.
+    has_accepted_communication = models.BooleanField(
+        _("accepts communication"), null=False, default=False
     )
 
     serialize_fields = (
@@ -247,7 +250,7 @@ class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMix
         {"name": "last_name"},
         {"name": "email"},
         {"name": "phone_number"},
-        {"name": "has_accepted_marketing"},
+        {"name": "has_accepted_communication"},
         {"name": "children"},
     )
 

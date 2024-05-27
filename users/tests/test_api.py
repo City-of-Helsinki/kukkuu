@@ -18,14 +18,14 @@ from users.factories import GuardianFactory
 from users.models import Guardian
 from users.tests.mutations import (
     REQUEST_EMAIL_CHANGE_TOKEN_MUTATION,
+    UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION,
     UPDATE_MY_EMAIL_MUTATION,
-    UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION,
     UPDATE_MY_PROFILE_MUTATION,
 )
 from users.tests.queries import (
     GUARDIANS_QUERY,
     MY_ADMIN_PROFILE_QUERY,
-    MY_MARKETING_SUBSCRIPTIONS_QUERY,
+    MY_COMMUNICATION_SUBSCRIPTIONS_QUERY,
     MY_PROFILE_QUERY,
 )
 from verification_tokens.factories import (
@@ -142,59 +142,66 @@ def test_my_profile_no_profile(snapshot, user_api_client):
     snapshot.assert_match(executed)
 
 
-def test_my_marketing_subscriptions_query_as_logged_in(snapshot, guardian_api_client):
+@pytest.mark.parametrize("has_accepted_communication", [True, False])
+def test_my_communication_subscriptions_query_as_logged_in(
+    has_accepted_communication, snapshot, guardian_api_client
+):
     guardian = guardian_api_client.user.guardian
-    executed = guardian_api_client.execute(MY_MARKETING_SUBSCRIPTIONS_QUERY)
+    guardian.has_accepted_communication = has_accepted_communication
+    guardian.save()
+    executed = guardian_api_client.execute(MY_COMMUNICATION_SUBSCRIPTIONS_QUERY)
     assert (
-        executed["data"]["myMarketingSubscriptions"]["firstName"] == guardian.first_name
+        executed["data"]["myCommunicationSubscriptions"]["firstName"]
+        == guardian.first_name
     )
     assert (
-        executed["data"]["myMarketingSubscriptions"]["hasAcceptedMarketing"]
-        == guardian.has_accepted_marketing
+        executed["data"]["myCommunicationSubscriptions"]["hasAcceptedCommunication"]
+        == guardian.has_accepted_communication
     )
     snapshot.assert_match(executed)
 
 
-def test_my_marketing_subscriptions_query_with_auth_verification_token(
+def test_my_communication_subscriptions_query_with_auth_verification_token(
     snapshot, api_client
 ):
-    guardian = GuardianFactory(has_accepted_marketing=True)
+    guardian = GuardianFactory(has_accepted_communication=True)
     auth_verification_token = UserSubscriptionsAuthVerificationTokenFactory(
         user=guardian.user
     )
     executed = api_client.execute(
-        MY_MARKETING_SUBSCRIPTIONS_QUERY,
+        MY_COMMUNICATION_SUBSCRIPTIONS_QUERY,
         variables={"authToken": auth_verification_token.key},
     )
     assert (
-        executed["data"]["myMarketingSubscriptions"]["firstName"] == guardian.first_name
+        executed["data"]["myCommunicationSubscriptions"]["firstName"]
+        == guardian.first_name
     )
     assert (
-        executed["data"]["myMarketingSubscriptions"]["hasAcceptedMarketing"]
-        == guardian.has_accepted_marketing
+        executed["data"]["myCommunicationSubscriptions"]["hasAcceptedCommunication"]
+        == guardian.has_accepted_communication
     )
     snapshot.assert_match(executed)
 
 
-def test_my_marketing_subscriptions_query_unauthenticated(api_client):
+def test_my_communication_subscriptions_query_unauthenticated(api_client):
     # no matter if a token exists
     UserSubscriptionsAuthVerificationTokenFactory()
     # no auth token given nor authorization header given
     executed = api_client.execute(
-        MY_MARKETING_SUBSCRIPTIONS_QUERY,
+        MY_COMMUNICATION_SUBSCRIPTIONS_QUERY,
         variables={},
     )
     assert_permission_denied(executed)
 
 
-def test_my_marketing_subscriptions_query_with_invalid_auth_verification_token(
+def test_my_communication_subscriptions_query_with_invalid_auth_verification_token(
     api_client,
 ):
     # no matter if a token exists
     UserSubscriptionsAuthVerificationTokenFactory()
     # no auth token given nor authorization header given
     executed = api_client.execute(
-        MY_MARKETING_SUBSCRIPTIONS_QUERY,
+        MY_COMMUNICATION_SUBSCRIPTIONS_QUERY,
         variables={"authToken": "invalid token"},
     )
     assert_permission_denied(executed)
@@ -207,6 +214,7 @@ UPDATE_MY_PROFILE_VARIABLES = {
         "phoneNumber": "Updated phone number",
         "language": "EN",
         "languagesSpokenAtHome": [],
+        "hasAcceptedCommunication": False,
     }
 }
 
@@ -414,62 +422,66 @@ def test_my_admin_profile_project_admin(
     snapshot.assert_match(executed)
 
 
-@pytest.mark.parametrize("initial_has_accepted_marketing", [False, True])
-def test_update_my_marketing_subscriptions_as_logged_in(
-    initial_has_accepted_marketing, snapshot, user_api_client
+@pytest.mark.parametrize("initial_has_accepted_communication", [False, True])
+def test_update_my_communication_subscriptions_as_logged_in(
+    initial_has_accepted_communication, snapshot, user_api_client
 ):
     user = user_api_client.user
     guardian = GuardianFactory(
-        user=user, has_accepted_marketing=initial_has_accepted_marketing
+        user=user, has_accepted_communication=initial_has_accepted_communication
     )
     executed = user_api_client.execute(
-        UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION,
+        UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION,
         variables={
-            "input": {"hasAcceptedMarketing": not initial_has_accepted_marketing}
+            "input": {
+                "hasAcceptedCommunication": not initial_has_accepted_communication
+            }
         },
     )
     assert (
-        executed["data"]["updateMyMarketingSubscriptions"]["guardian"]["firstName"]
+        executed["data"]["updateMyCommunicationSubscriptions"]["guardian"]["firstName"]
         == guardian.first_name
     )
     assert (
-        executed["data"]["updateMyMarketingSubscriptions"]["guardian"][
-            "hasAcceptedMarketing"
+        executed["data"]["updateMyCommunicationSubscriptions"]["guardian"][
+            "hasAcceptedCommunication"
         ]
-        is not initial_has_accepted_marketing
+        is not initial_has_accepted_communication
     )
-    assert guardian.has_accepted_marketing is not initial_has_accepted_marketing
+    assert guardian.has_accepted_communication is not initial_has_accepted_communication
     snapshot.assert_match(executed)
 
 
-@pytest.mark.parametrize("initial_has_accepted_marketing", [False, True])
-def test_update_my_marketing_subscriptions_with_auth_verification_token(
-    initial_has_accepted_marketing, snapshot, api_client
+@pytest.mark.parametrize("initial_has_accepted_communication", [False, True])
+def test_update_my_communication_subscriptions_with_auth_verification_token(
+    initial_has_accepted_communication, snapshot, api_client
 ):
-    guardian = GuardianFactory(has_accepted_marketing=initial_has_accepted_marketing)
+    guardian = GuardianFactory(
+        has_accepted_communication=initial_has_accepted_communication
+    )
     user = guardian.user
     auth_verification_token = UserSubscriptionsAuthVerificationTokenFactory(user=user)
     executed = api_client.execute(
-        UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION,
+        UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION,
         variables={
             "input": {
-                "hasAcceptedMarketing": not initial_has_accepted_marketing,
+                "hasAcceptedCommunication": not initial_has_accepted_communication,
                 "authToken": auth_verification_token.key,
             }
         },
     )
     assert (
-        executed["data"]["updateMyMarketingSubscriptions"]["guardian"]["firstName"]
+        executed["data"]["updateMyCommunicationSubscriptions"]["guardian"]["firstName"]
         == guardian.first_name
     )
     assert (
-        executed["data"]["updateMyMarketingSubscriptions"]["guardian"][
-            "hasAcceptedMarketing"
+        executed["data"]["updateMyCommunicationSubscriptions"]["guardian"][
+            "hasAcceptedCommunication"
         ]
-        is not initial_has_accepted_marketing
+        is not initial_has_accepted_communication
     )
     guardian.refresh_from_db()
-    assert guardian.has_accepted_marketing is not initial_has_accepted_marketing
+    assert guardian.has_accepted_communication is not initial_has_accepted_communication
     snapshot.assert_match(executed)
 
 
@@ -478,25 +490,25 @@ def test_update_my_marketing_subscriptions_with_auth_verification_token(
     [
         {
             "input": {
-                "hasAcceptedMarketing": True,
+                "hasAcceptedCommunication": True,
             }
         },
         {
             "input": {
-                "hasAcceptedMarketing": True,
+                "hasAcceptedCommunication": True,
                 "authToken": "invalid token",
             }
         },
     ],
 )
-def test_update_my_marketing_subscriptions_as_unauthenticated(
+def test_update_my_communication_subscriptions_as_unauthenticated(
     variables,
     api_client,
 ):
     # no matter if a token exists
     UserSubscriptionsAuthVerificationTokenFactory()
     executed = api_client.execute(
-        UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION,
+        UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION,
         variables=variables,
     )
     assert_permission_denied(executed)
@@ -514,13 +526,13 @@ def test_update_my_marketing_subscriptions_as_unauthenticated(
         },
     ],
 )
-def test_update_my_marketing_subscriptions_returns_errors_without_required_args(
+def test_update_my_communication_subscriptions_returns_errors_without_required_args(
     variables,
     snapshot,
     guardian_api_client,
 ):
     executed = guardian_api_client.execute(
-        UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION,
+        UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION,
         variables=variables,
     )
     assert_match_error_code(executed, "GENERAL_ERROR")

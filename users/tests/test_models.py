@@ -35,6 +35,16 @@ def test_guardian_creation():
 
 
 @pytest.mark.django_db
+def test_guardian_needs_to_accept_communication_explicitly():
+    guardian = Guardian()
+    assert not guardian.has_accepted_communication
+    guardian = GuardianFactory()
+    assert not guardian.has_accepted_communication
+    guardian = GuardianFactory(has_accepted_communication=True)
+    assert guardian.has_accepted_communication
+
+
+@pytest.mark.django_db
 def test_guardian_with_children_creation(project):
     GuardianFactory(relationships__count=3, relationships__child__project=project)
     assert Guardian.objects.count() == 1

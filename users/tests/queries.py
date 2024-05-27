@@ -54,6 +54,7 @@ query MyProfile {
         }
       }
     }
+    hasAcceptedCommunication
   }
 }
 """
@@ -76,13 +77,13 @@ query MyAdminProfile{
 }
 """
 
-MY_MARKETING_SUBSCRIPTIONS_QUERY = """
-query MyMarketingSubscriptions($authToken: String){
-  myMarketingSubscriptions(authToken: $authToken){
+MY_COMMUNICATION_SUBSCRIPTIONS_QUERY = """
+query MyCommunicationSubscriptions($authToken: String){
+  myCommunicationSubscriptions(authToken: $authToken){
     firstName
     lastName
     language
-    hasAcceptedMarketing
+    hasAcceptedCommunication
   }
 }
 """

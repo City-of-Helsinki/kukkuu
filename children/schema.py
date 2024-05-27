@@ -31,7 +31,7 @@ from languages.schema import LanguageNode
 from projects.models import Project
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
-from users.utils import get_marketing_unsubscribe_ui_url
+from users.utils import get_communication_unsubscribe_ui_url
 
 from .models import Child, postal_code_validator, Relationship
 
@@ -322,7 +322,7 @@ class GuardianInput(graphene.InputObjectType):
     language = LanguageEnum(required=True)
     email = graphene.String()
     languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
-    has_accepted_marketing = graphene.Boolean()
+    has_accepted_communication = graphene.Boolean()
 
 
 class BaseChildInput:
@@ -413,7 +413,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             phone_number=guardian_data.get("phone_number", ""),
             language=guardian_data["language"],
             email=guardian_data.get("email", ""),
-            has_accepted_marketing=guardian_data.get("has_accepted_marketing", False),
+            has_accepted_communication=guardian_data.get(
+                "has_accepted_communication", False
+            ),
         )
         set_obj_languages_spoken_at_home(info, guardian, languages_spoken_at_home)
 
@@ -446,7 +448,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             {
                 "children": children,
                 "guardian": guardian,
-                "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+                "unsubscribe_url": get_communication_unsubscribe_ui_url(
                     guardian, guardian.language
                 ),
             },

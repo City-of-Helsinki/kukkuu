@@ -19,7 +19,7 @@ def send_guardian_email_changed_notification(guardian: Guardian):
         NotificationType.GUARDIAN_EMAIL_CHANGED,
         context={
             "guardian": guardian,
-            "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+            "unsubscribe_url": get_communication_unsubscribe_ui_url(
                 guardian, guardian.language
             ),
         },
@@ -38,7 +38,7 @@ def send_guardian_email_update_token_notification(
         context={
             "guardian": guardian,
             "verification_token": verification_token_key,
-            "unsubscribe_url": get_marketing_unsubscribe_ui_url(
+            "unsubscribe_url": get_communication_unsubscribe_ui_url(
                 guardian, guardian.language
             ),
         },
@@ -72,7 +72,7 @@ def validate_guardian_data(guardian_data: dict):
     return guardian_data
 
 
-def get_marketing_unsubscribe_ui_url(
+def get_communication_unsubscribe_ui_url(
     guardian: Guardian,
     language: Optional[str] = DEFAULT_LANGUAGE,
     verification_token: Optional[VerificationToken] = None,
