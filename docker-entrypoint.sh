@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# -z for empty / not assigned variable or -o to check whether the value is 0 (=should be skipped)
 if [ -z "$SKIP_DATABASE_CHECK" -o "$SKIP_DATABASE_CHECK" = "0" ]; then
   until nc -z -v -w30 "$DATABASE_HOST" 5432
   do
@@ -15,12 +16,6 @@ fi
 if [[ "$APPLY_MIGRATIONS" = "1" ]]; then
     echo "Applying database migrations..."
     ./manage.py migrate --noinput
-fi
-
-# Create superuser
-if [[ "$CREATE_SUPERUSER" = "1" ]]; then
-    ./manage.py add_admin_user -u admin -p admin -e admin@example.com
-    echo "Admin user created with credentials admin:admin (email: admin@example.com)"
 fi
 
 # Add default languages
