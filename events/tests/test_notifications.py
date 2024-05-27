@@ -25,11 +25,8 @@ from events.factories import (
 )
 from events.models import Enrolment, Occurrence
 from events.notifications import NotificationType
-from events.tests.test_api import (
-    PUBLISH_EVENT_MUTATION,
-    PUBLISH_EVENT_VARIABLES,
-    UNENROL_OCCURRENCE_MUTATION,
-)
+from events.tests.mutations import PUBLISH_EVENT_MUTATION, UNENROL_OCCURRENCE_MUTATION
+from events.tests.test_api import PUBLISH_EVENT_VARIABLES
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 
