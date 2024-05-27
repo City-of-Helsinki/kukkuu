@@ -13,6 +13,7 @@ mutation UpdateMyProfile($input: UpdateMyProfileMutationInput!) {
           }
         }
       }
+      hasAcceptedCommunication
     }
   }
 }
@@ -38,16 +39,16 @@ mutation RequestEmailUpdateToken($input: RequestEmailUpdateTokenMutationInput!) 
 """
 
 
-UPDATE_MY_MARKETING_SUBSCRIPTIONS_MUTATION = """
-mutation UpdateMyMarketingSubscriptions(
-  $input: UpdateMyMarketingSubscriptionsMutationInput!
+UPDATE_MY_COMMUNICATION_SUBSCRIPTIONS_MUTATION = """
+mutation UpdateMyCommunicationSubscriptions(
+  $input: UpdateMyCommunicationSubscriptionsMutationInput!
 ) {
-  updateMyMarketingSubscriptions(input: $input) {
+  updateMyCommunicationSubscriptions(input: $input) {
     guardian {
       firstName,
       lastName
       language,
-      hasAcceptedMarketing
+      hasAcceptedCommunication
     }
   }
 }

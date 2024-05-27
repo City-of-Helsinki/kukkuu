@@ -166,22 +166,35 @@ snapshots["test_my_admin_profile_project_admin[no_model_perm] 1"] = {
     }
 }
 
-snapshots["test_my_marketing_subscriptions_query_as_logged_in 1"] = {
+snapshots["test_my_communication_subscriptions_query_as_logged_in[False] 1"] = {
     "data": {
-        "myMarketingSubscriptions": {
+        "myCommunicationSubscriptions": {
             "firstName": "Michael",
-            "hasAcceptedMarketing": False,
+            "hasAcceptedCommunication": False,
             "language": "fi",
             "lastName": "Patton",
         }
     }
 }
 
-snapshots["test_my_marketing_subscriptions_query_with_auth_verification_token 1"] = {
+snapshots["test_my_communication_subscriptions_query_as_logged_in[True] 1"] = {
     "data": {
-        "myMarketingSubscriptions": {
+        "myCommunicationSubscriptions": {
             "firstName": "Michael",
-            "hasAcceptedMarketing": True,
+            "hasAcceptedCommunication": True,
+            "language": "fi",
+            "lastName": "Patton",
+        }
+    }
+}
+
+snapshots[
+    "test_my_communication_subscriptions_query_with_auth_verification_token 1"
+] = {
+    "data": {
+        "myCommunicationSubscriptions": {
+            "firstName": "Michael",
+            "hasAcceptedCommunication": True,
             "language": "fi",
             "lastName": "Patton",
         }
@@ -195,6 +208,7 @@ snapshots["test_my_profile_query 1"] = {
         "myProfile": {
             "email": "michellewalker@example.net",
             "firstName": "Timothy",
+            "hasAcceptedCommunication": False,
             "language": "FI",
             "languagesSpokenAtHome": {"edges": []},
             "lastName": "Baldwin",
@@ -234,16 +248,12 @@ snapshots["test_request_email_change_token_mutation 1"] = {
     }
 }
 
-snapshots["test_update_my_email_mutation[changed-email@kummilapset.fi-True] 1"] = {
-    "data": {"updateMyEmail": {"myProfile": {"email": "changed-email@kummilapset.fi"}}}
-}
-
-snapshots["test_update_my_marketing_subscriptions_as_logged_in[False] 1"] = {
+snapshots["test_update_my_communication_subscriptions_as_logged_in[False] 1"] = {
     "data": {
-        "updateMyMarketingSubscriptions": {
+        "updateMyCommunicationSubscriptions": {
             "guardian": {
                 "firstName": "Michael",
-                "hasAcceptedMarketing": True,
+                "hasAcceptedCommunication": True,
                 "language": "fi",
                 "lastName": "Patton",
             }
@@ -251,12 +261,12 @@ snapshots["test_update_my_marketing_subscriptions_as_logged_in[False] 1"] = {
     }
 }
 
-snapshots["test_update_my_marketing_subscriptions_as_logged_in[True] 1"] = {
+snapshots["test_update_my_communication_subscriptions_as_logged_in[True] 1"] = {
     "data": {
-        "updateMyMarketingSubscriptions": {
+        "updateMyCommunicationSubscriptions": {
             "guardian": {
                 "firstName": "Michael",
-                "hasAcceptedMarketing": False,
+                "hasAcceptedCommunication": False,
                 "language": "fi",
                 "lastName": "Patton",
             }
@@ -265,51 +275,51 @@ snapshots["test_update_my_marketing_subscriptions_as_logged_in[True] 1"] = {
 }
 
 snapshots[
-    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables0] 1"
+    "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables0] 1"
 ] = {
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
             "message": """Variable "$input" got invalid value {}.
-In field "hasAcceptedMarketing": Expected "Boolean!", found null.""",
+In field "hasAcceptedCommunication": Expected "Boolean!", found null.""",
         }
     ]
 }
 
 snapshots[
-    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables1] 1"
+    "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables1] 1"
 ] = {
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
-            "message": 'Variable "$input" of required type "UpdateMyMarketingSubscriptionsMutationInput!" was not provided.',
+            "message": 'Variable "$input" of required type "UpdateMyCommunicationSubscriptionsMutationInput!" was not provided.',
         }
     ]
 }
 
 snapshots[
-    "test_update_my_marketing_subscriptions_returns_errors_without_required_args[variables2] 1"
+    "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables2] 1"
 ] = {
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
             "message": """Variable "$input" got invalid value {"authToken": "what ever"}.
-In field "hasAcceptedMarketing": Expected "Boolean!", found null.""",
+In field "hasAcceptedCommunication": Expected "Boolean!", found null.""",
         }
     ]
 }
 
 snapshots[
-    "test_update_my_marketing_subscriptions_with_auth_verification_token[False] 1"
+    "test_update_my_communication_subscriptions_with_auth_verification_token[False] 1"
 ] = {
     "data": {
-        "updateMyMarketingSubscriptions": {
+        "updateMyCommunicationSubscriptions": {
             "guardian": {
                 "firstName": "Michael",
-                "hasAcceptedMarketing": True,
+                "hasAcceptedCommunication": True,
                 "language": "fi",
                 "lastName": "Patton",
             }
@@ -318,18 +328,22 @@ snapshots[
 }
 
 snapshots[
-    "test_update_my_marketing_subscriptions_with_auth_verification_token[True] 1"
+    "test_update_my_communication_subscriptions_with_auth_verification_token[True] 1"
 ] = {
     "data": {
-        "updateMyMarketingSubscriptions": {
+        "updateMyCommunicationSubscriptions": {
             "guardian": {
                 "firstName": "Michael",
-                "hasAcceptedMarketing": False,
+                "hasAcceptedCommunication": False,
                 "language": "fi",
                 "lastName": "Patton",
             }
         }
     }
+}
+
+snapshots["test_update_my_email_mutation[changed-email@kummilapset.fi-True] 1"] = {
+    "data": {"updateMyEmail": {"myProfile": {"email": "changed-email@kummilapset.fi"}}}
 }
 
 snapshots["test_update_my_profile_mutation 1"] = {
@@ -337,6 +351,7 @@ snapshots["test_update_my_profile_mutation 1"] = {
         "updateMyProfile": {
             "myProfile": {
                 "firstName": "Updated First Name",
+                "hasAcceptedCommunication": False,
                 "language": "EN",
                 "languagesSpokenAtHome": {
                     "edges": [

@@ -38,7 +38,7 @@ class GuardianNode(DjangoObjectType):
             "language",
             "phone_number",
             "email",
-            "has_accepted_marketing",
+            "has_accepted_communication",
             "children",
             "relationships",
             "languages_spoken_at_home",
@@ -50,7 +50,7 @@ class GuardianNode(DjangoObjectType):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
 
-class GuardianMarketingSubscriptionsNode(DjangoObjectType):
+class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
     class Meta:
         model = Guardian
         fields = (
@@ -58,9 +58,9 @@ class GuardianMarketingSubscriptionsNode(DjangoObjectType):
             "first_name",
             "last_name",
             "language",
-            "has_accepted_marketing",
+            "has_accepted_communication",
         )
-        # Skip the registry, or this GuardianMarketingSubscriptionsNode
+        # Skip the registry, or this GuardianCommunicationSubscriptionsNode
         # would overlap with the GuardianNode, which would then lead to
         # situations where a wrong node type is used in wrong places.
         skip_registry = True
@@ -91,7 +91,7 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
         phone_number = graphene.String()
         language = LanguageEnum()
         languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
-        has_accepted_marketing = graphene.Boolean()
+        has_accepted_communication = graphene.Boolean()
 
     my_profile = graphene.Field(GuardianNode)
 
@@ -188,15 +188,15 @@ class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
         )
 
 
-class UpdateMyMarketingSubscriptionsMutation(graphene.relay.ClientIDMutation):
+class UpdateMyCommunicationSubscriptionsMutation(graphene.relay.ClientIDMutation):
     class Input:
-        has_accepted_marketing = graphene.Boolean(required=True)
+        has_accepted_communication = graphene.Boolean(required=True)
         auth_token = graphene.String(
             description="Auth token can be used to authorize the action "
             "without logging in as a user."
         )
 
-    guardian = graphene.Field(GuardianMarketingSubscriptionsNode)
+    guardian = graphene.Field(GuardianCommunicationSubscriptionsNode)
 
     @classmethod
     # When the login_required raises a PermissionDenied exception,
@@ -208,25 +208,25 @@ class UpdateMyMarketingSubscriptionsMutation(graphene.relay.ClientIDMutation):
         use_only_when_first_denied=True,
     )
     @login_required
-    def mutate_and_get_payload(cls, root, info, has_accepted_marketing, **kwargs):
+    def mutate_and_get_payload(cls, root, info, has_accepted_communication, **kwargs):
         user = info.context.user
         try:
             guardian = user.guardian
         except Guardian.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
-        guardian.has_accepted_marketing = has_accepted_marketing
+        guardian.has_accepted_communication = has_accepted_communication
         guardian.save()
 
-        return UpdateMyMarketingSubscriptionsMutation(guardian=guardian)
+        return UpdateMyCommunicationSubscriptionsMutation(guardian=guardian)
 
 
 class Query:
     guardians = DjangoConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
     my_admin_profile = graphene.Field(AdminNode)
-    my_marketing_subscriptions = graphene.Field(
-        GuardianMarketingSubscriptionsNode,
+    my_communication_subscriptions = graphene.Field(
+        GuardianCommunicationSubscriptionsNode,
         auth_token=graphene.String(
             description="Auth token can be used to authorize the action "
             "without logging in as a user."
@@ -258,7 +258,7 @@ class Query:
         use_only_when_first_denied=True,
     )
     @login_required
-    def resolve_my_marketing_subscriptions(parent, info, **kwargs):
+    def resolve_my_communication_subscriptions(parent, info, **kwargs):
         return info.context.user.guardian
 
 
@@ -266,4 +266,6 @@ class Mutation:
     update_my_profile = UpdateMyProfileMutation.Field()
     update_my_email = UpdateMyEmailMutation.Field()
     request_email_update_token = RequestEmailUpdateTokenMutation.Field()
-    update_my_marketing_subscriptions = UpdateMyMarketingSubscriptionsMutation.Field()
+    update_my_communication_subscriptions = (
+        UpdateMyCommunicationSubscriptionsMutation.Field()
+    )
