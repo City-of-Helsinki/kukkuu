@@ -18,7 +18,9 @@ Testing environment:
 
 1. Copy `docker-compose.env.yaml.example` to `docker-compose.env.yaml` and modify it if needed.
 
-2. Run `docker-compose up`
+2. Run `docker compose up`
+
+If you do not have a super user / admin to administrate the API yet, you can create one with `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`.
 
 The project is now running at [localhost:8081](http://localhost:8081)
 
@@ -52,6 +54,10 @@ Add default languages (optional)
     python manage.py add_languages --default
 
 **NOTE:** A few of the default languages may not have a properly translated name in all languages.
+
+Add admin user (optional)
+
+    python manage.py add_admin_user -u admin -p admin -e admin@example.com
 
 ### Notification import
 

@@ -48,10 +48,9 @@ extends:
   template: azure-pipelines-kukkuu-api-review.yml@kukkuu-pipelines
   parameters:
     # Application build arguments and config map values as key value pairs.
-    # Does not contain all buildArguments, the rest located in harrastukset-pipelines/harrastukset-variables-development.yml and harrastukset-variables-common.yml
-    # The values here will override the values defined in the harrastukset-pipelines repository
+    # Does not contain all buildArguments, the rest located in kukkuu-pipelines/kukkuu-variables-development.yml and kukkuu-variables-common.yml
+    # The values here will override the values defined in the kukkuu-pipelines repository
     # buildArgs:
     configMap: # pod environment variables
       DEBUG: 1
       ADD_DEFAULT_LANGUAGES: 1
-      CREATE_SUPERUSER: 1
