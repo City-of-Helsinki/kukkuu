@@ -6,3 +6,9 @@ class NotificationType:
     OCCURRENCE_CANCELLED = "occurrence_cancelled"
     OCCURRENCE_REMINDER = "occurrence_reminder"
     OCCURRENCE_FEEDBACK = "occurrence_feedback"
+
+
+notification_types_that_need_communication_acceptance = (
+    NotificationType.EVENT_PUBLISHED,
+    NotificationType.EVENT_GROUP_PUBLISHED,
+)

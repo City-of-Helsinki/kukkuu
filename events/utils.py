@@ -14,7 +14,6 @@ from users.utils import get_communication_unsubscribe_ui_url
 
 if TYPE_CHECKING:
     from children.models import Child
-    from events.consts import NotificationType
     from events.models import Event, EventGroup
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def send_event_notifications_to_guardians(
     event: "Event",
-    notification_type: "NotificationType",
+    notification_type: str,
     children: Union[QuerySet, List["Child"]],
     attachments: Optional[List] = None,
     **kwargs,
@@ -33,7 +32,9 @@ def send_event_notifications_to_guardians(
     context_for_address = {}
 
     for child in children:
-        for guardian in child.guardians.all():
+        for guardian in child.guardians.has_accepted_communication_for_notification(
+            notification_type
+        ):
             with switch_language(event, guardian.language):
                 context = {
                     "event": event,
@@ -85,7 +86,7 @@ def send_event_notifications_to_guardians(
 
 def send_event_group_notifications_to_guardians(
     event_group: "EventGroup",
-    notification_type: "NotificationType",
+    notification_type: str,
     children: Union[QuerySet, List["Child"]],
     **kwargs,
 ):
@@ -93,7 +94,9 @@ def send_event_group_notifications_to_guardians(
         children = [children]
 
     for child in children:
-        for guardian in child.guardians.all():
+        for guardian in child.guardians.has_accepted_communication_for_notification(
+            notification_type
+        ):
             with switch_language(event_group, guardian.language):
                 context = {
                     "event_group": event_group,

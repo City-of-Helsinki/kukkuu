@@ -14,6 +14,7 @@ from helsinki_gdpr.models import SerializableMixin
 from helusers.models import AbstractUser
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from events.consts import notification_types_that_need_communication_acceptance
 from gdpr.consts import CLEARED_VALUE
 from gdpr.models import GDPRModel
 from kukkuu.consts import DEFAULT_LANGUAGE
@@ -202,7 +203,7 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
 
 
 class GuardianQuerySet(models.QuerySet):
-    def user_can_view(self, user):
+    def user_can_view(self, user: User):
         return self.filter(
             Q(user=user) | Q(children__project__in=user.administered_projects)
         ).distinct()
@@ -211,6 +212,28 @@ class GuardianQuerySet(models.QuerySet):
     def delete(self):
         for child in self:
             child.delete()
+
+    def has_accepted_communication_for_notification(self, notification_type: str):
+        """Filter guardians who have accepted communication of the type.
+        If the given notification type is included in the types that
+        needs an acceptance, the queryset will be filtered to guardians
+        who has True in `has_accepted_communication`.
+
+        Args:
+            notification_type (str, NotificationType constant string literals):
+                notification type.
+
+        Returns:
+            GuardianQuerySet: a filtered queryset if notification type needs acceptance,
+                otherwise returns self.
+
+        """
+        if (
+            notification_type
+            not in notification_types_that_need_communication_acceptance
+        ):
+            return self
+        return self.filter(has_accepted_communication=True)
 
 
 class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMixin):
