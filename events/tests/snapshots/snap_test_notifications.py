@@ -8,11 +8,11 @@ snapshots = Snapshot()
 
 snapshots["test_event_group_publish_notification 1"] = [
     """kukkuu@example.com|['ywashington@example.com']|Event group published FI|
-        Event group FI: Loss there southern newspaper force.
+        Event group FI: Scientist service wonder everything pay.
         Guardian FI: Denise Thompson (ywashington@example.com)
         Url: http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDMwOQ==/event-group/RXZlbnRHcm91cE5vZGU6Nzc3
         Events:
-            If his their best. Election stay every something base. 2020-12-12 00:00:00+00:00 http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDMwOQ==/event/RXZlbnROb2RlOjc3Nw==
+            Gas heavy affect difficult look can purpose care. 2020-12-12 00:00:00+00:00 http://localhost:3000/fi/profile/child/Q2hpbGROb2RlOjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDMwOQ==/event/RXZlbnROb2RlOjc3Nw==
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False"""
 ]

@@ -183,12 +183,28 @@ def test_event_publish_notification(
     notification_template_event_published_fi,
     unpublished_event,
     project,
+    another_project,
     mock_user_create_subscriptions_management_auth_token,
 ):
-    GuardianFactory(language="fi")
-    children = ChildWithGuardianFactory.create_batch(3, project=project)
-    children[1].guardians.set(GuardianFactory.create_batch(3, language="fi"))
-    ChildWithGuardianFactory.create_batch(2, project=ProjectFactory(year=2019))
+    GuardianFactory(language="fi", has_accepted_communication=True)
+    children = ChildWithGuardianFactory.create_batch(
+        3, project=project, relationship__guardian__has_accepted_communication=True
+    )
+    children[1].guardians.set(
+        GuardianFactory.create_batch(3, language="fi", has_accepted_communication=True)
+    )
+    # children in another project
+    ChildWithGuardianFactory.create_batch(
+        2,
+        project=another_project,
+        relationship__guardian__has_accepted_communication=True,
+    )
+    # Children whose guardians have not accepted communication
+    ChildWithGuardianFactory.create_batch(
+        10,
+        project=project,
+        relationship__guardian__has_accepted_communication=False,
+    )
 
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", unpublished_event.id)
@@ -209,9 +225,11 @@ def test_event_publish_notification_not_sent_when_publication_fails(
     unpublished_event,
     project,
 ):
-    GuardianFactory(language="fi")
+    GuardianFactory(language="fi", has_accepted_communication=True)
     children = ChildWithGuardianFactory.create_batch(3, project=project)
-    children[1].guardians.set(GuardianFactory.create_batch(3, language="fi"))
+    children[1].guardians.set(
+        GuardianFactory.create_batch(3, language="fi", has_accepted_communication=True)
+    )
     ChildWithGuardianFactory.create_batch(2, project=ProjectFactory(year=2019))
 
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
@@ -242,14 +260,23 @@ def test_event_group_publish_notification(
     project,
     another_project,
 ):
-    ChildWithGuardianFactory(id=777, project=project)
-    ChildWithGuardianFactory(project=another_project)
+    ChildWithGuardianFactory(
+        id=777, project=project, relationship__guardian__has_accepted_communication=True
+    )
+    ChildWithGuardianFactory(
+        project=project,
+        relationship__guardian__has_accepted_communication=False,
+    )
+    ChildWithGuardianFactory(
+        project=another_project, relationship__guardian__has_accepted_communication=True
+    )
     event = EventFactory(id=777, event_group=EventGroupFactory(id=777))
 
     event.event_group.publish()
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
 
+    assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
 
 
@@ -263,8 +290,12 @@ def test_event_group_republish_notification(
     another_project,
     past,
 ):
-    ChildWithGuardianFactory(id=777, project=project)
-    ChildWithGuardianFactory(project=another_project)
+    ChildWithGuardianFactory(
+        id=777, project=project, relationship__guardian__has_accepted_communication=True
+    )
+    ChildWithGuardianFactory(
+        project=another_project, relationship__guardian__has_accepted_communication=True
+    )
     event_group = EventGroupFactory(id=777, published_at=past)
     EventFactory(
         id=777,
@@ -281,7 +312,7 @@ def test_event_group_republish_notification(
     event_group.publish()
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
-
+    assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
 
 

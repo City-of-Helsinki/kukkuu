@@ -6,11 +6,17 @@ from freezegun import freeze_time
 
 from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
+from children.notifications import NotificationType as ChildrenNotificationType
+from events.consts import NotificationType as EventNotificationType
 from events.factories import EnrolmentFactory, TicketSystemPasswordFactory
 from gdpr.consts import CLEARED_VALUE
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from subscriptions.models import FreeSpotNotificationSubscription
+from subscriptions.notifications import (
+    NotificationType as SubscriptionsNotificationType,
+)
 from users.models import Guardian
+from users.notifications import NotificationType as UserNotificationType
 from verification_tokens.factories import UserEmailVerificationTokenFactory
 from verification_tokens.models import VerificationToken
 
@@ -255,3 +261,73 @@ def test_user_serialize(snapshot, project):
     assert child_without_enrolments.ticket_system_passwords.count() == 0
     user.refresh_from_db()
     snapshot.assert_match(user.serialize())
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "notification_type",
+    [
+        EventNotificationType.OCCURRENCE_ENROLMENT,
+        EventNotificationType.OCCURRENCE_UNENROLMENT,
+        EventNotificationType.OCCURRENCE_CANCELLED,
+        EventNotificationType.OCCURRENCE_REMINDER,
+        EventNotificationType.OCCURRENCE_FEEDBACK,
+        ChildrenNotificationType.SIGNUP,
+        UserNotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
+        UserNotificationType.GUARDIAN_EMAIL_CHANGED,
+        SubscriptionsNotificationType.FREE_SPOT,
+    ],
+)
+def test_has_accepted_communication_for_notification_irrefusables(notification_type):
+    """Some of the notification types do not need an acceptance for communication.
+    They are so called transactional notifications which cannot be rejected.
+    Test that the GuardianQuerySet.has_accepted_communication_for_notification,
+    does not check the acceptance for the types that don't need it.
+
+    Args:
+        notification_type (str): notification type
+    """
+    guardian_with_filtered_communication = GuardianFactory(
+        has_accepted_communication=False
+    )
+    guardian_with_all_communication = GuardianFactory(has_accepted_communication=True)
+
+    queryset_result = list(
+        Guardian.objects.has_accepted_communication_for_notification(notification_type)
+    )
+
+    assert len(queryset_result) == 2
+    assert guardian_with_all_communication in queryset_result
+    assert guardian_with_filtered_communication in queryset_result
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "notification_type",
+    [
+        EventNotificationType.EVENT_PUBLISHED,
+        EventNotificationType.EVENT_GROUP_PUBLISHED,
+    ],
+)
+def test_has_accepted_communication_for_notification_needs_acceptance(
+    notification_type,
+):
+    """Some of the notification types need an acceptance for communication.
+    Test that the GuardianQuerySet.has_accepted_communication_for_notification,
+    checks the acceptance for the types that need it.
+
+    Args:
+        notification_type (str): notification type
+    """
+    guardian_with_filtered_communication = GuardianFactory(
+        has_accepted_communication=False
+    )
+    guardian_with_all_communication = GuardianFactory(has_accepted_communication=True)
+
+    queryset_result = list(
+        Guardian.objects.has_accepted_communication_for_notification(notification_type)
+    )
+
+    assert len(queryset_result) == 1
+    assert guardian_with_all_communication in queryset_result
+    assert guardian_with_filtered_communication not in queryset_result
