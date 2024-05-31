@@ -476,7 +476,7 @@ snapshots["test_submit_children_and_guardian 1"] = {
     }
 }
 
-snapshots["test_submit_children_and_guardian_with_email 1"] = {
+snapshots["test_submit_children_and_guardian_with_falsy_email[None] 1"] = {
     "data": {
         "submitChildrenAndGuardian": {
             "children": [
@@ -489,7 +489,7 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                             {
                                 "node": {
                                     "guardian": {
-                                        "email": "updated_email@example.com",
+                                        "email": "michellewalker@example.net",
                                         "firstName": "Gulle",
                                         "lastName": "Guardian",
                                         "phoneNumber": "777-777777",
@@ -509,7 +509,7 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                             {
                                 "node": {
                                     "guardian": {
-                                        "email": "updated_email@example.com",
+                                        "email": "michellewalker@example.net",
                                         "firstName": "Gulle",
                                         "lastName": "Guardian",
                                         "phoneNumber": "777-777777",
@@ -522,7 +522,175 @@ snapshots["test_submit_children_and_guardian_with_email 1"] = {
                 },
             ],
             "guardian": {
-                "email": "updated_email@example.com",
+                "email": "michellewalker@example.net",
+                "firstName": "Gulle",
+                "languagesSpokenAtHome": {"edges": []},
+                "lastName": "Guardian",
+                "phoneNumber": "777-777777",
+            },
+        }
+    }
+}
+
+snapshots["test_submit_children_and_guardian_with_falsy_email[] 1"] = {
+    "data": {
+        "submitChildrenAndGuardian": {
+            "children": [
+                {
+                    "birthyear": 2020,
+                    "name": "Matti",
+                    "postalCode": "00840",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": "OTHER_GUARDIAN",
+                                }
+                            }
+                        ]
+                    },
+                },
+                {
+                    "birthyear": 2020,
+                    "name": "Jussi",
+                    "postalCode": "00820",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": None,
+                                }
+                            }
+                        ]
+                    },
+                },
+            ],
+            "guardian": {
+                "email": "michellewalker@example.net",
+                "firstName": "Gulle",
+                "languagesSpokenAtHome": {"edges": []},
+                "lastName": "Guardian",
+                "phoneNumber": "777-777777",
+            },
+        }
+    }
+}
+
+snapshots["test_submit_children_and_guardian_with_user_email 1"] = {
+    "data": {
+        "submitChildrenAndGuardian": {
+            "children": [
+                {
+                    "birthyear": 2020,
+                    "name": "Matti",
+                    "postalCode": "00840",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": "OTHER_GUARDIAN",
+                                }
+                            }
+                        ]
+                    },
+                },
+                {
+                    "birthyear": 2020,
+                    "name": "Jussi",
+                    "postalCode": "00820",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": None,
+                                }
+                            }
+                        ]
+                    },
+                },
+            ],
+            "guardian": {
+                "email": "michellewalker@example.net",
+                "firstName": "Gulle",
+                "languagesSpokenAtHome": {"edges": []},
+                "lastName": "Guardian",
+                "phoneNumber": "777-777777",
+            },
+        }
+    }
+}
+
+snapshots["test_submit_children_and_guardian_without_email 1"] = {
+    "data": {
+        "submitChildrenAndGuardian": {
+            "children": [
+                {
+                    "birthyear": 2020,
+                    "name": "Matti",
+                    "postalCode": "00840",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": "OTHER_GUARDIAN",
+                                }
+                            }
+                        ]
+                    },
+                },
+                {
+                    "birthyear": 2020,
+                    "name": "Jussi",
+                    "postalCode": "00820",
+                    "relationships": {
+                        "edges": [
+                            {
+                                "node": {
+                                    "guardian": {
+                                        "email": "michellewalker@example.net",
+                                        "firstName": "Gulle",
+                                        "lastName": "Guardian",
+                                        "phoneNumber": "777-777777",
+                                    },
+                                    "type": None,
+                                }
+                            }
+                        ]
+                    },
+                },
+            ],
+            "guardian": {
+                "email": "michellewalker@example.net",
                 "firstName": "Gulle",
                 "languagesSpokenAtHome": {"edges": []},
                 "lastName": "Guardian",
