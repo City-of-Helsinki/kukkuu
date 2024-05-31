@@ -75,11 +75,13 @@ env = environ.Env(
     # for `GDPR_API_QUERY_SCOPE` and `GDPR_API_DELETE_SCOPE`.
     GDPR_API_QUERY_SCOPE=(str, "kukkuu.gdprquery"),
     GDPR_API_DELETE_SCOPE=(str, "kukkuu.gdprdelete"),
-    # NOTE: For a Keycloak, the following variables might be needed
+    GDPR_API_AUTHORIZATION_FIELD=(str, "https://api.hel.fi/auth"),
+    # NOTE: For a Keycloak, the following GDPR variables are needed
     # TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
     # TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
     # GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
     # GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
+    # GDPR_API_AUTHORIZATION_FIELD=(str, "authorization.permissions.scopes"),
     HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED=(bool, False),
 )
 
@@ -352,6 +354,7 @@ GDPR_API_MODEL_LOOKUP = "uuid"
 GDPR_API_URL_PATTERN = "v1/user/<uuid:uuid>"
 GDPR_API_USER_PROVIDER = "gdpr.service.get_user"
 GDPR_API_DELETER = "gdpr.service.clear_data"
+GDPR_API_AUTHORIZATION_FIELD = env("GDPR_API_AUTHORIZATION_FIELD")
 
 HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
 
