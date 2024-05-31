@@ -405,14 +405,23 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
         guardian_data = kwargs["guardian"]
         languages_spoken_at_home = guardian_data.pop("languages_spoken_at_home", [])
+
+        # Override inexistent/empty guardian email with user email
+        if not guardian_data.get("email", None):
+            guardian_data["email"] = user.email
+
         validate_guardian_data(guardian_data)
+
+        if guardian_data.get("email", None) != user.email:
+            raise ApiUsageError("Guardian email must be the same as user email.")
+
         guardian = Guardian.objects.create(
             user=user,
             first_name=guardian_data["first_name"],
             last_name=guardian_data["last_name"],
             phone_number=guardian_data.get("phone_number", ""),
             language=guardian_data["language"],
-            email=guardian_data.get("email", ""),
+            email=guardian_data["email"],
             has_accepted_communication=guardian_data.get(
                 "has_accepted_communication", False
             ),

@@ -203,9 +203,13 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages, proj
         assert child.notes == ""
 
 
-def test_submit_children_and_guardian_with_email(snapshot, user_api_client, project):
+def test_submit_children_and_guardian_without_email(snapshot, user_api_client, project):
+    """
+    Test that guardian email is set to user's email,
+    if guardian email is not provided.
+    """
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
-    variables["input"]["guardian"]["email"] = "updated_email@example.com"
+    assert "email" not in variables["input"]["guardian"]
 
     executed = user_api_client.execute(
         SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
@@ -214,10 +218,79 @@ def test_submit_children_and_guardian_with_email(snapshot, user_api_client, proj
     snapshot.assert_match(executed)
 
     guardian = Guardian.objects.last()
+    # Guardian's email uses the user's email as a fallback
+    variables["input"]["guardian"]["email"] = guardian.user.email
     assert_guardian_matches_data(guardian, variables["input"]["guardian"])
 
 
-def test_submit_children_and_guardian_one_child_required(snapshot, user_api_client):
+@pytest.mark.parametrize("guardian_email", [None, ""])
+def test_submit_children_and_guardian_with_falsy_email(
+    snapshot, user_api_client, project, guardian_email
+):
+    """
+    Test that guardian email is set to user's email,
+    if a falsy guardian email is provided.
+    """
+    assert not guardian_email
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["email"] = guardian_email
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    guardian = Guardian.objects.last()
+    assert guardian.user.email
+    variables["input"]["guardian"]["email"] = guardian.user.email
+    assert_guardian_matches_data(guardian, variables["input"]["guardian"])
+
+
+def test_submit_children_and_guardian_with_non_user_email(user_api_client, project):
+    """
+    Test that guardian email input is rejected,
+    if it's non-empty and differs from user's email.
+    """
+    user = user_api_client.user
+    assert user.email
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["email"] = "updated_email@example.com"
+    assert variables["input"]["guardian"]["email"] != user.email
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert_error_message(executed, "Guardian email must be the same as user email.")
+
+    assert not Guardian.objects.exists()
+
+
+def test_submit_children_and_guardian_with_user_email(
+    snapshot, user_api_client, project
+):
+    """
+    Test that guardian email input is accepted, if it's same as user's email.
+    """
+    user = user_api_client.user
+    assert user.email
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["guardian"]["email"] = user.email
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    snapshot.assert_match(executed)
+
+    assert Guardian.objects.exists()
+    guardian = Guardian.objects.last()
+    assert_guardian_matches_data(guardian, variables["input"]["guardian"])
+
+
+def test_submit_children_and_guardian_one_child_required(user_api_client):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["children"] = []
 
@@ -283,7 +356,7 @@ def test_submit_children_and_guardian_children_limit(user_api_client, settings):
     assert "Too many children." in str(executed["errors"])
 
 
-@pytest.mark.parametrize("guardian_email", ["INVALID_EMAIL", "", None])
+@pytest.mark.parametrize("guardian_email", ["INVALID_EMAIL", " ", "@"])
 def test_submit_children_and_guardian_email_validation(user_api_client, guardian_email):
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
     variables["input"]["guardian"]["email"] = guardian_email
