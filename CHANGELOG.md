@@ -1,6 +1,40 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.2.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.1.0...kukkuu-v3.2.0) (2024-06-04)
+
+
+### Features
+
+* Add back channel logout support ([0d10bf3](https://github.com/City-of-Helsinki/kukkuu/commit/0d10bf33721ba82d785012ba3a25ac472eb9a804))
+* Add Child.notes TextField, ChildNotes query and update mutation ([4476961](https://github.com/City-of-Helsinki/kukkuu/commit/44769612849ea08fbd1b3b970a9b6e788ffa3f96))
+* Add Child.notes TextField, ChildNotes query and update mutation ([4ff79c4](https://github.com/City-of-Helsinki/kukkuu/commit/4ff79c4555c69a2cdaead3b0b993da54b98314fe))
+* Add obsoleted props and features to User and Child ([cf473de](https://github.com/City-of-Helsinki/kukkuu/commit/cf473de282507f85ff8593f1ba0c0ced259704c0))
+* Always use user's email in SubmitChildrenAndGuardianMutation ([df89bf9](https://github.com/City-of-Helsinki/kukkuu/commit/df89bf9bde50f399086baba019440267c1c3278d))
+* Do not send event invitations to those who have rejected them ([75c12c1](https://github.com/City-of-Helsinki/kukkuu/commit/75c12c10bb8e9ff90ef2d3371b541205f1567fa6))
+* Replace has_accepted_marketing with has_accepted_communication ([d6bfa17](https://github.com/City-of-Helsinki/kukkuu/commit/d6bfa1737764da714715498225ca56402c9fb78c))
+* Send event and event group publish notification in a thread ([5510465](https://github.com/City-of-Helsinki/kukkuu/commit/55104659cd7f051318e598d2a8288a351f36dc02))
+* Serialize the models used by the GDPR API ([9dc697b](https://github.com/City-of-Helsinki/kukkuu/commit/9dc697ba2f10efcb36a8baea9f9e05134c4c176f))
+* The GDPR service to clear sensitive fields of user and guardian ([6ba1260](https://github.com/City-of-Helsinki/kukkuu/commit/6ba1260dc55680f4d2004ee33bfc69dbad5c39e4))
+
+
+### Bug Fixes
+
+* Add env-variable for GDPR API authorization field ([8ac6f45](https://github.com/City-of-Helsinki/kukkuu/commit/8ac6f459a57bfc3e60773b7ea858334e0772d31f))
+* Api authorization field ([f0c0528](https://github.com/City-of-Helsinki/kukkuu/commit/f0c052811ef914b7c335ce9ca93b68895f27377e))
+* Api authorization field ([4ebfe1c](https://github.com/City-of-Helsinki/kukkuu/commit/4ebfe1c42467a803c0ae15ef6abf88632eae8290))
+* Move api authorization field to oidc config ([56be176](https://github.com/City-of-Helsinki/kukkuu/commit/56be176c3b82a522df8aed2ef42287e016b1568c))
+* Projects model objects manager ([8958aff](https://github.com/City-of-Helsinki/kukkuu/commit/8958affda6a81e55d50715117b8b8912d8d9d7e9))
+* Upgrade the django-helusers to fix issues with GDPR API auth ([56b58dd](https://github.com/City-of-Helsinki/kukkuu/commit/56b58dd6cebba638c5cdef45096440e9d8092006))
+
+
+### Documentation
+
+* Add some gdpr api tester app instructions ([9dc697b](https://github.com/City-of-Helsinki/kukkuu/commit/9dc697ba2f10efcb36a8baea9f9e05134c4c176f))
+* Env-variables for the Tunnistamo and the Keycloak ([a7f1109](https://github.com/City-of-Helsinki/kukkuu/commit/a7f1109cb98e328c9df8d9db618d2e9002ad9067))
+* How to integrate with Helsinki-Profile through Tunnistamo ([469256f](https://github.com/City-of-Helsinki/kukkuu/commit/469256f80c882273d8dba779519ce1eddb679693))
+* Improvements ([2348c1c](https://github.com/City-of-Helsinki/kukkuu/commit/2348c1c5c997e8a64e19b5cf1461c4271d5d2577))
+
 ## [3.1.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.0.0...kukkuu-v3.1.0) (2024-03-27)
 
 
