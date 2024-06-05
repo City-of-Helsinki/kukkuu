@@ -3,47 +3,11 @@ from typing import Optional
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django_ilmoitin.utils import send_notification
 
 from kukkuu.consts import DEFAULT_LANGUAGE
 from kukkuu.exceptions import InvalidEmailFormatError, VerificationTokenInvalidError
 from users.models import Guardian, User
 from verification_tokens.models import VerificationToken
-
-
-def send_guardian_email_changed_notification(guardian: Guardian):
-    from users.notifications import NotificationType
-
-    send_notification(
-        guardian.email,
-        NotificationType.GUARDIAN_EMAIL_CHANGED,
-        context={
-            "guardian": guardian,
-            "unsubscribe_url": get_communication_unsubscribe_ui_url(
-                guardian, guardian.language
-            ),
-        },
-        language=guardian.language,
-    )
-
-
-def send_guardian_email_update_token_notification(
-    guardian: Guardian, email: str, verification_token_key: str
-):
-    from users.notifications import NotificationType
-
-    send_notification(
-        email,
-        NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
-        context={
-            "guardian": guardian,
-            "verification_token": verification_token_key,
-            "unsubscribe_url": get_communication_unsubscribe_ui_url(
-                guardian, guardian.language
-            ),
-        },
-        language=guardian.language,
-    )
 
 
 def validate_email_verification_token(
