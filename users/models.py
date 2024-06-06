@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional, TYPE_CHECKING, Union
 
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.contrib.auth.models import UserManager as OriginalUserManager
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
@@ -234,6 +236,17 @@ class GuardianQuerySet(models.QuerySet):
         ):
             return self
         return self.filter(has_accepted_communication=True)
+
+    def for_auth_service_is_changing_notification(
+        self, user_joined_before: Optional[datetime] = None, obsoleted_users_only=True
+    ):
+        if user_joined_before and user_joined_before > timezone.now():
+            raise ValueError("The user_joined_before cannot be set in future.")
+
+        qs_filters = {"user__date_joined__lte": (user_joined_before or timezone.now())}
+        if obsoleted_users_only:
+            qs_filters.update({"user__is_obsolete": True})
+        return self.filter(**qs_filters)
 
 
 class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMixin):

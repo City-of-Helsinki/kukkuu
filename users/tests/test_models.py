@@ -1,7 +1,9 @@
+from datetime import timedelta
 from uuid import UUID
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from freezegun import freeze_time
 
 from children.factories import ChildFactory, ChildWithGuardianFactory
@@ -331,3 +333,84 @@ def test_has_accepted_communication_for_notification_needs_acceptance(
     assert len(queryset_result) == 1
     assert guardian_with_all_communication in queryset_result
     assert guardian_with_filtered_communication not in queryset_result
+
+
+@pytest.mark.django_db
+@pytest.fixture
+def obsoleted_guardian_joined_yesterday():
+    return GuardianFactory(
+        user__date_joined=timezone.now() - timedelta(days=1), user__is_obsolete=True
+    )
+
+
+@pytest.mark.django_db
+@pytest.fixture
+def guardian_joined_yesterday():
+    return GuardianFactory(
+        user__date_joined=timezone.now() - timedelta(days=1), user__is_obsolete=False
+    )
+
+
+@pytest.mark.django_db
+@pytest.fixture
+def guardian_joined_today():
+    return GuardianFactory(user__date_joined=timezone.now(), user__is_obsolete=False)
+
+
+@pytest.mark.django_db
+def test_for_auth_service_is_changing_notification_default(
+    obsoleted_guardian_joined_yesterday,
+    guardian_joined_yesterday,
+    guardian_joined_today,
+):
+    """Test with default parameters
+    (no user_joined_before, obsoleted_users_only=True)
+    """
+    guardians = Guardian.objects.for_auth_service_is_changing_notification()
+    assert obsoleted_guardian_joined_yesterday in guardians
+    assert guardian_joined_yesterday in guardians  # Not obsoleted
+    assert guardian_joined_today not in guardians  # Not obsoleted
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("obsoleted_users_only", [True, False])
+def test_for_auth_service_is_changing_notification_with_user_joined_before(
+    obsoleted_users_only,
+    obsoleted_guardian_joined_yesterday,
+    guardian_joined_yesterday,
+    guardian_joined_today,
+):
+    """Test with a specific user_joined_before date"""
+    yesterday = timezone.now() - timedelta(days=1)
+    guardians = Guardian.objects.for_auth_service_is_changing_notification(
+        user_joined_before=yesterday, obsoleted_users_only=obsoleted_users_only
+    )
+    if not obsoleted_users_only:
+        assert guardian_joined_yesterday in guardians
+    assert obsoleted_guardian_joined_yesterday in guardians
+    assert guardian_joined_today not in guardians
+
+
+@pytest.mark.django_db
+def test_for_auth_service_is_changing_notification_with_future_date():
+    """Test with a future user_joined_before date (should raise ValueError)"""
+    tomorrow = timezone.now() + timedelta(days=1)
+    with pytest.raises(ValueError):
+        Guardian.objects.for_auth_service_is_changing_notification(
+            user_joined_before=tomorrow
+        )
+
+
+@pytest.mark.django_db
+def test_for_auth_service_is_changing_notification_all_users(
+    obsoleted_guardian_joined_yesterday,
+    guardian_joined_yesterday,
+    guardian_joined_today,
+):
+    """Test with obsoleted_users_only=False (should return all guardians)"""
+    guardians = Guardian.objects.for_auth_service_is_changing_notification(
+        obsoleted_users_only=False
+    )
+    assert obsoleted_guardian_joined_yesterday in guardians
+    assert guardian_joined_yesterday in guardians
+    assert guardian_joined_today in guardians
