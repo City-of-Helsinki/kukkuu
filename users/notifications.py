@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
@@ -8,6 +10,7 @@ from .factories import GuardianFactory
 class NotificationType:
     GUARDIAN_EMAIL_CHANGED = "guardian_email_changed"
     GUARDIAN_EMAIL_CHANGE_TOKEN = "guardian_email_change_token"
+    USER_AUTH_SERVICE_IS_CHANGING = "user_auth_service_is_changing"
 
 
 notifications.register(
@@ -16,6 +19,10 @@ notifications.register(
 notifications.register(
     NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
     _("guardian email change token requested"),
+)
+notifications.register(
+    NotificationType.USER_AUTH_SERVICE_IS_CHANGING,
+    _("user authentication service is changing"),
 )
 
 guardian = GuardianFactory.build()
@@ -33,6 +40,10 @@ dummy_context.update(
             "guardian": guardian,
             "verification_token": "aBcDXyZ123-",
             "unsubscribe_url": unsubscribe_url,
+        },
+        NotificationType.USER_AUTH_SERVICE_IS_CHANGING: {
+            "guardian": guardian,
+            "date_of_change": date(year=2024, month=6, day=17),
         },
     }
 )

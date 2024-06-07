@@ -238,7 +238,7 @@ def test_guardian_clear_gdpr_sensitive_data_fields(user_email):
     assert guardian.phone_number == ""
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 @freeze_time("2020-11-11 12:00:00")
 def test_user_serialize(snapshot, project):
     guardian = GuardianFactory(
@@ -253,8 +253,12 @@ def test_user_serialize(snapshot, project):
         child_with_one_enrolment,
         child_without_enrolments,
     ] = ChildWithGuardianFactory.create_batch(3, relationship__guardian=guardian)
-    FreeSpotNotificationSubscriptionFactory(child=child_without_enrolments)
-    FreeSpotNotificationSubscriptionFactory(child=child_with_one_enrolment)
+    FreeSpotNotificationSubscriptionFactory(
+        child=child_without_enrolments, occurrence__id=101
+    )
+    FreeSpotNotificationSubscriptionFactory(
+        child=child_with_one_enrolment, occurrence__id=102
+    )
     EnrolmentFactory.create_batch(5, child=child_with_many_enrolments)
     TicketSystemPasswordFactory.create_batch(5, child=child_with_many_enrolments)
     EnrolmentFactory(child=child_with_one_enrolment)
@@ -368,7 +372,7 @@ def test_for_auth_service_is_changing_notification_default(
     """
     guardians = Guardian.objects.for_auth_service_is_changing_notification()
     assert obsoleted_guardian_joined_yesterday in guardians
-    assert guardian_joined_yesterday in guardians  # Not obsoleted
+    assert guardian_joined_yesterday not in guardians  # Not obsoleted
     assert guardian_joined_today not in guardians  # Not obsoleted
 
 
