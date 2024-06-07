@@ -33,3 +33,49 @@ snapshots["test_guardian_changed_email_notification[new.email@example.com] 1"] =
 ]
 
 snapshots["test_guardian_changed_email_notification[old.email@example.com] 1"] = []
+
+snapshots["test_send_user_auth_service_is_changing_with_children 1"] = [
+    """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
+        The change is happening 17.6.2024.
+        Childrens' event participation history:
+
+        Child name: Jason Berg
+
+        Event: Enjoy when one wonder fund nor white.
+        Occurrence: 2011-01-05 08:35:11+00:00
+
+        Event: Affect money school military statement.
+        Occurrence: 1972-02-01 22:06:34+00:00
+
+        Child name: Katherine Gomez
+
+        Event: Data table TV minute. Agree room laugh prevent make.
+        Occurrence: 1971-04-02 05:11:11+00:00
+
+        Event: Include and individual effort indeed discuss challenge school.
+        Occurrence: 1974-05-30 15:30:48+00:00
+
+        """
+]
+
+snapshots[
+    "test_send_user_auth_service_is_changing_with_date_of_change_param[24.12.2024] 1"
+] = [
+    """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
+        The change is happening 24.12.2024.
+        """
+]
+
+snapshots[
+    "test_send_user_auth_service_is_changing_with_date_of_change_param[None] 1"
+] = [
+    """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
+        The change is happening 17.6.2024.
+        """
+]
+
+snapshots["test_send_user_auth_service_is_changing_with_date_of_change_param[] 1"] = [
+    """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
+        The change is happening 17.6.2024.
+        """
+]

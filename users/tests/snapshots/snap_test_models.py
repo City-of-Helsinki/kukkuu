@@ -62,7 +62,7 @@ snapshots["test_user_serialize 1"] = {
                                                 },
                                                 {
                                                     "key": "OCCURRENCE",
-                                                    "value": "2007-10-07 00:42:30+00:00 (589)",
+                                                    "value": "2007-10-07 00:42:30+00:00 (101)",
                                                 },
                                             ],
                                             "key": "FREESPOTNOTIFICATIONSUBSCRIPTION",
@@ -234,7 +234,7 @@ Yorkview, OK 06572""",
                                                 },
                                                 {
                                                     "key": "OCCURRENCE",
-                                                    "value": "1974-05-30 15:30:48+00:00 (590)",
+                                                    "value": "1974-05-30 15:30:48+00:00 (102)",
                                                 },
                                             ],
                                             "key": "FREESPOTNOTIFICATIONSUBSCRIPTION",

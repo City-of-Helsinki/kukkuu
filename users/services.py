@@ -1,3 +1,7 @@
+from datetime import date
+from typing import Optional, Union
+
+from django.db.models import QuerySet
 from django_ilmoitin.utils import send_notification
 
 from users.models import Guardian
@@ -51,3 +55,41 @@ class GuardianEmailManagementNotificationService:
                 "verification_token": verification_token_key,
             },
         )
+
+
+class AuthServiceNotificationService:
+    @staticmethod
+    def _send_auth_service_is_changing_notification(
+        guardian: Guardian, date_of_change: Optional[date]
+    ):
+        send_notification(
+            guardian.email,
+            NotificationType.USER_AUTH_SERVICE_IS_CHANGING,
+            context={"guardian": guardian, "date_of_change": date_of_change},
+            language=guardian.language,
+        )
+
+    @staticmethod
+    def send_user_auth_service_is_changing_notifications(
+        guardians: Optional[Union[QuerySet, list[Guardian]]] = None,
+        date_of_change: Optional[date] = None,
+    ):
+        """Send user authentication service is changing notifications
+        to guariands as recipients.
+
+        If the guardian list is not explicitly given
+        the queryset result of
+        `Guardian.objects.for_auth_service_is_changing_notification()`
+        will be used as a default.
+
+        Args:
+            guardians (Optional[Union[QuerySet, list[Guardian]]], optional):
+                explicit list of guardians as recipients. Defaults to None.
+        """
+        if guardians is None:
+            guardians = Guardian.objects.for_auth_service_is_changing_notification()
+
+        for guardian in guardians:
+            AuthServiceNotificationService._send_auth_service_is_changing_notification(
+                guardian, date_of_change
+            )
