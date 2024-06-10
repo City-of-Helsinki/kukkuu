@@ -50,7 +50,7 @@ def notification_template_user_auth_service_is_changing_fi():
         "fi",
         subject="User authorization service is changing FI",
         body_text="""Guardian FI: {{ guardian }}.
-        The change is happening {{ date_of_change|default('17.6.2024', true) }}.
+        The change is happening {{ date_of_change_str|default('17.6.2024', true) }}.
         {% if guardian.children.count() %}
         Childrens' event participation history:
 
@@ -141,17 +141,17 @@ def test_send_user_auth_service_is_changing_notifications(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("date_of_change", [None, "", "24.12.2024"])
-def test_send_user_auth_service_is_changing_with_date_of_change_param(
-    date_of_change, snapshot, notification_template_user_auth_service_is_changing_fi
+@pytest.mark.parametrize("date_of_change_str", [None, "", "24.12.2024"])
+def test_send_user_auth_service_is_changing_with_date_of_change_str_param(
+    date_of_change_str, snapshot, notification_template_user_auth_service_is_changing_fi
 ):
-    """if no date_of_change is given, the default should be used.
+    """if no date_of_change_str is given, the default should be used.
     The default is set in `notification_template_user_auth_service_is_changing_fi`:
     "The change is happening 17.6.2024".
     """
     GuardianFactory(user__is_obsolete=True)
     AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
-        date_of_change=date_of_change
+        date_of_change_str=date_of_change_str
     )
     assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)

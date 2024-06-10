@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Optional, Union
 
 from django.db.models import QuerySet
@@ -64,8 +63,16 @@ class GuardianEmailManagementNotificationService:
 class AuthServiceNotificationService:
     @staticmethod
     def _send_auth_service_is_changing_notification(
-        guardian: Guardian, date_of_change: Optional[date]
+        guardian: Guardian, date_of_change_str: Optional[str] = None
     ):
+        """Send the auth service is changing notification to a guardian.
+
+        Args:
+            guardian (Guardian): the guardian instance
+            date_of_change_str (Optional[str], optional): Date or datetime
+                in string format. Defaults to None.
+                The actual default should be given in the notification template.
+        """
         from users.notifications import NotificationType
 
         send_notification(
@@ -73,7 +80,7 @@ class AuthServiceNotificationService:
             NotificationType.USER_AUTH_SERVICE_IS_CHANGING,
             context={
                 "guardian": guardian,
-                "date_of_change": date_of_change,
+                "date_of_change_str": date_of_change_str,
                 "children_event_history_markdown": (
                     AuthServiceNotificationService.generate_children_event_history_markdown(  # noqa
                         guardian
@@ -86,7 +93,7 @@ class AuthServiceNotificationService:
     @staticmethod
     def send_user_auth_service_is_changing_notifications(
         guardians: Optional[Union[QuerySet, list[Guardian]]] = None,
-        date_of_change: Optional[date] = None,
+        date_of_change_str: Optional[str] = None,
     ):
         """Send user authentication service is changing notifications
         to guariands as recipients.
@@ -99,13 +106,16 @@ class AuthServiceNotificationService:
         Args:
             guardians (Optional[Union[QuerySet, list[Guardian]]], optional):
                 explicit list of guardians as recipients. Defaults to None.
+            date_of_change_str (Optional[str], optional): Date or datetime
+                in string format. Defaults to None.
+                The actual default should be given in the notification template.
         """
         if guardians is None:
             guardians = Guardian.objects.for_auth_service_is_changing_notification()
 
         for guardian in guardians:
             AuthServiceNotificationService._send_auth_service_is_changing_notification(
-                guardian, date_of_change
+                guardian, date_of_change_str
             )
 
     @staticmethod

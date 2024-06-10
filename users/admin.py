@@ -5,7 +5,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import GroupAdmin as DjangoGroupAdmin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group
+from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
+from django_ilmoitin.models import NotificationTemplate
+from django_ilmoitin.utils import render_notification_template
 from guardian.admin import GuardedModelAdmin
 
 from children.models import Relationship
@@ -13,6 +16,8 @@ from languages.models import Language
 from projects.models import Project
 from reports.models import Permission as ReportPermission
 from users.models import Guardian
+from users.notifications import NotificationType
+from users.services import AuthServiceNotificationService
 
 
 class RelationshipInline(admin.TabularInline):
@@ -36,6 +41,115 @@ class LanguagesSpokenAtHomeInline(admin.TabularInline):
     extra = 0
     verbose_name = _("Language spoken at home")
     verbose_name_plural = _("Languages spoken at home")
+
+
+def _generate_children_event_history_markdown(modeladmin, request, queryset):
+    if queryset.count() != 1:
+        modeladmin.message_user(
+            request,
+            "Only 1 guardian can be selected for "
+            "'Generate authorization server is changing notification text' action.",
+        )
+        return
+    guardian = queryset.first()
+    return (
+        guardian,
+        AuthServiceNotificationService.generate_children_event_history_markdown(
+            guardian=guardian
+        ).replace("\n", "<br/>"),
+    )
+
+
+@admin.action(description="Generate children event history markdown")
+def generate_children_event_history_markdown(modeladmin, request, queryset):
+    (
+        guardian,
+        children_event_history_markdown,
+    ) = _generate_children_event_history_markdown(modeladmin, request, queryset)
+    return HttpResponse(children_event_history_markdown)
+
+
+def _generate_generate_user_auth_service_is_changing_notification_for_lang(
+    language: str,
+):
+    def _generate_user_auth_service_is_changing_notification_text(
+        modeladmin, request, queryset
+    ):
+        (
+            guardian,
+            children_event_history_markdown,
+        ) = _generate_children_event_history_markdown(modeladmin, request, queryset)
+
+        template = NotificationTemplate.objects.filter(
+            type=NotificationType.USER_AUTH_SERVICE_IS_CHANGING
+        ).first()
+
+        if not template:
+            modeladmin.message_user(
+                request,
+                "USER_AUTH_SERVICE_IS_CHANGING is not yet available in the database. "
+                "It should be importable from the notifications spreadsheet?",
+            )
+            return
+
+        context = {
+            "guardian": guardian,
+            "date_of_change_str": None,  # give default in notification template instead
+            "children_event_history_markdown": children_event_history_markdown,
+        }
+
+        subject, body_html, body_text = render_notification_template(
+            template, context, language
+        )
+
+        return f"""
+    {subject}
+
+    {body_text}
+    """.replace(
+            "\n", "<br/>"
+        )
+
+    return _generate_user_auth_service_is_changing_notification_text
+
+
+@admin.action(
+    description="Generate children event history notification email content (fi)"
+)
+def generate_user_auth_service_is_changing_notification_text_fi(
+    modeladmin, request, queryset
+):
+    return HttpResponse(
+        _generate_generate_user_auth_service_is_changing_notification_for_lang("fi")(
+            modeladmin, request, queryset
+        )
+    )
+
+
+@admin.action(
+    description="Generate children event history notification email content (sv)"
+)
+def generate_user_auth_service_is_changing_notification_text_sv(
+    modeladmin, request, queryset
+):
+    return HttpResponse(
+        _generate_generate_user_auth_service_is_changing_notification_for_lang("sv")(
+            modeladmin, request, queryset
+        )
+    )
+
+
+@admin.action(
+    description="Generate children event history notification email content (en)"
+)
+def generate_user_auth_service_is_changing_notification_text_en(
+    modeladmin, request, queryset
+):
+    return HttpResponse(
+        _generate_generate_user_auth_service_is_changing_notification_for_lang("en")(
+            modeladmin, request, queryset
+        )
+    )
 
 
 @admin.register(Guardian)
@@ -62,6 +176,12 @@ class GuardianAdmin(admin.ModelAdmin):
     form = GuardianForm
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
     list_filter = ("children__project", "has_accepted_communication")
+    actions = (
+        generate_children_event_history_markdown,
+        generate_user_auth_service_is_changing_notification_text_fi,
+        generate_user_auth_service_is_changing_notification_text_sv,
+        generate_user_auth_service_is_changing_notification_text_en,
+    )
 
 
 class PermissionFilterMixin:
