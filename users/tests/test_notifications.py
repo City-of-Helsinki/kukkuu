@@ -64,7 +64,11 @@ def notification_template_user_auth_service_is_changing_fi():
         {% endfor %}
         {% endfor %}
         {% endif %}
-        """,
+        {% if children_event_history_markdown %}
+        Markdown: 
+        {{children_event_history_markdown}}
+        {% endif %}
+        """,  # noqa
     )
 
 
