@@ -2,10 +2,10 @@ from datetime import date
 from typing import Optional, Union
 
 from django.db.models import QuerySet
+from django.template import Context, Template
 from django_ilmoitin.utils import send_notification
 
 from users.models import Guardian
-from users.notifications import NotificationType
 from users.utils import get_communication_unsubscribe_ui_url
 
 
@@ -31,6 +31,8 @@ class GuardianEmailManagementNotificationService:
         Args:
             guardian (Guardian): the recipient guardian
         """
+        from users.notifications import NotificationType
+
         GuardianEmailManagementNotificationService._send_notification(
             guardian, NotificationType.GUARDIAN_EMAIL_CHANGED, guardian.email
         )
@@ -47,6 +49,8 @@ class GuardianEmailManagementNotificationService:
             email (str): the new email address where the token is being sent
             verification_token_key (str): token to verify new email
         """
+        from users.notifications import NotificationType
+
         GuardianEmailManagementNotificationService._send_notification(
             guardian,
             NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
@@ -62,10 +66,20 @@ class AuthServiceNotificationService:
     def _send_auth_service_is_changing_notification(
         guardian: Guardian, date_of_change: Optional[date]
     ):
+        from users.notifications import NotificationType
+
         send_notification(
             guardian.email,
             NotificationType.USER_AUTH_SERVICE_IS_CHANGING,
-            context={"guardian": guardian, "date_of_change": date_of_change},
+            context={
+                "guardian": guardian,
+                "date_of_change": date_of_change,
+                "children_event_history_markdown": (
+                    AuthServiceNotificationService.generate_children_event_history_markdown(  # noqa
+                        guardian
+                    )
+                ),
+            },
             language=guardian.language,
         )
 
@@ -93,3 +107,20 @@ class AuthServiceNotificationService:
             AuthServiceNotificationService._send_auth_service_is_changing_notification(
                 guardian, date_of_change
             )
+
+    @staticmethod
+    def generate_children_event_history_markdown(guardian: Guardian):
+        """Generates a Markdown string listing a guardian's children's enrolments."""
+
+        # NOTE: This is markdown, so the line changes and white spaces are important!
+        template_string = """
+{% for child in guardian.children.all %}# {{ child.name }}
+{% for enrolment in child.enrolments.all|dictsort:"occurrence.time" %}1. **{{ enrolment.occurrence.event.name }}:** {{ enrolment.occurrence.time|date:"j.n.Y H:i" }}{% if enrolment.occurrence.event.short_description %}
+{{enrolment.occurrence.event.short_description}}{% endif %}
+{% endfor %}
+{% endfor %}
+"""  # noqa
+
+        template = Template(template_string)
+        context = Context({"guardian": guardian})
+        return template.render(context).strip()
