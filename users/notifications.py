@@ -45,7 +45,7 @@ dummy_context.update(
         },
         NotificationType.USER_AUTH_SERVICE_IS_CHANGING: {
             "guardian": guardian,
-            "date_of_change": date(year=2024, month=6, day=17),
+            "date_of_change_str": date(year=2024, month=6, day=17),
             "children_event_history_markdown": (
                 AuthServiceNotificationService.generate_children_event_history_markdown(
                     guardian

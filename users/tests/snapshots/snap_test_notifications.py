@@ -71,7 +71,7 @@ Second know say former conference carry factor.
 ]
 
 snapshots[
-    "test_send_user_auth_service_is_changing_with_date_of_change_param[24.12.2024] 1"
+    "test_send_user_auth_service_is_changing_with_date_of_change_str_param[24.12.2024] 1"
 ] = [
     """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
         The change is happening 24.12.2024.
@@ -79,14 +79,16 @@ snapshots[
 ]
 
 snapshots[
-    "test_send_user_auth_service_is_changing_with_date_of_change_param[None] 1"
+    "test_send_user_auth_service_is_changing_with_date_of_change_str_param[None] 1"
 ] = [
     """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
         The change is happening 17.6.2024.
         """
 ]
 
-snapshots["test_send_user_auth_service_is_changing_with_date_of_change_param[] 1"] = [
+snapshots[
+    "test_send_user_auth_service_is_changing_with_date_of_change_str_param[] 1"
+] = [
     """kukkuu@example.com|['michellewalker@example.net']|User authorization service is changing FI|Guardian FI: Michael Patton (michellewalker@example.net).
         The change is happening 17.6.2024.
         """
