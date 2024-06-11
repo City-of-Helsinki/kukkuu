@@ -418,3 +418,22 @@ def test_for_auth_service_is_changing_notification_all_users(
     assert obsoleted_guardian_joined_yesterday in guardians
     assert guardian_joined_yesterday in guardians
     assert guardian_joined_today in guardians
+
+
+@pytest.mark.django_db
+def test_for_auth_service_is_changing_notification_with_emails(
+    obsoleted_guardian_joined_yesterday,
+    guardian_joined_yesterday,
+    guardian_joined_today,
+):
+    """Test with guardian_emails [...] (should return those who are listed)"""
+    guardians = Guardian.objects.for_auth_service_is_changing_notification(
+        obsoleted_users_only=False,
+        guardian_emails=[
+            obsoleted_guardian_joined_yesterday.email,
+            guardian_joined_today.email,
+        ],
+    )
+    assert obsoleted_guardian_joined_yesterday in guardians
+    assert guardian_joined_today in guardians
+    assert guardian_joined_yesterday not in guardians
