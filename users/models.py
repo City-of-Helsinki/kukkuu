@@ -238,7 +238,10 @@ class GuardianQuerySet(models.QuerySet):
         return self.filter(has_accepted_communication=True)
 
     def for_auth_service_is_changing_notification(
-        self, user_joined_before: Optional[datetime] = None, obsoleted_users_only=True
+        self,
+        user_joined_before: Optional[datetime] = None,
+        obsoleted_users_only=True,
+        guardian_emails: Optional[list[str]] = None,
     ):
         if user_joined_before and user_joined_before > timezone.now():
             raise ValueError("The user_joined_before cannot be set in future.")
@@ -246,6 +249,8 @@ class GuardianQuerySet(models.QuerySet):
         qs_filters = {"user__date_joined__lte": (user_joined_before or timezone.now())}
         if obsoleted_users_only:
             qs_filters.update({"user__is_obsolete": True})
+        if guardian_emails:
+            qs_filters.update({"email__in": guardian_emails})
         return self.filter(**qs_filters)
 
 

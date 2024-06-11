@@ -24,8 +24,14 @@ class Command(BaseCommand):
             "--joined_before",
             type=str,
             help="Users who has joined before this datetime are included in queryset "
-            "Datetime in ISO format (e.g., '2024-06-17T15:00:00Z')",
+            "Datetime in ISO format (e.g., '2024-06-17T15:00:00Z').",
             default=None,
+        )
+        parser.add_argument(
+            "-e",
+            "--emails",
+            nargs="+",  # Accept multiple values as a list
+            help="List of guardian emails to send notifications to (space-separated).",
         )
         parser.add_argument(
             "--include_non_obsoleted",
@@ -51,6 +57,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         date_of_change_str = options["date_of_change"]
         user_joined_before = self._get_joined_before(**options)
+        guardian_emails = options.get("emails", None)
         obsoleted_users_only = not options["include_non_obsoleted"]
         Guardian = apps.get_model("users", "Guardian")
 
@@ -59,6 +66,7 @@ class Command(BaseCommand):
         guardians = Guardian.objects.for_auth_service_is_changing_notification(
             user_joined_before=user_joined_before,
             obsoleted_users_only=obsoleted_users_only,
+            guardian_emails=guardian_emails,
         )
         count = guardians.count()
 
