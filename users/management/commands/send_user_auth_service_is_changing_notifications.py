@@ -9,7 +9,6 @@ class Command(BaseCommand):
     help = "Sends user authorization service is changing notifications."
 
     def add_arguments(self, parser):
-        # user_joined_before: Optional[datetime] = None, obsoleted_users_only=True
         parser.add_argument(
             "-d",
             "--date_of_change",
@@ -23,7 +22,7 @@ class Command(BaseCommand):
             "-j",
             "--joined_before",
             type=str,
-            help="Users who has joined before this datetime are included in queryset "
+            help="Users who have joined before this datetime are included in queryset "
             "Datetime in ISO format (e.g., '2024-06-17T15:00:00Z').",
             default=None,
         )
@@ -36,14 +35,17 @@ class Command(BaseCommand):
         parser.add_argument(
             "--include_non_obsoleted",
             action="store_true",
-            help="Date of the change in auth server. "
-            "The default should be given in the notification template.",
+            help="Should the non obsoleted accounts be included in the recipients? "
+            "By default only the obsoleted accounts are included in the query set.",
             default=False,
         )
 
     def _get_joined_before(self, **options):
         joined_before_datetime_str = options["joined_before"]
-        invalid_date_error_str = "Invalid datetime format with joined_before. Use ISO format (YYYY-MM-DDTHH:MM:SS)."  # noqa
+        invalid_date_error_str = (
+            "Invalid datetime format with joined_before. "
+            "Use ISO format (YYYY-MM-DDTHH:MM:SS)."
+        )
         if joined_before_datetime_str:
             try:
                 joined_before_datetime = parse_datetime(joined_before_datetime_str)

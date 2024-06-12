@@ -43,32 +43,35 @@ def notification_template_guardian_email_change_requested_fi():
     )
 
 
+USER_AUTH_SERVICE_IS_CHANGING_TEMPLATE = """
+Guardian FI: {{ guardian }}.
+The change is happening {{ date_of_change_str|default('17.6.2024', true) }}.
+{% if guardian.children.count() %}
+Childrens' event participation history:
+
+{% for child in guardian.children.all() %}
+Child name: {{child.name}}
+
+{% for enrolment in child.enrolments.all() %}
+Event: {{enrolment.occurrence.event.name}}
+Occurrence: {{enrolment.occurrence.time}}
+
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if children_event_history_markdown %}
+Markdown: 
+{{children_event_history_markdown}}
+{% endif %}"""  # noqa W291
+
+
 @pytest.fixture
 def notification_template_user_auth_service_is_changing_fi():
     return create_notification_template_in_language(
         NotificationType.USER_AUTH_SERVICE_IS_CHANGING,
         "fi",
         subject="User authorization service is changing FI",
-        body_text="""Guardian FI: {{ guardian }}.
-        The change is happening {{ date_of_change_str|default('17.6.2024', true) }}.
-        {% if guardian.children.count() %}
-        Childrens' event participation history:
-
-        {% for child in guardian.children.all() %}
-        Child name: {{child.name}}
-
-        {% for enrolment in child.enrolments.all() %}
-        Event: {{enrolment.occurrence.event.name}}
-        Occurrence: {{enrolment.occurrence.time}}
-
-        {% endfor %}
-        {% endfor %}
-        {% endif %}
-        {% if children_event_history_markdown %}
-        Markdown: 
-        {{children_event_history_markdown}}
-        {% endif %}
-        """,  # noqa
+        body_text=USER_AUTH_SERVICE_IS_CHANGING_TEMPLATE,
     )
 
 

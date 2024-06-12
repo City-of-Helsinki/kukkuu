@@ -254,10 +254,10 @@ def test_user_serialize(snapshot, project):
         child_without_enrolments,
     ] = ChildWithGuardianFactory.create_batch(3, relationship__guardian=guardian)
     FreeSpotNotificationSubscriptionFactory(
-        child=child_without_enrolments, occurrence__id=101
+        child=child_without_enrolments, occurrence__id=101  # set id for snapshots
     )
     FreeSpotNotificationSubscriptionFactory(
-        child=child_with_one_enrolment, occurrence__id=102
+        child=child_with_one_enrolment, occurrence__id=102  # set id for snapshots
     )
     EnrolmentFactory.create_batch(5, child=child_with_many_enrolments)
     TicketSystemPasswordFactory.create_batch(5, child=child_with_many_enrolments)

@@ -12,7 +12,7 @@ from projects.schema import ProjectNode
 from verification_tokens.decorators import user_from_auth_verification_token
 
 from .models import Guardian
-from .services import GuardianEmailManagementNotificationService
+from .services import GuardianEmailChangeNotificationService
 from .utils import (
     validate_email_verification_token,
     validate_guardian_data,
@@ -151,7 +151,7 @@ class UpdateMyEmailMutation(graphene.relay.ClientIDMutation):
         # Save and send message
         if guardian.email != old_email:
             guardian.save()
-            GuardianEmailManagementNotificationService.send_email_changed_notification(
+            GuardianEmailChangeNotificationService.send_email_changed_notification(
                 guardian
             )
 
@@ -179,7 +179,7 @@ class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
         verification_token = user.deactivate_and_create_email_verification_token(
             new_email
         )
-        GuardianEmailManagementNotificationService.send_email_update_token_notification(
+        GuardianEmailChangeNotificationService.send_email_update_token_notification(
             guardian, new_email, verification_token.key
         )
 

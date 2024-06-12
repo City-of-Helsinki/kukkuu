@@ -8,7 +8,7 @@ from users.models import Guardian
 from users.utils import get_communication_unsubscribe_ui_url
 
 
-class GuardianEmailManagementNotificationService:
+class GuardianEmailChangeNotificationService:
     @staticmethod
     def _send_notification(
         guardian: Guardian, notification_type: str, email: str, **kwargs
@@ -32,7 +32,7 @@ class GuardianEmailManagementNotificationService:
         """
         from users.notifications import NotificationType
 
-        GuardianEmailManagementNotificationService._send_notification(
+        GuardianEmailChangeNotificationService._send_notification(
             guardian, NotificationType.GUARDIAN_EMAIL_CHANGED, guardian.email
         )
 
@@ -50,7 +50,7 @@ class GuardianEmailManagementNotificationService:
         """
         from users.notifications import NotificationType
 
-        GuardianEmailManagementNotificationService._send_notification(
+        GuardianEmailChangeNotificationService._send_notification(
             guardian,
             NotificationType.GUARDIAN_EMAIL_CHANGE_TOKEN,
             email,
@@ -58,6 +58,15 @@ class GuardianEmailManagementNotificationService:
                 "verification_token": verification_token_key,
             },
         )
+
+
+CHILDREN_EVENT_HISTORY_MARKDOWN_TEMPLATE = """
+{% for child in guardian.children.all %}# {{ child.name }}
+{% for enrolment in child.enrolments.all|dictsort:"occurrence.time" %}{{ forloop.counter }}. **{{ enrolment.occurrence.event.name }}:** {{ enrolment.occurrence.time|date:"j.n.Y H:i" }}{% if enrolment.occurrence.event.short_description %}
+{{enrolment.occurrence.event.short_description}}{% endif %}
+{% endfor %}
+{% endfor %}
+"""  # noqa E501
 
 
 class AuthServiceNotificationService:
@@ -96,7 +105,7 @@ class AuthServiceNotificationService:
         date_of_change_str: Optional[str] = None,
     ):
         """Send user authentication service is changing notifications
-        to guariands as recipients.
+        to guardians as recipients.
 
         If the guardian list is not explicitly given
         the queryset result of
@@ -123,14 +132,6 @@ class AuthServiceNotificationService:
         """Generates a Markdown string listing a guardian's children's enrolments."""
 
         # NOTE: This is markdown, so the line changes and white spaces are important!
-        template_string = """
-{% for child in guardian.children.all %}# {{ child.name }}
-{% for enrolment in child.enrolments.all|dictsort:"occurrence.time" %}1. **{{ enrolment.occurrence.event.name }}:** {{ enrolment.occurrence.time|date:"j.n.Y H:i" }}{% if enrolment.occurrence.event.short_description %}
-{{enrolment.occurrence.event.short_description}}{% endif %}
-{% endfor %}
-{% endfor %}
-"""  # noqa
-
-        template = Template(template_string)
+        template = Template(CHILDREN_EVENT_HISTORY_MARKDOWN_TEMPLATE)
         context = Context({"guardian": guardian})
         return template.render(context).strip()
