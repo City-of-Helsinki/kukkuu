@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -18,6 +20,12 @@ from reports.models import Permission as ReportPermission
 from users.models import Guardian
 from users.notifications import NotificationType
 from users.services import AuthServiceNotificationService
+
+USER_AUTH_SERVICE_IS_CHANGING_NOTIFICATION_TEMPLATE = """
+{subject}
+
+{body_text}
+""".strip()
 
 
 class RelationshipInline(admin.TabularInline):
@@ -43,7 +51,9 @@ class LanguagesSpokenAtHomeInline(admin.TabularInline):
     verbose_name_plural = _("Languages spoken at home")
 
 
-def _generate_children_event_history_markdown(modeladmin, request, queryset):
+def _generate_children_event_history_markdown(
+    modeladmin, request, queryset
+) -> Tuple[Guardian, str]:
     if queryset.count() != 1:
         modeladmin.message_user(
             request,
@@ -69,48 +79,39 @@ def generate_children_event_history_markdown(modeladmin, request, queryset):
     return HttpResponse(children_event_history_markdown)
 
 
-def _generate_generate_user_auth_service_is_changing_notification_for_lang(
-    language: str,
+def _generate_user_auth_service_is_changing_notification_text(
+    language: str, modeladmin, request, queryset
 ):
-    def _generate_user_auth_service_is_changing_notification_text(
-        modeladmin, request, queryset
-    ):
-        (
-            guardian,
-            children_event_history_markdown,
-        ) = _generate_children_event_history_markdown(modeladmin, request, queryset)
+    (
+        guardian,
+        children_event_history_markdown,
+    ) = _generate_children_event_history_markdown(modeladmin, request, queryset)
 
-        template = NotificationTemplate.objects.filter(
-            type=NotificationType.USER_AUTH_SERVICE_IS_CHANGING
-        ).first()
+    template = NotificationTemplate.objects.filter(
+        type=NotificationType.USER_AUTH_SERVICE_IS_CHANGING
+    ).first()
 
-        if not template:
-            modeladmin.message_user(
-                request,
-                "USER_AUTH_SERVICE_IS_CHANGING is not yet available in the database. "
-                "It should be importable from the notifications spreadsheet?",
-            )
-            return
-
-        context = {
-            "guardian": guardian,
-            "date_of_change_str": None,  # give default in notification template instead
-            "children_event_history_markdown": children_event_history_markdown,
-        }
-
-        subject, body_html, body_text = render_notification_template(
-            template, context, language
+    if not template:
+        modeladmin.message_user(
+            request,
+            "USER_AUTH_SERVICE_IS_CHANGING is not yet available in the database. "
+            "It should be importable from the notifications spreadsheet?",
         )
+        return
 
-        return f"""
-    {subject}
+    context = {
+        "guardian": guardian,
+        "date_of_change_str": None,  # give default in notification template instead
+        "children_event_history_markdown": children_event_history_markdown,
+    }
 
-    {body_text}
-    """.replace(
-            "\n", "<br/>"
-        )
+    subject, body_html, body_text = render_notification_template(
+        template, context, language
+    )
 
-    return _generate_user_auth_service_is_changing_notification_text
+    return USER_AUTH_SERVICE_IS_CHANGING_NOTIFICATION_TEMPLATE.format(
+        subject=subject, body_text=body_text
+    ).replace("\n", "<br/>")
 
 
 @admin.action(
@@ -120,8 +121,8 @@ def generate_user_auth_service_is_changing_notification_text_fi(
     modeladmin, request, queryset
 ):
     return HttpResponse(
-        _generate_generate_user_auth_service_is_changing_notification_for_lang("fi")(
-            modeladmin, request, queryset
+        _generate_user_auth_service_is_changing_notification_text(
+            "fi", modeladmin, request, queryset
         )
     )
 
@@ -133,8 +134,8 @@ def generate_user_auth_service_is_changing_notification_text_sv(
     modeladmin, request, queryset
 ):
     return HttpResponse(
-        _generate_generate_user_auth_service_is_changing_notification_for_lang("sv")(
-            modeladmin, request, queryset
+        _generate_user_auth_service_is_changing_notification_text(
+            "sv", modeladmin, request, queryset
         )
     )
 
@@ -146,8 +147,8 @@ def generate_user_auth_service_is_changing_notification_text_en(
     modeladmin, request, queryset
 ):
     return HttpResponse(
-        _generate_generate_user_auth_service_is_changing_notification_for_lang("en")(
-            modeladmin, request, queryset
+        _generate_user_auth_service_is_changing_notification_text(
+            "en", modeladmin, request, queryset
         )
     )
 
