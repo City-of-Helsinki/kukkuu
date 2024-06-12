@@ -200,7 +200,7 @@ INSTALLED_APPS = [
     "parler",
     "anymail",
     "mailer",
-    "kukkuu_mailer",  # must be after `mailer`, since it overrides admin
+    "kukkuu_mailer_admin",  # must be after `mailer`, since it overrides admin
     "django_ilmoitin",
     "django_filters",
     "guardian",

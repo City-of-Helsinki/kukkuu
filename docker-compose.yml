@@ -16,7 +16,7 @@ services:
     django:
         build:
             context: .
-            target: development
+            target: ${TARGET:-development}
         env_file:
             - docker-compose.env.yaml
         environment:
