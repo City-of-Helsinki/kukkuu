@@ -1,6 +1,26 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.3.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.2.0...kukkuu-v3.3.0) (2024-06-12)
+
+
+### Features
+
+* Add AuthServiceNotificationService to mass mail when auth service is changed ([1665cd9](https://github.com/City-of-Helsinki/kukkuu/commit/1665cd9ca40a25daa74b0dbdb212884461a78c0e))
+* Add children event history markdown generator ([64f5c69](https://github.com/City-of-Helsinki/kukkuu/commit/64f5c699f1001c440ba3bca7dc35787c4127148d))
+* Add for_auth_service_is_changing_notification in guardian queryset ([6dfcb37](https://github.com/City-of-Helsinki/kukkuu/commit/6dfcb37645be3111f03f79f84b3856452c3da96a))
+* Add guardian admin actions to generate auth service changing email ([4609f9a](https://github.com/City-of-Helsinki/kukkuu/commit/4609f9aeb329d1e508ab3112a660635470ae6240))
+* Add management command to send auth service changing notifications ([4d786aa](https://github.com/City-of-Helsinki/kukkuu/commit/4d786aa9128de13bb59d7095a6e7485dd1a67e88))
+* Use a list of emails to filter recipients on auth service notification ([9fd0746](https://github.com/City-of-Helsinki/kukkuu/commit/9fd0746e1461902177f26962d3553635e5f0bbdd))
+
+
+### Bug Fixes
+
+* Add apps.py for Kukkuu mailer app ([8ff158c](https://github.com/City-of-Helsinki/kukkuu/commit/8ff158c43b297483ba4e06e2f5029b53da49861b))
+* Improve the django_mailer admin list display view ([2cf4be0](https://github.com/City-of-Helsinki/kukkuu/commit/2cf4be0c852700a3a87927f64716f27c480d79cf))
+* Remove children_event_history_markdown from notification dummy context ([40c4c11](https://github.com/City-of-Helsinki/kukkuu/commit/40c4c11d711dadedfcecadf5f52aa40f07d896e1))
+* Rename kukkuu_mailer to kukkuu_mailer_admin ([8722395](https://github.com/City-of-Helsinki/kukkuu/commit/8722395d1bbfde7b996419d1e798ec88af438303))
+
 ## [3.2.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.1.0...kukkuu-v3.2.0) (2024-06-04)
 
 
