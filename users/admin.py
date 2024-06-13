@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import markdown
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -66,7 +67,7 @@ def _generate_children_event_history_markdown(
         guardian,
         AuthServiceNotificationService.generate_children_event_history_markdown(
             guardian=guardian
-        ).replace("\n", "<br/>"),
+        ),
     )
 
 
@@ -76,7 +77,9 @@ def generate_children_event_history_markdown(modeladmin, request, queryset):
         guardian,
         children_event_history_markdown,
     ) = _generate_children_event_history_markdown(modeladmin, request, queryset)
-    return HttpResponse(children_event_history_markdown)
+    # Use markdown rendered to render this admin view,
+    # so the actual end result can be validated.
+    return HttpResponse(markdown.markdown(children_event_history_markdown))
 
 
 def _generate_user_auth_service_is_changing_notification_text(
@@ -109,9 +112,13 @@ def _generate_user_auth_service_is_changing_notification_text(
         template, context, language
     )
 
-    return USER_AUTH_SERVICE_IS_CHANGING_NOTIFICATION_TEMPLATE.format(
-        subject=subject, body_text=body_text
-    ).replace("\n", "<br/>")
+    # use <pre> to define that the text is preformatted,
+    # so the line breaks and indentations works properly.
+    return "<pre>{email_content}</pre>".format(
+        email_content=USER_AUTH_SERVICE_IS_CHANGING_NOTIFICATION_TEMPLATE.format(
+            subject=subject, body_text=body_text
+        )
+    )
 
 
 @admin.action(
