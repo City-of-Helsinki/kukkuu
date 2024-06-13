@@ -9,6 +9,7 @@ from django.contrib.auth.admin import GroupAdmin as DjangoGroupAdmin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group
 from django.http import HttpResponse
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.models import NotificationTemplate
 from django_ilmoitin.utils import render_notification_template
@@ -163,7 +164,8 @@ def generate_user_auth_service_is_changing_notification_text_en(
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
     list_display = (
-        "user",
+        "id",
+        "user_link",
         "first_name",
         "last_name",
         "email",
@@ -172,6 +174,7 @@ class GuardianAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "has_accepted_communication",
+        "is_user_obsolete",
     )
     search_fields = (
         "first_name",
@@ -183,13 +186,27 @@ class GuardianAdmin(admin.ModelAdmin):
     exclude = ("languages_spoken_at_home",)
     form = GuardianForm
     inlines = (RelationshipInline, LanguagesSpokenAtHomeInline)
-    list_filter = ("children__project", "has_accepted_communication")
+    list_filter = (
+        "has_accepted_communication",
+        "user__is_obsolete",
+        "children__project",
+    )
     actions = (
         generate_children_event_history_markdown,
         generate_user_auth_service_is_changing_notification_text_fi,
         generate_user_auth_service_is_changing_notification_text_sv,
         generate_user_auth_service_is_changing_notification_text_en,
     )
+
+    def user_link(self, guardian: Guardian):
+        return mark_safe(
+            '<a href="../user/%s">%s</a>' % (guardian.user_id, guardian.user)
+        )
+
+    def is_user_obsolete(self, guardian: Guardian) -> bool:
+        return guardian.user.is_obsolete
+
+    is_user_obsolete.boolean = True
 
 
 class PermissionFilterMixin:
@@ -216,6 +233,7 @@ class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
         "username",
         "id",
         "uuid",
+        "guardian_link",
         "email",
         "first_name",
         "last_name",
@@ -230,6 +248,7 @@ class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
     )
     readonly_fields = ("uuid",)
     list_filter = (
+        ("guardian", admin.EmptyFieldListFilter),
         "is_staff",
         "is_superuser",
         "is_active",
@@ -241,6 +260,11 @@ class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
     search_fields = DjangoUserAdmin.search_fields + ("uuid",)
     date_hierarchy = "date_joined"
     actions = [make_obsoleted]
+
+    def guardian_link(self, user):
+        return mark_safe(
+            '<a href="../guardian/%s">%s</a>' % (user.guardian.id, user.guardian)
+        )
 
 
 admin.site.unregister(Group)
