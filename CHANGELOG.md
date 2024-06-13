@@ -1,6 +1,20 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.4.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.3.0...kukkuu-v3.4.0) (2024-06-13)
+
+
+### Features
+
+* Add --obsolete_handled_users & --batch_size to auth change command ([272ef3d](https://github.com/City-of-Helsinki/kukkuu/commit/272ef3dfdc025d3c44df67845faaa4e8e8a83983))
+* Add links and filters from guardian to user and vice versa in admin site ([9f870f2](https://github.com/City-of-Helsinki/kukkuu/commit/9f870f2f9f69e8a709060f9c542d4c381f5d0458))
+* Send auth service changing notifications from admin ([e37c0de](https://github.com/City-of-Helsinki/kukkuu/commit/e37c0de0ef0fcb205e29bd515015a62b71a6f2c8))
+
+
+### Bug Fixes
+
+* Children event history markdown line endings and indentations ([efd595d](https://github.com/City-of-Helsinki/kukkuu/commit/efd595d9194d232002155df2c109435a04382bd4))
+
 ## [3.3.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.2.0...kukkuu-v3.3.0) (2024-06-12)
 
 
