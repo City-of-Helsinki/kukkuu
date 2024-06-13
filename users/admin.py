@@ -160,6 +160,30 @@ def generate_user_auth_service_is_changing_notification_text_en(
     )
 
 
+@admin.action(
+    description="Send auth service is changing notification (email with default date)"
+)
+def send_user_auth_service_is_changing_notification(modeladmin, request, queryset):
+    AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
+        guardians=queryset, date_of_change_str=None
+    )
+
+
+@admin.action(
+    description=(
+        "Obsolete and send auth service is changing notification "
+        "(email with default date)"
+    )
+)
+def obsolete_and_send_user_auth_service_is_changing_notification(
+    modeladmin, request, queryset
+):
+    queryset.update(is_obsolete=True)
+    AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
+        guardians=queryset, date_of_change_str=None
+    )
+
+
 @admin.register(Guardian)
 class GuardianAdmin(admin.ModelAdmin):
     list_display = (
@@ -189,6 +213,8 @@ class GuardianAdmin(admin.ModelAdmin):
         generate_user_auth_service_is_changing_notification_text_fi,
         generate_user_auth_service_is_changing_notification_text_sv,
         generate_user_auth_service_is_changing_notification_text_en,
+        send_user_auth_service_is_changing_notification,
+        obsolete_and_send_user_auth_service_is_changing_notification,
     )
 
 
