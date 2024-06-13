@@ -62,9 +62,14 @@ class GuardianEmailChangeNotificationService:
 
 CHILDREN_EVENT_HISTORY_MARKDOWN_TEMPLATE = """
 {% for child in guardian.children.all %}# {{ child.name }}
-{% for enrolment in child.enrolments.all|dictsort:"occurrence.time" %}{{ forloop.counter }}. **{{ enrolment.occurrence.event.name }}:** {{ enrolment.occurrence.time|date:"j.n.Y H:i" }}{% if enrolment.occurrence.event.short_description %}
-{{enrolment.occurrence.event.short_description}}{% endif %}
+
+{% for enrolment in child.enrolments.all|dictsort:"occurrence.time" %}
+{{ forloop.counter }}. **{{ enrolment.occurrence.event.name }}:** {{ enrolment.occurrence.time|date:"j.n.Y H:i" }}{% if enrolment.occurrence.event.short_description %}
+
+    {{enrolment.occurrence.event.short_description}}
+{% endif %}
 {% endfor %}
+
 {% endfor %}
 """  # noqa E501
 

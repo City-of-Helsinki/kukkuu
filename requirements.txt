@@ -132,6 +132,8 @@ helsinki-profile-gdpr-api==0.2.0
     # via -r requirements.in
 idna==3.2
     # via requests
+importlib-metadata==7.1.0
+    # via markdown
 inflection==0.5.1
     # via drf-spectacular
 isodate==0.6.0
@@ -142,6 +144,8 @@ jsonschema==4.2.1
     # via drf-spectacular
 lockfile==0.12.2
     # via django-mailer
+markdown==3.6
+    # via -r requirements.in
 markupsafe==2.0.1
     # via jinja2
 msrest==0.6.21
@@ -237,6 +241,8 @@ urllib3==1.26.7
     # via
     #   requests
     #   sentry-sdk
+zipp==3.19.2
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
