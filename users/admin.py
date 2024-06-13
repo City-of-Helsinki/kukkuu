@@ -179,9 +179,8 @@ def send_user_auth_service_is_changing_notification(modeladmin, request, queryse
 def obsolete_and_send_user_auth_service_is_changing_notification(
     modeladmin, request, queryset
 ):
-    queryset.update(is_obsolete=True)
     AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
-        guardians=queryset, date_of_change_str=None
+        guardians=queryset, date_of_change_str=None, obsolete_handled_users=True
     )
 
 

@@ -39,6 +39,22 @@ class Command(BaseCommand):
             "By default only the obsoleted accounts are included in the query set.",
             default=False,
         )
+        parser.add_argument(
+            "-b",
+            "--batch_size",
+            type=int,
+            help="Batch size for bulk updates and queryset iteration. "
+            "By default %(default)s.",
+            default=1000,
+        )
+        parser.add_argument(
+            "-o",
+            "--obsolete_handled_users",
+            action="store_true",
+            help="Should the handled users be marked as obsolete? "
+            "By default %(default)s.",
+            default=False,
+        )
 
     def _get_joined_before(self, **options):
         joined_before_datetime_str = options["joined_before"]
@@ -56,11 +72,21 @@ class Command(BaseCommand):
                 raise CommandError(invalid_date_error_str)
         return None
 
+    @staticmethod
+    def validate_options(options):
+        batch_size = options["batch_size"]
+        if batch_size < 1:
+            raise CommandError("--batch_size must be at least 1")
+
     def handle(self, *args, **options):
+        self.validate_options(options)
+
         date_of_change_str = options["date_of_change"]
         user_joined_before = self._get_joined_before(**options)
         guardian_emails = options.get("emails", None)
         obsoleted_users_only = not options["include_non_obsoleted"]
+        batch_size = options["batch_size"]
+        obsolete_handled_users = options["obsolete_handled_users"]
         Guardian = apps.get_model("users", "Guardian")
 
         self.stdout.write("Sending user auth service is changing notifications...")
@@ -73,7 +99,10 @@ class Command(BaseCommand):
         count = guardians.count()
 
         AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
-            guardians=guardians, date_of_change_str=date_of_change_str
+            guardians=guardians,
+            date_of_change_str=date_of_change_str,
+            obsolete_handled_users=obsolete_handled_users,
+            batch_size=batch_size,
         )
 
         self.stdout.write(
