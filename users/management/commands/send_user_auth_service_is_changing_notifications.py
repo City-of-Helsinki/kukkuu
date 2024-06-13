@@ -39,6 +39,14 @@ class Command(BaseCommand):
             "By default only the obsoleted accounts are included in the query set.",
             default=False,
         )
+        parser.add_argument(
+            "-m",
+            "--max_guardian_count",
+            type=int,
+            help="Maximum number of guardians to send notifications to. "
+            "By default there's no limit.",
+            default=None,
+        )
 
     def _get_joined_before(self, **options):
         joined_before_datetime_str = options["joined_before"]
@@ -61,6 +69,7 @@ class Command(BaseCommand):
         user_joined_before = self._get_joined_before(**options)
         guardian_emails = options.get("emails", None)
         obsoleted_users_only = not options["include_non_obsoleted"]
+        max_guardian_count = options["max_guardian_count"]
         Guardian = apps.get_model("users", "Guardian")
 
         self.stdout.write("Sending user auth service is changing notifications...")
@@ -69,7 +78,7 @@ class Command(BaseCommand):
             user_joined_before=user_joined_before,
             obsoleted_users_only=obsoleted_users_only,
             guardian_emails=guardian_emails,
-        )
+        )[:max_guardian_count]
         count = guardians.count()
 
         AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(

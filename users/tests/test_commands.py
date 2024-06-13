@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest import mock
 
 import pytest
@@ -6,6 +7,7 @@ from django.core.management.base import CommandError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from users.factories import GuardianFactory
 from users.models import Guardian
 from users.services import AuthServiceNotificationService
 
@@ -114,3 +116,45 @@ def test_command_with_emails_filter(mock_notification_service, mock_guardian_que
         guardian_emails=["test@example.com", "another@test.com"],
     )
     mock_notification_service.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "max_guardian_count,expected_sent_count",
+    [
+        (0, 0),
+        (1, 1),
+        (2, 2),
+        (3, 3),
+        (4, 3),
+        (9999, 3),
+    ],
+)
+@pytest.mark.django_db
+def test_command_max_guardian_count_filter(
+    capfd,
+    max_guardian_count,
+    expected_sent_count,
+):
+    GuardianFactory.create_batch(
+        size=3,
+        user__date_joined=timezone.now() - timedelta(days=1),
+        user__is_obsolete=True,
+    )
+    assert Guardian.objects.count() == 3
+    assert Guardian.objects.filter(user__is_obsolete=True).count() == 3
+
+    with mock.patch.object(
+        AuthServiceNotificationService,
+        "send_user_auth_service_is_changing_notifications",
+    ):
+        call_command(
+            "send_user_auth_service_is_changing_notifications",
+            "-m",
+            str(max_guardian_count),
+        )
+
+    captured = capfd.readouterr()
+    assert (
+        f"Sent {expected_sent_count} user auth service is changing notifications."
+        in captured.out
+    )
