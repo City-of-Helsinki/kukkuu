@@ -1,11 +1,14 @@
 from typing import Optional, Union
 
+from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from django.template import Context, Template
 from django_ilmoitin.utils import send_notification
 
 from users.models import Guardian
 from users.utils import get_communication_unsubscribe_ui_url
+
+User = get_user_model()
 
 
 class GuardianEmailChangeNotificationService:
@@ -108,9 +111,12 @@ class AuthServiceNotificationService:
     def send_user_auth_service_is_changing_notifications(
         guardians: Optional[Union[QuerySet, list[Guardian]]] = None,
         date_of_change_str: Optional[str] = None,
-    ):
+        obsolete_handled_users: bool = False,
+        batch_size: int = 1000,
+    ) -> None:
         """Send user authentication service is changing notifications
-        to guardians as recipients.
+        to guardians as recipients and optionally mark the handled users
+        as obsolete.
 
         If the guardian list is not explicitly given
         the queryset result of
@@ -123,14 +129,30 @@ class AuthServiceNotificationService:
             date_of_change_str (Optional[str], optional): Date or datetime
                 in string format. Defaults to None.
                 The actual default should be given in the notification template.
+            obsolete_handled_users (bool, optional): Should the users
+                who have been handled be marked as obsolete. Defaults to False.
+            batch_size (int, optional): The batch size for queryset iteration.
+                Defaults to 1000.
         """
         if guardians is None:
-            guardians = Guardian.objects.for_auth_service_is_changing_notification()
+            guardians = Guardian.objects.prefetch_related(
+                "children"
+            ).for_auth_service_is_changing_notification()
 
-        for guardian in guardians:
-            AuthServiceNotificationService._send_auth_service_is_changing_notification(
-                guardian, date_of_change_str
-            )
+        handled_user_ids = set()
+        _notify_function = (
+            AuthServiceNotificationService._send_auth_service_is_changing_notification
+        )
+
+        try:
+            # Use iterator to reduce memory usage
+            for guardian in guardians.iterator(chunk_size=batch_size):
+                _notify_function(guardian, date_of_change_str)
+                handled_user_ids.add(guardian.user_id)
+        finally:
+            # This will be executed even if an exception is raised
+            if obsolete_handled_users:
+                User.objects.filter(id__in=handled_user_ids).update(is_obsolete=True)
 
     @staticmethod
     def generate_children_event_history_markdown(guardian: Guardian):

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest import mock
 
 import pytest
@@ -6,8 +7,19 @@ from django.core.management.base import CommandError
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from users.factories import GuardianFactory
 from users.models import Guardian
 from users.services import AuthServiceNotificationService
+
+
+@pytest.fixture(params=("-o", "--obsolete_handled_users"))
+def obsolete_handled_users_argument(request):
+    return request.param
+
+
+@pytest.fixture(params=("-b", "--batch_size"))
+def batch_size_argument(request):
+    return request.param
 
 
 @mock.patch.object(
@@ -114,3 +126,75 @@ def test_command_with_emails_filter(mock_notification_service, mock_guardian_que
         guardian_emails=["test@example.com", "another@test.com"],
     )
     mock_notification_service.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_command_obsolete_handled_users_default():
+    """
+    Test that the handled users are not marked as obsolete by default.
+    """
+    GuardianFactory.create_batch(
+        size=3,
+        user__date_joined=timezone.now() - timedelta(days=1),
+        user__is_obsolete=False,
+    )
+    assert Guardian.objects.count() == 3
+    assert Guardian.objects.filter(user__is_obsolete=False).count() == 3
+
+    with mock.patch.object(
+        AuthServiceNotificationService,
+        "_send_auth_service_is_changing_notification",
+    ):
+        call_command(
+            "send_user_auth_service_is_changing_notifications",
+            # Needed for including the non-obsoleted users as input:
+            "--include_non_obsoleted",
+        )
+
+    # By default should not mark any users as obsolete
+    assert Guardian.objects.filter(user__is_obsolete=True).count() == 0
+
+
+@pytest.mark.django_db
+def test_command_obsolete_handled_users_true(obsolete_handled_users_argument):
+    """
+    Test that "-o" or "--obsolete_handled_users" argument
+    marks the handled users as obsolete.
+    """
+    GuardianFactory.create_batch(
+        size=3,
+        user__date_joined=timezone.now() - timedelta(days=1),
+        user__is_obsolete=False,
+    )
+    assert Guardian.objects.count() == 3
+    assert Guardian.objects.filter(user__is_obsolete=False).count() == 3
+
+    with mock.patch.object(
+        AuthServiceNotificationService,
+        "_send_auth_service_is_changing_notification",
+    ):
+        call_command(
+            "send_user_auth_service_is_changing_notifications",
+            obsolete_handled_users_argument,
+            # Needed for including the non-obsoleted users as input:
+            "--include_non_obsoleted",
+        )
+
+    # Should mark all users as obsolete
+    assert Guardian.objects.filter(user__is_obsolete=True).count() == 3
+
+
+@pytest.mark.parametrize("batch_size_value", [0, -1, -9999])
+@pytest.mark.django_db
+def test_command_invalid_batch_size(batch_size_argument, batch_size_value):
+    with pytest.raises(CommandError) as excinfo:
+        with mock.patch.object(
+            AuthServiceNotificationService,
+            "_send_auth_service_is_changing_notification",
+        ):
+            call_command(
+                "send_user_auth_service_is_changing_notifications",
+                batch_size_argument,
+                str(batch_size_value),
+            )
+        assert "--batch_size must be at least 1" in str(excinfo.value)
