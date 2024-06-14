@@ -3,7 +3,7 @@ from typing import Tuple
 import markdown
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import GroupAdmin as DjangoGroupAdmin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
@@ -168,6 +168,11 @@ def send_user_auth_service_is_changing_notification(modeladmin, request, queryse
     AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
         guardians=queryset, date_of_change_str=None
     )
+    modeladmin.message_user(
+        request,
+        _("The notification was sent to the selected guardians."),
+        messages.SUCCESS,
+    )
 
 
 @admin.action(
@@ -181,6 +186,14 @@ def obsolete_and_send_user_auth_service_is_changing_notification(
 ):
     AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
         guardians=queryset, date_of_change_str=None, obsolete_handled_users=True
+    )
+    modeladmin.message_user(
+        request,
+        _(
+            "The notification was sent to the selected guardians "
+            "and they are now also obsoleted."
+        ),
+        messages.SUCCESS,
     )
 
 
@@ -250,6 +263,9 @@ class PermissionFilterMixin:
 @admin.action(description="Mark selected users as obsoleted")
 def make_obsoleted(modeladmin, request, queryset):
     queryset.update(is_obsolete=True)
+    modeladmin.message_user(
+        request, _("The selected users are now obsoleted."), messages.SUCCESS
+    )
 
 
 @admin.register(get_user_model())
