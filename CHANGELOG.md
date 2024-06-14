@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.6.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.5.0...kukkuu-v3.6.0) (2024-06-14)
+
+
+### Features
+
+* Test auth change notifications command's query count ([14c1c7d](https://github.com/City-of-Helsinki/kukkuu/commit/14c1c7dfc8eb82686bc8ac93cdddf174c908605a))
+
 ## [3.5.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.4.0...kukkuu-v3.5.0) (2024-06-14)
 
 
