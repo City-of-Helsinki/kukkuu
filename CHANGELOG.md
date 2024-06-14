@@ -1,6 +1,18 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.5.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.4.0...kukkuu-v3.5.0) (2024-06-14)
+
+
+### Features
+
+* Batch user is_obsolete updating in auth change command ([7e89c1b](https://github.com/City-of-Helsinki/kukkuu/commit/7e89c1b237fd20e348b948175a44042cf52131d0))
+
+
+### Bug Fixes
+
+* Add missing success messages to user and guardian admin actions ([21f4e69](https://github.com/City-of-Helsinki/kukkuu/commit/21f4e6933dbe774dc17e762687f5e824aaa0c78e))
+
 ## [3.4.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.3.0...kukkuu-v3.4.0) (2024-06-13)
 
 
