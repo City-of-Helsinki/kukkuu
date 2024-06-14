@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
 from django.db.models import QuerySet
 from django.template import Context, Template
 from django_ilmoitin.utils import send_notification
@@ -136,10 +137,10 @@ class AuthServiceNotificationService:
         """
         if guardians is None:
             guardians = Guardian.objects.prefetch_related(
-                "children"
+                "children",
             ).for_auth_service_is_changing_notification()
 
-        handled_user_ids = set()
+        handled_user_ids = []
         _notify_function = (
             AuthServiceNotificationService._send_auth_service_is_changing_notification
         )
@@ -148,11 +149,18 @@ class AuthServiceNotificationService:
             # Use iterator to reduce memory usage
             for guardian in guardians.iterator(chunk_size=batch_size):
                 _notify_function(guardian, date_of_change_str)
-                handled_user_ids.add(guardian.user_id)
+                handled_user_ids.append(guardian.user_id)
         finally:
             # This will be executed even if an exception is raised
             if obsolete_handled_users:
-                User.objects.filter(id__in=handled_user_ids).update(is_obsolete=True)
+                # Mark the handled users as obsolete in batches
+                # to limit SQL update query size
+                paginator = Paginator(handled_user_ids, batch_size)
+                for page_num in paginator.page_range:
+                    page_of_user_ids = paginator.page(page_num).object_list
+                    User.objects.filter(id__in=page_of_user_ids).update(
+                        is_obsolete=True
+                    )
 
     @staticmethod
     def generate_children_event_history_markdown(guardian: Guardian):

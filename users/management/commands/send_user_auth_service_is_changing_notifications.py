@@ -43,7 +43,7 @@ class Command(BaseCommand):
             "-b",
             "--batch_size",
             type=int,
-            help="Batch size for bulk updates and queryset iteration. "
+            help="Batch size for queryset iteration and data updating. "
             "By default %(default)s.",
             default=1000,
         )
