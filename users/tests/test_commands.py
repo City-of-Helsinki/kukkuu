@@ -184,38 +184,60 @@ def test_command_obsolete_handled_users_true(obsolete_handled_users_argument):
     assert Guardian.objects.filter(user__is_obsolete=True).count() == 3
 
 
-@pytest.mark.parametrize("batch_size_value", [1, 3, 10, 11, 25, 50, 1000, 1000000])
+@pytest.mark.parametrize(
+    "guardian_count,batch_size_value,expected_num_queries",
+    [
+        (
+            guardian_count,
+            batch_size_value,
+            (guardian_count // batch_size_value)  # Full batches count
+            + (
+                0 if (guardian_count % batch_size_value) == 0 else 1
+            )  # Partial last batch if not divisible by batch size
+            + 1  # Guardian query
+            + 1,  # Children prefetch query
+        )
+        for guardian_count in [1, 60]
+        for batch_size_value in [1, 3, 10, 11, 25, 60, 1000, 1000000]
+    ],
+)
 @pytest.mark.django_db
 def test_command_obsolete_handled_users_with_batch_size(
-    obsolete_handled_users_argument, batch_size_argument, batch_size_value
+    django_assert_num_queries,
+    obsolete_handled_users_argument,
+    batch_size_argument,
+    guardian_count,
+    batch_size_value,
+    expected_num_queries,
 ):
     """
     Test that "-o" or "--obsolete_handled_users" argument
     marks the handled users as obsolete with different batch sizes.
     """
     GuardianFactory.create_batch(
-        size=50,
+        size=guardian_count,
         user__date_joined=timezone.now() - timedelta(days=1),
         user__is_obsolete=False,
     )
-    assert Guardian.objects.count() == 50
-    assert Guardian.objects.filter(user__is_obsolete=False).count() == 50
+    assert Guardian.objects.count() == guardian_count
+    assert Guardian.objects.filter(user__is_obsolete=False).count() == guardian_count
 
     with mock.patch.object(
         AuthServiceNotificationService,
         "_send_auth_service_is_changing_notification",
     ):
-        call_command(
-            "send_user_auth_service_is_changing_notifications",
-            batch_size_argument,
-            str(batch_size_value),
-            obsolete_handled_users_argument,
-            # Needed for including the non-obsoleted users as input:
-            "--include_non_obsoleted",
-        )
+        with django_assert_num_queries(expected_num_queries):
+            call_command(
+                "send_user_auth_service_is_changing_notifications",
+                batch_size_argument,
+                str(batch_size_value),
+                obsolete_handled_users_argument,
+                # Needed for including the non-obsoleted users as input:
+                "--include_non_obsoleted",
+            )
 
     # Should mark all users as obsolete
-    assert Guardian.objects.filter(user__is_obsolete=True).count() == 50
+    assert Guardian.objects.filter(user__is_obsolete=True).count() == guardian_count
 
 
 @pytest.mark.parametrize("batch_size_value", [0, -1, -9999])
