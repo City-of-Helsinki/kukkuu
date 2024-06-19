@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import Node
-from graphql.execution.base import ResolveInfo
+from graphql.type import GraphQLResolveInfo
 from graphql_relay import from_global_id, to_global_id
 
 from kukkuu import __version__
@@ -83,7 +83,7 @@ def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
 def context(f):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            info = next(arg for arg in args if isinstance(arg, ResolveInfo))
+            info = next(arg for arg in args if isinstance(arg, GraphQLResolveInfo))
             return func(info.context, *args, **kwargs)
 
         return wrapper
