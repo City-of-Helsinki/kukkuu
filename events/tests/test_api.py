@@ -918,9 +918,9 @@ def test_enrol_limit_reached(
         enrolled_amount + 1,
         time=timezone.now(),
         event__published_at=timezone.now(),
-        event__ticket_system=Event.TICKETMASTER
-        if use_ticket_system_passwords
-        else Event.INTERNAL,
+        event__ticket_system=(
+            Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+        ),
     )
     for i in range(enrolled_amount):
         # Previous enrolments have been with TicketSystemPasswords
@@ -1685,19 +1685,21 @@ def test_events_and_event_groups_query_upcoming_filter(
         time=not_visible,
         event__name="Not visible",
         event__published_at=not_visible,
-        event__event_group=EventGroupFactory(
-            name="Not visible", published_at=not_visible
-        )
-        if has_event_group
-        else None,
+        event__event_group=(
+            EventGroupFactory(name="Not visible", published_at=not_visible)
+            if has_event_group
+            else None
+        ),
     )
     OccurrenceFactory.create(
         time=future,
         event__name="In the future",
         event__published_at=now(),
-        event__event_group=EventGroupFactory(name="In the future", published_at=now())
-        if has_event_group
-        else None,
+        event__event_group=(
+            EventGroupFactory(name="In the future", published_at=now())
+            if has_event_group
+            else None
+        ),
     )
 
     executed = guardian_api_client.execute(

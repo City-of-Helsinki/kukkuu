@@ -24,7 +24,9 @@ project = ProjectFactory.build(pk=uuid4(), year=2020)
 event = EventFactory.build(pk=uuid4(), project=project)
 venue = VenueFactory.build(pk=uuid4(), project=project)
 guardian = GuardianFactory.build(pk=uuid4())
-child = ChildWithGuardianFactory.build(pk=uuid4(), relationship__guardian=guardian, project=project)
+child = ChildWithGuardianFactory.build(
+    pk=uuid4(), relationship__guardian=guardian, project=project
+)
 occurrence = OccurrenceFactory.build(pk=uuid4(), event=event, venue=venue)
 subscription = FreeSpotNotificationSubscriptionFactory.build(
     pk=uuid4(), child=child, occurrence=occurrence
