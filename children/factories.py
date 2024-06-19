@@ -24,6 +24,7 @@ class ChildFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Child
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 class RelationshipFactory(factory.django.DjangoModelFactory):
@@ -35,6 +36,7 @@ class RelationshipFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Relationship
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 class ChildWithGuardianFactory(ChildFactory):

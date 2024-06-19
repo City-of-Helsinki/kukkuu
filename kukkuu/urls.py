@@ -9,15 +9,12 @@ from helusers.admin_site import admin
 from rest_framework import routers
 
 from common.utils import get_api_version
-from kukkuu.views import DepthAnalysisBackend, SentryGraphQLView
+from kukkuu.views import SentryGraphQLView
 from reports.api import ChildViewSet
 
 admin.site.index_title = _("Kukkuu backend {api_version}").format(
     api_version=get_api_version()
 )
-
-gql_backend = DepthAnalysisBackend(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
-
 
 router = routers.DefaultRouter()
 router.register(r"children", ChildViewSet)
@@ -29,7 +26,7 @@ urlpatterns = [
         r"^graphql/?$",
         csrf_exempt(
             SentryGraphQLView.as_view(
-                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG, backend=gql_backend
+                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG
             )
         ),
     ),

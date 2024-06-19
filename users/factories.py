@@ -4,6 +4,7 @@ import factory
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
+from common.mixins import SaveAfterPostGenerationMixin
 from languages.models import Language
 from users.models import Guardian
 
@@ -16,9 +17,10 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
-class GuardianFactory(factory.django.DjangoModelFactory):
+class GuardianFactory(SaveAfterPostGenerationMixin, factory.django.DjangoModelFactory):
     id = factory.LazyFunction(lambda: uuid.uuid4())
     user = factory.SubFactory(UserFactory)
     first_name = factory.Faker("first_name")

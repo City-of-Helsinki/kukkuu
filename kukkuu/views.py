@@ -1,14 +1,11 @@
+from typing import Optional
+
 import sentry_sdk
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from graphene.validation import depth_limit_validator
 from graphene_file_upload.django import FileUploadGraphQLView
-from graphql.backend.core import GraphQLCoreBackend
-from graphql.language.ast import (
-    Field,
-    FragmentDefinition,
-    FragmentSpread,
-    InlineFragment,
-    OperationDefinition,
-)
+from graphql import ExecutionResult
 from helusers.oidc import AuthenticationError
 
 from kukkuu.consts import (
@@ -36,7 +33,6 @@ from kukkuu.consts import (
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
-    QUERY_TOO_DEEP_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
@@ -66,7 +62,6 @@ from kukkuu.exceptions import (
     OccurrenceYearMismatchError,
     PastEnrolmentError,
     PastOccurrenceError,
-    QueryTooDeepError,
     SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
@@ -75,12 +70,12 @@ from kukkuu.exceptions import (
 )
 
 error_codes_shared = {
+    type(None): GENERAL_ERROR,
     Exception: GENERAL_ERROR,
     ObjectDoesNotExistError: OBJECT_DOES_NOT_EXIST_ERROR,
     PermissionDenied: PERMISSION_DENIED_ERROR,
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
-    QueryTooDeepError: QUERY_TOO_DEEP_ERROR,
     InvalidEmailFormatError: INVALID_EMAIL_FORMAT_ERROR,
 }
 
@@ -123,89 +118,22 @@ sentry_ignored_errors = (
 error_codes = {**error_codes_shared, **error_codes_kukkuu}
 
 
-def get_fragments(definitions):
-    return {
-        definition.name.value: definition
-        for definition in definitions
-        if isinstance(definition, FragmentDefinition)
-    }
-
-
-def get_queries_and_mutations(definitions):
-    return [
-        definition
-        for definition in definitions
-        if isinstance(definition, OperationDefinition)
-    ]
-
-
-def measure_depth(node, fragments):
-    if isinstance(node, FragmentSpread):
-        fragment = fragments.get(node.name.value)
-        return measure_depth(node=fragment, fragments=fragments)
-
-    elif isinstance(node, Field):
-        if node.name.value.lower() in ["__schema", "__introspection"]:
-            return 0
-
-        if not node.selection_set:
-            return 1
-
-        depths = []
-        for selection in node.selection_set.selections:
-            depth = measure_depth(node=selection, fragments=fragments)
-            depths.append(depth)
-        return 1 + max(depths)
-
-    elif (
-        isinstance(node, FragmentDefinition)
-        or isinstance(node, OperationDefinition)
-        or isinstance(node, InlineFragment)
-    ):
-        depths = []
-        for selection in node.selection_set.selections:
-            depth = measure_depth(node=selection, fragments=fragments)
-            depths.append(depth)
-        return max(depths)
-    else:
-        raise Exception("Unknown node")
-
-
-def check_max_depth(max_depth, document):
-    fragments = get_fragments(document.definitions)
-    queries = get_queries_and_mutations(document.definitions)
-
-    for query in queries:
-        depth = measure_depth(query, fragments)
-        if depth > max_depth:
-            raise QueryTooDeepError(
-                "Query is too deep - its depth is {} but the max depth is {}".format(
-                    depth, max_depth
-                )
-            )
-
-
-# Customize GraphQL Backend inspired by
-# https://github.com/manesioz/secure-graphene/pull/1/files
-class DepthAnalysisBackend(GraphQLCoreBackend):
-    def __init__(self, max_depth, executor=None):
-        super().__init__(executor=executor)
-        self.max_depth = max_depth
-
-    def document_from_string(self, schema, document_string):
-        document = super().document_from_string(schema, document_string)
-
-        check_max_depth(max_depth=self.max_depth, document=document.document_ast)
-
-        return document
-
-
 class SentryGraphQLView(FileUploadGraphQLView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            validation_rules=[
+                depth_limit_validator(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
+            ],
+            *args,
+            **kwargs
+        )
+
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
         """Extract any exceptions and send some of them to Sentry"""
-        result = super().execute_graphql_request(request, data, query, *args, **kwargs)
-        # If 'invalid' is set, it's a bad request
-        if result and result.errors and not result.invalid:
+        result: Optional[ExecutionResult] = super().execute_graphql_request(
+            request, data, query, *args, **kwargs
+        )
+        if result and result.errors:
             errors_to_sentry = [
                 e
                 for e in result.errors
@@ -240,6 +168,7 @@ class SentryGraphQLView(FileUploadGraphQLView):
             error_code = get_error_code(error.original_error.__class__)
         except AttributeError:
             error_code = GENERAL_ERROR
+
         formatted_error = super(SentryGraphQLView, SentryGraphQLView).format_error(
             error
         )

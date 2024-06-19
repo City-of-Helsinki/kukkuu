@@ -9,8 +9,7 @@ from django.utils import timezone
 from django.utils.timezone import localtime, now
 from freezegun import freeze_time
 from graphene.utils.str_converters import to_snake_case
-from graphql_relay import to_global_id
-from graphql_relay.connection.arrayconnection import offset_to_cursor
+from graphql_relay import offset_to_cursor, to_global_id
 from guardian.shortcuts import assign_perm
 
 from children.factories import ChildWithGuardianFactory
@@ -810,7 +809,7 @@ def test_update_child_notes_mutation_no_extra_fields(
 
     assert_general_error(executed)
     assert_error_message(
-        executed, f'Cannot query field "{extra_field_name}" on type "ChildNotesNode".'
+        executed, f"Cannot query field '{extra_field_name}' on type 'ChildNotesNode'."
     )
 
 
@@ -871,17 +870,17 @@ def test_child_notes_query_with_incorrect_id_type(
 
 def test_child_notes_query_with_plain_id(user_api_client, child_with_random_guardian):
     """
-    Test that ChildNotes query gives API usage error, if using plain UUID as ID.
+    Test that ChildNotes query gives general error, if using plain UUID as ID.
     """
     variables = {"id": child_with_random_guardian.id}
 
     executed = user_api_client.execute(CHILD_NOTES_QUERY, variables=variables)
 
-    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert_match_error_code(executed, GENERAL_ERROR)
     assert_error_message(
         executed,
-        "Unable to decode child ID in childNotes query, "
-        + 'please use "ChildNode:<uuid>" encoded as base64.',
+        "Variable '$id' got invalid value <UUID instance>; "
+        + "ID cannot represent value: <UUID instance>",
     )
 
 
@@ -899,8 +898,8 @@ def test_child_notes_query_with_incorrect_id(
     assert_match_error_code(executed, API_USAGE_ERROR)
     assert_error_message(
         executed,
-        "Unable to decode child ID in childNotes query, "
-        + 'please use "ChildNode:<uuid>" encoded as base64.',
+        "childNotes must be queried using ChildNode type ID, "
+        + "was queried with empty type ID",
     )
 
 
@@ -914,7 +913,7 @@ def test_child_notes_query_with_null_id(user_api_client, child_with_random_guard
 
     assert_general_error(executed)
     assert_error_message(
-        executed, 'Variable "$id" of required type "ID!" was not provided.'
+        executed, "Variable '$id' of non-null type 'ID!' must not be null."
     )
 
 
@@ -973,7 +972,7 @@ def test_child_notes_query_no_extra_fields(
 
     assert_general_error(executed)
     assert_error_message(
-        executed, f'Cannot query field "{extra_field_name}" on type "ChildNotesNode".'
+        executed, f"Cannot query field '{extra_field_name}' on type 'ChildNotesNode'."
     )
 
 
@@ -987,7 +986,8 @@ def test_child_notes_query_without_id_parameter_fails(
     assert_general_error(executed)
     assert_error_message(
         executed,
-        'Field "childNotes" argument "id" of type "ID!" is required but not provided.',
+        "Field 'childNotes' argument 'id' of type 'ID!' is required, "
+        + "but it was not provided.",
     )
 
 

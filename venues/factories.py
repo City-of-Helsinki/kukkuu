@@ -17,3 +17,4 @@ class VenueFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Venue
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
