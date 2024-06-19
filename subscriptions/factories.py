@@ -11,3 +11,4 @@ class FreeSpotNotificationSubscriptionFactory(factory.django.DjangoModelFactory)
 
     class Meta:
         model = FreeSpotNotificationSubscription
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0

@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableQuerySet as ParlerTranslatableQuerySet
 from parler.models import TranslatableModel as ParlerTranslatableModel
 
+from common.utils import map_enums_to_values_in_kwargs
 from kukkuu.exceptions import MissingDefaultTranslationError
 
 
@@ -29,6 +30,7 @@ class UUIDPrimaryKeyModel(models.Model):
 
 class TranslatableQuerySet(ParlerTranslatableQuerySet):
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def create_translatable_object(self, **kwargs):
         translations = kwargs.pop("translations")
         obj = self.create(**kwargs)

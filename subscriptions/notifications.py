@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
@@ -18,14 +20,16 @@ from venues.factories import VenueFactory
 
 notifications.register(NotificationType.FREE_SPOT, _("free spot"))
 
-project = ProjectFactory.build(year=2020)
-event = EventFactory.build(project=project)
-venue = VenueFactory.build(project=project)
-guardian = GuardianFactory.build()
-child = ChildWithGuardianFactory.build(relationship__guardian=guardian, project=project)
-occurrence = OccurrenceFactory.build(event=event, venue=venue)
+project = ProjectFactory.build(pk=uuid4(), year=2020)
+event = EventFactory.build(pk=uuid4(), project=project)
+venue = VenueFactory.build(pk=uuid4(), project=project)
+guardian = GuardianFactory.build(pk=uuid4())
+child = ChildWithGuardianFactory.build(
+    pk=uuid4(), relationship__guardian=guardian, project=project
+)
+occurrence = OccurrenceFactory.build(pk=uuid4(), event=event, venue=venue)
 subscription = FreeSpotNotificationSubscriptionFactory.build(
-    child=child, occurrence=occurrence
+    pk=uuid4(), child=child, occurrence=occurrence
 )
 unsubscribe_url = "https://kukkuu-ui-domain/fi/profile/subscriptions?authToken=abc123"
 dummy_context.update(

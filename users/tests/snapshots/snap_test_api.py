@@ -13,16 +13,16 @@ snapshots["test_guardians_query_normal_user 1"] = {
                 {
                     "node": {
                         "email": "michellewalker@example.net",
-                        "firstName": "Steve",
-                        "lastName": "Hutchinson",
-                        "phoneNumber": "001-117-159-1023x20281",
+                        "firstName": "Andrew",
+                        "lastName": "Eaton",
+                        "phoneNumber": "001-311-571-5910x23202",
                         "relationships": {
                             "edges": [
                                 {
                                     "node": {
                                         "child": {
                                             "birthyear": 2023,
-                                            "name": "John Moore",
+                                            "name": "Nicholas Chavez",
                                             "project": {"year": 2020},
                                         },
                                         "type": "PARENT",
@@ -46,7 +46,7 @@ snapshots["test_guardians_query_project_user 1"] = {
                         "email": "debbie77@example.com",
                         "firstName": "Guardian having children in own and another project",
                         "lastName": "Should be visible 1/2",
-                        "phoneNumber": "(712)406-7506x4976",
+                        "phoneNumber": "(971)824-0675x0649",
                         "relationships": {
                             "edges": [
                                 {
@@ -68,7 +68,7 @@ snapshots["test_guardians_query_project_user 1"] = {
                         "email": "michellewalker@example.net",
                         "firstName": "Another project own guardian",
                         "lastName": "Should be visible 2/2",
-                        "phoneNumber": "202.813.0727",
+                        "phoneNumber": "420.928.1307",
                         "relationships": {
                             "edges": [
                                 {
@@ -207,20 +207,20 @@ snapshots["test_my_profile_query 1"] = {
     "data": {
         "myProfile": {
             "email": "michellewalker@example.net",
-            "firstName": "Timothy",
+            "firstName": "Robert",
             "hasAcceptedCommunication": False,
             "language": "FI",
             "languagesSpokenAtHome": {"edges": []},
-            "lastName": "Baldwin",
-            "phoneNumber": "803.466.9727",
+            "lastName": "Crane",
+            "phoneNumber": "303.746.6972x70117",
             "relationships": {
                 "edges": [
                     {
                         "node": {
                             "child": {
-                                "birthyear": 2018,
-                                "name": "Stephen Charles",
-                                "postalCode": "71591",
+                                "birthyear": 2019,
+                                "name": "Ashley Hernandez",
+                                "postalCode": "28130",
                             },
                             "type": "OTHER_GUARDIAN",
                         }
@@ -277,39 +277,40 @@ snapshots["test_update_my_communication_subscriptions_as_logged_in[True] 1"] = {
 snapshots[
     "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables0] 1"
 ] = {
+    "data": None,
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
-            "message": """Variable "$input" got invalid value {}.
-In field "hasAcceptedCommunication": Expected "Boolean!", found null.""",
+            "message": "Variable '$input' got invalid value {}; Field 'hasAcceptedCommunication' of required type 'Boolean!' was not provided.",
         }
-    ]
+    ],
 }
 
 snapshots[
     "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables1] 1"
 ] = {
+    "data": None,
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
-            "message": 'Variable "$input" of required type "UpdateMyCommunicationSubscriptionsMutationInput!" was not provided.',
+            "message": "Variable '$input' of required type 'UpdateMyCommunicationSubscriptionsMutationInput!' was not provided.",
         }
-    ]
+    ],
 }
 
 snapshots[
     "test_update_my_communication_subscriptions_returns_errors_without_required_args[variables2] 1"
 ] = {
+    "data": None,
     "errors": [
         {
             "extensions": {"code": "GENERAL_ERROR"},
             "locations": [{"column": 3, "line": 3}],
-            "message": """Variable "$input" got invalid value {"authToken": "what ever"}.
-In field "hasAcceptedCommunication": Expected "Boolean!", found null.""",
+            "message": "Variable '$input' got invalid value {'authToken': 'what ever'}; Field 'hasAcceptedCommunication' of required type 'Boolean!' was not provided.",
         }
-    ]
+    ],
 }
 
 snapshots[

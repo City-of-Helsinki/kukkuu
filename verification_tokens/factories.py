@@ -23,6 +23,7 @@ class VerificationTokenFactory(factory.django.DjangoModelFactory):
         model = VerificationToken
         exclude = ["content_object"]
         abstract = True
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 class UserEmailVerificationTokenFactory(VerificationTokenFactory):

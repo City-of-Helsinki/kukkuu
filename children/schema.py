@@ -1,6 +1,7 @@
 import binascii
+import datetime
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import graphene
 from django.conf import settings
@@ -19,7 +20,7 @@ from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
 from common.schema import set_obj_languages_spoken_at_home
-from common.utils import login_required, update_object
+from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from events.models import Event, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -267,7 +268,7 @@ class ChildNode(DjangoObjectType):
             )
         )
 
-        datetime_max = make_aware(datetime.max, timezone=timezone.utc)
+        datetime_max = make_aware(datetime.datetime.max, timezone=datetime.timezone.utc)
         return sorted(
             (
                 *EnrolmentNode.get_queryset(internal_enrolments, info),
@@ -391,6 +392,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if hasattr(user, "guardian"):
@@ -478,6 +480,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if not hasattr(user, "guardian"):
@@ -521,6 +524,7 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         validate_child_data(kwargs)
         user = info.context.user
@@ -558,6 +562,7 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
 
@@ -586,6 +591,7 @@ class UpdateChildNotesMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child_global_id = kwargs.pop("child_id")
@@ -636,9 +642,10 @@ class Query:
             )
 
         if id_type != "ChildNode":
+            formatted_id_type = "empty" if id_type == "" else id_type
             raise ApiUsageError(
                 "childNotes must be queried using ChildNode type ID, "
-                + f"was queried with {id_type} type ID"
+                + f"was queried with {formatted_id_type} type ID"
             )
         return ChildNotesNode.get_node(info, child_id)
 

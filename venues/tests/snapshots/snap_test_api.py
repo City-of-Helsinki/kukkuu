@@ -55,11 +55,11 @@ snapshots["test_update_venue_project_user 1"] = {
 snapshots["test_venue_query_normal_user 1"] = {
     "data": {
         "venue": {
-            "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+            "accessibilityInfo": """Like lay still bar. From daughter order stay sign discover eight.
 Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
             "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
             "address": """04883 Mary Corner
-Port Mikeview, IN 23956""",
+Port Mikeview, NY 31053""",
             "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
             "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
@@ -68,11 +68,11 @@ Page box child care any concern. Defense level church use.""",
             "project": {"year": 2020},
             "translations": [
                 {
-                    "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+                    "accessibilityInfo": """Like lay still bar. From daughter order stay sign discover eight.
 Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                     "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
                     "address": """04883 Mary Corner
-Port Mikeview, IN 23956""",
+Port Mikeview, NY 31053""",
                     "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                     "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
@@ -102,11 +102,11 @@ snapshots["test_venues_query_normal_user 1"] = {
             "edges": [
                 {
                     "node": {
-                        "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+                        "accessibilityInfo": """Like lay still bar. From daughter order stay sign discover eight.
 Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                         "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
                         "address": """04883 Mary Corner
-Port Mikeview, IN 23956""",
+Port Mikeview, NY 31053""",
                         "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                         "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
@@ -114,11 +114,11 @@ Page box child care any concern. Defense level church use.""",
                         "occurrences": {"edges": []},
                         "translations": [
                             {
-                                "accessibilityInfo": """Sit enter stand himself from daughter order. Sign discover eight.
+                                "accessibilityInfo": """Like lay still bar. From daughter order stay sign discover eight.
 Scientist service wonder everything pay. Moment strong hand push book and interesting sit.""",
                                 "additionalInfo": "Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.",
                                 "address": """04883 Mary Corner
-Port Mikeview, IN 23956""",
+Port Mikeview, NY 31053""",
                                 "arrivalInstructions": "Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.",
                                 "description": """Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
 Page box child care any concern. Defense level church use.""",
