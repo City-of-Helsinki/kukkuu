@@ -1,7 +1,9 @@
 import binascii
 from copy import deepcopy
 from functools import wraps
+from typing import Type
 
+import graphene
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -144,3 +146,13 @@ def strtobool(val):
         return 0
     else:
         raise ValueError("invalid truth value %r" % (val,))
+
+
+def graphene_enum_values(enum_class: Type[graphene.Enum]) -> list:
+    """
+    Get all values of an enumeration that is derived from graphene.Enum.
+
+    :param enum_class: The enumeration class, not an instance, but the class.
+    :return: A list of all values of the enumeration.
+    """
+    return list(enum_class._meta.enum._value2member_map_.keys())
