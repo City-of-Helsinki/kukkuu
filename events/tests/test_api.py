@@ -5,6 +5,7 @@ from typing import Dict
 import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import activate
@@ -84,12 +85,12 @@ from kukkuu.consts import (
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
-from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist, QueryTooDeepError
-from kukkuu.schema import schema
-from kukkuu.views import DepthAnalysisBackend
+from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
+from kukkuu.views import SentryGraphQLView
 from projects.factories import ProjectFactory
 from projects.models import Project
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from users.factories import GuardianFactory, UserFactory
 from venues.factories import VenueFactory
 
 
@@ -917,9 +918,9 @@ def test_enrol_limit_reached(
         enrolled_amount + 1,
         time=timezone.now(),
         event__published_at=timezone.now(),
-        event__ticket_system=Event.TICKETMASTER
-        if use_ticket_system_passwords
-        else Event.INTERNAL,
+        event__ticket_system=(
+            Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
+        ),
     )
     for i in range(enrolled_amount):
         # Previous enrolments have been with TicketSystemPasswords
@@ -1450,30 +1451,44 @@ def test_child_enrol_occurence_from_different_project(
     assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
 
 
-def test_api_query_depth(snapshot, guardian_api_client, event):
-    # Depth 6
+@pytest.mark.parametrize(
+    "max_query_depth,expected_error_message",
+    [
+        (3, "'Events' exceeds maximum operation depth of 3."),
+        (4, None),
+    ],
+)
+def test_api_query_depth(settings, event, max_query_depth, expected_error_message):
+    settings.KUKKUU_QUERY_MAX_DEPTH = max_query_depth
+    user = UserFactory(guardian=GuardianFactory())
+    request = RequestFactory().post("/graphql")
+    request.user = user
+
     query = """
     query Events {
       events {
         edges {
           node {
-            project{
-              events{
-                name
-              }
+            project {
+              name
             }
           }
         }
       }
     }
     """
-    backend = DepthAnalysisBackend(max_depth=5)
-    with pytest.raises(QueryTooDeepError):
-        backend.document_from_string(schema=schema, document_string=query)
 
-    backend = DepthAnalysisBackend(max_depth=6)
-    document = backend.document_from_string(schema=schema, document_string=query)
-    assert document is not None
+    view = SentryGraphQLView()
+    result = view.execute_graphql_request(
+        request=request,
+        data=None,
+        variables=None,
+        operation_name="Events",
+        query=query,
+    )
+
+    assert (result.errors is None) == (expected_error_message is None)
+    assert str(expected_error_message) in str(result.errors)
 
 
 @pytest.mark.parametrize("expected_attended", [True, None])
@@ -1670,19 +1685,21 @@ def test_events_and_event_groups_query_upcoming_filter(
         time=not_visible,
         event__name="Not visible",
         event__published_at=not_visible,
-        event__event_group=EventGroupFactory(
-            name="Not visible", published_at=not_visible
-        )
-        if has_event_group
-        else None,
+        event__event_group=(
+            EventGroupFactory(name="Not visible", published_at=not_visible)
+            if has_event_group
+            else None
+        ),
     )
     OccurrenceFactory.create(
         time=future,
         event__name="In the future",
         event__published_at=now(),
-        event__event_group=EventGroupFactory(name="In the future", published_at=now())
-        if has_event_group
-        else None,
+        event__event_group=(
+            EventGroupFactory(name="In the future", published_at=now())
+            if has_event_group
+            else None
+        ),
     )
 
     executed = guardian_api_client.execute(

@@ -79,10 +79,6 @@ class IneligibleOccurrenceEnrolment(KukkuuGraphQLError):
     """Ineligible to enrol event"""
 
 
-class QueryTooDeepError(KukkuuGraphQLError):
-    """Query depth exceeded settings.KUKKUU_QUERY_MAX_DEPTH"""
-
-
 class InvalidEmailFormatError(KukkuuGraphQLError):
     """Invalid email format"""
 

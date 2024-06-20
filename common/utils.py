@@ -1,12 +1,14 @@
 import binascii
 from copy import deepcopy
 from functools import wraps
+from typing import Type
 
+import graphene
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import Node
-from graphql.execution.base import ResolveInfo
+from graphql.type import GraphQLResolveInfo
 from graphql_relay import from_global_id, to_global_id
 
 from kukkuu import __version__
@@ -83,7 +85,7 @@ def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
 def context(f):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            info = next(arg for arg in args if isinstance(arg, ResolveInfo))
+            info = next(arg for arg in args if isinstance(arg, GraphQLResolveInfo))
             return func(info.context, *args, **kwargs)
 
         return wrapper
@@ -144,3 +146,13 @@ def strtobool(val):
         return 0
     else:
         raise ValueError("invalid truth value %r" % (val,))
+
+
+def graphene_enum_values(enum_class: Type[graphene.Enum]) -> list:
+    """
+    Get all values of an enumeration that is derived from graphene.Enum.
+
+    :param enum_class: The enumeration class, not an instance, but the class.
+    :return: A list of all values of the enumeration.
+    """
+    return list(enum_class._meta.enum._value2member_map_.keys())
