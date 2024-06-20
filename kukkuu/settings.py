@@ -7,6 +7,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
+
 checkout_dir = environ.Path(__file__) - 2
 assert os.path.exists(checkout_dir("manage.py"))
 
@@ -44,10 +46,13 @@ env = environ.Env(
     SENTRY_ENVIRONMENT=(str, ""),
     CORS_ORIGIN_WHITELIST=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
-    TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, "kukkuu"),
-    TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, True),
+    TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
+    TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
     TOKEN_AUTH_ACCEPTED_AUDIENCE=(list, ["https://api.hel.fi/auth/kukkuu"]),
-    TOKEN_AUTH_AUTHSERVER_URL=(list, ["https://tunnistamo.test.hel.ninja/openid"]),
+    TOKEN_AUTH_AUTHSERVER_URL=(
+        list,
+        ["https://tunnistus.test.hel.ninja/auth/realms/helsinkitunnistus"],
+    ),
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, True),
     DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
@@ -71,18 +76,13 @@ env = environ.Env(
     VERIFICATION_TOKEN_LENGTH=(int, 8),
     SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES=(int, 30 * 24 * 60),  # 30 days
     SUBSCRIPTIONS_AUTH_TOKEN_LENGTH=(int, 16),
-    # NOTE: TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX sets a prefix
-    # for `GDPR_API_QUERY_SCOPE` and `GDPR_API_DELETE_SCOPE`.
-    GDPR_API_QUERY_SCOPE=(str, "kukkuu.gdprquery"),
-    GDPR_API_DELETE_SCOPE=(str, "kukkuu.gdprdelete"),
-    GDPR_API_AUTHORIZATION_FIELD=(str, "https://api.hel.fi/auth"),
-    # NOTE: For a Keycloak, the following GDPR variables are needed
-    # TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
-    # TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
-    # GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
-    # GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
-    # GDPR_API_AUTHORIZATION_FIELD=(str, "authorization.permissions.scopes"),
+    GDPR_API_QUERY_SCOPE=(str, "gdprquery"),
+    GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
+    GDPR_API_AUTHORIZATION_FIELD=(str, "authorization.permissions.scopes"),
     HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED=(bool, False),
+    TOKEN_AUTH_BROWSER_TEST_JWT_256BIT_SIGN_SECRET=(str, None),
+    TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER=(list, None),
+    TOKEN_AUTH_BROWSER_TEST_ENABLED=(bool, False),
 )
 
 if os.path.exists(env_file):
@@ -275,6 +275,30 @@ OIDC_API_TOKEN_AUTH = {
 }
 
 OIDC_AUTH = {"OIDC_LEEWAY": 60 * 60}
+
+OIDC_BROWSER_TEST_API_TOKEN_AUTH = {
+    "ENABLED": env.bool("TOKEN_AUTH_BROWSER_TEST_ENABLED"),
+    "JWT_SIGN_SECRET": env.str("TOKEN_AUTH_BROWSER_TEST_JWT_256BIT_SIGN_SECRET"),
+    "ISSUER": env.list("TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER"),
+    "AUDIENCE": env.list("TOKEN_AUTH_ACCEPTED_AUDIENCE"),
+    "API_SCOPE_PREFIX": env.str("TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX"),
+    "REQUIRE_API_SCOPE_FOR_AUTHENTICATION": env.bool("TOKEN_AUTH_REQUIRE_SCOPE_PREFIX"),
+    "API_AUTHORIZATION_FIELD": env.str("GDPR_API_AUTHORIZATION_FIELD"),
+}
+
+# Ensure that the browser test JWT authentication is configured properly.
+if OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]:
+    if not OIDC_BROWSER_TEST_API_TOKEN_AUTH["ISSUER"]:
+        raise ImproperlyConfigured(
+            "API token authentication is enabled, but no issuer is configured. "
+            "Set OIDC_BROWSER_TEST_API_TOKEN_AUTH['ISSUER']."
+        )
+    if not is_valid_256_bit_key(OIDC_BROWSER_TEST_API_TOKEN_AUTH["JWT_SIGN_SECRET"]):
+        raise ImproperlyConfigured(
+            "JWT secret key for BrowserTestAwareJWTAuthentication must be 256-bits. "
+            "Set OIDC_BROWSER_TEST_API_TOKEN_AUTH['JWT_SIGN_SECRET']."
+        )
+
 
 SITE_ID = 1
 
