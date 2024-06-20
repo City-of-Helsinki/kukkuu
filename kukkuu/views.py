@@ -1,8 +1,11 @@
+from typing import Optional
+
 import sentry_sdk
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from graphene.validation import depth_limit_validator
 from graphene_file_upload.django import FileUploadGraphQLView
+from graphql import ExecutionResult
 from helusers.oidc import AuthenticationError
 
 from kukkuu.consts import (
@@ -126,9 +129,10 @@ class SentryGraphQLView(FileUploadGraphQLView):
 
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
         """Extract any exceptions and send some of them to Sentry"""
-        result = super().execute_graphql_request(request, data, query, *args, **kwargs)
-        # If 'invalid' is set, it's a bad request
-        if result and result.errors and not result.invalid:
+        result: Optional[ExecutionResult] = super().execute_graphql_request(
+            request, data, query, *args, **kwargs
+        )
+        if result and result.errors:
             errors_to_sentry = [
                 e
                 for e in result.errors
