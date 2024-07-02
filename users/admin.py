@@ -314,6 +314,7 @@ admin.site.unregister(Group)
 class UserInline(admin.StackedInline):
     model = get_user_model().groups.through
     extra = 0
+    autocomplete_fields = ("user",)
 
 
 @admin.register(Group)
