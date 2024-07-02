@@ -190,6 +190,7 @@ ENABLE_GRAPHIQL = env("ENABLE_GRAPHIQL")
 INSTALLED_APPS = [
     "helusers.apps.HelusersConfig",
     "helusers.apps.HelusersAdminConfig",
+    "kukkuu_helusers_admin",  # must be after `helusers`, since it overrides admin
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
