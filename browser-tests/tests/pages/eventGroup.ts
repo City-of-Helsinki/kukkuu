@@ -31,7 +31,7 @@ export const publish = async (t: TestController) => {
   await t.navigateTo(route());
 
   // checkbox on event group row
-  const selectCheckbox = Selector(".field-name")
+  const selectCheckbox = Selector(".field-name_with_fallback")
     .withText(eventGroup.name)
     .parent("tr")
     .child(".action-checkbox")
@@ -48,7 +48,10 @@ export const publish = async (t: TestController) => {
 };
 
 // fill add form for new event group
-export const fillFormAdd = async (t: TestController, projectName: string) => {
+export const fillFormAdd = async (
+  t: TestController,
+  projectName: string | RegExp
+) => {
   await t
     .click(eventGroupAdd.project)
     .click(getDropdownOption(projectName))
@@ -57,7 +60,10 @@ export const fillFormAdd = async (t: TestController, projectName: string) => {
 };
 
 // create new event group
-export const createNew = async (t: TestController, projectName: string) => {
+export const createNew = async (
+  t: TestController,
+  projectName: string | RegExp
+) => {
   await t.navigateTo(routeAdd());
 
   await fillFormAdd(t, projectName);
