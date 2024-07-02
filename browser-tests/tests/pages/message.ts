@@ -25,7 +25,7 @@ export const routeAdd = () => `${envUrl()}/admin/messaging/message/add/`;
 // fill add form for new message
 export const fillFormAdd = async (
   t: TestController,
-  projectName: string,
+  projectName: string | RegExp,
   eventName: string
 ) => {
   const eventOption = messageAdd.event.find("option");
@@ -49,7 +49,7 @@ export const fillFormAdd = async (
 // create new message
 export const createNewMessage = async (
   t: TestController,
-  projectName: string,
+  projectName: string | RegExp,
   eventName: string
 ) => {
   await t.navigateTo(routeAdd());

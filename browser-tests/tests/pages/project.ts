@@ -22,7 +22,6 @@ export const routeAdd = () => `${envUrl()}/admin/projects/project/add/`;
 
 export const addProject = async (t: TestController) => {
   await t.navigateTo(routeAdd());
-
   await t
     .typeText(projectAdd.name, project.name)
     .typeText(projectAdd.year, year.toString())

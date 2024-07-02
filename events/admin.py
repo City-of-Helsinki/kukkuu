@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import ValidationError
@@ -84,6 +85,7 @@ class EventAdmin(TranslatableAdmin):
         "ticket_system_url",
         "ticket_system_end_time",
     )
+    search_fields = ("translations__name", "event_group__translations__name")
     inlines = [
         OccurrencesInline,
     ]
@@ -237,19 +239,62 @@ class EventGroupForm(TranslatableModelForm):
 @admin.register(EventGroup)
 class EventGroupAdmin(TranslatableAdmin):
     list_display = (
-        "name",
-        "short_description",
+        "id",
+        "name_with_fallback",
+        "short_description_with_fallback",
         "project",
         "get_event_count",
         "published_at",
         "created_at",
         "updated_at",
     )
-
+    list_display_links = ("id", "name_with_fallback")
     readonly_fields = ("published_at",)
     form = EventGroupForm
     actions = ("publish",)
     list_filter = ("project", IsPublishedFilter)
+    search_fields = ("translations__name", "translations__short_description")
+
+    def name_with_fallback(self, obj):
+        """By default the current active language is used,
+        but if the browser is using some other locale than what is set as a default
+        in the Django, then there might be some missing translations,
+        because the Kukkuu and Kukkuu Admin UI has been empty string to
+        untranslated fields. This uses the ddefault language ("fi") in cases
+        when the current active language returns an empty string.
+
+        Args:
+            obj (EventGroup): EventGroup model instance
+
+        Returns:
+            string: name in the current active language or in Finnish as a fallback
+        """
+        return obj.safe_translation_getter(
+            "name", any_language=True
+        ) or obj.safe_translation_getter("name", language_code=settings.LANGUAGE_CODE)
+
+    name_with_fallback.short_description = _("name")
+
+    def short_description_with_fallback(self, obj):
+        """By default the current active language is used,
+        but if the browser is using some other locale than what is set as a default
+        in the Django, then there might be some missing translations,
+        because the Kukkuu and Kukkuu Admin UI has been empty string to
+        untranslated fields. This uses the ddefault language ("fi") in cases
+        when the current active language returns an empty string.
+
+        Args:
+            obj (EventGroup): EventGroup model instance
+
+        Returns:
+            string: short description in the current active language
+                or in Finnish as a fallback
+        """
+        return obj.safe_translation_getter(
+            "short_description", any_language=True
+        ) or obj.safe_translation_getter("name", language_code=settings.LANGUAGE_CODE)
+
+    short_description_with_fallback.short_description = _("short description")
 
     def get_event_count(self, obj):
         return obj.events.count()

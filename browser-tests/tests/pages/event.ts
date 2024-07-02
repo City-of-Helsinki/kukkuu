@@ -32,7 +32,7 @@ export const routeAdd = () => `${envUrl()}/admin/events/event/add`;
 // fill add form for new event
 export const fillFormAdd = async (
   t: TestController,
-  projectName: string,
+  projectName: string | RegExp,
   eventGroupName: string
 ) => {
   const eventGroupOption = eventAdd.eventGroup.find("option");
@@ -56,7 +56,7 @@ export const fillFormAdd = async (
 // create new event
 export const createNew = async (
   t: TestController,
-  projectName: string,
+  projectName: string | RegExp,
   eventGroupName: string
 ) => {
   await t.navigateTo(routeAdd());

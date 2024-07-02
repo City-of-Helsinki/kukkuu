@@ -28,7 +28,7 @@ export const addVenue = async (t: TestController) => {
 
   await t
     .click(venueAdd.project)
-    .click(getDropdownOption(`${project.name} ${project.year}`))
+    .click(getDropdownOption(new RegExp(`${project.year}$`)))
     .typeText(venueAdd.name, venue.name)
     .typeText(venueAdd.description, venue.description)
     .click(venueAdd.saveButton);
