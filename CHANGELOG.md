@@ -1,6 +1,19 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.6.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.5.0...kukkuu-v3.6.0) (2024-07-05)
+
+
+### Features
+
+* Add search and autocomplete fields to user, group and ad groups admin ([e576fd0](https://github.com/City-of-Helsinki/kukkuu/commit/e576fd00ca068b78d4e66d46be5a731b85f53f61))
+* Test auth change notifications command's query count ([14c1c7d](https://github.com/City-of-Helsinki/kukkuu/commit/14c1c7dfc8eb82686bc8ac93cdddf174c908605a))
+
+
+### Bug Fixes
+
+* Improve event and event group admins with safegetters and searches ([022ca8d](https://github.com/City-of-Helsinki/kukkuu/commit/022ca8d14f36551cedd093ffd60f19615725da3f))
+
 ## [3.5.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.4.0...kukkuu-v3.5.0) (2024-06-14)
 
 
