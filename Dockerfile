@@ -30,6 +30,9 @@ ENV DEV_SERVER=1
 
 COPY --chown=default:root . /app/
 
+# fatal: detected dubious ownership in repository at '/app'
+RUN git config --system --add safe.directory /app
+
 USER default
 EXPOSE 8081/tcp
 
@@ -38,6 +41,9 @@ FROM appbase AS production
 # ==============================
 
 COPY --chown=default:root . /app/
+
+# fatal: detected dubious ownership in repository at '/app'
+RUN git config --system --add safe.directory /app
 
 RUN SECRET_KEY="only-used-for-collectstatic" KUKKUU_HASHID_SALT="only-used-for-collectstatic" python manage.py collectstatic
 

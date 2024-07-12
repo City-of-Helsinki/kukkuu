@@ -295,6 +295,13 @@ if OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]:
             "Set OIDC_BROWSER_TEST_API_TOKEN_AUTH['JWT_SIGN_SECRET']."
         )
 
+# The browser tests should be targeted for the users of this group.
+# If the group does not exist, it will be automatically created,
+# when the OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"] is True.
+BROWSER_TEST_PROJECT_YEAR = 1234
+BROWSER_TEST_PROJECT_NAME = "Browser test"
+BROWSER_TEST_GROUP_NAME = BROWSER_TEST_PROJECT_NAME
+BROWSER_TEST_AD_GROUP_NAME = "kukkuu_browser_test"
 
 SITE_ID = 1
 
