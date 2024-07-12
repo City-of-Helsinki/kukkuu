@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.7.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.6.0...kukkuu-v3.7.0) (2024-07-12)
+
+
+### Features
+
+* Authenticate symmetrically signed JWT with shared secret for browser tests ([718d92c](https://github.com/City-of-Helsinki/kukkuu/commit/718d92cbf35dca7ad14c9b8e99c63174b9318bc8))
+
 ## [3.6.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.5.0...kukkuu-v3.6.0) (2024-07-05)
 
 
