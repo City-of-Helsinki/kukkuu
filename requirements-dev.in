@@ -1,12 +1,10 @@
 -c requirements.txt
-black
-flake8
 freezegun
 ipython
-isort
 pytest
 pytest-cov
 pytest-django
+ruff
 snapshottest
 responses
 requests-mock

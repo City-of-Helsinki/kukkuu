@@ -1,8 +1,8 @@
 from datetime import date
 from typing import Union
+from uuid import UUID
 
 import pytest
-from click import UUID
 from django.contrib.auth import get_user_model
 from django.core import mail
 from freezegun import freeze_time

@@ -181,22 +181,32 @@ KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/check-ticket-validity/{refe
 
    - `pip-sync requirements.txt`
 
-## Code format
+## Code linting & formatting
 
-This project uses [`black`](https://github.com/ambv/black) for Python code formatting.
-We follow the basic config, without any modifications. Basic `black` commands:
+This project uses [ruff](https://github.com/astral-sh/ruff) for Python code linting and formatting.
+Ruff is configured through [pyproject.toml](./pyproject.toml).
+Basic `ruff` commands:
 
-- To let `black` do its magic: `black .`
-- To see which files `black` would change: `black --check .`
+- Check linting: `ruff check` or `ruff check --fix` to auto-fix
+- Check & auto-fix linting: `ruff check --fix`
+- Format: `ruff format`
 
-Or you can use [`pre-commit`](https://pre-commit.com/) to quickly format your code before committing.
+Basically:
+ - Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
+ - Ruff formatter (i.e. `ruff format`) does what `black` did before.
 
+Integrations for `ruff` are available for many editors:
+ - https://docs.astral.sh/ruff/integrations/
+
+### Pre-commit hooks
+
+You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
 1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
    - `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
    - `pre-commit install`
 
-After that, formatting hooks will run against all changed files before committing
+After that, linting and formatting hooks will run against all changed files before committing.
 
 ## Issues board
 

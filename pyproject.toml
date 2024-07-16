@@ -1,0 +1,48 @@
+[project]
+requires-python = ">=3.9"
+
+[tool.ruff]
+extend-exclude = ["migrations", "snapshots"]
+
+[tool.ruff.lint]
+# See https://docs.astral.sh/ruff/rules/ for documentation of rules
+extend-select = [
+    "C90",  # Enable mccabe (C90) rules
+    "I",  # Enable isort (I) rules
+    "E",  # Enable pycodestyle error (E) rules
+    "W",  # Enable pycodestyle warning (W) rules
+]
+# Ignore conflicting lint rules:
+# https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+#
+# If left enabled, these could cause conflicts between the linter
+# (i.e. "ruff check --fix") and formatter (i.e. "ruff format").
+ignore = [
+    "E111",  # "Indentation is not a multiple of four"
+    "E114",  # "Indentation is not a multiple of four (comment)"
+    "E117",  # "Over-indented"
+]
+
+[tool.ruff.lint.isort]
+# isort options for ruff:
+# https://docs.astral.sh/ruff/settings/#lintisort
+order-by-type = false  # Don't use type (i.e. case) to sort imports
+
+[tool.ruff.format]
+docstring-code-format = true  # Format code in docstrings
+
+[tool.coverage.run]
+# Coverage run options:
+# https://coverage.readthedocs.io/en/latest/config.html#run
+branch = true
+omit = ["*migrations*", "*site-packages*", "*venv*"]
+
+[tool.pytest.ini_options]
+# pytest-django options:
+# https://pytest-django.readthedocs.io/en/latest/configuring_django.html
+DJANGO_SETTINGS_MODULE = "kukkuu.settings"
+
+# pytest options:
+# https://docs.pytest.org/en/stable/reference/reference.html#configuration-options
+norecursedirs = ["node_modules", ".git", "venv*"]
+doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL", "ALLOW_UNICODE"]
