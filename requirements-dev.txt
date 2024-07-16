@@ -6,8 +6,6 @@
 #
 asttokens==2.4.1
     # via stack-data
-black==24.4.2
-    # via -r requirements-dev.in
 certifi==2024.7.4
     # via
     #   -c requirements.txt
@@ -16,8 +14,6 @@ charset-normalizer==3.3.2
     # via
     #   -c requirements.txt
     #   requests
-click==8.1.7
-    # via black
 coverage[toml]==7.6.0
     # via pytest-cov
 decorator==5.1.1
@@ -26,8 +22,6 @@ executing==2.0.1
     # via stack-data
 fastdiff==0.3.0
     # via snapshottest
-flake8==7.1.0
-    # via -r requirements-dev.in
 freezegun==1.5.1
     # via -r requirements-dev.in
 idna==3.7
@@ -38,29 +32,18 @@ iniconfig==2.0.0
     # via pytest
 ipython==8.26.0
     # via -r requirements-dev.in
-isort==5.13.2
-    # via -r requirements-dev.in
 jedi==0.19.1
     # via ipython
 matplotlib-inline==0.1.7
     # via ipython
-mccabe==0.7.0
-    # via flake8
-mypy-extensions==1.0.0
-    # via black
 packaging==24.1
     # via
     #   -c requirements.txt
-    #   black
     #   pytest
 parso==0.8.4
     # via jedi
-pathspec==0.12.1
-    # via black
 pexpect==4.9.0
     # via ipython
-platformdirs==4.2.2
-    # via black
 pluggy==1.5.0
     # via pytest
 prompt-toolkit==3.0.47
@@ -69,10 +52,6 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pycodestyle==2.12.0
-    # via flake8
-pyflakes==3.2.0
-    # via flake8
 pygments==2.18.0
     # via ipython
 pytest==8.2.2
@@ -100,6 +79,8 @@ requests==2.32.3
 requests-mock==1.12.1
     # via -r requirements-dev.in
 responses==0.25.3
+    # via -r requirements-dev.in
+ruff==0.5.2
     # via -r requirements-dev.in
 six==1.16.0
     # via

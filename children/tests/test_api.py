@@ -135,8 +135,8 @@ def assert_guardian_matches_data(guardian_obj, guardian_data):
 
     if "languagesSpokenAtHome" in guardian_data:
         language_ids = [
-            get_node_id_from_global_id(l, "LanguageNode")
-            for l in guardian_data["languagesSpokenAtHome"]
+            get_node_id_from_global_id(lang, "LanguageNode")
+            for lang in guardian_data["languagesSpokenAtHome"]
         ]
         assert set(guardian_obj.languages_spoken_at_home.all()) == set(
             Language.objects.filter(id__in=language_ids)
