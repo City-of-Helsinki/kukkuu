@@ -166,8 +166,8 @@ class ChildSerializer(serializers.ModelSerializer):
     )
     def get_languages_spoken_at_home(self, obj: Child) -> List[Optional[str]]:
         return [
-            l.alpha_3_code or OTHER_LANGUAGE_API_NAME
-            for l in obj.guardians.all()[0].prefetched_languages_spoken_at_home
+            lang.alpha_3_code or OTHER_LANGUAGE_API_NAME
+            for lang in obj.guardians.all()[0].prefetched_languages_spoken_at_home
         ]
 
     def get_is_obsolete(self, obj: Child) -> bool:

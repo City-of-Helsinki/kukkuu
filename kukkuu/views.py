@@ -125,7 +125,7 @@ class SentryGraphQLView(FileUploadGraphQLView):
                 depth_limit_validator(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
             ],
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
