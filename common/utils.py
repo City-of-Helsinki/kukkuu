@@ -21,7 +21,7 @@ def is_enum_value(value):
     where TestEnum derives from enum.Enum or graphene.Enum.
     """
     # Works both for enum.Enum and graphene.Enum
-    return type(type(value)) == enum.EnumMeta
+    return type(type(value)) is enum.EnumMeta
 
 
 def deepfix_enum_values(data):
