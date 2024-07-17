@@ -78,7 +78,6 @@ def test_child_free_spot_notifications_query(
     snapshot, guardian_api_client, guardian_child
 ):
     FreeSpotNotificationSubscriptionFactory(id=1, child=guardian_child)
-
     executed = guardian_api_client.execute(
         CHILD_FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS_QUERY,
         variables={"id": get_global_id(guardian_child)},

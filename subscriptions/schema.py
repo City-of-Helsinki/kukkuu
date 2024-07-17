@@ -7,7 +7,11 @@ from graphene_django import DjangoObjectType
 
 from children.models import Child
 from children.schema import ChildNode
-from common.utils import get_node_id_from_global_id, login_required
+from common.utils import (
+    get_node_id_from_global_id,
+    login_required,
+    map_enums_to_values_in_kwargs,
+)
 from events.models import Occurrence
 from events.schema import OccurrenceNode
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
@@ -24,16 +28,38 @@ logger = logging.getLogger(__name__)
 
 
 class FreeSpotNotificationSubscriptionNode(DjangoObjectType):
+    occurrence = graphene.Field(OccurrenceNode)  # WORKAROUND: See resolve_occurrence
+
     class Meta:
         model = FreeSpotNotificationSubscription
         interfaces = (relay.Node,)
-        fields = ("id", "created_at", "child", "occurrence")
+        fields = ("id", "created_at", "child")
         filter_fields = ("child_id", "occurrence_id")
 
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
         return super().get_queryset(queryset, info).user_can_view(info.context.user)
+
+    def resolve_occurrence(self, info, **kwargs):
+        """
+        Resolver for the occurrence field, which is a foreign key.
+
+        WORKAROUND: Just putting "occurrence" into Meta.fields breaks
+        occurrence field resolving in test_child_free_spot_notifications_query
+        with graphene-django 3.2.2, but works with graphene-django 3.1.3.
+
+        Probably caused by the changes done after 3.1.3:
+        - "fix: fk resolver permissions leak":
+          - https://github.com/graphql-python/graphene-django/pull/1411
+        - "fix: foreign key nullable and custom resolver":
+          - https://github.com/graphql-python/graphene-django/pull/1446
+
+        Found a similar graphene-django issue #1482:
+        - "Vesion 3.1.5 returns null for an object pointed to non PK in referred table":
+          - https://github.com/graphql-python/graphene-django/issues/1482
+        """
+        return self.occurrence
 
 
 def validate_free_spot_notification_subscription(child, occurrence):
@@ -81,6 +107,7 @@ class SubscribeToFreeSpotNotificationMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @login_required
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child, occurrence = _get_child_and_occurrence(info, **kwargs)
@@ -111,6 +138,7 @@ class UnsubscribeFromFreeSpotNotificationMutation(graphene.relay.ClientIDMutatio
 
     @classmethod
     @login_required
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child, occurrence = _get_child_and_occurrence(info, **kwargs)
@@ -165,6 +193,7 @@ class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
         use_only_when_first_denied=True,
     )
     @login_required
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         user.unsubscribe_all_notification_subscriptions()

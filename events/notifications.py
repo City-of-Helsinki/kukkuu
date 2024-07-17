@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
@@ -34,15 +36,19 @@ notifications.register(
 notifications.register(NotificationType.OCCURRENCE_CANCELLED, _("occurrence cancelled"))
 notifications.register(NotificationType.OCCURRENCE_REMINDER, _("occurrence reminder"))
 
-project = ProjectFactory.build(year=2020)
-event = EventFactory.build(project=project)
-event_group = EventGroupFactory.build(project=project)
-event_with_event_group = EventFactory.build(project=project, event_group=event_group)
-venue = VenueFactory.build(project=project)
-guardian = GuardianFactory.build()
-child = ChildWithGuardianFactory.build(relationship__guardian=guardian, project=project)
-occurrence = OccurrenceFactory.build(event=event, venue=venue)
-enrolment = EnrolmentFactory.build(occurrence=occurrence, child=child)
+project = ProjectFactory.build(pk=uuid4(), year=2020)
+event = EventFactory.build(pk=uuid4(), project=project)
+event_group = EventGroupFactory.build(pk=uuid4(), project=project)
+event_with_event_group = EventFactory.build(
+    pk=uuid4(), project=project, event_group=event_group
+)
+venue = VenueFactory.build(pk=uuid4(), project=project)
+guardian = GuardianFactory.build(pk=uuid4())
+child = ChildWithGuardianFactory.build(
+    pk=uuid4(), relationship__guardian=guardian, project=project
+)
+occurrence = OccurrenceFactory.build(pk=uuid4(), event=event, venue=venue)
+enrolment = EnrolmentFactory.build(pk=uuid4(), occurrence=occurrence, child=child)
 unsubscribe_url = "https://kukkuu-ui-domain/fi/profile/subscriptions?authToken=abc123"
 common_event_context = {
     "event": event,

@@ -339,7 +339,6 @@ def test_has_accepted_communication_for_notification_needs_acceptance(
     assert guardian_with_filtered_communication not in queryset_result
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def obsoleted_guardian_joined_yesterday():
     return GuardianFactory(
@@ -347,7 +346,6 @@ def obsoleted_guardian_joined_yesterday():
     )
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def guardian_joined_yesterday():
     return GuardianFactory(
@@ -355,7 +353,6 @@ def guardian_joined_yesterday():
     )
 
 
-@pytest.mark.django_db
 @pytest.fixture
 def guardian_joined_today():
     return GuardianFactory(user__date_joined=timezone.now(), user__is_obsolete=False)

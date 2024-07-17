@@ -1,8 +1,7 @@
-Django
+Django~=4.2
 django-cors-headers
 django-environ
-# when helusers is upgraded, check if the expired token thingy in kukkuu.graphene.JWTMiddleware could be improved (and does it even still work)
-django-helusers==0.11.0
+django-helusers
 django-ilmoitin
 django-parler
 django-cleanup
@@ -15,6 +14,7 @@ psycopg2
 sentry-sdk
 Pillow
 pycountry
+pytz
 django-guardian
 requests
 djangorestframework

@@ -265,7 +265,7 @@ def test_update_my_email_mutation(snapshot, user_api_client, new_email, is_valid
         assert guardian.email == new_email
     elif new_email is None:
         assert len(executed["errors"]) == 1
-        assert 'Variable "$input" got invalid value' in executed["errors"][0]["message"]
+        assert "Variable '$input' got invalid value" in executed["errors"][0]["message"]
     else:
         assert_match_error_code(executed, INVALID_EMAIL_FORMAT_ERROR)
         assert guardian.email == initial_email

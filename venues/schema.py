@@ -12,6 +12,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 from common.utils import (
     get_obj_if_user_can_administer,
     login_required,
+    map_enums_to_values_in_kwargs,
     project_user_required,
     update_object_with_translations,
 )
@@ -110,6 +111,7 @@ class AddVenueMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         kwargs["project_id"] = get_obj_if_user_can_administer(
             info, kwargs["project_id"], Project
@@ -134,6 +136,7 @@ class UpdateVenueMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         project_global_id = kwargs.pop("project_id", None)
         if project_global_id:
@@ -157,6 +160,7 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
+    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         venue = get_obj_if_user_can_administer(info, kwargs["id"], Venue)
         log_text = f"user {info.context.user.uuid} deleted venue {venue}"

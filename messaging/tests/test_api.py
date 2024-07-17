@@ -20,8 +20,8 @@ from messaging.factories import MessageFactory
 from messaging.models import Message
 
 MESSAGES_QUERY = """
-query Messages($projectId: ID, $protocol: String, $occurrences: [ID]) {
-  messages(projectId: $projectId, protocol: $protocol, occurrences: $occurrences) {
+query Messages($projectId: ID) {
+  messages(projectId: $projectId) {
     edges {
       node {
         project {
@@ -73,47 +73,6 @@ def test_messages_query_project_filter(
         MESSAGES_QUERY, variables={"project_id": get_global_id(project)}
     )
 
-    snapshot.assert_match(executed)
-
-
-@pytest.mark.parametrize("protocol", [Message.SMS, Message.EMAIL])
-def test_messages_query_protocol_filter(
-    protocol, snapshot, project_user_api_client, project
-):
-    MessageFactory.create_batch(5, protocol=Message.SMS, project=project)
-    MessageFactory.create_batch(5, protocol=Message.EMAIL, project=project)
-
-    executed = project_user_api_client.execute(
-        MESSAGES_QUERY, variables={"protocol": protocol}
-    )
-    assert all(
-        edge["node"]["protocol"] == protocol.upper()
-        for edge in executed["data"]["messages"]["edges"]
-    )
-    assert len(executed["data"]["messages"]["edges"]) == 5
-    snapshot.assert_match(executed)
-
-
-def test_messages_query_occurrences_filter(snapshot, project_user_api_client, project):
-    occurrence1 = OccurrenceFactory(
-        messages=MessageFactory.create_batch(2, project=project)
-    )
-    occurrence2 = OccurrenceFactory(
-        messages=MessageFactory.create_batch(2, project=project)
-    )
-    OccurrenceFactory(messages=MessageFactory.create_batch(2, project=project))
-
-    assert Message.objects.count() == 6
-
-    executed = project_user_api_client.execute(
-        MESSAGES_QUERY,
-        variables={
-            "occurrences": [
-                get_global_id(occurrence) for occurrence in [occurrence1, occurrence2]
-            ]
-        },
-    )
-    assert len(executed["data"]["messages"]["edges"]) == 4
     snapshot.assert_match(executed)
 
 

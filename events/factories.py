@@ -5,6 +5,7 @@ import pytz
 from django.utils import timezone
 
 from children.factories import ChildFactory
+from common.mixins import SaveAfterPostGenerationMixin
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from projects.models import Project
 from venues.factories import VenueFactory
@@ -19,6 +20,7 @@ class EventGroupFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = EventGroup
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 class EventFactory(factory.django.DjangoModelFactory):
@@ -37,6 +39,7 @@ class EventFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Event
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 def get_external_ticket_system():
@@ -60,7 +63,9 @@ class LippupisteEventFactory(RandomExternalTicketSystemEventFactory):
     ticket_system = Event.LIPPUPISTE
 
 
-class OccurrenceFactory(factory.django.DjangoModelFactory):
+class OccurrenceFactory(
+    SaveAfterPostGenerationMixin, factory.django.DjangoModelFactory
+):
     time = factory.Faker("date_time", tzinfo=pytz.timezone("Europe/Helsinki"))
     event = factory.SubFactory(EventFactory)
     venue = factory.SubFactory(VenueFactory)
@@ -83,6 +88,7 @@ class EnrolmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Enrolment
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
 class TicketSystemPasswordFactory(factory.django.DjangoModelFactory):
@@ -92,3 +98,4 @@ class TicketSystemPasswordFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = TicketSystemPassword
+        skip_postgeneration_save = True  # Not needed after factory v4.0.0

@@ -39,7 +39,7 @@ snapshots["test_feedback_notification 1"] = [
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
     """kukkuu@example.com|['jennifer00@example.com']|Feedback FI|
-        Event FI: Difficult special respond.
+        Event FI: Special respond positive cold.
         Guardian FI: (30, 15) I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-11 23:30:00+00:00
         Child: Jason Williams (2021)
@@ -47,18 +47,18 @@ snapshots["test_feedback_notification 1"] = [
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
     """kukkuu@example.com|['aaronlee@example.org']|Feedback FI|
-        Event FI: History ahead well herself consider fight.
+        Event FI: Bar wish find system woman why. Whose age feeling speech.
         Guardian FI: (135, None) I Should Receive A Notification (aaronlee@example.org)
         Occurrence: 2020-12-11 21:45:00+00:00
         Child: Lindsey Baker (2022)
         Enrolment: 2020-12-11 21:45:00+00:00
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
-    """kukkuu@example.com|['christine87@example.com']|Feedback FI|
-        Event FI: Sort clearly happy peace really brother.
-        Guardian FI: (10080, 15) I Should Receive A Notification (christine87@example.com)
+    """kukkuu@example.com|['dennis27@example.net']|Feedback FI|
+        Event FI: Other poor specific carry owner sense other.
+        Guardian FI: (10080, 15) I Should Receive A Notification (dennis27@example.net)
         Occurrence: 2020-12-05 00:00:00+00:00
-        Child: Dana Smith (2023)
+        Child: Alexa Mcdonald (2018)
         Enrolment: 2020-12-05 00:00:00+00:00
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
@@ -96,7 +96,7 @@ snapshots["test_feedback_notification_instance_checks[True] 1"] = [
 
 snapshots["test_occurrence_cancelled_notification[False] 1"] = [
     """kukkuu@example.com|['michellewalker@example.net']|Occurrence cancelled FI|
-        Event FI: Our very television beat at success decade.
+        Event FI: Decade either enter everything.
         Guardian FI: I Should Receive A Notification Valdez (michellewalker@example.net)
         Occurrence: 2020-12-12 01:00:00+00:00
         Child: Richard Hayes (2019)
@@ -106,7 +106,7 @@ snapshots["test_occurrence_cancelled_notification[False] 1"] = [
 
 snapshots["test_occurrence_cancelled_notification[True] 1"] = [
     """kukkuu@example.com|['michellewalker@example.net']|Occurrence cancelled FI|
-        Event FI: Our very television beat at success decade.
+        Event FI: Decade either enter everything.
         Guardian FI: I Should Receive A Notification Valdez (michellewalker@example.net)
         Occurrence: 2020-12-12 01:00:00+00:00
         Child: Richard Hayes (2019)
@@ -148,7 +148,7 @@ snapshots["test_occurrence_reminder_notification[None] 1"] = [
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
     """kukkuu@example.com|['jennifer00@example.com']|Occurrence reminder FI|
-        Event FI: Difficult special respond.
+        Event FI: Special respond positive cold.
         Guardian FI: I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-13 00:00:00+00:00
         Child: Jason Williams (2021)
@@ -169,7 +169,7 @@ snapshots[
         Unsubscribe: http://localhost:3000/fi/profile/subscriptions?authToken=a1b2c3d4e5f6g7h8
         Obsoleted: False""",
     """kukkuu@example.com|['jennifer00@example.com']|Occurrence reminder FI|
-        Event FI: Difficult special respond.
+        Event FI: Special respond positive cold.
         Guardian FI: I Should Receive A Notification (jennifer00@example.com)
         Occurrence: 2020-12-13 00:00:00+00:00
         Child: Jason Williams (2021)

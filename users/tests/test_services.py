@@ -27,16 +27,20 @@ def guardian_with_children_and_enrolments():
     event4 = EventFactory(name="Event 4 for child2")
 
     occurrence1 = OccurrenceFactory(
-        event=event1, time=timezone.datetime(year=2024, month=1, day=1)
+        event=event1,
+        time=timezone.make_aware(timezone.datetime(year=2024, month=1, day=1)),
     )
     occurrence2 = OccurrenceFactory(
-        event=event2, time=timezone.datetime(year=2023, month=12, day=24)
+        event=event2,
+        time=timezone.make_aware(timezone.datetime(year=2023, month=12, day=24)),
     )
     occurrence3 = OccurrenceFactory(
-        event=event3, time=timezone.datetime(year=2023, month=6, day=16)
+        event=event3,
+        time=timezone.make_aware(timezone.datetime(year=2023, month=6, day=16)),
     )
     occurrence4 = OccurrenceFactory(
-        event=event4, time=timezone.datetime(year=2023, month=12, day=6)
+        event=event4,
+        time=timezone.make_aware(timezone.datetime(year=2023, month=12, day=6)),
     )
 
     EnrolmentFactory(child=child1, occurrence=occurrence1)

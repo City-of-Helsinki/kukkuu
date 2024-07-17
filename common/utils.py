@@ -1,4 +1,5 @@
 import binascii
+import enum
 from copy import deepcopy
 from functools import wraps
 
@@ -6,12 +7,47 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import Node
-from graphql.execution.base import ResolveInfo
+from graphql.type import GraphQLResolveInfo
 from graphql_relay import from_global_id, to_global_id
 
 from kukkuu import __version__
 from kukkuu.exceptions import DataValidationError, ObjectDoesNotExistError
 from kukkuu.settings import REVISION
+
+
+def is_enum_value(value):
+    """
+    Check if a value is an enum value, e.g. TestEnum.FI
+    where TestEnum derives from enum.Enum or graphene.Enum.
+    """
+    # Works both for enum.Enum and graphene.Enum
+    return type(type(value)) == enum.EnumMeta
+
+
+def deepfix_enum_values(data):
+    """
+    Fix enum values recursively in/out of dictionaries, lists, sets, and tuples.
+    """
+    if isinstance(data, dict):
+        return {deepfix_enum_values(k): deepfix_enum_values(v) for k, v in data.items()}
+    elif isinstance(data, (list, set, tuple)):
+        return type(data)(deepfix_enum_values(v) for v in data)
+    elif is_enum_value(data):
+        return data.value
+    else:
+        return data
+
+
+def map_enums_to_values_in_kwargs(method):
+    """
+    Decorator that maps enums to their values in keyword arguments.
+    """
+
+    def wrapper(*args, **kwargs):
+        fixed_kwargs = deepfix_enum_values(kwargs)
+        return method(*args, **fixed_kwargs)
+
+    return wrapper
 
 
 def update_object(obj, data):
@@ -38,7 +74,7 @@ def get_api_version():
 
 
 def get_global_id(obj):
-    return to_global_id(f"{obj.__class__.__name__}Node", obj.pk)
+    return to_global_id(f"{obj.__class__.__name__}Node", str(obj.pk))
 
 
 def get_node_id_from_global_id(global_id, expected_node_name):
@@ -83,7 +119,7 @@ def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
 def context(f):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            info = next(arg for arg in args if isinstance(arg, ResolveInfo))
+            info = next(arg for arg in args if isinstance(arg, GraphQLResolveInfo))
             return func(info.context, *args, **kwargs)
 
         return wrapper
