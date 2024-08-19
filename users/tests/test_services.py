@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pytest
 from django.utils import timezone
 
@@ -9,7 +7,7 @@ from users.factories import GuardianFactory
 from users.services import AuthServiceNotificationService
 
 
-def get_local_timestamp(dt: datetime):
+def get_local_timestamp(dt: timezone.datetime):
     dt = dt.astimezone(timezone.get_current_timezone())
     return f"{dt.day}.{dt.month}.{dt.year} {dt.hour:02d}:{dt.minute:02d}"
 
