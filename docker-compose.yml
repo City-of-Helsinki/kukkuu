@@ -1,4 +1,3 @@
-version: '3.7'
 services:
     postgres:
         image: postgres:12
@@ -10,7 +9,7 @@ services:
         ports:
             - 5434:5432
         volumes:
-          - pgdata:/var/lib/postgresql/data
+          - pgdata:/var/lib/postgresql@12/data
         container_name: kukkuu-db
 
     django:
