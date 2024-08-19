@@ -1,7 +1,6 @@
 import binascii
-import datetime
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 import graphene
 from django.conf import settings
@@ -9,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import F, Q
-from django.utils import timezone
+from django.utils import timezone as django_utils_timezone
 from django.utils.timezone import localdate, make_aware
 from django_ilmoitin.utils import send_notification
 from graphene import relay
@@ -170,7 +169,7 @@ class ChildNode(DjangoObjectType):
         ).published()
 
         occurrences = self.occurrences.with_end_time()
-        now = timezone.now()
+        now = django_utils_timezone.now()
         past_enough = now - timedelta(
             minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY
         )
@@ -268,7 +267,7 @@ class ChildNode(DjangoObjectType):
             )
         )
 
-        datetime_max = make_aware(datetime.datetime.max, timezone=datetime.timezone.utc)
+        datetime_max = make_aware(datetime.max, timezone=timezone.utc)
         return sorted(
             (
                 *EnrolmentNode.get_queryset(internal_enrolments, info),
