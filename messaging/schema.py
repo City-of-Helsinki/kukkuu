@@ -1,6 +1,7 @@
 import logging
 from copy import deepcopy
 
+import django_filters
 import graphene
 from django.apps import apps
 from django.db import transaction
@@ -10,6 +11,7 @@ from graphene_django.filter import DjangoFilterConnectionField
 
 from common.schema import LanguageEnum
 from common.utils import (
+    get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     map_enums_to_values_in_kwargs,
     project_user_required,
@@ -46,6 +48,66 @@ ProtocolType = graphene.Enum(
 )
 
 
+class MessageFilter(django_filters.FilterSet):
+    occurrences = django_filters.ModelMultipleChoiceFilter(
+        queryset=Occurrence.objects.all(),
+        conjoined=False,
+        method="filter_occurrences",
+        label="Occurrences",
+        help_text="Filter by multiple occurrences.",
+    )
+
+    def __init__(self, data=None, *args, **kwargs):
+        """
+        Initializes the MessageFilter instance and processes occurrence global IDs.
+
+        Args:
+            data (dict, optional): The filter data.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        if data:
+            data = self._fix_occurrences_global_ids(data)
+        super().__init__(data, *args, **kwargs)
+
+    class Meta:
+        model = Message
+        fields = ["project_id", "protocol", "occurrences"]
+
+    def filter_occurrences(self, qs, name, value):
+        if value:
+            return qs.filter(occurrences__in=value)
+        return qs
+
+    def _fix_occurrences_global_ids(self, data):
+        """
+        Extracts and converts occurrence global IDs to their corresponding node IDs.
+
+        Args:
+            data (dict): The filter data containing the 'occurrences' key.
+
+        Returns:
+            dict: The updated filter data with 'occurrences'
+            replaced by a list of global node IDs.
+        """
+        value = data.pop("occurrences", None)
+        occurrences_node_ids = None
+        occurrences_ids = None
+
+        if isinstance(value, (list, tuple)):
+            occurrences_node_ids = value
+        elif isinstance(value, str):
+            occurrences_node_ids = [value]
+
+        if occurrences_node_ids:
+            occurrences_ids = [
+                get_node_id_from_global_id(node_id, "OccurrenceNode")
+                for node_id in occurrences_node_ids
+            ]
+
+        return {**data, "occurrences": occurrences_ids}
+
+
 class MessageNode(DjangoObjectType):
     subject = graphene.String()
     body_text = graphene.String()
@@ -69,7 +131,7 @@ class MessageNode(DjangoObjectType):
             "recipient_count",
             "translations",
         )
-        filter_fields = ("project_id",)
+        filterset_class = MessageFilter
 
     @classmethod
     @project_user_required

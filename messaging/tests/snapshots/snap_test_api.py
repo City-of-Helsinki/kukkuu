@@ -126,6 +126,83 @@ snapshots["test_messages_query 1"] = {
     }
 }
 
+snapshots["test_messages_query_occurrences_filter 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [
+                                {"node": {"time": "1980-08-23T04:46:09.363315+00:00"}}
+                            ]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Him question stay.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Child care any. Minute defense level church. Alone our very television beat at success.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [
+                                {"node": {"time": "1980-08-23T04:46:09.363315+00:00"}}
+                            ]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Business hot PM.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Focus significant kind. Laugh smile behavior whom gas. Significant minute rest. Special far magazine.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [
+                                {"node": {"time": "2003-01-02T18:10:46.571751+00:00"}}
+                            ]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Attention practice.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Conference carry factor front Mr amount conference thing. Positive cold start rest tonight including believe. Respond range bit college question. Stop treatment suggest. Sometimes growth check court.",
+                        "event": None,
+                        "occurrences": {
+                            "edges": [
+                                {"node": {"time": "2003-01-02T18:10:46.571751+00:00"}}
+                            ]
+                        },
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Past life thus.",
+                    }
+                },
+            ]
+        }
+    }
+}
+
 snapshots["test_messages_query_project_filter 1"] = {
     "data": {
         "messages": {
@@ -143,6 +220,154 @@ snapshots["test_messages_query_project_filter 1"] = {
                         "subject": "Otsikko",
                     }
                 }
+            ]
+        }
+    }
+}
+
+snapshots["test_messages_query_protocol_filter[email] 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Which president smile staff country actually generation. Age member whatever open effort clear. Difficult look can. Care figure mention wrong when lead involve. Event lay yes policy data control as receive.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Partner exist true.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Girl middle same space speak. Person the probably deep center develop character situation. Score think turn argue present.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Decade every town.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Voice radio happen color scene. Create state rock only. Several behavior media career decide season mission TV. Work head table city central deep response. Through resource professional debate produce college able.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Walk fish teach.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Sea something western research. Candidate century network bar hear quite wonder. Up always sport return. Light a point charge stand store. Generation able take food share.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Product issue along.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Site chance of performance. Hand cause receive kitchen middle. Step able last in able local garden. Nearly gun two born land military first.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "EMAIL",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Discussion remain.",
+                    }
+                },
+            ]
+        }
+    }
+}
+
+snapshots["test_messages_query_protocol_filter[sms] 1"] = {
+    "data": {
+        "messages": {
+            "edges": [
+                {
+                    "node": {
+                        "bodyText": "Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Him question stay.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Child care any. Minute defense level church. Alone our very television beat at success.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Business hot PM.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Enter everything history remember stay public high. Exist shoulder write century. Never skill down subject town. According hard enough watch condition like lay.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Detail.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting. Near increase process truth list pressure. Capital city sing himself yard stuff.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Their tell.",
+                    }
+                },
+                {
+                    "node": {
+                        "bodyText": "Base may middle good father boy economy. Fly discussion huge get this success. Science sort already name. Senior number scene today friend maintain marriage.",
+                        "event": None,
+                        "occurrences": {"edges": []},
+                        "project": {"year": 2020},
+                        "protocol": "SMS",
+                        "recipientCount": 0,
+                        "recipientSelection": "ALL",
+                        "sentAt": None,
+                        "subject": "Even perhaps that.",
+                    }
+                },
             ]
         }
     }
