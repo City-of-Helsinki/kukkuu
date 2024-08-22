@@ -232,7 +232,7 @@ class EventGroupForm(TranslatableModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance:
+        if self.instance.pk:
             self.fields["events"].initial = self.instance.events.all()
 
 
