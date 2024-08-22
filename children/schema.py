@@ -21,7 +21,7 @@ from common.schema import (
     DjangoFilterAndOffsetConnectionField,
     set_obj_languages_spoken_at_home,
 )
-from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from common.utils import login_required, safe_test_and_get_enum_value, update_object
 from events.models import Event, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -393,7 +393,6 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if hasattr(user, "guardian"):
@@ -423,7 +422,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
             first_name=guardian_data["first_name"],
             last_name=guardian_data["last_name"],
             phone_number=guardian_data.get("phone_number", ""),
-            language=guardian_data["language"],
+            language=safe_test_and_get_enum_value(guardian_data["language"]),
             email=guardian_data["email"],
             has_accepted_communication=guardian_data.get(
                 "has_accepted_communication", False
@@ -443,7 +442,9 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             child = Child.objects.create(**child_data)
             Relationship.objects.create(
-                type=relationship_data.get("type"), child=child, guardian=guardian
+                type=safe_test_and_get_enum_value(relationship_data.get("type")),
+                child=child,
+                guardian=guardian,
             )
             set_obj_languages_spoken_at_home(info, child, languages)
 
@@ -481,7 +482,6 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         if not hasattr(user, "guardian"):
@@ -503,7 +503,9 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
 
         child = Child.objects.create(**kwargs)
         Relationship.objects.create(
-            type=relationship_data.get("type"), child=child, guardian=user.guardian
+            type=safe_test_and_get_enum_value(relationship_data.get("type")),
+            child=child,
+            guardian=user.guardian,
         )
         set_obj_languages_spoken_at_home(info, child, languages)
 
@@ -525,7 +527,6 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         validate_child_data(kwargs)
         user = info.context.user
@@ -563,7 +564,6 @@ class DeleteChildMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
 
@@ -592,7 +592,6 @@ class UpdateChildNotesMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child_global_id = kwargs.pop("child_id")

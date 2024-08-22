@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -122,7 +123,12 @@ def _set_group_project_permissions(project, group):
 def create_browser_test_resources(sender, **kwargs):
     """Creates Group, ADGroup, and Project resources for browser tests."""
 
-    if not settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]:
+    if (
+        # Don't create browser test resources when running pytest
+        # to make pytest test runs more predictable
+        "pytest" in sys.modules
+        or not settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]
+    ):
         return
 
     group = _get_or_create_browser_test_group()

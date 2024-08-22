@@ -9,105 +9,74 @@ snapshots = Snapshot()
 
 snapshots['test_add_message[None] 1'] = {
     'data': {
-        'addMessage': {
-            'message': {
-                'event': None,
-                'occurrences': {
-                    'edges': [
-                    ]
-                },
-                'project': {
-                    'year': 2020
-                },
-                'protocol': 'EMAIL',
-                'recipientCount': 0,
-                'recipientSelection': 'ALL',
-                'sentAt': None,
-                'translations': [
-                    {
-                        'bodyText': 'Testiteksti',
-                        'languageCode': 'FI',
-                        'subject': 'Testiotsikko'
-                    }
-                ]
-            }
+        'addMessage': None
+    },
+    'errors': [
+        {
+            'extensions': {
+                'code': 'GENERAL_ERROR'
+            },
+            'locations': [
+                {
+                    'column': 3,
+                    'line': 3
+                }
+            ],
+            'message': '''value too long for type character varying(16)
+''',
+            'path': [
+                'addMessage'
+            ]
         }
-    }
+    ]
 }
 
 snapshots['test_add_message[event] 1'] = {
     'data': {
-        'addMessage': {
-            'message': {
-                'event': {
-                    'name': 'Poor lawyer treat free heart significant.'
-                },
-                'occurrences': {
-                    'edges': [
-                    ]
-                },
-                'project': {
-                    'year': 2020
-                },
-                'protocol': 'EMAIL',
-                'recipientCount': 0,
-                'recipientSelection': 'ALL',
-                'sentAt': None,
-                'translations': [
-                    {
-                        'bodyText': 'Testiteksti',
-                        'languageCode': 'FI',
-                        'subject': 'Testiotsikko'
-                    }
-                ]
-            }
+        'addMessage': None
+    },
+    'errors': [
+        {
+            'extensions': {
+                'code': 'GENERAL_ERROR'
+            },
+            'locations': [
+                {
+                    'column': 3,
+                    'line': 3
+                }
+            ],
+            'message': '''value too long for type character varying(16)
+''',
+            'path': [
+                'addMessage'
+            ]
         }
-    }
+    ]
 }
 
 snapshots['test_add_message[occurrences] 1'] = {
     'data': {
-        'addMessage': {
-            'message': {
-                'event': {
-                    'name': 'Poor lawyer treat free heart significant.'
-                },
-                'occurrences': {
-                    'edges': [
-                        {
-                            'node': {
-                                'time': '1970-12-29T14:27:50.629900+00:00'
-                            }
-                        },
-                        {
-                            'node': {
-                                'time': '1977-02-25T23:14:59.889967+00:00'
-                            }
-                        },
-                        {
-                            'node': {
-                                'time': '1997-09-11T01:32:17.610651+00:00'
-                            }
-                        }
-                    ]
-                },
-                'project': {
-                    'year': 2020
-                },
-                'protocol': 'EMAIL',
-                'recipientCount': 0,
-                'recipientSelection': 'ALL',
-                'sentAt': None,
-                'translations': [
-                    {
-                        'bodyText': 'Testiteksti',
-                        'languageCode': 'FI',
-                        'subject': 'Testiotsikko'
-                    }
-                ]
-            }
+        'addMessage': None
+    },
+    'errors': [
+        {
+            'extensions': {
+                'code': 'GENERAL_ERROR'
+            },
+            'locations': [
+                {
+                    'column': 3,
+                    'line': 3
+                }
+            ],
+            'message': '''value too long for type character varying(16)
+''',
+            'path': [
+                'addMessage'
+            ]
         }
-    }
+    ]
 }
 
 snapshots['test_cannot_do_message_query_unauthorized_wrong_project 1'] = {

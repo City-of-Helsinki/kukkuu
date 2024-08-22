@@ -12,7 +12,6 @@ from common.schema import DjangoFilterAndOffsetConnectionField, LanguageEnum
 from common.utils import (
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
-    map_enums_to_values_in_kwargs,
     project_user_required,
     update_object_with_translations,
 )
@@ -191,7 +190,6 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         send_directly = kwargs.pop("send_directly", False)
         data = deepcopy(kwargs)
@@ -244,7 +242,6 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         data = deepcopy(kwargs)
         message = get_obj_if_user_can_administer(info, data.pop("id"), Message)
@@ -324,7 +321,6 @@ class SendMessageMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @project_user_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         message = get_obj_if_user_can_administer(info, kwargs["id"], Message)
 
@@ -346,7 +342,6 @@ class DeleteMessageMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @project_user_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         message = get_obj_if_user_can_administer(info, kwargs["id"], Message)
         if message.sent_at:

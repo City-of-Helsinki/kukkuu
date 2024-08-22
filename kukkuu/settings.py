@@ -321,6 +321,7 @@ PARLER_ENABLE_CACHING = False
 GRAPHENE = {
     "SCHEMA": "kukkuu.schema.schema",
     "MIDDLEWARE": ["kukkuu.graphene.JWTMiddleware"],
+    "DJANGO_CHOICE_FIELD_ENUM_CONVERT": True,
 }
 
 GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}

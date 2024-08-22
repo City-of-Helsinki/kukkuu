@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.managers import TranslatableQuerySet as ParlerTranslatableQuerySet
 from parler.models import TranslatableModel as ParlerTranslatableModel
 
-from common.utils import map_enums_to_values_in_kwargs
+from common.utils import safe_test_and_get_enum_value
 from kukkuu.exceptions import MissingDefaultTranslationError
 
 
@@ -30,7 +30,6 @@ class UUIDPrimaryKeyModel(models.Model):
 
 class TranslatableQuerySet(ParlerTranslatableQuerySet):
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def create_translatable_object(self, **kwargs):
         translations = kwargs.pop("translations")
         obj = self.create(**kwargs)
@@ -47,13 +46,16 @@ class TranslatableModel(ParlerTranslatableModel):
     @transaction.atomic
     def create_or_update_translations(self, translations):
         if settings.LANGUAGE_CODE not in [
-            translation["language_code"] for translation in translations
+            safe_test_and_get_enum_value(translation["language_code"])
+            for translation in translations
         ]:
             raise MissingDefaultTranslationError("Default translation is missing")
         self.clear_translations()
         for translation in translations:
             translation = deepcopy(translation)
-            language_code = translation.pop("language_code")
+            language_code = safe_test_and_get_enum_value(
+                translation.pop("language_code")
+            )
             if language_code not in settings.PARLER_SUPPORTED_LANGUAGE_CODES:
                 continue
             self.create_translation(language_code=language_code, **translation)
