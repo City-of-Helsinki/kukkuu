@@ -83,6 +83,10 @@ env = environ.Env(
     TOKEN_AUTH_BROWSER_TEST_JWT_256BIT_SIGN_SECRET=(str, None),
     TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER=(list, None),
     TOKEN_AUTH_BROWSER_TEST_ENABLED=(bool, False),
+    BROWSER_TEST_PROJECT_YEAR=(int, 1234),
+    BROWSER_TEST_PROJECT_NAME=(str, "Browser test"),
+    BROWSER_TEST_GROUP_NAME=(str, "Browser test"),
+    BROWSER_TEST_AD_GROUP_NAME=(str, "kukkuu_browser_test"),
 )
 
 if os.path.exists(env_file):
@@ -298,10 +302,12 @@ if OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]:
 # The browser tests should be targeted for the users of this group.
 # If the group does not exist, it will be automatically created,
 # when the OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"] is True.
-BROWSER_TEST_PROJECT_YEAR = 1234
-BROWSER_TEST_PROJECT_NAME = "Browser test"
-BROWSER_TEST_GROUP_NAME = BROWSER_TEST_PROJECT_NAME
-BROWSER_TEST_AD_GROUP_NAME = "kukkuu_browser_test"
+BROWSER_TEST_PROJECT_YEAR = env.int("BROWSER_TEST_PROJECT_YEAR")
+BROWSER_TEST_PROJECT_NAME = env.str("BROWSER_TEST_PROJECT_NAME")
+BROWSER_TEST_GROUP_NAME = env.str("BROWSER_TEST_GROUP_NAME") or env.str(
+    "BROWSER_TEST_PROJECT_NAME"
+)
+BROWSER_TEST_AD_GROUP_NAME = env.str("BROWSER_TEST_AD_GROUP_NAME")
 
 SITE_ID = 1
 
