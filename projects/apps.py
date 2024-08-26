@@ -81,7 +81,7 @@ def _get_or_create_browser_test_project():
         # Project (check for name updates)
         project, _ = Project.objects.get_or_create(
             year=settings.BROWSER_TEST_PROJECT_YEAR,
-            defaults={"translation__name": settings.BROWSER_TEST_PROJECT_NAME},
+            defaults={"name": settings.BROWSER_TEST_PROJECT_NAME},
         )
         logger.info(f"Project '{project}' retrieved or created.")
 
