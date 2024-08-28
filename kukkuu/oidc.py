@@ -72,7 +72,9 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
         The `helusers` always uses a issuer specific `OIDCConfig` that fetches the
         keys from a server (from a path "/.well-known/openid-configuration").
         """
-        logger.debug("Validating a symmetrically signed test JWT", extra=jwt)
+        logger.debug(
+            "Validating a symmetrically signed test JWT", extra={"jwt_str": str(jwt)}
+        )
         try:
             jwt.validate_issuer()
         except ValidationError as e:
@@ -118,9 +120,15 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
         """
         logger.info("Authenticating with a test JWT!")
         self._validate_symmetrically_signed_jwt(jwt)
-        logger.debug("The symmetrically signed JWT was valid.", extra=jwt)
+        logger.debug(
+            "The symmetrically signed JWT was valid.", extra={"jwt_str": str(jwt)}
+        )
         user = get_or_create_user(jwt.claims, oidc=True)
-        logger.debug("The user %s returned from get_or_create_user", user, extra=user)
+        logger.debug(
+            "The user %s returned from get_or_create_user",
+            user,
+            extra={"user_dict": user.__dict__ if user else None},
+        )
         return UserAuthorization(user, jwt.claims)
 
     def authenticate(self, request):
