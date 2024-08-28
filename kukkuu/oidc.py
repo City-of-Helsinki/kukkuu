@@ -91,8 +91,8 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
             )
         except ValidationError as e:
             raise AuthenticationError(str(e)) from e
-        except Exception:
-            raise AuthenticationError("JWT verification failed.")
+        except Exception as e:
+            raise AuthenticationError(f"JWT verification failed: {e}")
 
     def has_auth_token_for_testing(self, request) -> Optional[JWT]:
         """Checks whether the request contains a JWT which is
