@@ -73,7 +73,8 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
         keys from a server (from a path "/.well-known/openid-configuration").
         """
         logger.debug(
-            "Validating a symmetrically signed test JWT", extra={"jwt_str": str(jwt)}
+            "Validating a symmetrically signed test JWT",
+            extra={"jwt_claims": jwt.claims if jwt else None},
         )
         try:
             jwt.validate_issuer()
@@ -121,13 +122,14 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
         logger.info("Authenticating with a test JWT!")
         self._validate_symmetrically_signed_jwt(jwt)
         logger.debug(
-            "The symmetrically signed JWT was valid.", extra={"jwt_str": str(jwt)}
+            "The symmetrically signed JWT was valid.",
+            extra={"jwt_claims": jwt.claims if jwt else None},
         )
         user = get_or_create_user(jwt.claims, oidc=True)
         logger.debug(
             "The user %s returned from get_or_create_user",
             user,
-            extra={"user_dict": user.__dict__ if user else None},
+            extra={"user": getattr(user, "__dict__", str(user))},
         )
         return UserAuthorization(user, jwt.claims)
 
