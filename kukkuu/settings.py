@@ -87,6 +87,7 @@ env = environ.Env(
     BROWSER_TEST_PROJECT_NAME=(str, "Browser test"),
     BROWSER_TEST_GROUP_NAME=(str, "Browser test"),
     BROWSER_TEST_AD_GROUP_NAME=(str, "kukkuu_browser_test"),
+    KUKKUU_DEFAULT_LOGGING_LEVEL=(str, "INFO"),
 )
 
 if os.path.exists(env_file):
@@ -379,7 +380,9 @@ LOGGING = {
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "timestamped_named"}
     },
-    "loggers": {"": {"handlers": ["console"], "level": "INFO"}},
+    "loggers": {
+        "": {"handlers": ["console"], "level": env("KUKKUU_DEFAULT_LOGGING_LEVEL")}
+    },
 }
 
 # GDPR API DOCS - See https://profile-api.dev.hel.ninja/docs/gdpr-api/.
