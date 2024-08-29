@@ -35,6 +35,9 @@ def setup_test_environment(settings):
     settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE = 7
     settings.KUKKUU_DEFAULT_EVENT_DURATION = 120
     settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY = 30
+    settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH = {
+        "ENABLED": False,
+    }
     with translation.override("fi"), freeze_time("2020-12-12"):
         yield
     shutil.rmtree("test_media", ignore_errors=True)

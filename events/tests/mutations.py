@@ -2,6 +2,10 @@ ADD_EVENT_MUTATION = """
 mutation AddEvent($input: AddEventMutationInput!) {
   addEvent(input: $input) {
     event {
+      id
+      eventGroup {
+        id
+      }
       translations{
         languageCode
         name
@@ -43,6 +47,10 @@ UPDATE_EVENT_MUTATION = """
 mutation UpdateEvent($input: UpdateEventMutationInput!) {
   updateEvent(input: $input) {
     event {
+      id
+      eventGroup {
+        id
+      }
       translations{
         name
         shortDescription

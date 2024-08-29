@@ -62,7 +62,7 @@ def test_project_query_unauthenticated(snapshot, api_client, project):
 
 def test_projects_query_normal_user(snapshot, guardian_api_client, project):
     executed = guardian_api_client.execute(PROJECTS_QUERY)
-
+    assert len(executed["data"]["projects"]["edges"]) == 1
     snapshot.assert_match(executed)
 
 
@@ -70,5 +70,4 @@ def test_project_query_normal_user(snapshot, guardian_api_client, project):
     variables = {"id": to_global_id("ProjectNode", project.id)}
 
     executed = guardian_api_client.execute(PROJECT_QUERY, variables=variables)
-
     snapshot.assert_match(executed)

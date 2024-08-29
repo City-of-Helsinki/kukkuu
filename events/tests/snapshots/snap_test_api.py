@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from snapshottest import Snapshot
 
+
 snapshots = Snapshot()
 
 snapshots["test_add_event_group[model_perm] 1"] = {
@@ -56,6 +57,8 @@ snapshots["test_add_event_project_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
+                "eventGroup": {"id": "RXZlbnRHcm91cE5vZGU6MjE="},
+                "id": "RXZlbnROb2RlOjE2NQ==",
                 "image": "",
                 "imageAltText": "Image alt text",
                 "participantsPerInvite": "FAMILY",
@@ -1290,6 +1293,8 @@ snapshots["test_required_translation 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
+                "eventGroup": None,
+                "id": "RXZlbnROb2RlOjI1OA==",
                 "image": "",
                 "imageAltText": "Image alt text",
                 "participantsPerInvite": "FAMILY",
@@ -1386,6 +1391,8 @@ snapshots["test_update_event_project_user 1"] = {
             "event": {
                 "capacityPerOccurrence": 30,
                 "duration": 1000,
+                "eventGroup": {"id": "RXZlbnRHcm91cE5vZGU6MjI="},
+                "id": "RXZlbnROb2RlOjE4Mg==",
                 "image": "http://testserver/media/teacher.jpg",
                 "imageAltText": "Image alt text",
                 "occurrences": {"edges": []},
@@ -1419,6 +1426,8 @@ snapshots["test_update_event_ready_for_event_group_publishing 1"] = {
             "event": {
                 "capacityPerOccurrence": 35,
                 "duration": 181,
+                "eventGroup": {"id": "RXZlbnRHcm91cE5vZGU6MjM="},
+                "id": "RXZlbnROb2RlOjE4Mw==",
                 "image": "http://testserver/media/teacher.jpg",
                 "imageAltText": "",
                 "occurrences": {"edges": []},
