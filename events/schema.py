@@ -853,9 +853,10 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
                 info, project_global_id, Project
             ).pk
 
-        if "event_group_id" in kwargs and kwargs["event_group_id"]:
+        event_group_global_id = kwargs.pop("event_group_id", None)
+        if event_group_global_id:
             kwargs["event_group_id"] = get_obj_if_user_can_administer(
-                info, kwargs["event_group_id"], EventGroup
+                info, event_group_global_id, EventGroup
             ).pk
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)

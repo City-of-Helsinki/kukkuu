@@ -6,9 +6,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots[
-    "test_add_default_languages 1"
-] = """Created special language "Other"
+snapshots["test_add_default_languages 1"] = """Created special language "Other"
 Created Arabic (ara)
 Created Bengali (ben)
 Created German (deu)
@@ -76,9 +74,7 @@ snapshots["test_add_default_languages 2"] = {
     "zho": {"en": "Chinese", "fi": "kiina", "sv": "Kinesiska"},
 }
 
-snapshots[
-    "test_add_languages 1"
-] = """Created Manide (abd)
+snapshots["test_add_languages 1"] = """Created Manide (abd)
 Created Ngelima (agh)
 All done!
 """
@@ -88,9 +84,7 @@ snapshots["test_add_languages 2"] = {
     "agh": {"en": "Ngelima", "fi": "Ngelima", "sv": "Ngelima"},
 }
 
-snapshots[
-    "test_add_languages_and_flush 1"
-] = """Flushed existing languages
+snapshots["test_add_languages_and_flush 1"] = """Flushed existing languages
 Created Manide (abd)
 Created Ngelima (agh)
 All done!
@@ -101,7 +95,5 @@ snapshots["test_add_languages_and_flush 2"] = {
     "agh": {"en": "Ngelima", "fi": "Ngelima", "sv": "Ngelima"},
 }
 
-snapshots[
-    "test_no_arguments 1"
-] = """Nothing to do. Hint: try --help.
+snapshots["test_no_arguments 1"] = """Nothing to do. Hint: try --help.
 """

@@ -6,9 +6,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots[
-    "test_generate_children_event_history_markdown_with_data 1"
-] = """# Jason Berg
+snapshots["test_generate_children_event_history_markdown_with_data 1"] = """# Jason Berg
 
 
 1. **Event 3 for child2:** 16.6.2023 00:00

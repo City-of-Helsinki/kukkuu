@@ -543,12 +543,16 @@ def test_update_event_project_user(
     snapshot, project_user_api_client, event, event_group
 ):
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
-    event_variables["input"]["id"] = to_global_id("EventNode", event.id)
-    event_variables["input"]["eventGroupId"] = to_global_id(
-        "EventGroupNode", event_group.id
-    )
+    event_node_id = to_global_id("EventNode", event.id)
+    event_group_node_id = to_global_id("EventGroupNode", event_group.id)
+    event_variables["input"]["id"] = event_node_id
+    event_variables["input"]["eventGroupId"] = event_group_node_id
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
+    )
+    assert executed["data"]["updateEvent"]["event"]["id"] == event_node_id
+    assert executed["data"]["updateEvent"]["event"]["eventGroup"]["id"] == (
+        event_group_node_id
     )
     snapshot.assert_match(executed)
 
@@ -556,13 +560,21 @@ def test_update_event_project_user(
 def test_update_event_ready_for_event_group_publishing(
     snapshot, project_user_api_client, event, event_group
 ):
+    event.event_group = event_group
+    event.save()
+    assert event.event_group.id == event_group.id
+
     variables = {
         "input": {"id": get_global_id(event), "readyForEventGroupPublishing": True},
     }
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=variables
     )
+    assert executed["data"]["updateEvent"]["event"]["readyForEventGroupPublishing"]
     snapshot.assert_match(executed)
+    # the event group id should be still set
+    event.refresh_from_db()
+    assert event.event_group.id == event_group.id
 
 
 def test_update_ticketmaster_event(snapshot, project_user_api_client):
