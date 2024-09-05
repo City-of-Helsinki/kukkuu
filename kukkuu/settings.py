@@ -381,7 +381,10 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler", "formatter": "timestamped_named"}
     },
     "loggers": {
-        "": {"handlers": ["console"], "level": env("KUKKUU_DEFAULT_LOGGING_LEVEL")}
+        "": {
+            "handlers": ["console"],
+            "level": env("KUKKUU_DEFAULT_LOGGING_LEVEL", None, "INFO"),
+        }
     },
 }
 
