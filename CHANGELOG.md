@@ -1,6 +1,29 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.7.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.6.0...kukkuu-v3.7.0) (2024-09-05)
+
+
+### Features
+
+* Add more fields and filters to messaging admin view ([d70dfe9](https://github.com/City-of-Helsinki/kukkuu/commit/d70dfe909eab6cbac5badbf125664f0c60ab6df9))
+* Authenticate symmetrically signed JWT with shared secret for browser tests ([718d92c](https://github.com/City-of-Helsinki/kukkuu/commit/718d92cbf35dca7ad14c9b8e99c63174b9318bc8))
+* Provide initial browser test data automatically ([7250605](https://github.com/City-of-Helsinki/kukkuu/commit/72506053f941f48f74521c5808e27f9d33b6c410))
+* Switch setup.cfg -&gt; pyproject.toml, black/isort/flake8 -> ruff ([4d8e834](https://github.com/City-of-Helsinki/kukkuu/commit/4d8e834747470f1134fa316186c935467dada974))
+* Upgrade Django to 4.2 & upgrade all packages to latest ([e5b12aa](https://github.com/City-of-Helsinki/kukkuu/commit/e5b12aae778db6270d57de67bc0dd3d5870efa28))
+* Upgrade to Python 3.11 ([553b964](https://github.com/City-of-Helsinki/kukkuu/commit/553b964b2902c5352700fc4c0f46a36c785158eb))
+
+
+### Bug Fixes
+
+* Allow schema introspection for unauthenticated users ([e8879aa](https://github.com/City-of-Helsinki/kukkuu/commit/e8879aa5a6c6cd29e7b88cd909281108a3fea08b))
+* Default test project creation ([ab76ba7](https://github.com/City-of-Helsinki/kukkuu/commit/ab76ba7b4efa6b752cb40668f14e929de72f08d7))
+* Event group creation bug in admin ([8ff4042](https://github.com/City-of-Helsinki/kukkuu/commit/8ff4042de598c76a68f91e60f565606d64540028))
+* Making event groups events publishable should not clear event group ([e00f931](https://github.com/City-of-Helsinki/kukkuu/commit/e00f93168a837dcdda67f56187b666370b6c8416))
+* Message api filters for protocol and occurrences ([9277462](https://github.com/City-of-Helsinki/kukkuu/commit/9277462ea0c7e5379b08e5b08672ffe1ebe187c9))
+* Oidc debug extra usage ([a9a3d46](https://github.com/City-of-Helsinki/kukkuu/commit/a9a3d4611a1e57ea5e4ad0a8f1f613dbb005125c))
+* Oidc debug extra usage ([f1265a1](https://github.com/City-of-Helsinki/kukkuu/commit/f1265a14a6ecdfb1b661c78ba8410bab2a91b53e))
+
 ## [3.6.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.5.0...kukkuu-v3.6.0) (2024-07-05)
 
 
