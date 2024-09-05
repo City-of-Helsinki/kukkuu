@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.7.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.7.0...kukkuu-v3.7.1) (2024-09-05)
+
+
+### Bug Fixes
+
+* Logging level default value ([42c91a1](https://github.com/City-of-Helsinki/kukkuu/commit/42c91a144392745fab8f142a1ac8c4b77d71aa9c))
+
 ## [3.7.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.6.0...kukkuu-v3.7.0) (2024-09-05)
 
 
