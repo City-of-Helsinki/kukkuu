@@ -4,7 +4,8 @@
   "packages": {
     ".": {
       "release-type": "python",
-      "package-name": "kukkuu"
+      "package-name": "kukkuu",
+      "extra-files": ["pyproject.toml"]
     }
   },
   "plugins": ["sentence-case"]
