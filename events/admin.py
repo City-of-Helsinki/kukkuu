@@ -280,7 +280,7 @@ class EventGroupAdmin(TranslatableAdmin):
         but if the browser is using some other locale than what is set as a default
         in the Django, then there might be some missing translations,
         because the Kukkuu and Kukkuu Admin UI has been empty string to
-        untranslated fields. This uses the ddefault language ("fi") in cases
+        untranslated fields. This uses the default language ("fi") in cases
         when the current active language returns an empty string.
 
         Args:

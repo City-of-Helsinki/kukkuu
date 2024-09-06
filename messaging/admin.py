@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
@@ -10,7 +11,8 @@ from .models import Message
 @admin.register(Message)
 class MessageAdmin(TranslatableAdmin):
     list_display = (
-        "subject",
+        "id",
+        "get_subject_with_fallback",
         "project",
         "protocol",
         "sent_at",
@@ -39,6 +41,22 @@ class MessageAdmin(TranslatableAdmin):
     )
     date_hierarchy = "created_at"
     actions = ("send",)
+
+    def get_subject_with_fallback(self, obj):
+        """By default the current active language is used,
+        but if the browser is using some other locale than what is set as a default
+        in the Django, then there might be some missing translations,
+        because the Kukkuu and Kukkuu Admin UI has been empty string to
+        untranslated fields. This uses the default language ("fi") in cases
+        when the current active language returns an empty string.
+        """
+        return obj.safe_translation_getter(
+            "subject", any_language=True
+        ) or obj.safe_translation_getter(
+            "subject", language_code=settings.LANGUAGE_CODE
+        )
+
+    get_subject_with_fallback.short_description = _("subject")
 
     def get_occurrences_names(self, obj):
         return ", ".join(
