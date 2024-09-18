@@ -7,9 +7,8 @@ from django.apps import apps
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoObjectType
-from graphene_django.filter import DjangoFilterConnectionField
 
-from common.schema import LanguageEnum
+from common.schema import DjangoFilterAndOffsetConnectionField, LanguageEnum
 from common.utils import (
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
@@ -352,7 +351,7 @@ class DeleteMessageMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     message = relay.Node.Field(MessageNode)
-    messages = DjangoFilterConnectionField(MessageNode)
+    messages = DjangoFilterAndOffsetConnectionField(MessageNode)
 
 
 class Mutation:

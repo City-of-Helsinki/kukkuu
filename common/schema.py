@@ -1,7 +1,9 @@
 import graphene
 from django.conf import settings
+from graphene_django.filter import DjangoFilterConnectionField
 
 from common.utils import get_obj_from_global_id
+from kukkuu.exceptions import ApiUsageError
 from languages.models import Language
 
 LanguageEnum = graphene.Enum(
@@ -32,3 +34,20 @@ class ErrorType(graphene.ObjectType):
     field = graphene.String(required=True)
     message = graphene.String(required=True)
     value = graphene.String(required=True)
+
+
+class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
+    def __init__(self, type, *args, **kwargs):
+        kwargs.setdefault("limit", graphene.Int())
+        kwargs.setdefault("offset", graphene.Int())
+        super().__init__(type, *args, **kwargs)
+
+    @classmethod
+    def connection_resolver(cls, *args, **kwargs):
+        limit = kwargs.get("limit")
+        has_cursor = any(arg in kwargs for arg in ("first", "last", "after", "before"))
+        if limit:
+            if has_cursor:
+                raise ApiUsageError("Cannot use both offset and cursor pagination.")
+            kwargs["first"] = limit
+        return super().connection_resolver(*args, **kwargs)
