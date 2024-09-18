@@ -60,9 +60,12 @@ def test_project_query_unauthenticated(snapshot, api_client, project):
     assert_permission_denied(executed)
 
 
-def test_projects_query_normal_user(snapshot, guardian_api_client, project):
+def test_projects_query_normal_user(settings, snapshot, guardian_api_client, project):
     executed = guardian_api_client.execute(PROJECTS_QUERY)
-    assert len(executed["data"]["projects"]["edges"]) == 1
+    # projects.apps might add a browser testing project
+    assert len(executed["data"]["projects"]["edges"]) == (
+        2 if settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"] else 1
+    )
     snapshot.assert_match(executed)
 
 

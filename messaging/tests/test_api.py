@@ -23,13 +23,23 @@ MESSAGES_QUERY = """
 query Messages(
     $projectId: ID, 
     $protocol: MessagingMessageProtocolChoices, 
-    $occurrences: [ID]
+    $occurrences: [ID],
+    $after: String, 
+    $first: Int
 ) {
     messages(
         projectId: $projectId, 
         protocol: $protocol, 
-        occurrences: $occurrences
+        occurrences: $occurrences,
+        after: $after, 
+        first: $first
     ) {
+    pageInfo {
+      startCursor
+      endCursor
+      hasPreviousPage
+      hasNextPage
+    }
     edges {
       node {
         project {
@@ -148,6 +158,59 @@ def test_messages_query_occurrences_and_protol_filter_together(
         },
     )
     assert len(executed["data"]["messages"]["edges"]) == 2
+
+
+def test_messages_query_pagination(project_user_api_client, project):
+    MessageFactory.create_batch(10, project=project)
+    assert Message.objects.count() == 10
+    # First 2 of 10 objects
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={"first": 2},
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 2
+    # FIXME: hasPreviousPage is not working https://github.com/graphql-python/graphene/issues/395
+    # assert executed["data"]["messages"]["pageInfo"]["hasPreviousPage"] is False
+    assert executed["data"]["messages"]["pageInfo"]["hasNextPage"] is True
+
+    # Second page for next 4 objects, so 6 of 10 objects shown
+    end_cursor = executed["data"]["messages"]["pageInfo"]["endCursor"]
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={
+            "first": 4,
+            "after": end_cursor,
+        },
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 4
+    # assert executed["data"]["messages"]["pageInfo"]["hasPreviousPage"] is True
+    assert executed["data"]["messages"]["pageInfo"]["hasNextPage"] is True
+
+    # Third and the last page for next 4 objects, so 10 of 10 objects shown
+    end_cursor = executed["data"]["messages"]["pageInfo"]["endCursor"]
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={
+            "first": 4,
+            "after": end_cursor,
+        },
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 4
+    # assert executed["data"]["messages"]["pageInfo"]["hasPreviousPage"] is True
+    assert executed["data"]["messages"]["pageInfo"]["hasNextPage"] is False
+
+    # 4th page has no objects
+    end_cursor = executed["data"]["messages"]["pageInfo"]["endCursor"]
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={
+            "first": 4,
+            "after": end_cursor,
+        },
+    )
+    assert len(executed["data"]["messages"]["edges"]) == 0
+    # assert executed["data"]["messages"]["pageInfo"]["hasPreviousPage"] is True
+    assert executed["data"]["messages"]["pageInfo"]["hasNextPage"] is False
 
 
 MESSAGE_QUERY = """
