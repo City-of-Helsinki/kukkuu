@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -27,7 +27,8 @@ query Messages(
     $limit: Int, 
     $offset: Int, 
     $after: String, 
-    $first: Int
+    $first: Int,
+    $orderBy: String
 ) {
     messages(
         projectId: $projectId, 
@@ -36,7 +37,8 @@ query Messages(
         limit: $limit, 
         offset: $offset, 
         after: $after, 
-        first: $first
+        first: $first,
+        orderBy: $orderBy
     ) {
     pageInfo {
       startCursor
@@ -278,6 +280,24 @@ def test_messages_query_pagination_with_limit_and_offset(
     assert len(executed["data"]["messages"]["edges"]) == 0
     # assert executed["data"]["messages"]["pageInfo"]["hasPreviousPage"] is True
     assert executed["data"]["messages"]["pageInfo"]["hasNextPage"] is False
+
+
+@pytest.mark.parametrize(
+    "order_by_criteria", ["created_at", "-created_at", "sent_at", "-sent_at"]
+)
+def test_messages_query_order_by(order_by_criteria, project_user_api_client, project):
+    for days in range(0, 5, 1):
+        t = now() - timedelta(days=days)
+        MessageFactory(project=project, sent_at=t, created_at=t)
+    executed = project_user_api_client.execute(
+        MESSAGES_QUERY,
+        variables={"orderBy": order_by_criteria},
+    )
+    messages = [edge["node"] for edge in executed["data"]["messages"]["edges"]]
+    assert len(messages) == 5
+    assert [
+        message.subject for message in Message.objects.all().order_by(order_by_criteria)
+    ] == [message["subject"] for message in messages]
 
 
 MESSAGE_QUERY = """

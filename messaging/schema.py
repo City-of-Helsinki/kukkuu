@@ -66,6 +66,8 @@ class MessageFilter(django_filters.FilterSet):
         help_text="Filter by multiple occurrences.",
     )
 
+    order_by = django_filters.OrderingFilter(fields=("created_at", "sent_at"))
+
     def __init__(self, data=None, *args, **kwargs):
         """
         Initializes the MessageFilter instance and processes occurrence global IDs.
