@@ -44,6 +44,7 @@ query Messages(
       hasPreviousPage
       hasNextPage
     }
+    count
     edges {
       node {
         project {
