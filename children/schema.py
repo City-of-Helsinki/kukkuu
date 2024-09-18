@@ -13,12 +13,14 @@ from django.utils.timezone import localdate, make_aware
 from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
-from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
-from common.schema import set_obj_languages_spoken_at_home
+from common.schema import (
+    DjangoFilterAndOffsetConnectionField,
+    set_obj_languages_spoken_at_home,
+)
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from events.models import Event, Occurrence
 from kukkuu.exceptions import (
@@ -607,23 +609,6 @@ class UpdateChildNotesMutation(graphene.relay.ClientIDMutation):
         logger.info(f"user {user.uuid} updated child {child.pk} notes")
 
         return UpdateChildNotesMutation(child_notes=child)
-
-
-class DjangoFilterAndOffsetConnectionField(DjangoFilterConnectionField):
-    def __init__(self, type, *args, **kwargs):
-        kwargs.setdefault("limit", graphene.Int())
-        kwargs.setdefault("offset", graphene.Int())
-        super().__init__(type, *args, **kwargs)
-
-    @classmethod
-    def connection_resolver(cls, *args, **kwargs):
-        limit = kwargs.get("limit")
-        has_cursor = any(arg in kwargs for arg in ("first", "last", "after", "before"))
-        if limit:
-            if has_cursor:
-                raise ApiUsageError("Cannot use both offset and cursor pagination.")
-            kwargs["first"] = limit
-        return super().connection_resolver(*args, **kwargs)
 
 
 class Query:
