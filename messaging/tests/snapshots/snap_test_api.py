@@ -147,6 +147,7 @@ snapshots['test_message_query 1'] = {
 snapshots['test_messages_query 1'] = {
     'data': {
         'messages': {
+            'count': 1,
             'edges': [
                 {
                     'node': {
@@ -180,6 +181,7 @@ snapshots['test_messages_query 1'] = {
 snapshots['test_messages_query_occurrences_filter 1'] = {
     'data': {
         'messages': {
+            'count': 4,
             'edges': [
                 {
                     'node': {
@@ -287,6 +289,7 @@ snapshots['test_messages_query_occurrences_filter 1'] = {
 snapshots['test_messages_query_project_filter 1'] = {
     'data': {
         'messages': {
+            'count': 1,
             'edges': [
                 {
                     'node': {
@@ -320,6 +323,7 @@ snapshots['test_messages_query_project_filter 1'] = {
 snapshots['test_messages_query_protocol_filter[email] 1'] = {
     'data': {
         'messages': {
+            'count': 5,
             'edges': [
                 {
                     'node': {
@@ -425,6 +429,7 @@ snapshots['test_messages_query_protocol_filter[email] 1'] = {
 snapshots['test_messages_query_protocol_filter[sms] 1'] = {
     'data': {
         'messages': {
+            'count': 5,
             'edges': [
                 {
                     'node': {

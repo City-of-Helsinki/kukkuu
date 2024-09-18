@@ -47,6 +47,16 @@ ProtocolType = graphene.Enum(
 )
 
 
+class MessagesConnection(graphene.Connection):
+    class Meta:
+        abstract = True
+
+    count = graphene.Int(required=True)
+
+    def resolve_count(self, info, **kwargs):
+        return self.length
+
+
 class MessageFilter(django_filters.FilterSet):
     occurrences = django_filters.ModelMultipleChoiceFilter(
         queryset=Occurrence.objects.all(),
@@ -115,6 +125,7 @@ class MessageNode(DjangoObjectType):
     class Meta:
         model = Message
         interfaces = (relay.Node,)
+        connection_class = MessagesConnection
         fields = (
             "id",
             "project",
