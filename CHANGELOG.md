@@ -1,6 +1,20 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.8.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.7.1...kukkuu-v3.8.0) (2024-09-18)
+
+
+### Features
+
+* Add count field to messages connection ([c9a4415](https://github.com/City-of-Helsinki/kukkuu/commit/c9a441508aba1fc5a4d41a1b5d42651b6d8eef79))
+* Add order_by field to messages query ([0cb3bfb](https://github.com/City-of-Helsinki/kukkuu/commit/0cb3bfb4abac4cd63298fea81eeed0ad51ae38a3))
+* Use DjangoFilterAndOffsetConnectionField with messages query ([1c38e39](https://github.com/City-of-Helsinki/kukkuu/commit/1c38e39a3635f6695e8f053e1b5999a16bee081b))
+
+
+### Bug Fixes
+
+* Link and subject field in the messaging admin list display ([e584d75](https://github.com/City-of-Helsinki/kukkuu/commit/e584d7583096e438d53cd8a34e17ed1ed351f7e1))
+
 ## [3.7.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.7.0...kukkuu-v3.7.1) (2024-09-05)
 
 
