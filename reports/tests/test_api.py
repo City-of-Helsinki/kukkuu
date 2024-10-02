@@ -13,8 +13,8 @@ from children.factories import (
     ChildWithTwoGuardiansFactory,
 )
 from languages.models import Language
-from reports.api import get_primary_contact_language
 from reports.drf_permissions import ACCESS_REPORT_API_PERM
+from reports.serializers import get_primary_contact_language
 
 LIST_ENDPOINT = "/reports/children/"
 
