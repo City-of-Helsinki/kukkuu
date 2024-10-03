@@ -10,7 +10,7 @@ from rest_framework import routers
 
 from common.utils import get_api_version
 from kukkuu.views import SentryGraphQLView
-from reports.api import ChildViewSet
+from reports.api import ChildViewSet, EventGroupViewSet, EventViewSet, VenueViewSet
 
 admin.site.index_title = _("Kukkuu backend {api_version}").format(
     api_version=get_api_version()
@@ -18,6 +18,9 @@ admin.site.index_title = _("Kukkuu backend {api_version}").format(
 
 router = routers.DefaultRouter()
 router.register(r"children", ChildViewSet)
+router.register(r"event", EventViewSet)
+router.register(r"event-group", EventGroupViewSet)
+router.register(r"venue", VenueViewSet)
 
 
 urlpatterns = [

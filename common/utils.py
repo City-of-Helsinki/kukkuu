@@ -162,7 +162,7 @@ def get_translations_dict(obj, field_name: str):
 
     Example:
         >>> # doctest: +SKIP
-        >>> get_translations_dict(my_model_instance, "description")
+        ... get_translations_dict(my_model_instance, "description")
         {'fi': 'lorem ipsum.', 'en': '', 'sv': ''}
     """
 
