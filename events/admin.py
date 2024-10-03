@@ -187,6 +187,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
         OccurrenceIsUpcomingFilter,
     )
     ordering = ("-time",)
+    search_fields = ("event__translations__name",)
 
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
@@ -376,3 +377,51 @@ class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
             .select_related("child")
             .prefetch_related("child__guardians")
         )
+
+
+@admin.register(Enrolment)
+class EnrolmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "child",
+        "get_project_year",
+        "get_event",
+        "occurrence",
+        "attended",
+        "created_at",
+        "updated_at",
+        "reminder_sent_at",
+        "feedback_notification_sent_at",
+    )
+    list_filter = (
+        "occurrence__event__project__year",
+        "attended",
+        "created_at",
+        "updated_at",
+        "reminder_sent_at",
+        "feedback_notification_sent_at",
+    )
+    search_fields = (
+        "child__name",
+        "occurrence__event__translations__name",
+    )
+    autocomplete_fields = [
+        "child",
+        "occurrence",
+    ]
+    readonly_fields = [
+        "reminder_sent_at",
+        "feedback_notification_sent_at",
+    ]
+    date_hierarchy = "created_at"
+    order = "-created_at"
+
+    def get_event(self, obj):
+        return obj.occurrence.event
+
+    get_event.short_description = _("event")
+
+    def get_project_year(self, obj):
+        return obj.occurrence.event.project.year
+
+    get_project_year.short_description = _("project year")
