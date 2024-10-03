@@ -170,6 +170,18 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     def is_published(self):
         return bool(self.published_at)
 
+    def get_enrolment_count(self) -> int:
+        return sum(event.get_enrolment_count() for event in self.events.all())
+
+    def get_attended_enrolment_count(self) -> int:
+        return sum(event.get_attended_enrolment_count() for event in self.events.all())
+
+    def get_capacity(self) -> Optional[int]:
+        try:
+            return sum(event.get_capacity() for event in self.events.all())
+        except TypeError:
+            return None
+
 
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
@@ -430,6 +442,25 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
     def is_published(self):
         return bool(self.published_at)
+
+    def get_enrolment_count(self) -> int:
+        return sum(
+            occurrence.get_enrolment_count() for occurrence in self.occurrences.all()
+        )
+
+    def get_attended_enrolment_count(self) -> int:
+        return sum(
+            occurrence.get_attended_enrolment_count()
+            for occurrence in self.occurrences.all()
+        )
+
+    def get_capacity(self) -> Optional[int]:
+        try:
+            return sum(
+                occurrence.get_capacity() for occurrence in self.occurrences.all()
+            )
+        except TypeError:
+            return None
 
 
 class OccurrenceQueryset(models.QuerySet):

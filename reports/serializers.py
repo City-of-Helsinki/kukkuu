@@ -8,12 +8,15 @@ from drf_spectacular.utils import (
 from rest_framework import serializers
 
 from children.models import Child
+from events.models import Event, EventGroup, Occurrence
+from projects.models import Project
 from reports.consts import (
     CONTACT_LANGUAGE_PRIORITIES,
     CONTACT_LANGUAGE_TO_LANGUAGE,
     LANGUAGE_CHOICES,
     OTHER_LANGUAGE_API_NAME,
 )
+from venues.models import Venue
 
 
 def get_primary_contact_language(contact_languages: List[str]):
@@ -23,6 +26,27 @@ def get_primary_contact_language(contact_languages: List[str]):
         for contact_lang in contact_languages
         if contact_lang == lang
     ][0]
+
+
+class DynamicFieldsModelSerializer(serializers.ModelSerializer):
+    """
+    A ModelSerializer that takes an additional `fields` argument that
+    controls which fields should be displayed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop("fields", None)
+
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument.
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
 
 
 class ChildSerializer(serializers.ModelSerializer):
@@ -103,3 +127,235 @@ class ChildSerializer(serializers.ModelSerializer):
 
     def get_is_obsolete(self, obj: Child) -> bool:
         return obj.is_obsolete
+
+
+class ProjectSerializer(DynamicFieldsModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ["id", "year", "name"]
+
+    # NOTE: Fetching the translations from django-parler table
+    # can cause lots of sub queries.
+    def get_name(self, obj: Project):
+        return obj.name_with_translations
+
+
+class VenueSerializer(
+    DynamicFieldsModelSerializer, serializers.HyperlinkedModelSerializer
+):
+    name = serializers.SerializerMethodField()
+    address = serializers.SerializerMethodField()
+    project = ProjectSerializer(
+        # To optimize the query, exclude django-parler translated fields and
+        # offer url for details instead
+        fields=[
+            "id",
+            "year",
+        ],
+        read_only=True,
+        help_text="A project describes the year group where "
+        "the children can participate. A venue is a project specific object.",
+    )
+
+    class Meta:
+        model = Venue
+        fields = ["url", "id", "project", "name", "address"]
+
+    # NOTE: Fetching the translations from django-parler table
+    # can cause lots of sub queries.
+    def get_name(self, obj: Venue):
+        return obj.name_with_translations
+
+    # NOTE: Fetching the translations from django-parler table
+    # can cause lots of sub queries.
+    def get_address(self, obj: Venue):
+        return obj.address_with_translations
+
+
+class OccurrenceSerializer(serializers.ModelSerializer):
+    enrolment_count = serializers.SerializerMethodField(
+        help_text="Count of how many children have enrolled "
+        "in this occurrence of an event."
+    )
+
+    attended_count = serializers.SerializerMethodField(
+        help_text="Count of how many children atteded "
+        "in this occurrence of an event."
+    )
+
+    capacity = serializers.SerializerMethodField(
+        help_text="The total capacity of how many children can there participate "
+        "in this occurrence of an event."
+    )
+
+    venue = VenueSerializer(
+        read_only=True,
+        # To optimize the query, exclude django-parler translated fields and
+        # offer url for details instead
+        fields=[
+            "url",
+            "id",
+        ],
+    )
+
+    class Meta:
+        model = Occurrence
+        fields = [
+            "id",
+            "time",
+            "venue",
+            "enrolment_count",
+            "attended_count",
+            "capacity",
+        ]
+
+    def get_enrolment_count(self, obj: Occurrence) -> int:
+        return obj.get_enrolment_count()
+
+    def get_attended_count(self, obj: Occurrence) -> int:
+        return obj.get_attended_enrolment_count()
+
+    def get_capacity(self, obj: Occurrence) -> Optional[int]:
+        return obj.get_capacity()
+
+
+class EventGroupSerializer(
+    DynamicFieldsModelSerializer, serializers.HyperlinkedModelSerializer
+):
+    name = serializers.SerializerMethodField()
+    project = ProjectSerializer(
+        # To optimize the query, exclude django-parler translated fields and
+        # offer url for details instead
+        fields=[
+            "id",
+            "year",
+        ],
+        read_only=True,
+        help_text="A project describes the year group where "
+        "the children can participate.",
+    )
+    events_count = serializers.SerializerMethodField(
+        help_text="Total count of events in this event group."
+    )
+    enrolment_count = serializers.SerializerMethodField(
+        help_text="Total count of how many children have enrolled "
+        "in this event group's event occurrences."
+    )
+    attended_count = serializers.SerializerMethodField(
+        help_text="Count of how many children atteded "
+        "in this event group's event occurrences."
+    )
+    capacity = serializers.SerializerMethodField(
+        help_text="The total capacity of how many children can there participate "
+        "in this event group's event occurrences."
+    )
+
+    class Meta:
+        model = EventGroup
+        fields = [
+            "url",
+            "id",
+            "name",
+            "project",
+            "events_count",
+            "enrolment_count",
+            "attended_count",
+            "capacity",
+        ]
+
+    def get_events_count(self, obj: EventGroup) -> int:
+        return obj.events.count()
+
+    def get_enrolment_count(self, obj: EventGroup) -> int:
+        return obj.get_enrolment_count()
+
+    def get_attended_count(self, obj: EventGroup) -> int:
+        return obj.get_attended_enrolment_count()
+
+    def get_capacity(self, obj: EventGroup) -> Optional[int]:
+        return obj.get_capacity()
+
+    # NOTE: Fetching the translations from django-parler table
+    # can cause lots of sub queries.
+    def get_name(self, obj: Project):
+        return obj.name_with_translations
+
+
+class EventSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    project = ProjectSerializer(
+        # To optimize the query, exclude django-parler translated fields and
+        # offer url for details instead
+        fields=[
+            "id",
+            "year",
+        ],
+        read_only=True,
+        help_text="A project describes the year group where "
+        "the children can participate.",
+    )
+    event_group = EventGroupSerializer(
+        # To optimize the query, exclude django-parler translated fields and
+        # offer url for details instead
+        fields=[
+            "url",
+            "id",
+        ],
+        read_only=True,
+        help_text="The event can belong to an event group "
+        "that contains a group of events.",
+    )
+    occurrences = OccurrenceSerializer(
+        many=True,
+        read_only=True,
+        help_text="A single event can contain 1 or multiple occurrences "
+        "that are held at different times",
+    )
+    occurrences_count = serializers.SerializerMethodField(
+        help_text="Total count of occurrences in this event."
+    )
+    enrolment_count = serializers.SerializerMethodField(
+        help_text="Total count of how many children have enrolled "
+        "in this event's occurrences."
+    )
+    attended_count = serializers.SerializerMethodField(
+        help_text="Count of how many children atteded " "in this event's occurrences."
+    )
+    capacity = serializers.SerializerMethodField(
+        help_text="The total capacity of how many children can there participate "
+        "in this event's occurrences."
+    )
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "name",
+            "project",
+            "event_group",
+            "occurrences",
+            "ticket_system",
+            "occurrences_count",
+            "enrolment_count",
+            "attended_count",
+            "capacity",
+        ]
+
+    def get_occurrences_count(self, obj: Event) -> int:
+        return obj.occurrences.count()
+
+    def get_enrolment_count(self, obj: Event) -> int:
+        return obj.get_enrolment_count()
+
+    def get_attended_count(self, obj: Event) -> int:
+        return obj.get_attended_enrolment_count()
+
+    def get_capacity(self, obj: Event) -> Optional[int]:
+        return obj.get_capacity()
+
+    # NOTE: Fetching the translations from django-parler table
+    # can cause lots of sub queries.
+    def get_name(self, obj: Project):
+        return obj.name_with_translations

@@ -9,8 +9,15 @@ from rest_framework import mixins, viewsets
 
 from children.models import Child
 from common.utils import strtobool
+from events.models import Event, EventGroup, Occurrence
 from languages.models import Language
-from reports.serializers import ChildSerializer
+from reports.serializers import (
+    ChildSerializer,
+    EventGroupSerializer,
+    EventSerializer,
+    VenueSerializer,
+)
+from venues.models import Venue
 
 
 @extend_schema_serializer(
@@ -60,3 +67,45 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             except ValueError:
                 pass
         return super().get_queryset().filter(**filters)
+
+
+@extend_schema_view(list=extend_schema(description="Get all events report data."))
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = (
+        Event.objects.prefetch_related(
+            Prefetch(
+                "occurrences",
+                queryset=Occurrence.objects.with_enrolment_count()
+                .with_attended_enrolment_count()
+                .with_free_spot_notification_subscription_count()
+                .select_related("venue"),
+            )
+        )
+        .select_related("event_group")
+        .select_related("project")
+    )
+    serializer_class = EventSerializer
+
+
+@extend_schema_view(list=extend_schema(description="Get all event groups."))
+class EventGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = (
+        EventGroup.objects.prefetch_related("translations")
+        .prefetch_related(
+            Prefetch(
+                "events__occurrences",
+                queryset=Occurrence.objects.with_enrolment_count()
+                .with_attended_enrolment_count()
+                .with_free_spot_notification_subscription_count()
+                .select_related("venue"),
+            )
+        )
+        .select_related("project")
+    )
+    serializer_class = EventGroupSerializer
+
+
+@extend_schema_view(list=extend_schema(description="Get all venues."))
+class VenueViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Venue.objects.prefetch_related("translations").select_related("project")
+    serializer_class = VenueSerializer
