@@ -149,21 +149,33 @@ project_user_required = user_passes_test(
 )
 
 
-def get_translations_dict(obj, field_name):
+def get_translations_dict(obj, field_name: str):
     """
     Returns a dict of translations for a given field of a model instance.
 
-    :param obj: The model instance
-    :param field_name: The name of the field
-    :return: A dict with language codes as keys and translations as values
+    Args:
+        obj: The model instance.
+        field_name: The name of the field.
+
+    Returns:
+        A dict with language codes as keys and translations as values.
+
+    Example:
+        >>> # doctest: +SKIP
+        >>> get_translations_dict(my_model_instance, "description")
+        {'fi': 'lorem ipsum.', 'en': '', 'sv': ''}
     """
 
-    return {
-        lang_code: getattr(
-            obj.translations.filter(language_code=lang_code).first(), field_name, ""
-        )
-        for lang_code, _ in settings.LANGUAGES
-    }
+    # initialize an empty string for every langauge
+    translations = {language_code: "" for language_code, _ in settings.LANGUAGES}
+    # update with the existing translations
+    translations.update(
+        {
+            getattr(d, "language_code"): getattr(d, field_name)
+            for d in obj.translations.all()
+        }
+    )
+    return translations
 
 
 def strtobool(val):
