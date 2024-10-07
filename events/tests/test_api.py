@@ -1,3 +1,4 @@
+import itertools
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Dict
@@ -42,6 +43,7 @@ from events.tests.mutations import (
     UPDATE_EVENT_GROUP_MUTATION,
     UPDATE_EVENT_MUTATION,
     UPDATE_OCCURRENCE_MUTATION,
+    UPDATE_TICKET_ATTENDED_MUTATION,
     UPDATE_TICKETMASTER_EVENT_MUTATION,
 )
 from events.tests.queries import (
@@ -2334,6 +2336,75 @@ def test_erroneous_ticket_verification(api_client, snapshot):
     )
     assert executed["errors"][0]["message"] == "Could not decode the enrolment id"
     assert executed["data"]["verifyTicket"] is None
+    snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize(
+    "init_value,updated_value", list(itertools.product([False, True], repeat=2))
+)
+# NOTE: Using a public client (anonymous user) for testing, since in the ticket KK-1224,
+# it was decided that this mutation can be left open, because only the ticket owner
+# and the admins should know the (secret) reference id for the ticket.
+# Also, if the owner would mark themselves as attended or unattended,
+# they would only make harm for themselves. The attended status is only used to track
+# how many person have arrived and how many are still left to come.
+def test_update_valid_ticket_attended(init_value, updated_value, api_client, snapshot):
+    """The ticket can be marked as attended and unattended."""
+    upcoming_occurrence = OccurrenceFactory(time=timezone.now())
+    valid_enrolment = EnrolmentFactory(
+        occurrence=upcoming_occurrence, attended=init_value
+    )
+    original_attended_count = valid_enrolment.occurrence.get_attended_enrolment_count()
+
+    if init_value is True:
+        assert original_attended_count > 0
+
+    executed = api_client.execute(
+        UPDATE_TICKET_ATTENDED_MUTATION,
+        variables={
+            "input": {
+                "referenceId": valid_enrolment.reference_id,
+                "attended": updated_value,
+            }
+        },
+    )
+    assert executed["data"]["updateTicketAttended"]["ticket"]["validity"] is True
+    assert (
+        executed["data"]["updateTicketAttended"]["ticket"]["occurrenceTime"]
+        == upcoming_occurrence.time.isoformat()
+    )
+    assert (
+        executed["data"]["updateTicketAttended"]["ticket"]["eventName"]
+        == upcoming_occurrence.event.name
+    )
+    assert (
+        executed["data"]["updateTicketAttended"]["ticket"]["venueName"]
+        == upcoming_occurrence.venue.name
+    )
+    # Attended status should be the same as the input.
+    assert (
+        executed["data"]["updateTicketAttended"]["ticket"]["attended"] == updated_value
+    )
+    # check the attended count. If the attended status has changed...
+    if init_value is not updated_value:
+        if updated_value is True:
+            # ...and the new value is True,
+            # then the count of attended should have increased.
+            assert valid_enrolment.occurrence.get_attended_enrolment_count() == (
+                original_attended_count + 1
+            )
+        elif updated_value is False:
+            # ...and the new value is False,
+            # then the count of attended should have decreased.
+            assert valid_enrolment.occurrence.get_attended_enrolment_count() == (
+                original_attended_count - 1
+            )
+    else:
+        # otherwise the attended count should stay unchanged.
+        assert (
+            valid_enrolment.occurrence.get_attended_enrolment_count()
+            == original_attended_count
+        )
     snapshot.assert_match(executed)
 
 

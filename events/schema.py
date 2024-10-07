@@ -28,7 +28,10 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
-from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
+from events.exceptions import (
+    NoFreePasswordsError,
+    PasswordAlreadyAssignedError,
+)
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
@@ -48,6 +51,7 @@ from kukkuu.exceptions import (
     SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
+    TicketVerificationError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
@@ -605,6 +609,14 @@ class TicketVerificationNode(ObjectType):
     )
     venue_name = graphene.String(description="The name of the venue")
     validity = graphene.Boolean(required=True)
+    attended = graphene.Boolean(
+        description=(
+            "Is the ticket marked as attended. "
+            "The attended status helps to keep track on "
+            "if everybody who have enrolled, has already arrived. "
+            "If None, then the status is still unset."
+        )
+    )
 
 
 class EventTranslationsInput(graphene.InputObjectType):
@@ -1295,6 +1307,46 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         return PublishEventGroupMutation(event_group=event_group)
 
 
+class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
+    class Input:
+        reference_id = graphene.String(required=True)
+        attended = graphene.Boolean(required=True)
+
+    ticket = graphene.Field(TicketVerificationNode)
+
+    @classmethod
+    @transaction.atomic
+    # NOTE: It's not ideal that this mutation is available through the public API
+    # without any authorization, but in KK-1224, it was decided that it's approved.
+    # Only the ticket owner and the admins (or the doorman) knows can know
+    # the reference id of the ticket and the reference id is verified,
+    # so if the ticket owner would make some changes to their attended status,
+    # they would make harm only to themselves. The attended status is basically only
+    # used to track how many person have arrived and how many are stil lelft to come.
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        """With a referenc id for a ticket,
+        this mutation can change the ticket attended status to True or False.
+        """
+        attended = kwargs.get("attended", True)
+        enrolment_reference_id = kwargs.get("reference_id", None)
+        enrolment, is_ticket_valid = check_ticket_validity(enrolment_reference_id)
+        if not is_ticket_valid:
+            raise TicketVerificationError("The ticket was invalid.")
+
+        enrolment.attended = attended
+        enrolment.save()
+
+        return UpdateTicketAttendedMutation(
+            ticket=TicketVerificationNode(
+                event_name=enrolment.occurrence.event.name,
+                occurrence_time=enrolment.occurrence.time,
+                venue_name=enrolment.occurrence.venue.name,
+                validity=is_ticket_valid,
+                attended=enrolment.attended,
+            )
+        )
+
+
 class Query:
     events = DjangoFilterConnectionField(EventNode)
     events_and_event_groups = graphene.ConnectionField(
@@ -1341,6 +1393,7 @@ class Query:
             occurrence_time=enrolment.occurrence.time,
             venue_name=enrolment.occurrence.venue.name,
             validity=ticket_validity,
+            attended=enrolment.attended,
         )
 
 
@@ -1364,3 +1417,5 @@ class Mutation:
 
     assign_ticket_system_password = AssignTicketSystemPasswordMutation.Field()
     import_ticket_system_passwords = ImportTicketSystemPasswordsMutation.Field()
+
+    update_ticket_attended = UpdateTicketAttendedMutation.Field()
