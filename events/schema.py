@@ -602,6 +602,24 @@ class InternalOrTicketSystemEnrolmentConnection(Connection):
         node = InternalOrTicketSystemEnrolmentUnion
 
 
+class OccurrenceArrivalStatusNode(ObjectType):
+    enrolment_count = graphene.Int(
+        required=True,
+        description="**DEPRECATED:** Total number of enrolments for this occurrence.",
+        deprecation_reason="This field exposes potentially sensitive data "
+        "and will be removed in a future release. "
+        "Consider using a more secure method to access this information.",
+    )
+    attended_enrolment_count = graphene.Int(
+        required=True,
+        description="**DEPRECATED:**  Number of enrolments marked as attended "
+        "for this occurrence.",
+        deprecation_reason="This field exposes potentially sensitive data "
+        "and will be removed in a future release. "
+        "Consider using a more secure method to access this information.",
+    )
+
+
 class TicketVerificationNode(ObjectType):
     event_name = graphene.String(required=True, description="The name of the event")
     occurrence_time = graphene.DateTime(
@@ -611,11 +629,27 @@ class TicketVerificationNode(ObjectType):
     validity = graphene.Boolean(required=True)
     attended = graphene.Boolean(
         description=(
-            "Is the ticket marked as attended. "
-            "The attended status helps to keep track on "
-            "if everybody who have enrolled, has already arrived. "
-            "If None, then the status is still unset."
+            "Indicates whether the ticket holder has arrived. "
+            "If null, the status is unset."
         )
+    )
+
+    # TODO: Occurrence arrival status should not be public information.
+    # The information of this node should be moved in another node
+    # e.g. in OccurrenceNode, where it would always be available and
+    # not only by verifying a ticket. The information should need
+    # an authorization so it should not be available for anonymous users.
+    occurrence_arrival_status = graphene.Field(
+        OccurrenceArrivalStatusNode,
+        description=(
+            "**DEPRECATED:** Use `OccurrenceNode` instead (requires authorization). "
+            "Provides a summary of arrivals for this occurrence. "
+            "This field will be removed in a future release "
+            "to protect sensitive attendance data."
+        ),
+        deprecation_reason="This field exposes potentially sensitive data "
+        "and will be removed in a future release. "
+        "The attendance information should not be publicly available.",
     )
 
 
@@ -1318,13 +1352,13 @@ class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     # NOTE: It's not ideal that this mutation is available through the public API
     # without any authorization, but in KK-1224, it was decided that it's approved.
-    # Only the ticket owner and the admins (or the doorman) knows can know
+    # Only the ticket owner and the admins (or the doorman) should know
     # the reference id of the ticket and the reference id is verified,
     # so if the ticket owner would make some changes to their attended status,
     # they would make harm only to themselves. The attended status is basically only
-    # used to track how many person have arrived and how many are stil lelft to come.
+    # used to track how many person have arrived and how many are still left to come.
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        """With a referenc id for a ticket,
+        """With a reference id for a ticket,
         this mutation can change the ticket attended status to True or False.
         """
         attended = kwargs.get("attended", True)
@@ -1336,13 +1370,19 @@ class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
         enrolment.attended = attended
         enrolment.save()
 
+        occurrence = enrolment.occurrence
+
         return UpdateTicketAttendedMutation(
             ticket=TicketVerificationNode(
-                event_name=enrolment.occurrence.event.name,
-                occurrence_time=enrolment.occurrence.time,
-                venue_name=enrolment.occurrence.venue.name,
+                event_name=occurrence.event.name,
+                occurrence_time=occurrence.time,
+                venue_name=occurrence.venue.name,
                 validity=is_ticket_valid,
                 attended=enrolment.attended,
+                occurrence_arrival_status=OccurrenceArrivalStatusNode(
+                    enrolment_count=occurrence.get_enrolment_count(),
+                    attended_enrolment_count=occurrence.get_attended_enrolment_count(),
+                ),
             )
         )
 
@@ -1388,12 +1428,17 @@ class Query:
     def resolve_verify_ticket(self, info, **kwargs):
         enrolment_reference_id = kwargs.get("reference_id", None)
         enrolment, ticket_validity = check_ticket_validity(enrolment_reference_id)
+        occurrence = enrolment.occurrence
         return TicketVerificationNode(
-            event_name=enrolment.occurrence.event.name,
-            occurrence_time=enrolment.occurrence.time,
-            venue_name=enrolment.occurrence.venue.name,
+            event_name=occurrence.event.name,
+            occurrence_time=occurrence.time,
+            venue_name=occurrence.venue.name,
             validity=ticket_validity,
             attended=enrolment.attended,
+            occurrence_arrival_status=OccurrenceArrivalStatusNode(
+                enrolment_count=occurrence.get_enrolment_count(),
+                attended_enrolment_count=occurrence.get_attended_enrolment_count(),
+            ),
         )
 
 

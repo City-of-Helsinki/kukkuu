@@ -385,6 +385,10 @@ VERIFY_TICKET_QUERY = """
       venueName
       validity
       attended
+      occurrenceArrivalStatus {
+        enrolmentCount
+        attendedEnrolmentCount
+      }
     }
   }
 """
