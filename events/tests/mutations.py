@@ -313,3 +313,17 @@ mutation AssignTicketSystemPassword($input: AssignTicketSystemPasswordMutationIn
   }
 }
 """
+
+UPDATE_TICKET_ATTENDED_MUTATION = """
+  mutation UpdateTicketAttended($input: UpdateTicketAttendedMutationInput!){
+    updateTicketAttended(input: $input){
+      ticket {
+        occurrenceTime
+        eventName
+        venueName
+        validity
+        attended
+      }
+    }
+  }
+"""

@@ -384,6 +384,7 @@ VERIFY_TICKET_QUERY = """
       eventName
       venueName
       validity
+      attended
     }
   }
 """
