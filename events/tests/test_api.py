@@ -1378,6 +1378,7 @@ def test_enrolment_visibility_project_user(
     snapshot.assert_match(executed)
 
 
+@pytest.mark.django_db(reset_sequences=True)
 def test_required_translation(project_user_api_client, snapshot, project):
     # Finnish translation required when creating event
     variable = deepcopy(ADD_EVENT_VARIABLES)

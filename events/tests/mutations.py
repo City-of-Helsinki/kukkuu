@@ -323,6 +323,10 @@ UPDATE_TICKET_ATTENDED_MUTATION = """
         venueName
         validity
         attended
+        occurrenceArrivalStatus {
+          enrolmentCount
+          attendedEnrolmentCount
+        }
       }
     }
   }

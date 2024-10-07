@@ -1687,7 +1687,7 @@ snapshots['test_required_translation 1'] = {
                 'capacityPerOccurrence': 30,
                 'duration': 1000,
                 'eventGroup': None,
-                'id': 'RXZlbnROb2RlOjExMA==',
+                'id': 'RXZlbnROb2RlOjI=',
                 'image': '',
                 'imageAltText': 'Image alt text',
                 'participantsPerInvite': 'FAMILY',
@@ -2017,6 +2017,10 @@ snapshots['test_update_valid_ticket_attended[False-False] 1'] = {
             'ticket': {
                 'attended': False,
                 'eventName': 'Record card my. Sure sister return.',
+                'occurrenceArrivalStatus': {
+                    'attendedEnrolmentCount': 0,
+                    'enrolmentCount': 1
+                },
                 'occurrenceTime': '2020-12-12T00:00:00+00:00',
                 'validity': True,
                 'venueName': 'Remember stay public high concern glass person.'
@@ -2031,6 +2035,10 @@ snapshots['test_update_valid_ticket_attended[False-True] 1'] = {
             'ticket': {
                 'attended': True,
                 'eventName': 'Record card my. Sure sister return.',
+                'occurrenceArrivalStatus': {
+                    'attendedEnrolmentCount': 1,
+                    'enrolmentCount': 1
+                },
                 'occurrenceTime': '2020-12-12T00:00:00+00:00',
                 'validity': True,
                 'venueName': 'Remember stay public high concern glass person.'
@@ -2045,6 +2053,10 @@ snapshots['test_update_valid_ticket_attended[True-False] 1'] = {
             'ticket': {
                 'attended': False,
                 'eventName': 'Record card my. Sure sister return.',
+                'occurrenceArrivalStatus': {
+                    'attendedEnrolmentCount': 0,
+                    'enrolmentCount': 1
+                },
                 'occurrenceTime': '2020-12-12T00:00:00+00:00',
                 'validity': True,
                 'venueName': 'Remember stay public high concern glass person.'
@@ -2059,6 +2071,10 @@ snapshots['test_update_valid_ticket_attended[True-True] 1'] = {
             'ticket': {
                 'attended': True,
                 'eventName': 'Record card my. Sure sister return.',
+                'occurrenceArrivalStatus': {
+                    'attendedEnrolmentCount': 1,
+                    'enrolmentCount': 1
+                },
                 'occurrenceTime': '2020-12-12T00:00:00+00:00',
                 'validity': True,
                 'venueName': 'Remember stay public high concern glass person.'
@@ -2072,6 +2088,10 @@ snapshots['test_verify_invalid_ticket 1'] = {
         'verifyTicket': {
             'attended': None,
             'eventName': 'Record card my. Sure sister return.',
+            'occurrenceArrivalStatus': {
+                'attendedEnrolmentCount': 0,
+                'enrolmentCount': 1
+            },
             'occurrenceTime': '2020-12-11T00:00:00+00:00',
             'validity': False,
             'venueName': 'Remember stay public high concern glass person.'
@@ -2084,6 +2104,10 @@ snapshots['test_verify_valid_ticket 1'] = {
         'verifyTicket': {
             'attended': None,
             'eventName': 'Record card my. Sure sister return.',
+            'occurrenceArrivalStatus': {
+                'attendedEnrolmentCount': 0,
+                'enrolmentCount': 1
+            },
             'occurrenceTime': '2020-12-12T00:00:00+00:00',
             'validity': True,
             'venueName': 'Remember stay public high concern glass person.'
