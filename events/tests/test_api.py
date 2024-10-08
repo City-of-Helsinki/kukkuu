@@ -331,6 +331,7 @@ def test_add_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
+@pytest.mark.django_db(reset_sequences=True)
 def test_add_event_project_user(
     snapshot, project_user_api_client, project, event_group
 ):
@@ -541,6 +542,7 @@ def test_update_event_permission_denied(api_client, user_api_client):
     assert_permission_denied(executed)
 
 
+@pytest.mark.django_db(reset_sequences=True)
 def test_update_event_project_user(
     snapshot, project_user_api_client, event, event_group
 ):
@@ -559,6 +561,7 @@ def test_update_event_project_user(
     snapshot.assert_match(executed)
 
 
+@pytest.mark.django_db(reset_sequences=True)
 def test_update_event_ready_for_event_group_publishing(
     snapshot, project_user_api_client, event, event_group
 ):

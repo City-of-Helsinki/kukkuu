@@ -62,9 +62,9 @@ snapshots['test_add_event_project_user 1'] = {
                 'capacityPerOccurrence': 30,
                 'duration': 1000,
                 'eventGroup': {
-                    'id': 'RXZlbnRHcm91cE5vZGU6MjE='
+                    'id': 'RXZlbnRHcm91cE5vZGU6MQ=='
                 },
-                'id': 'RXZlbnROb2RlOjE2NQ==',
+                'id': 'RXZlbnROb2RlOjE=',
                 'image': '',
                 'imageAltText': 'Image alt text',
                 'participantsPerInvite': 'FAMILY',
@@ -1687,7 +1687,7 @@ snapshots['test_required_translation 1'] = {
                 'capacityPerOccurrence': 30,
                 'duration': 1000,
                 'eventGroup': None,
-                'id': 'RXZlbnROb2RlOjI1OA==',
+                'id': 'RXZlbnROb2RlOjExMA==',
                 'image': '',
                 'imageAltText': 'Image alt text',
                 'participantsPerInvite': 'FAMILY',
@@ -1805,9 +1805,9 @@ snapshots['test_update_event_project_user 1'] = {
                 'capacityPerOccurrence': 30,
                 'duration': 1000,
                 'eventGroup': {
-                    'id': 'RXZlbnRHcm91cE5vZGU6MjI='
+                    'id': 'RXZlbnRHcm91cE5vZGU6MQ=='
                 },
-                'id': 'RXZlbnROb2RlOjE4Mg==',
+                'id': 'RXZlbnROb2RlOjE=',
                 'image': 'http://testserver/media/teacher.jpg',
                 'imageAltText': 'Image alt text',
                 'occurrences': {
@@ -1847,9 +1847,9 @@ snapshots['test_update_event_ready_for_event_group_publishing 1'] = {
                 'capacityPerOccurrence': 35,
                 'duration': 181,
                 'eventGroup': {
-                    'id': 'RXZlbnRHcm91cE5vZGU6MjM='
+                    'id': 'RXZlbnRHcm91cE5vZGU6MQ=='
                 },
-                'id': 'RXZlbnROb2RlOjE4Mw==',
+                'id': 'RXZlbnROb2RlOjE=',
                 'image': 'http://testserver/media/teacher.jpg',
                 'imageAltText': '',
                 'occurrences': {
