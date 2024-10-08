@@ -23,7 +23,6 @@ from common.utils import (
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
-    map_enums_to_values_in_kwargs,
     project_user_required,
     update_object,
     update_object_with_translations,
@@ -644,7 +643,6 @@ class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_id = get_node_id_from_global_id(kwargs.get("event_id"), "EventNode")
         given_passwords = kwargs.get("passwords")
@@ -732,7 +730,6 @@ class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_id = get_node_id_from_global_id(kwargs.get("event_id"), "EventNode")
         child_id = get_node_id_from_global_id(kwargs.get("child_id"), "ChildNode")
@@ -774,7 +771,6 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         original_kwargs = deepcopy(kwargs)
 
@@ -843,7 +839,6 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         original_kwargs = deepcopy(kwargs)
 
@@ -894,7 +889,6 @@ class DeleteEventMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
         event.delete()
@@ -914,7 +908,6 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence_id = from_global_id(kwargs["occurrence_id"])[1]
         child_id = from_global_id(kwargs["child_id"])[1]
@@ -948,7 +941,6 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence_id = from_global_id(kwargs["occurrence_id"])[1]
         child_id = from_global_id(kwargs["child_id"])[1]
@@ -989,7 +981,6 @@ class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         if "attended" not in kwargs:
             raise DataValidationError('"attended" is required.')
@@ -1027,7 +1018,6 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         original_kwargs = deepcopy(kwargs)
 
@@ -1071,7 +1061,6 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         original_kwargs = deepcopy(kwargs)
         occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
@@ -1117,7 +1106,6 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
         log_text = (
@@ -1140,7 +1128,6 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event = get_obj_if_user_can_administer(info, kwargs["id"], Event)
         user = info.context.user
@@ -1184,7 +1171,6 @@ class AddEventGroupMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
 
@@ -1216,7 +1202,6 @@ class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs.pop("id"), EventGroup)
         user = info.context.user
@@ -1246,7 +1231,6 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @project_user_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
         user = info.context.user
@@ -1269,7 +1253,6 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @project_user_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         event_group = get_obj_if_user_can_administer(info, kwargs["id"], EventGroup)
         user = info.context.user

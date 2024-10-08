@@ -439,7 +439,7 @@ def test_add_message(snapshot, project_user_api_client, project, event_selection
     snapshot.assert_match(executed)
 
 
-@pytest.mark.parametrize("protocol", ["EMAIL", "SMS"])
+@pytest.mark.parametrize("protocol", [Message.EMAIL, Message.SMS])
 @patch.object(SMSNotificationService, "send_sms")
 def test_send_email_directly_with_add_message(
     mock_send_sms, protocol, project, project_user_api_client
@@ -447,12 +447,12 @@ def test_send_email_directly_with_add_message(
     ChildWithGuardianFactory()
 
     variables = get_add_message_variables(
-        project, protocol=protocol, send_directly=True
+        project, protocol=protocol.upper(), send_directly=True
     )
     project_user_api_client.execute(ADD_MESSAGE_MUTATION, variables=variables)
-    if protocol == "SMS":
+    if protocol == Message.SMS.upper():
         mock_send_sms.assert_called_once()
-    elif protocol == "EMAIL":
+    elif protocol == Message.EMAIL.upper():
         assert len(mail.outbox) == 1
 
 
@@ -571,7 +571,10 @@ def test_update_message(snapshot, project_user_api_client, event_selection):
         new_occurrences = []
 
     variables = get_update_message_variables(
-        message, event=new_event, occurrences=new_occurrences, protocol="SMS"
+        message,
+        event=new_event,
+        occurrences=new_occurrences,
+        protocol=Message.SMS.upper(),
     )
 
     executed = project_user_api_client.execute(

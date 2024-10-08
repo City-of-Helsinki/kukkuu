@@ -6,7 +6,7 @@ from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 
 from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
-from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from common.utils import login_required, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
 from verification_tokens.decorators import user_from_auth_verification_token
@@ -97,7 +97,6 @@ class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
 
@@ -131,7 +130,6 @@ class UpdateMyEmailMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         try:
@@ -170,7 +168,6 @@ class RequestEmailUpdateTokenMutation(graphene.relay.ClientIDMutation):
     @classmethod
     @login_required
     @transaction.atomic
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         new_email = kwargs["email"]
         user = info.context.user
@@ -212,7 +209,6 @@ class UpdateMyCommunicationSubscriptionsMutation(graphene.relay.ClientIDMutation
         use_only_when_first_denied=True,
     )
     @login_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, has_accepted_communication, **kwargs):
         user = info.context.user
         try:

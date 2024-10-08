@@ -10,7 +10,6 @@ from children.schema import ChildNode
 from common.utils import (
     get_node_id_from_global_id,
     login_required,
-    map_enums_to_values_in_kwargs,
 )
 from events.models import Occurrence
 from events.schema import OccurrenceNode
@@ -107,7 +106,6 @@ class SubscribeToFreeSpotNotificationMutation(graphene.relay.ClientIDMutation):
 
     @classmethod
     @login_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child, occurrence = _get_child_and_occurrence(info, **kwargs)
@@ -138,7 +136,6 @@ class UnsubscribeFromFreeSpotNotificationMutation(graphene.relay.ClientIDMutatio
 
     @classmethod
     @login_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         child, occurrence = _get_child_and_occurrence(info, **kwargs)
@@ -193,7 +190,6 @@ class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
         use_only_when_first_denied=True,
     )
     @login_required
-    @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         user.unsubscribe_all_notification_subscriptions()

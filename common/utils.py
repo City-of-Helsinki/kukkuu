@@ -24,30 +24,8 @@ def is_enum_value(value):
     return type(type(value)) is enum.EnumMeta
 
 
-def deepfix_enum_values(data):
-    """
-    Fix enum values recursively in/out of dictionaries, lists, sets, and tuples.
-    """
-    if isinstance(data, dict):
-        return {deepfix_enum_values(k): deepfix_enum_values(v) for k, v in data.items()}
-    elif isinstance(data, (list, set, tuple)):
-        return type(data)(deepfix_enum_values(v) for v in data)
-    elif is_enum_value(data):
-        return data.value
-    else:
-        return data
-
-
-def map_enums_to_values_in_kwargs(method):
-    """
-    Decorator that maps enums to their values in keyword arguments.
-    """
-
-    def wrapper(*args, **kwargs):
-        fixed_kwargs = deepfix_enum_values(kwargs)
-        return method(*args, **fixed_kwargs)
-
-    return wrapper
+def safe_test_and_get_enum_value(enum_value):
+    return enum_value.value if is_enum_value(enum_value) else enum_value
 
 
 def update_object(obj, data):
@@ -56,7 +34,7 @@ def update_object(obj, data):
     for k, v in data.items():
         if v is None and not obj.__class__._meta.get_field(k).null:
             raise DataValidationError(f"{k} cannot be null.")
-        setattr(obj, k, v)
+        setattr(obj, k, safe_test_and_get_enum_value(v))
     obj.save()
 
 
