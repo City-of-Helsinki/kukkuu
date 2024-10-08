@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -118,18 +119,38 @@ def _set_group_project_permissions(project, group):
             logger.error(f"Error assigning permission '{perm}': {e}")
 
 
+def is_browser_test_environment() -> bool:
+    """Checks if the application is running in a browser test environment.
+
+    The browser test environment is defined as:
+    1. Browser test API token authentication is enabled
+        (`settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]` is True).
+    2. The application is not running unit tests (pytest is not in sys.modules).
+
+    Returns:
+        bool: True if the application is in a browser test environment,
+            False otherwise.
+    """
+    is_configured_as_enabled = settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]
+    is_running_pytests = "pytest" in sys.modules
+    return is_configured_as_enabled and not is_running_pytests
+
+
 @transaction.atomic()
 def create_browser_test_resources(sender, **kwargs):
     """Creates Group, ADGroup, and Project resources for browser tests."""
 
-    if not settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]:
+    if not is_browser_test_environment():
+        logger.info(
+            "Not in browser test environment, "
+            "so not creating any browser test resources."
+        )
         return
 
     group = _get_or_create_browser_test_group()
     ad_group = _get_or_create_browser_test_ad_group()
     _get_or_create_browser_test_ad_group_mapping(ad_group=ad_group, group=group)
     project = _get_or_create_browser_test_project()
-
     _set_group_project_permissions(project=project, group=group)
 
 
