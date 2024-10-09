@@ -389,7 +389,6 @@ class EnrolmentAdmin(admin.ModelAdmin):
         "occurrence",
         "attended",
         "created_at",
-        "updated_at",
         "reminder_sent_at",
         "feedback_notification_sent_at",
     )
@@ -397,10 +396,18 @@ class EnrolmentAdmin(admin.ModelAdmin):
         "occurrence__event__project__year",
         "attended",
         "created_at",
-        "updated_at",
         "reminder_sent_at",
         "feedback_notification_sent_at",
     )
+    fields = [
+        "child",
+        "occurrence",
+        "attended",
+        "reminder_sent_at",
+        "feedback_notification_sent_at",
+        "created_at",
+        "reference_id",
+    ]
     search_fields = (
         "child__name",
         "occurrence__event__translations__name",
@@ -412,6 +419,8 @@ class EnrolmentAdmin(admin.ModelAdmin):
     readonly_fields = [
         "reminder_sent_at",
         "feedback_notification_sent_at",
+        "created_at",
+        "reference_id",
     ]
     date_hierarchy = "created_at"
     order = "-created_at"
