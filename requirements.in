@@ -10,6 +10,7 @@ django-storages[google, azure]
 factory-boy
 graphene-django
 graphene-file-upload
+django-graphql-jwt
 psycopg2
 sentry-sdk
 Pillow

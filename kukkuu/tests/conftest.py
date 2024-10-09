@@ -1,10 +1,12 @@
 import secrets
+from typing import Optional
 
 import pytest
 
 from kukkuu.service import get_hashid_service
 from kukkuu.tests.utils.jwt_utils import generate_symmetric_test_jwt
 from users.factories import UserFactory
+from users.models import User
 
 
 @pytest.fixture
@@ -32,9 +34,8 @@ def get_browser_test_bearer_token_for_user(oidc_browser_test_api_token_auth_sett
     The generator function returns a signed bearer token to authenticate through
     the authentcation made for browser testing."""
 
-    default_user = UserFactory.build()
-
-    def generate_test_jwt_token(user=default_user):
+    def generate_test_jwt_token(user: Optional[User] = None):
+        user = user or UserFactory.build()
         return generate_symmetric_test_jwt(user)
 
     return generate_test_jwt_token

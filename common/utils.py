@@ -1,13 +1,17 @@
 import binascii
 import enum
 from copy import deepcopy
-from functools import wraps
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import Node
-from graphql.type import GraphQLResolveInfo
+from graphql_jwt.decorators import (
+    login_required as graphql_jwt_login_required,
+)
+from graphql_jwt.decorators import (
+    user_passes_test,
+)
 from graphql_relay import from_global_id, to_global_id
 
 from kukkuu import __version__
@@ -116,33 +120,7 @@ def get_obj_if_user_can_administer(info, global_id, expected_obj_type):
     return obj
 
 
-def context(f):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            info = next(arg for arg in args if isinstance(arg, GraphQLResolveInfo))
-            return func(info.context, *args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def user_passes_test(test_func):
-    def decorator(f):
-        @wraps(f)
-        @context(f)
-        def wrapper(context, *args, **kwargs):
-            if test_func(context.user):
-                return f(*args, **kwargs)
-            raise PermissionDenied("You do not have permission to perform this action")
-
-        return wrapper
-
-    return decorator
-
-
-# copied from https://github.com/flavors/django-graphql-jwt/blob/704f24e7ebbea0b81015ef3c1f4a302e9d432ecf/graphql_jwt/decorators.py  # noqa
-login_required = user_passes_test(lambda u: u.is_authenticated)
+login_required = graphql_jwt_login_required
 
 project_user_required = user_passes_test(
     lambda u: u.is_authenticated and u.administered_projects

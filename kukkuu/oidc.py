@@ -8,8 +8,10 @@ from helusers.jwt import JWT, ValidationError
 from helusers.oidc import AuthenticationError, RequestJWTAuthentication
 from helusers.settings import api_token_auth_settings
 from helusers.user_utils import get_or_create_user
+from jose import ExpiredSignatureError
 from jose import jwt as jose_jwt
 
+from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
 logger = logging.getLogger(__name__)
@@ -40,28 +42,26 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
                     "JWT_SIGN_SECRET (JWT secret key) must be 256 bits"
                 )
 
-    def _get_auth_header_jwt(self, request):
-        """Looks for a JWT from the request's "Authorization" header.
-
-        If the header is not found, or it doesn't contain a JWT, returns None.
-        If the header is found and contains a JWT then returns a JWT.
-
-        Args:
-            request: the request object
-
-        Returns:
-            JWT|None: JWT if the Authorization header contains one. Otherwise None.
+    def _get_auth_header_jwt(self, request) -> Optional[JWT]:
         """
-        auth_header = request.headers["Authorization"]
+        Extracts a JWT from the request's "Authorization" header.
+
+        Returns the JWT if found and valid, otherwise None.
+        """
+        auth_header = request.headers.get("Authorization")  # Use .get() for safety
 
         if not auth_header:
             return None
 
-        auth_scheme, jwt_value = auth_header.split()
-        if auth_scheme.lower() != "bearer":
+        try:
+            auth_scheme, jwt_value = auth_header.split()
+            if auth_scheme.lower() == "bearer":
+                return JWT(jwt_value, self._api_token_auth_settings)
+        except ValueError:
+            # Handle potential errors from splitting the header
             return None
 
-        return JWT(jwt_value, self._api_token_auth_settings)
+        return None
 
     def _validate_symmetrically_signed_jwt(self, jwt: JWT):
         """
@@ -105,35 +105,33 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
             Optional[JWT]: JWT if it is issued for brower test use. Otherwise None.
         """
         jwt = self._get_auth_header_jwt(request)
-        if jwt.claims.get("iss") not in self._api_token_auth_settings.ISSUER:
-            return None
-        return jwt
+        if jwt and jwt.claims.get("iss") in self._api_token_auth_settings.ISSUER:
+            return jwt
+        return None
 
-    def authenticate_test_user(self, jwt: JWT):
-        """Authenticate a user who is sending the browser test request.
+    def is_browser_testing_jwt_enabled(self) -> bool:
+        return self._api_token_auth_settings.ENABLED
 
-        Args:
-            jwt (JWT): the JWT issued for browser testing use that is
-                attached into the request.
+    def authenticate_test_user(self, jwt: JWT) -> UserAuthorization:
+        """Authenticates a user with a JWT issued for browser testing.
 
-        Returns:
-            UserAuthorization: user authorization instance.
+        Validates the JWT, retrieves or creates the user, and returns a
+        UserAuthorization object.
         """
         logger.info("Authenticating with a test JWT!")
         self._validate_symmetrically_signed_jwt(jwt)
         logger.debug(
-            "The symmetrically signed JWT was valid.",
-            extra={"jwt_claims": jwt.claims if jwt else None},
+            "The symmetrically signed JWT was valid.", extra={"jwt_claims": jwt.claims}
         )
         user = get_or_create_user(jwt.claims, oidc=True)
         logger.debug(
-            "The user %s returned from get_or_create_user",
+            "User authenticated: %s",
             user,
             extra={"user": getattr(user, "__dict__", str(user))},
         )
         return UserAuthorization(user, jwt.claims)
 
-    def authenticate(self, request):
+    def authenticate(self, request, **credentials):
         """
         Looks for a JWT from the request's "Authorization" header.
         If the header is not found, or it doesn't contain a JWT, returns None.
@@ -145,11 +143,16 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
 
         If verification passes, takes a user's id from the JWT's "sub" claim.
         Creates a User if it doesn't already exist.
-        On success returns a UserAuthorization object.
-        Raises an AuthenticationError on authentication failure.
 
+        On success returns a UserAuthorization object.
+
+        The authentications raises an AuthenticationError on authentication failure.
         """
-        if self._api_token_auth_settings.ENABLED:
-            if jwt := self.has_auth_token_for_testing(request):
-                return self.authenticate_test_user(jwt)
-        return super().authenticate(request)
+        try:
+            if self.is_browser_testing_jwt_enabled():
+                if jwt := self.has_auth_token_for_testing(request):
+                    return self.authenticate_test_user(jwt).user
+            user_auth = super().authenticate(request)
+            return getattr(user_auth, "user", None)
+        except ExpiredSignatureError as e:
+            raise AuthenticationExpiredError(e)
