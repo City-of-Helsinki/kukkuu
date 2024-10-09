@@ -15,11 +15,18 @@ from helusers.oidc import AuthenticationError
 from jose import ExpiredSignatureError, JWTError
 
 from common.tests.utils import assert_match_error_code, assert_permission_denied
-from kukkuu.consts import AUTHENTICATION_ERROR, AUTHENTICATION_EXPIRED_ERROR
+from kukkuu.consts import (
+    AUTHENTICATION_ERROR,
+    AUTHENTICATION_EXPIRED_ERROR,
+)
 from kukkuu.oidc import BrowserTestAwareJWTAuthentication
 from kukkuu.tests.utils.jwt_utils import TEST_JWT_EXP_TIME_IN_SECONDS
 from users.factories import GuardianFactory
 
+KUKKUU_IS_BROWSER_TESTING_ENABLED = (
+    "kukkuu.oidc.BrowserTestAwareJWTAuthentication.is_browser_testing_jwt_enabled"
+)
+HELUSERS_AUTHENTICATE = "kukkuu.oidc.RequestJWTAuthentication.authenticate"
 KUKKUU_AUTHENTICATE = "kukkuu.oidc.BrowserTestAwareJWTAuthentication.authenticate"
 SENTRY_CAPTURE_EXCEPTION = "sentry_sdk.capture_exception"
 
@@ -46,10 +53,7 @@ def request_factory(get_browser_test_bearer_token_for_user):
 
 @contextmanager
 def set_authenticated_user(user):
-    with patch(
-        KUKKUU_AUTHENTICATE,
-        return_value=UserAuthorization(user=user, api_token_payload={}),
-    ):
+    with patch(KUKKUU_AUTHENTICATE, return_value=user):
         yield
 
 
@@ -73,11 +77,11 @@ def test_authentication_authenticated(live_server):
     guardian = GuardianFactory(email="gustavo.guardian@example.com")
 
     with set_authenticated_user(guardian.user):
-        response = graphql_request(live_server)
-        assert (
-            response.json()["data"]["myProfile"]["email"]
-            == "gustavo.guardian@example.com"
+        response = graphql_request(
+            live_server, headers={"Authorization": "Bearer something-is-needed"}
         )
+        json = response.json()
+        assert json["data"]["myProfile"]["email"] == "gustavo.guardian@example.com"
 
 
 def test_authentication_error(live_server):
@@ -86,26 +90,28 @@ def test_authentication_error(live_server):
             KUKKUU_AUTHENTICATE,
             side_effect=AuthenticationError("JWT verification failed."),
         ):
-            response = graphql_request(live_server)
+            response = graphql_request(
+                live_server, headers={"Authorization": "Bearer something-is-needed"}
+            )
             assert_match_error_code(response.json(), AUTHENTICATION_ERROR)
             sentry.assert_called()
 
 
 def test_authentication_expired_error(live_server):
-    def expired_token_authenticate(*args):
-        try:
-            raise ExpiredSignatureError()
-        except Exception:
-            raise AuthenticationError("JWT verification failed.")
-
-    with patch(SENTRY_CAPTURE_EXCEPTION) as sentry:
-        with patch(
-            KUKKUU_AUTHENTICATE,
-            side_effect=expired_token_authenticate,
-        ):
-            response = graphql_request(live_server)
-            assert_match_error_code(response.json(), AUTHENTICATION_EXPIRED_ERROR)
-            sentry.assert_not_called()
+    with patch(
+        KUKKUU_IS_BROWSER_TESTING_ENABLED,
+        return_value=False,
+    ):
+        with patch(SENTRY_CAPTURE_EXCEPTION) as sentry:
+            with patch(
+                HELUSERS_AUTHENTICATE,
+                side_effect=ExpiredSignatureError(),
+            ):
+                response = graphql_request(
+                    live_server, headers={"Authorization": "Bearer something-is-needed"}
+                )
+                assert_match_error_code(response.json(), AUTHENTICATION_EXPIRED_ERROR)
+                sentry.assert_not_called()
 
 
 def test_browser_test_authentication_using_live_server(
@@ -119,9 +125,8 @@ def test_browser_test_authentication_using_live_server(
             "authorization": get_browser_test_bearer_token_for_user(guardian.user)
         },
     )
-    assert (
-        response.json()["data"]["myProfile"]["email"] == "gustavo.guardian@example.com"
-    )
+    json = response.json()
+    assert json["data"]["myProfile"]["email"] == "gustavo.guardian@example.com"
 
 
 @patch("kukkuu.oidc.get_or_create_user")

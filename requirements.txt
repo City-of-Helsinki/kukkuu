@@ -47,6 +47,7 @@ django==4.2.14
     #   django-anymail
     #   django-cors-headers
     #   django-filter
+    #   django-graphql-jwt
     #   django-guardian
     #   django-helusers
     #   django-ilmoitin
@@ -67,6 +68,8 @@ django-cors-headers==4.4.0
 django-environ==0.11.2
     # via -r requirements.in
 django-filter==24.2
+    # via -r requirements.in
+django-graphql-jwt==0.4.0
     # via -r requirements.in
 django-guardian==2.4.0
     # via -r requirements.in
@@ -122,9 +125,13 @@ google-resumable-media==2.7.1
 googleapis-common-protos==1.63.2
     # via google-api-core
 graphene==3.3
-    # via graphene-django
+    # via
+    #   django-graphql-jwt
+    #   graphene-django
 graphene-django==3.2.2
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   django-graphql-jwt
 graphene-file-upload==1.3.0
     # via -r requirements.in
 graphql-core==3.2.3
@@ -184,6 +191,8 @@ pycountry==24.6.1
     # via -r requirements.in
 pycparser==2.22
     # via cffi
+pyjwt==2.9.0
+    # via django-graphql-jwt
 pypng==0.20220715.0
     # via qrcode
 python-dateutil==2.9.0.post0

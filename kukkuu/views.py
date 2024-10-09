@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from graphene.validation import depth_limit_validator
 from graphene_file_upload.django import FileUploadGraphQLView
 from graphql import ExecutionResult
+from graphql_jwt.exceptions import PermissionDenied as GraphQLJWTPermissionDenied
 from helusers.oidc import AuthenticationError
 
 from kukkuu.consts import (
@@ -74,6 +75,7 @@ error_codes_shared = {
     Exception: GENERAL_ERROR,
     ObjectDoesNotExistError: OBJECT_DOES_NOT_EXIST_ERROR,
     PermissionDenied: PERMISSION_DENIED_ERROR,
+    GraphQLJWTPermissionDenied: PERMISSION_DENIED_ERROR,
     ApiUsageError: API_USAGE_ERROR,
     DataValidationError: DATA_VALIDATION_ERROR,
     InvalidEmailFormatError: INVALID_EMAIL_FORMAT_ERROR,
@@ -112,6 +114,7 @@ error_codes_kukkuu = {
 sentry_ignored_errors = (
     ObjectDoesNotExist,
     PermissionDenied,
+    GraphQLJWTPermissionDenied,
     AuthenticationExpiredError,
 )
 

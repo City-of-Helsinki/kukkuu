@@ -2,8 +2,11 @@ from functools import wraps
 from typing import Callable, Optional
 
 from django.core.exceptions import PermissionDenied
+from graphql_jwt.decorators import (
+    context,
+)
+from graphql_jwt.exceptions import PermissionDenied as GraphQLJWTPermissionDenied
 
-from common.utils import context
 from verification_tokens.models import VerificationToken
 
 
@@ -81,7 +84,10 @@ def user_from_auth_verification_token(
                 if not use_only_when_first_denied:
                     _use_auth_token(context, **kwargs)
                 return func(*args, **kwargs)
-            except PermissionDenied as permissionDeniedError:
+            except (
+                PermissionDenied,
+                GraphQLJWTPermissionDenied,
+            ) as permissionDeniedError:
                 _use_auth_token(context, permissionDeniedError, **kwargs)
                 return func(*args, **kwargs)
 
