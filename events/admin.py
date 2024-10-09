@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
 
 from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
@@ -399,15 +400,30 @@ class EnrolmentAdmin(admin.ModelAdmin):
         "reminder_sent_at",
         "feedback_notification_sent_at",
     )
-    fields = [
-        "child",
-        "occurrence",
-        "attended",
-        "reminder_sent_at",
-        "feedback_notification_sent_at",
-        "created_at",
-        "reference_id",
-    ]
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": [
+                    "child",
+                    "occurrence",
+                    "attended",
+                    "created_at",
+                    "reminder_sent_at",
+                    "feedback_notification_sent_at",
+                ],
+            },
+        ),
+        (
+            _("Ticket validity"),
+            {
+                "fields": [
+                    "reference_id",
+                    "is_reference_id_valid",
+                ],
+            },
+        ),
+    )
     search_fields = (
         "child__name",
         "occurrence__event__translations__name",
@@ -421,16 +437,23 @@ class EnrolmentAdmin(admin.ModelAdmin):
         "feedback_notification_sent_at",
         "created_at",
         "reference_id",
+        "is_reference_id_valid",
     ]
     date_hierarchy = "created_at"
     order = "-created_at"
 
-    def get_event(self, obj):
+    def get_event(self, obj: Enrolment):
         return obj.occurrence.event
 
     get_event.short_description = _("event")
 
-    def get_project_year(self, obj):
+    def get_project_year(self, obj: Enrolment):
         return obj.occurrence.event.project.year
 
     get_project_year.short_description = _("project year")
+
+    def is_reference_id_valid(self, obj: Enrolment):
+        _, is_valid = check_ticket_validity(obj.reference_id)
+        return is_valid
+
+    is_reference_id_valid.short_description = _("reference id validity")
