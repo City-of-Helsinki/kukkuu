@@ -894,7 +894,7 @@ class TicketSystemPasswordQueryset(models.QuerySet):
 
     @transaction.atomic
     def assign(self, event: Event, child: Child) -> "TicketSystemPassword":
-        obj: TicketSystemPassword = (
+        obj: Optional[TicketSystemPassword] = (
             self.select_for_update(skip_locked=True).filter(event=event).free().first()
         )
         if not obj:
