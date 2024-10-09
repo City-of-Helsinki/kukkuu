@@ -1,0 +1,11 @@
+[title-max-length] 
+line-length=50
+
+[title-min-length]
+min-length=3
+
+[body-max-line-length]
+line-length=72
+
+[body-min-length]
+min-length=0
