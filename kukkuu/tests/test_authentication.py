@@ -73,7 +73,10 @@ def test_authentication_authenticated(live_server):
     guardian = GuardianFactory(email="gustavo.guardian@example.com")
 
     with set_authenticated_user(guardian.user):
-        response = graphql_request(live_server)
+        response = graphql_request(
+            live_server,
+            headers={"Authorization": "Bearer something-is-needed"},
+        )
         assert (
             response.json()["data"]["myProfile"]["email"]
             == "gustavo.guardian@example.com"
@@ -86,8 +89,14 @@ def test_authentication_error(live_server):
             KUKKUU_AUTHENTICATE,
             side_effect=AuthenticationError("JWT verification failed."),
         ):
-            response = graphql_request(live_server)
-            assert_match_error_code(response.json(), AUTHENTICATION_ERROR)
+            response = graphql_request(
+                live_server,
+                headers={"Authorization": "Bearer something-is-needed"},
+            )
+            assert_match_error_code(
+                response.json(),
+                AUTHENTICATION_ERROR,
+            )
             sentry.assert_called()
 
 
@@ -103,7 +112,10 @@ def test_authentication_expired_error(live_server):
             KUKKUU_AUTHENTICATE,
             side_effect=expired_token_authenticate,
         ):
-            response = graphql_request(live_server)
+            response = graphql_request(
+                live_server,
+                headers={"Authorization": "Bearer something-is-needed"},
+            )
             assert_match_error_code(response.json(), AUTHENTICATION_EXPIRED_ERROR)
             sentry.assert_not_called()
 
