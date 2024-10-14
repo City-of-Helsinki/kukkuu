@@ -18,6 +18,7 @@ from kukkuu.consts import (
 )
 from messaging.factories import MessageFactory
 from messaging.models import Message
+from projects.models import ProjectPermission
 
 MESSAGES_QUERY = """
 query Messages(
@@ -388,8 +389,8 @@ def get_add_message_variables(
     project,
     event=None,
     occurrences=None,
-    recipient="ALL",
-    protocol="EMAIL",
+    recipient=Message.ALL.upper(),
+    protocol=Message.EMAIL.upper(),
     send_directly=False,
 ):
     variables = {
@@ -419,6 +420,8 @@ def get_add_message_variables(
 @pytest.mark.parametrize("event_selection", (None, "event", "occurrences"))
 @pytest.mark.django_db
 def test_add_message(snapshot, project_user_api_client, project, event_selection):
+    user = project_user_api_client.user
+    assign_perm(ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, user, project)
     if event_selection == "event":
         variables = get_add_message_variables(
             project, event=EventFactory(published_at=now())
@@ -439,11 +442,35 @@ def test_add_message(snapshot, project_user_api_client, project, event_selection
     snapshot.assert_match(executed)
 
 
-@pytest.mark.parametrize("protocol", ["EMAIL", "SMS"])
+@pytest.mark.django_db
+@pytest.mark.parametrize("has_perm", [True, False])
+def test_add_message_for_recipient_all_needs_permission(
+    has_perm, project_user_api_client, project
+):
+    if has_perm:
+        user = project_user_api_client.user
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, user, project
+        )
+    executed = project_user_api_client.execute(
+        ADD_MESSAGE_MUTATION,
+        variables=get_add_message_variables(project, recipient=Message.ALL.upper()),
+    )
+    if not has_perm:
+        assert_permission_denied(executed)
+    else:
+        assert executed["data"]["addMessage"]["message"] is not None
+        assert "errors" not in executed
+
+
+@pytest.mark.parametrize("protocol", [Message.EMAIL.upper(), Message.SMS.upper()])
 @patch.object(SMSNotificationService, "send_sms")
 def test_send_email_directly_with_add_message(
     mock_send_sms, protocol, project, project_user_api_client
 ):
+    user = project_user_api_client.user
+    assign_perm(ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, user, project)
+
     ChildWithGuardianFactory()
 
     variables = get_add_message_variables(
@@ -471,8 +498,8 @@ def test_cannot_add_message_with_event_for_invited_group_message(
         project,
         event=event,
         occurrences=occurrences,
-        recipient="INVITED",
-        protocol="EMAIL",
+        recipient=Message.INVITED.upper(),
+        protocol=Message.EMAIL.upper(),
     )
 
     executed = project_user_api_client.execute(
@@ -524,7 +551,11 @@ mutation UpdateMessage($input: UpdateMessageMutationInput!) {
 
 
 def get_update_message_variables(
-    message, event=None, occurrences=None, recipient="ATTENDED", **kwargs
+    message,
+    event=None,
+    occurrences=None,
+    recipient=Message.ATTENDED.upper(),
+    **kwargs,
 ):
     variables = {
         "input": {
@@ -549,7 +580,9 @@ def get_update_message_variables(
 
 @pytest.mark.parametrize("event_selection", (None, "event", "event_and_occurrences"))
 @pytest.mark.django_db
-def test_update_message(snapshot, project_user_api_client, event_selection):
+def test_update_message(snapshot, project_user_api_client, event_selection, project):
+    user = project_user_api_client.user
+    assign_perm(ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, user, project)
     old_event = EventFactory(published_at=now())
     message = MessageFactory(event=old_event)
     old_occurrences = OccurrenceFactory.create_batch(2, event=message.event)
@@ -571,7 +604,10 @@ def test_update_message(snapshot, project_user_api_client, event_selection):
         new_occurrences = []
 
     variables = get_update_message_variables(
-        message, event=new_event, occurrences=new_occurrences, protocol="SMS"
+        message,
+        event=new_event,
+        occurrences=new_occurrences,
+        protocol=Message.SMS.upper(),
     )
 
     executed = project_user_api_client.execute(
@@ -602,7 +638,10 @@ def test_cannot_update_event_for_invited_group_message(
         occurrences = [OccurrenceFactory(event=event)]
 
     variables = get_update_message_variables(
-        message, event=event, occurrences=occurrences, recipient="INVITED"
+        message,
+        event=event,
+        occurrences=occurrences,
+        recipient=Message.INVITED.upper(),
     )
 
     executed = project_user_api_client.execute(
@@ -631,6 +670,32 @@ def test_cannot_update_sent_message(project_user_api_client, sent_message):
     assert_match_error_code(executed, MESSAGE_ALREADY_SENT_ERROR)
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("has_perm", [True, False])
+def test_update_for_recipient_all_needs_permission(
+    has_perm, project_user_api_client, message, project
+):
+    if has_perm:
+        user = project_user_api_client.user
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, user, project
+        )
+    executed = project_user_api_client.execute(
+        UPDATE_MESSAGE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(message),
+                "recipientSelection": Message.ALL.upper(),
+            }
+        },
+    )
+    if not has_perm:
+        assert_permission_denied(executed)
+    else:
+        assert executed["data"]["updateMessage"]["message"] is not None
+        assert "errors" not in executed
+
+
 SEND_MESSAGE_MUTATION = """
 mutation SendMessage($input: SendMessageMutationInput!) {
   sendMessage(input: $input) {
@@ -648,7 +713,12 @@ mutation SendMessage($input: SendMessageMutationInput!) {
 @pytest.mark.django_db
 def test_send_message(snapshot, project_user_api_client, message):
     ChildWithGuardianFactory()
-
+    if message.recipient_selection == Message.ALL:
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+            project_user_api_client.user,
+            message.project,
+        )
     executed = project_user_api_client.execute(
         SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(message)}}
     )
@@ -658,10 +728,39 @@ def test_send_message(snapshot, project_user_api_client, message):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("has_perm", [True, False])
+def test_send_message_for_recipient_all_needs_permission(
+    has_perm, project_user_api_client, message
+):
+    ChildWithGuardianFactory()
+    assert message.recipient_selection == Message.ALL
+    if has_perm:
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+            project_user_api_client.user,
+            message.project,
+        )
+    executed = project_user_api_client.execute(
+        SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(message)}}
+    )
+    if not has_perm:
+        assert_permission_denied(executed)
+        assert len(mail.outbox) == 0
+    else:
+        assert len(mail.outbox) == 1
+
+
+@pytest.mark.django_db
 @patch.object(SMSNotificationService, "send_sms")
 def test_send_sms_message_sent_with_default_language(
     mock_send_sms, snapshot, project_user_api_client, sms_message
 ):
+    if sms_message.recipient_selection == Message.ALL:
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+            project_user_api_client.user,
+            sms_message.project,
+        )
     child = ChildWithGuardianFactory(relationship__guardian__language="sv")
     guardian = child.relationships.first().guardian
 
@@ -677,6 +776,12 @@ def test_send_sms_message_sent_with_default_language(
 
 @pytest.mark.django_db
 def test_cannot_send_message_unauthorized(wrong_project_api_client, message):
+    if message.recipient_selection == Message.ALL:
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+            wrong_project_api_client.user,
+            message.project,
+        )
     executed = wrong_project_api_client.execute(
         SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(message)}}
     )
@@ -687,7 +792,12 @@ def test_cannot_send_message_unauthorized(wrong_project_api_client, message):
 @pytest.mark.django_db
 def test_cannot_send_message_more_than_once(project_user_api_client, sent_message):
     ChildWithGuardianFactory()
-
+    if sent_message.recipient_selection == Message.ALL:
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+            project_user_api_client.user,
+            sent_message.project,
+        )
     executed = project_user_api_client.execute(
         SEND_MESSAGE_MUTATION, variables={"input": {"id": get_global_id(sent_message)}}
     )
