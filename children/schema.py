@@ -10,7 +10,6 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone as django_utils_timezone
 from django.utils.timezone import localdate, make_aware
-from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
@@ -22,6 +21,7 @@ from common.schema import (
     set_obj_languages_spoken_at_home,
 )
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from django_ilmoitin.utils import send_notification
 from events.models import Event, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,

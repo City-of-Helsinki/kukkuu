@@ -181,6 +181,43 @@ KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/check-ticket-validity/{refe
 
    - `pip-sync requirements.txt`
 
+### Forked Django Application: Django-Ilmoitin
+
+There is a fork of the `django-ilmoitin` Django application [(link to original repo)](https://github.com/City-of-Helsinki/django-ilmoitin) in this project.
+
+**Reason for Forking:**
+
+The official version of `django-ilmoitin` does not currently properly support Django 4.x, since there are some migrations that needs to be applied in the official version still. This fork has been modified to ensure compatibility.
+
+**Key Modifications:**
+
+- Auto generated migrations (with `python manage.py makemigrations`) in [django_ilmoitin/migrations/0006_alter_notificationtemplate_admins_to_notify_and_more.py](./django_ilmoitin/migrations/0006_alter_notificationtemplate_admins_to_notify_and_more.py)
+  ```
+  Migrations for 'django_ilmoitin':
+  django_ilmoitin/migrations/0006_alter_notificationtemplate_admins_to_notify_and_more.py
+  - Alter field admins_to_notify on notificationtemplate
+  - Alter field id on notificationtemplatetranslation
+  ```
+
+**Updating to the Official Version:**
+
+Once `django-ilmoitin` officially supports Django 4.2, this fork can be replaced. To update:
+
+1. remove this fork by removing the `django-ilmoitin` directory in [./django-ilmoitin](./django_ilmoitin/).
+2. install the official package update by updating the `django-ilmoitin` in [requirements.txt](./requirements.txt). While the `pip-tools` are in use, the upgrade can be done with the `pip-compile` updgrade command:
+
+```
+pip-compile -P django-ilmoitin requirements.in
+```
+
+To update the file in your own local Python virtualenv, use `pip-sync`:
+
+```
+pip-sync requirements.txt requirements-dev.txt
+```
+
+3. handle the migrations. Compare the migrations that have been applied in [django_ilmoitin/migrations/0006_alter_notificationtemplate_admins_to_notify_and_more.py](./django_ilmoitin/migrations/0006_alter_notificationtemplate_admins_to_notify_and_more.py) with the ones that now comes from the updated 3rd party package. Some faking may be needed. See more https://docs.djangoproject.com/en/4.2/ref/django-admin/#cmdoption-migrate-fake.
+
 ## Code linting & formatting
 
 This project uses [ruff](https://github.com/astral-sh/ruff) for Python code linting and formatting.
@@ -192,15 +229,18 @@ Basic `ruff` commands:
 - Format: `ruff format`
 
 Basically:
- - Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
- - Ruff formatter (i.e. `ruff format`) does what `black` did before.
+
+- Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
+- Ruff formatter (i.e. `ruff format`) does what `black` did before.
 
 Integrations for `ruff` are available for many editors:
- - https://docs.astral.sh/ruff/integrations/
+
+- https://docs.astral.sh/ruff/integrations/
 
 ### Pre-commit hooks
 
 You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
+
 1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
    - `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
