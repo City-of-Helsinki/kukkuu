@@ -204,9 +204,12 @@ You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code
 1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
    - `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
-   - `pre-commit install`
+   - `pre-commit install` for code formatting & linting
+   - `pre-commit install --hook-type commit-msg` for commit message linting
 
 After that, linting and formatting hooks will run against all changed files before committing.
+
+Git commit message linting is configured in [.gitlint](./.gitlint)
 
 ## Issues board
 
