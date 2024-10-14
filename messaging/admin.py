@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
@@ -15,11 +16,11 @@ class MessageAdmin(TranslatableAdmin):
         "get_subject_with_fallback",
         "project",
         "protocol",
-        "sent_at",
+        "get_occurrences_count",
         "get_recipient_count",
+        "sent_at",
         "created_at",
         "updated_at",
-        "get_occurrences_names",
     )
     fields = (
         "project",
@@ -41,6 +42,10 @@ class MessageAdmin(TranslatableAdmin):
     )
     date_hierarchy = "created_at"
     actions = ("send",)
+    ordering = ["-id"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(Count("occurrences"))
 
     def get_subject_with_fallback(self, obj):
         """By default the current active language is used,
@@ -58,15 +63,10 @@ class MessageAdmin(TranslatableAdmin):
 
     get_subject_with_fallback.short_description = _("subject")
 
-    def get_occurrences_names(self, obj):
-        return ", ".join(
-            [
-                f"{occurrence.event}: {occurrence}"
-                for occurrence in obj.occurrences.all()
-            ]
-        )
+    def get_occurrences_count(self, obj):
+        return obj.occurrences__count
 
-    get_occurrences_names.short_description = _("occurrences")
+    get_occurrences_count.short_description = _("occurrences count")
 
     def get_recipient_count(self, obj):
         return str(obj.get_recipient_count()) + (
