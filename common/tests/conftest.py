@@ -19,7 +19,11 @@ from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
 from languages.models import Language
 from projects.factories import ProjectFactory
-from projects.models import Project
+from projects.models import (
+    PERM_CAN_PUBLISH_EVENTS,
+    Project,
+    ProjectPermission,
+)
 from users.factories import GuardianFactory, UserFactory
 from users.models import User
 from venues.factories import VenueFactory
@@ -108,19 +112,19 @@ def guardian_api_client():
 @pytest.fixture()
 def project_user_api_client(project):
     user = UserFactory()
-    assign_perm("admin", user, project)
+    assign_perm(ProjectPermission.ADMIN.value, user, project)
     return create_api_client_with_user(user)
 
 
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def publisher_api_client(request, project):
     user = UserFactory()
-    assign_perm("admin", user, project)
+    assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:
-        assign_perm("publish", user, project)
+        assign_perm(ProjectPermission.PUBLISH.value, user, project)
     else:
-        assign_perm("projects.publish", user)
+        assign_perm(PERM_CAN_PUBLISH_EVENTS, user)
 
     return create_api_client_with_user(user)
 
@@ -128,7 +132,7 @@ def publisher_api_client(request, project):
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def event_group_manager_api_client(request, project):
     user = UserFactory()
-    assign_perm("admin", user, project)
+    assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:
         assign_perm("manage_event_groups", user, project)
@@ -185,14 +189,14 @@ def event_group():
 @pytest.fixture()
 def wrong_project_api_client(another_project):
     user = UserFactory()
-    assign_perm("admin", user, another_project)
+    assign_perm(ProjectPermission.ADMIN.value, user, another_project)
     return create_api_client_with_user(user)
 
 
 @pytest.fixture
 def two_project_user_api_client(project, another_project):
     user = UserFactory()
-    assign_perm("admin", user, [project, another_project])
+    assign_perm(ProjectPermission.ADMIN.value, user, [project, another_project])
     return create_api_client_with_user(user)
 
 

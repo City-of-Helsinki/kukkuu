@@ -1,9 +1,11 @@
 import logging
 from copy import deepcopy
+from typing import List, Optional
 
 import django_filters
 import graphene
 from django.apps import apps
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from graphene import relay
 from graphene_django import DjangoObjectType
@@ -19,6 +21,7 @@ from common.utils import (
 from events.models import Event, Occurrence
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
 from projects.models import Project
+from users.models import User
 
 from .exceptions import AlreadySentError
 from .models import Message
@@ -35,11 +38,11 @@ class MessageTranslationType(DjangoObjectType):
 
 
 class RecipientSelectionEnum(graphene.Enum):
-    ALL = "all"
-    INVITED = "invited"
-    ENROLLED = "enrolled"
-    ATTENDED = "attended"
-    SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION = "subscribed_to_free_spot_notification"
+    ALL = Message.ALL
+    INVITED = Message.INVITED
+    ENROLLED = Message.ENROLLED
+    ATTENDED = Message.ATTENDED
+    SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION = Message.SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION
 
 
 ProtocolType = graphene.Enum(
@@ -179,7 +182,11 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
         protocol = ProtocolType(default=Message.EMAIL, required=True)
         translations = graphene.List(MessageTranslationsInput)
         project_id = graphene.GlobalID()
-        recipient_selection = RecipientSelectionEnum(required=True)
+        recipient_selection = RecipientSelectionEnum(
+            required=True,
+            description="Set the scope for message recipients. "
+            "The 'ALL' is valid only when a user has a specific permission.",
+        )
         event_id = graphene.ID()
         occurrence_ids = graphene.List(graphene.NonNull(graphene.ID))
         send_directly = graphene.Boolean(
@@ -193,6 +200,7 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
         send_directly = kwargs.pop("send_directly", False)
         data = deepcopy(kwargs)
         data["project"] = get_obj_if_user_can_administer(
@@ -210,7 +218,11 @@ class AddMessageMutation(graphene.relay.ClientIDMutation):
         ]
 
         validate_recipient_selection_and_data(
-            data["recipient_selection"], data["event"], occurrences
+            data["recipient_selection"],
+            data["event"],
+            occurrences,
+            user,
+            data["project"],
         )
         validate_event_and_occurrences(data["event"], occurrences)
 
@@ -235,7 +247,10 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
         protocol = ProtocolType(default=Message.EMAIL)
         translations = graphene.List(MessageTranslationsInput)
         project_id = graphene.ID()
-        recipient_selection = RecipientSelectionEnum()
+        recipient_selection = RecipientSelectionEnum(
+            description="Set the scope for message recipients. "
+            "The 'ALL' is valid only when a user has a specific permission.",
+        )
         event_id = graphene.ID()
         occurrence_ids = graphene.List(graphene.NonNull(graphene.ID))
 
@@ -246,9 +261,9 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
+        user = info.context.user
         data = deepcopy(kwargs)
         message = get_obj_if_user_can_administer(info, data.pop("id"), Message)
-
         if message.sent_at:
             raise MessageAlreadySentError(
                 "Cannot update because the message has already been sent."
@@ -277,11 +292,13 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
         if recipient_selection := data.get("recipient_selection"):
             validate_recipient_selection_and_data(
                 recipient_selection,
-                data["event"] if "event" in data else message.event,
+                data.get("event", message.event),
                 occurrences,
+                user,
+                data.get("project_id", message.project),
             )
         validate_event_and_occurrences(
-            data["event"] if "event" in data else message.event,
+            data.get("event", message.event),
             occurrences if occurrences is not None else message.occurrences.all(),
         )
 
@@ -297,7 +314,22 @@ class UpdateMessageMutation(graphene.relay.ClientIDMutation):
         return UpdateMessageMutation(message=message)
 
 
-def validate_recipient_selection_and_data(recipient_selection, event, occurrences):
+def validate_recipient_selection_and_data(
+    recipient_selection: RecipientSelectionEnum,
+    event: Optional[Event],
+    occurrences: Optional[List[Occurrence]],
+    user: Optional[User],
+    project: Optional[Project],
+):
+    if (
+        recipient_selection == RecipientSelectionEnum.ALL.value
+        and not user.can_send_messages_to_all_in_project(project)
+    ):
+        raise PermissionDenied(
+            "User cannot send to ALL recipients "
+            "without having a permission 'message.can_send_to_all_in_project' for that"
+        )
+
     if recipient_selection == RecipientSelectionEnum.INVITED and (event or occurrences):
         raise DataValidationError(
             "Selecting an event or occurrences are not supported when "
@@ -327,13 +359,23 @@ class SendMessageMutation(graphene.relay.ClientIDMutation):
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         message = get_obj_if_user_can_administer(info, kwargs["id"], Message)
+        user = info.context.user
 
         try:
+            validate_recipient_selection_and_data(
+                message.recipient_selection,
+                message.event,
+                message.occurrences,
+                user,
+                message.project,
+            )
             message.send()
         except AlreadySentError:
             raise MessageAlreadySentError(
                 "Cannot send because the message has already been sent."
             )
+        except PermissionDenied as e:
+            raise e
 
         logger.info(f"user {info.context.user.uuid} sent message {message}")
 

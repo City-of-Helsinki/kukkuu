@@ -21,6 +21,12 @@ from gdpr.consts import CLEARED_VALUE
 from gdpr.models import GDPRModel
 from kukkuu.consts import DEFAULT_LANGUAGE
 from languages.models import Language
+from projects.models import (
+    PERM_CAN_MANAGE_EVENT_GROUPS,
+    PERM_CAN_PUBLISH_EVENTS,
+    PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT,
+    ProjectPermission,
+)
 
 if TYPE_CHECKING:
     from children.models import Child
@@ -92,21 +98,28 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
     def administered_projects(self):
         from projects.models import Project  # noqa
 
-        return list(get_objects_for_user(self, "admin", Project))
+        return list(get_objects_for_user(self, ProjectPermission.ADMIN.value, Project))
 
     def can_administer_project(self, project):
         return project in self.administered_projects
 
     def can_publish_in_project(self, project):
-        return self.has_perm("publish", project) or self.has_perm("projects.publish")
-
-    def can_manage_event_groups_in_project(self, project):
-        return self.has_perm("manage_event_groups", project) or self.has_perm(
-            "projects.manage_event_groups"
+        return self.has_perm(ProjectPermission.PUBLISH.value, project) or self.has_perm(
+            PERM_CAN_PUBLISH_EVENTS
         )
 
+    def can_manage_event_groups_in_project(self, project):
+        return self.has_perm(
+            ProjectPermission.MANAGE_EVENT_GROUPS.value, project
+        ) or self.has_perm(PERM_CAN_MANAGE_EVENT_GROUPS)
+
+    def can_send_messages_to_all_in_project(self, project):
+        return self.has_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, project
+        ) or self.has_perm(PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT)
+
     def get_active_verification_tokens(
-        self, verification_type: "VerificationToken.verification_type" = None
+        self, verification_type: Optional[str] = None
     ) -> list["VerificationToken"]:
         """Filter active verification tokens"""
         from verification_tokens.models import VerificationToken
