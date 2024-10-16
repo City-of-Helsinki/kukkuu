@@ -69,6 +69,7 @@ query MyAdminProfile{
           myPermissions {
             publish
             manageEventGroups
+            canSendToAllInProject
           }
         }
       }

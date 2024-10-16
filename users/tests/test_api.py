@@ -14,6 +14,13 @@ from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
 from projects.factories import ProjectFactory
+from projects.models import (
+    PERM_CAN_ADMINISTRATE_PROJECT,
+    PERM_CAN_MANAGE_EVENT_GROUPS,
+    PERM_CAN_PUBLISH_EVENTS,
+    PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT,
+    ProjectPermission,
+)
 from users.factories import GuardianFactory
 from users.models import Guardian
 from users.tests.mutations import (
@@ -406,14 +413,24 @@ def test_my_admin_profile_project_admin(
     project_2 = ProjectFactory(
         year=2022, name="project where base admin object perm and other object perms"
     )
-    assign_perm("admin", user_api_client.user, [project_1, project_2])
-    assign_perm("publish", user_api_client.user, project_2)
-    assign_perm("manage_event_groups", user_api_client.user, project_2)
+    assign_perm(
+        ProjectPermission.ADMIN.value, user_api_client.user, [project_1, project_2]
+    )
+    assign_perm(ProjectPermission.PUBLISH.value, user_api_client.user, project_2)
+    assign_perm(
+        ProjectPermission.MANAGE_EVENT_GROUPS.value, user_api_client.user, project_2
+    )
+    assign_perm(
+        ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
+        user_api_client.user,
+        project_2,
+    )
 
     if has_also_model_perms:
-        assign_perm("projects.admin", user_api_client.user)
-        assign_perm("projects.publish", user_api_client.user)
-        assign_perm("projects.manage_event_groups", user_api_client.user)
+        assign_perm(PERM_CAN_ADMINISTRATE_PROJECT, user_api_client.user)
+        assign_perm(PERM_CAN_PUBLISH_EVENTS, user_api_client.user)
+        assign_perm(PERM_CAN_MANAGE_EVENT_GROUPS, user_api_client.user)
+        assign_perm(PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT, user_api_client.user)
 
     ProjectFactory(year=2030, name="project where no object perms")
 
