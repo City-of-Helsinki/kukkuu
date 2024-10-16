@@ -105,6 +105,7 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': True,
                                 'manageEventGroups': True,
                                 'publish': True
                             },
@@ -114,6 +115,7 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': True,
                                 'manageEventGroups': True,
                                 'publish': True
                             },
@@ -123,6 +125,7 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': True,
                                 'manageEventGroups': True,
                                 'publish': True
                             },
@@ -132,6 +135,7 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': True,
                                 'manageEventGroups': True,
                                 'publish': True
                             },
@@ -152,6 +156,7 @@ snapshots['test_my_admin_profile_project_admin[no_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': False,
                                 'manageEventGroups': False,
                                 'publish': False
                             },
@@ -161,6 +166,7 @@ snapshots['test_my_admin_profile_project_admin[no_model_perm] 1'] = {
                     {
                         'node': {
                             'myPermissions': {
+                                'canSendToAllInProject': True,
                                 'manageEventGroups': True,
                                 'publish': True
                             },
