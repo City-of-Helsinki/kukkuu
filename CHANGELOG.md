@@ -1,6 +1,28 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.9.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.8.0...kukkuu-v3.9.0) (2024-10-17)
+
+
+### Features
+
+* Add  canSendToAllInProject permission to myAdminProfile query ([462f72c](https://github.com/City-of-Helsinki/kukkuu/commit/462f72c415eb13770f2d0411d6c273c45f0a2848))
+* Add ticket validity to enrolment admin ([623d553](https://github.com/City-of-Helsinki/kukkuu/commit/623d553b1701bb35968c687ecd287d2d257d122c))
+* Admin view for enrolments ([7df154f](https://github.com/City-of-Helsinki/kukkuu/commit/7df154f601b155dd5831e9bbacebf1ac7122c5a0))
+* Attendance information given in ticket verification ([8cf9bb1](https://github.com/City-of-Helsinki/kukkuu/commit/8cf9bb17c3b493c02061f23228f2f20cfc1c8d0b))
+* **auth:** Authentication with graphene_jwt instead of custom implementation ([815cb27](https://github.com/City-of-Helsinki/kukkuu/commit/815cb27bcabada3443d72841860c819b37265ab9))
+* Enrolment reference id is viewable from the enrolment admin ([616dca1](https://github.com/City-of-Helsinki/kukkuu/commit/616dca1123324f25426042fd640801659072215f))
+* Event report API with event group and venue view sets as helpers ([b438915](https://github.com/City-of-Helsinki/kukkuu/commit/b43891583706d5a383541c1bff3a68ece325d595))
+* Project message permissions for sending to all ([d15578b](https://github.com/City-of-Helsinki/kukkuu/commit/d15578b0e84acf078b414a96e45339f348c14024))
+* Update ticket attended status ([b9eefcb](https://github.com/City-of-Helsinki/kukkuu/commit/b9eefcb36f9d5160218551ed60cef7f60cd33af2))
+
+
+### Bug Fixes
+
+* **admin:** Performance and UX issue in messaging admin ([4acdc93](https://github.com/City-of-Helsinki/kukkuu/commit/4acdc93eac4ba80356f9496b1e7e31b4c58401a6))
+* Browser test resources creation for pytests ([3de8cbb](https://github.com/City-of-Helsinki/kukkuu/commit/3de8cbbe1f42d1f5dafae61c8503ae7725e7023f))
+* Get_translations_dict utility's database usage ([81e87d6](https://github.com/City-of-Helsinki/kukkuu/commit/81e87d650a352a5a7289bbee71a11e438d859de6))
+
 ## [3.8.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.7.1...kukkuu-v3.8.0) (2024-09-18)
 
 
