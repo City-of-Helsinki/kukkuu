@@ -15,6 +15,8 @@ from events.schema import (
     LippupisteOccurrenceTicketSystem,
     TicketmasterEventTicketSystem,
     TicketmasterOccurrenceTicketSystem,
+    TixlyEventTicketSystem,
+    TixlyOccurrenceTicketSystem,
 )
 
 
@@ -49,9 +51,11 @@ schema = graphene.Schema(
     types=[
         TicketmasterEventTicketSystem,
         LippupisteEventTicketSystem,
+        TixlyEventTicketSystem,
         InternalEventTicketSystem,
         TicketmasterOccurrenceTicketSystem,
         LippupisteOccurrenceTicketSystem,
+        TixlyOccurrenceTicketSystem,
         InternalOccurrenceTicketSystem,
     ],
 )

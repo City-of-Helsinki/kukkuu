@@ -248,9 +248,11 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     INTERNAL = "internal"
     TICKETMASTER = "ticketmaster"
     LIPPUPISTE = "lippupiste"
+    TIXLY = "tixly"
     EXTERNAL_TICKET_SYSTEM_CHOICES = (
         (TICKETMASTER, _("Ticketmaster")),
         (LIPPUPISTE, _("Lippupiste")),
+        (TIXLY, _("Tixly")),
     )
     TICKET_SYSTEM_CHOICES = ((INTERNAL, _("Internal")), *EXTERNAL_TICKET_SYSTEM_CHOICES)
 
