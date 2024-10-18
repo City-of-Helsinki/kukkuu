@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.utils import timezone
-from django_ilmoitin.utils import Message as MailerMessage
-from django_ilmoitin.utils import send_all, send_mail
 from parler.utils.context import switch_language
 
+from django_ilmoitin.utils import Message as MailerMessage
+from django_ilmoitin.utils import send_all, send_mail
 from kukkuu.notification_service import send_sms_notification
 from messaging.exceptions import AlreadySentError
 from users.models import Guardian
