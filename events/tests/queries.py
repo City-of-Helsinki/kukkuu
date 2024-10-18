@@ -48,6 +48,9 @@ query Events {
                 ... on LippupisteOccurrenceTicketSystem {
                   url
                 }
+                ... on TixlyOccurrenceTicketSystem {
+                  url
+                }
               }
             }
           }
@@ -105,6 +108,9 @@ query Event($id: ID!) {
               url
             }
             ... on LippupisteOccurrenceTicketSystem {
+              url
+            }
+            ... on TixlyOccurrenceTicketSystem {
               url
             }
           }
@@ -166,6 +172,9 @@ query Occurrences {
             url
           }
           ... on LippupisteOccurrenceTicketSystem {
+            url
+          }
+          ... on TixlyOccurrenceTicketSystem {
             url
           }
         }
@@ -239,6 +248,9 @@ query Occurrence($id: ID!) {
         url
       }
       ... on LippupisteOccurrenceTicketSystem {
+        url
+      }
+      ... on TixlyOccurrenceTicketSystem {
         url
       }
     }
