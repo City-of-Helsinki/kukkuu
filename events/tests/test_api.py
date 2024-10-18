@@ -21,8 +21,11 @@ from events.factories import (
     EnrolmentFactory,
     EventFactory,
     EventGroupFactory,
+    LippupisteEventFactory,
     OccurrenceFactory,
+    TicketmasterEventFactory,
     TicketSystemPasswordFactory,
+    TixlyEventFactory,
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.tests.mutations import (
@@ -1629,7 +1632,10 @@ def test_event_group_query_wrong_project(
 
 def test_events_and_event_groups_query_normal_user(snapshot, guardian_api_client):
     EventFactory(name="I'M UNPUBLISHED AND SHOULDN'T BE VISIBLE")
-    EventFactory(name="Published Event", published_at=now())
+    EventFactory(name="Published internal Event", published_at=now())
+    TicketmasterEventFactory(name="Ticket master event", published_at=now())
+    LippupisteEventFactory(name="Lippupiste event", published_at=now())
+    TixlyEventFactory(name="Tixly event", published_at=now())
     EventGroupFactory(name="I'M UNPUBLISHED AND SHOULD NOT BE VISIBLE")
     EventGroupFactory(name="Published EventGroup", published_at=now())
 

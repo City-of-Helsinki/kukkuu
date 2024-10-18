@@ -621,7 +621,25 @@ snapshots['test_events_and_event_groups_query_normal_user 1'] = {
                 {
                     'node': {
                         '__typename': 'EventNode',
-                        'name': 'Published Event'
+                        'name': 'Published internal Event'
+                    }
+                },
+                {
+                    'node': {
+                        '__typename': 'EventNode',
+                        'name': 'Ticket master event'
+                    }
+                },
+                {
+                    'node': {
+                        '__typename': 'EventNode',
+                        'name': 'Lippupiste event'
+                    }
+                },
+                {
+                    'node': {
+                        '__typename': 'EventNode',
+                        'name': 'Tixly event'
                     }
                 },
                 {

@@ -63,6 +63,10 @@ class LippupisteEventFactory(RandomExternalTicketSystemEventFactory):
     ticket_system = Event.LIPPUPISTE
 
 
+class TixlyEventFactory(RandomExternalTicketSystemEventFactory):
+    ticket_system = Event.TIXLY
+
+
 class OccurrenceFactory(
     SaveAfterPostGenerationMixin, factory.django.DjangoModelFactory
 ):

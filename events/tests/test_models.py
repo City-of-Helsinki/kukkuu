@@ -13,8 +13,11 @@ from ..factories import (
     EnrolmentFactory,
     EventFactory,
     EventGroupFactory,
+    LippupisteEventFactory,
     OccurrenceFactory,
+    TicketmasterEventFactory,
     TicketSystemPasswordFactory,
+    TixlyEventFactory,
 )
 from ..models import Enrolment, Event, EventGroup, Occurrence
 
@@ -332,3 +335,14 @@ def test_event_can_child_enroll_already_enrolled(
     assert (
         enrolled_occurrence.event.can_child_enroll(child_with_random_guardian) is False
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "external_event_factory",
+    [TicketmasterEventFactory, LippupisteEventFactory, TixlyEventFactory],
+)
+def test_external_event_factories(external_event_factory):
+    assert Event.objects.count() == 0
+    external_event_factory()
+    assert Event.objects.count() == 1

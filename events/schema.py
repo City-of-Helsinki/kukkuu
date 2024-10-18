@@ -126,9 +126,10 @@ class EventParticipantsPerInvite(graphene.Enum):
 
 
 class TicketSystem(graphene.Enum):
-    INTERNAL = "internal"
-    TICKETMASTER = "ticketmaster"
-    LIPPUPISTE = "lippupiste"
+    INTERNAL = Event.INTERNAL
+    TICKETMASTER = Event.TICKETMASTER
+    LIPPUPISTE = Event.LIPPUPISTE
+    TIXLY = Event.TIXLY
 
 
 class EventTicketSystem(graphene.Interface):
@@ -146,6 +147,8 @@ class EventTicketSystem(graphene.Interface):
             return TicketmasterEventTicketSystem
         elif instance.ticket_system == Event.LIPPUPISTE:
             return LippupisteEventTicketSystem
+        elif instance.ticket_system == Event.TIXLY:
+            return TixlyEventTicketSystem
         else:
             raise Exception(f'Invalid ticket system "{instance.ticket_system}".')
 
@@ -194,6 +197,11 @@ class TicketmasterEventTicketSystem(ExternalEventTicketSystem):
 
 
 class LippupisteEventTicketSystem(ExternalEventTicketSystem):
+    class Meta:
+        interfaces = (EventTicketSystem,)
+
+
+class TixlyEventTicketSystem(ExternalEventTicketSystem):
     class Meta:
         interfaces = (EventTicketSystem,)
 
@@ -397,6 +405,8 @@ class OccurrenceTicketSystem(graphene.Interface):
             return TicketmasterOccurrenceTicketSystem
         elif ticket_system == Event.LIPPUPISTE:
             return LippupisteOccurrenceTicketSystem
+        elif ticket_system == Event.TIXLY:
+            return TixlyOccurrenceTicketSystem
         else:
             raise Exception(f'Invalid ticket system "{ticket_system}".')
 
@@ -414,6 +424,11 @@ class TicketmasterOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
 
 
 class LippupisteOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
+    class Meta:
+        interfaces = (OccurrenceTicketSystem,)
+
+
+class TixlyOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
     class Meta:
         interfaces = (OccurrenceTicketSystem,)
 
@@ -592,9 +607,30 @@ class LippupisteEnrolmentNode(ExternalTicketSystemEnrolmentNode):
         )
 
 
+class TixlyEnrolmentNode(ExternalTicketSystemEnrolmentNode):
+    class Meta:
+        model = TicketSystemPassword
+        interfaces = (relay.Node,)
+        fields = ("event", "created_at")
+
+    @classmethod
+    @login_required
+    def get_queryset(cls, queryset, info):
+        return (
+            super()
+            .get_queryset(queryset, info)
+            .filter(event__ticket_system=Event.TIXLY)
+        )
+
+
 class InternalOrTicketSystemEnrolmentUnion(graphene.Union):
     class Meta:
-        types = (EnrolmentNode, TicketmasterEnrolmentNode, LippupisteEnrolmentNode)
+        types = (
+            EnrolmentNode,
+            TicketmasterEnrolmentNode,
+            LippupisteEnrolmentNode,
+            TixlyEnrolmentNode,
+        )
 
 
 class InternalOrTicketSystemEnrolmentConnection(Connection):
