@@ -346,7 +346,10 @@ class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
         "child",
         "assigned_at",
     )
-    autocomplete_fields = ("child",)
+    autocomplete_fields = (
+        "child",
+        "event",
+    )
     list_display = (
         "value",
         "event",
