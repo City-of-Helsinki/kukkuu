@@ -30,6 +30,7 @@ LANGUAGE_CHOICES = [
     ("tgl", "Tagalog"),
     ("tha", "Thai"),
     ("tur", "Turkish"),
+    ("ukr", "Ukrainian"),
     ("urd", "Urdu"),
     ("vie", "Vietnamese"),
     ("zho", "Chinese"),
