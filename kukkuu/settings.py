@@ -154,19 +154,9 @@ STATIC_URL = env.str("STATIC_URL")
 
 # For staging env, we use Google Cloud Storage
 DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
-if DEFAULT_FILE_STORAGE == "storages.backends.gcloud.GoogleCloudStorage":
-    # GOOGLE_APPLICATION_CREDENTIALS do not work even it is mentioned in documentation
-    from google.oauth2 import service_account
 
-    GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-        env("STAGING_GCS_BUCKET_CREDENTIALS")
-    )
-
-    GS_BUCKET_NAME = env("GS_BUCKET_NAME")
-    GS_DEFAULT_ACL = env("GS_DEFAULT_ACL")
-    GS_FILE_OVERWRITE = env("GS_FILE_OVERWRITE")
 # For prod, it's Azure Storage
-elif DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
+if DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
     AZURE_CONTAINER = env("AZURE_CONTAINER")
     if env("AZURE_BLOB_STORAGE_SAS_TOKEN"):
