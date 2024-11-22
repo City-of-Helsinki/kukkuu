@@ -203,6 +203,7 @@ INSTALLED_APPS = [
     "kukkuu_mailer_admin",  # must be after `mailer`, since it overrides admin
     "django_ilmoitin",
     "django_filters",
+    "auditlog",
     "guardian",
     "rest_framework",
     "drf_spectacular",
@@ -232,6 +233,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "auditlog.middleware.AuditlogMiddleware",
 ]
 
 TEMPLATES = [
