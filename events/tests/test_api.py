@@ -54,6 +54,7 @@ from events.tests.queries import (
     EVENT_GROUP_EVENTS_FILTER_QUERY,
     EVENT_GROUP_QUERY,
     EVENT_QUERY,
+    EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
     EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
@@ -2105,6 +2106,67 @@ def test_event_ticket_system_password_counts_no_permission(guardian_api_client):
 
     executed = guardian_api_client.execute(
         EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
+        variables=variables,
+    )
+
+    assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
+
+
+@pytest.mark.parametrize(
+    "free_passwords_count, expected_result",
+    [
+        (0, False),
+        (1, True),
+        (123, True),
+    ],
+)
+def test_event_ticket_system_has_any_free_passwords(
+    free_passwords_count, expected_result, guardian_api_client
+):
+    """
+    Test that a non-anonymous user without project permissions can
+    check if an event has any free passwords.
+    """
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+
+    # free passwords
+    TicketSystemPasswordFactory.create_batch(
+        free_passwords_count, event=event, child=None
+    )
+
+    # used passwords
+    TicketSystemPasswordFactory.create_batch(2, event=event, assigned_at=now())
+
+    # another event free passwords, should not affect anything
+    TicketSystemPasswordFactory.create_batch(7, child=None)
+
+    # another event used passwords, should not affect anything
+    TicketSystemPasswordFactory.create_batch(6, assigned_at=now())
+
+    variables = {"eventId": get_global_id(event)}
+
+    executed = guardian_api_client.execute(
+        EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
+        variables=variables,
+    )
+
+    assert executed == {
+        "data": {"event": {"ticketSystem": {"hasAnyFreePasswords": expected_result}}}
+    }
+
+
+def test_event_ticket_system_has_any_free_passwords_no_permission(api_client):
+    """
+    Test that anonymous access to event's hasAnyFreePasswords is denied.
+    """
+    assert api_client.user.is_anonymous is True
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    TicketSystemPasswordFactory.create(event=event, child=None)
+
+    variables = {"eventId": get_global_id(event)}
+
+    executed = api_client.execute(
+        EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
         variables=variables,
     )
 

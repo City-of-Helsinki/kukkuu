@@ -155,6 +155,7 @@ class EventTicketSystem(graphene.Interface):
 
 class ExternalEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID())
+    has_any_free_passwords = graphene.Boolean(required=True)
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
     url = graphene.String(required=True)
@@ -163,6 +164,7 @@ class ExternalEventTicketSystem(ObjectType):
     class Meta:
         abstract = True
 
+    @staticmethod
     def resolve_child_password(event: Event, info, **kwargs):
         try:
             child = Child.objects.user_can_view(info.context.user).get(
@@ -174,19 +176,41 @@ class ExternalEventTicketSystem(ObjectType):
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
 
-    def resolve_free_password_count(self, info, **kwargs):
-        if not self.can_user_administer(info.context.user):
-            raise PermissionDenied()
-        return self.ticket_system_passwords.free().count()
+    @staticmethod
+    @login_required
+    def resolve_has_any_free_passwords(event: Event, info, **kwargs) -> bool:
+        """
+        Is there at least one free password available for the event?
 
-    def resolve_used_password_count(self, info, **kwargs):
-        if not self.can_user_administer(info.context.user):
-            raise PermissionDenied()
-        return self.ticket_system_passwords.used().count()
+        NOTE:
+            This is available to all logged-in users, no anonymous access,
+            but no project permission required either.
 
+        Returns:
+            bool: True if there is at least one free password available for the event,
+                  otherwise False.
+        """
+        return event.ticket_system_passwords.free().count() > 0
+
+    @staticmethod
+    @login_required
+    def resolve_free_password_count(event: Event, info, **kwargs):
+        if not event.can_user_administer(info.context.user):
+            raise PermissionDenied()
+        return event.ticket_system_passwords.free().count()
+
+    @staticmethod
+    @login_required
+    def resolve_used_password_count(event: Event, info, **kwargs):
+        if not event.can_user_administer(info.context.user):
+            raise PermissionDenied()
+        return event.ticket_system_passwords.used().count()
+
+    @staticmethod
     def resolve_url(event: Event, info, **kwargs):
         return event.ticket_system_url
 
+    @staticmethod
     def resolve_end_time(event: Event, info, **kwargs):
         return event.ticket_system_end_time
 
