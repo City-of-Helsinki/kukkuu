@@ -388,6 +388,18 @@ query TicketSystemPasswordCounts($eventId: ID!) {
 }
 """
 
+EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY = """
+query TicketSystemHasAnyFreePasswords($eventId: ID!) {
+  event(id: $eventId) {
+    ticketSystem {
+      ... on TicketmasterEventTicketSystem {
+        hasAnyFreePasswords
+      }
+    }
+  }
+}
+"""
+
 
 VERIFY_TICKET_QUERY = """
   query VerifyTicket($referenceId: String!){
