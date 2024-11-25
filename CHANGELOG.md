@@ -1,6 +1,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.10.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.9.0...kukkuu-v3.10.0) (2024-11-25)
+
+
+### Features
+
+* Add hasAnyFreePasswords to ExternalEventTicketSystem ([915e85a](https://github.com/City-of-Helsinki/kukkuu/commit/915e85a46b74ffad40836a01827c57237baccfad))
+
 ## [3.9.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.8.0...kukkuu-v3.9.0) (2024-10-31)
 
 
