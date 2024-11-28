@@ -46,6 +46,22 @@ class VenueNode(DjangoObjectType):
     class Meta:
         model = Venue
         interfaces = (relay.Node,)
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "name",
+            "description",
+            "address",
+            "accessibility_info",
+            "arrival_instructions",
+            "additional_info",
+            "wc_and_facilities",
+            "www_url",
+            "project",
+            "translations",
+            "occurrences",
+        )
         filter_fields = ("project_id",)
 
     @classmethod
