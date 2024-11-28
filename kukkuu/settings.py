@@ -224,6 +224,8 @@ INSTALLED_APPS = [
     "importers",
     "reports",
     "verification_tokens",
+    "hel_django_auditlog_extra.apps.HelDjangoAuditLogExtraConfig",
+    "kukkuu",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
@@ -237,7 +239,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "auditlog.middleware.AuditlogMiddleware",
+    "hel_django_auditlog_extra.middleware.AuditlogMiddleware",
 ]
 
 TEMPLATES = [
@@ -324,7 +326,9 @@ PARLER_ENABLE_CACHING = False
 
 GRAPHENE = {
     "SCHEMA": "kukkuu.schema.schema",
-    "MIDDLEWARE": ["graphql_jwt.middleware.JSONWebTokenMiddleware"],
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
 }
 
 GRAPHQL_JWT = {"JWT_AUTH_HEADER_PREFIX": "Bearer"}
@@ -407,6 +411,9 @@ HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED
 APP_RELEASE = env("APP_RELEASE")
 # get build time from a file in docker image
 APP_BUILD_TIME = datetime.fromtimestamp(os.path.getmtime(__file__))
+
+# Load auditlog settings
+from kukkuu.auditlog_settings import *  # noqa: E402, F403
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
