@@ -54,7 +54,7 @@ env = environ.Env(
         ["https://tunnistus.test.hel.ninja/auth/realms/helsinkitunnistus"],
     ),
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, True),
-    DEFAULT_FILE_STORAGE=(str, "django.core.files.storage.FileSystemStorage"),
+    STORAGES_DEFAULT_BACKEND=(str, "django.core.files.storage.FileSystemStorage"),
     GS_BUCKET_NAME=(str, ""),
     STAGING_GCS_BUCKET_CREDENTIALS=(str, ""),
     GS_DEFAULT_ACL=(str, "publicRead"),
@@ -153,10 +153,10 @@ MEDIA_URL = env.str("MEDIA_URL")
 STATIC_URL = env.str("STATIC_URL")
 
 # For staging env, we use Google Cloud Storage
-DEFAULT_FILE_STORAGE = env("DEFAULT_FILE_STORAGE")
+STORAGES_DEFAULT_BACKEND = env("STORAGES_DEFAULT_BACKEND")
 
 # For prod, it's Azure Storage
-if DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
+if STORAGES_DEFAULT_BACKEND == "storages.backends.azure_storage.AzureStorage":
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
     AZURE_CONTAINER = env("AZURE_CONTAINER")
     if env("AZURE_BLOB_STORAGE_SAS_TOKEN"):
@@ -165,6 +165,15 @@ if DEFAULT_FILE_STORAGE == "storages.backends.azure_storage.AzureStorage":
         AZURE_CONNECTION_STRING = f"{AZURE_ENDP};SharedAccessSignature={SAS_TOKEN};"
     else:
         AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
+
+STORAGES = {
+    "default": {
+        "BACKEND": STORAGES_DEFAULT_BACKEND,
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 ROOT_URLCONF = "kukkuu.urls"
 WSGI_APPLICATION = "kukkuu.wsgi.application"
