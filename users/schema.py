@@ -7,6 +7,7 @@ from graphene_django.types import DjangoObjectType
 
 from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
 from verification_tokens.decorators import user_from_auth_verification_token
@@ -22,6 +23,7 @@ from .utils import (
 User = get_user_model()
 
 
+@auditlog_access
 class GuardianNode(DjangoObjectType):
     language = LanguageEnum(required=True)
 
@@ -70,6 +72,7 @@ class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
         return queryset.user_can_view(info.context.user)
 
 
+@auditlog_access
 class AdminNode(DjangoObjectType):
     projects = DjangoConnectionField(ProjectNode)
 
