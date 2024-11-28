@@ -16,6 +16,7 @@ from guardian.admin import GuardedModelAdmin
 from children.models import Relationship
 from django_ilmoitin.models import NotificationTemplate
 from django_ilmoitin.utils import render_notification_template
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from languages.models import Language
 from projects.models import Project
 from reports.models import Permission as ReportPermission
@@ -198,7 +199,8 @@ def obsolete_and_send_user_auth_service_is_changing_notification(
 
 
 @admin.register(Guardian)
-class GuardianAdmin(admin.ModelAdmin):
+class GuardianAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    enable_list_view_audit_logging = True
     list_display = (
         "id",
         "user_link",
@@ -269,7 +271,13 @@ def make_obsoleted(modeladmin, request, queryset):
 
 
 @admin.register(get_user_model())
-class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
+class UserAdmin(
+    AuditlogAdminViewAccessLogMixin,
+    PermissionFilterMixin,
+    GuardedModelAdmin,
+    DjangoUserAdmin,
+):
+    enable_list_view_audit_logging = True
     list_display = (
         "username",
         "id",
@@ -320,7 +328,10 @@ class UserInline(admin.StackedInline):
 
 
 @admin.register(Group)
-class GroupAdmin(PermissionFilterMixin, DjangoGroupAdmin):
+class GroupAdmin(
+    AuditlogAdminViewAccessLogMixin, PermissionFilterMixin, DjangoGroupAdmin
+):
+    enable_list_view_audit_logging = False  # not needed in list view
     list_display = ("name", "get_user_count")
     inlines = (UserInline,)
 
