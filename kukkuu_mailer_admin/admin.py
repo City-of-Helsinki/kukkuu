@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from mailer.admin import MessageLogAdmin, show_to
-from mailer.models import MessageLog, RESULT_CODES
+from mailer.admin import MessageAdmin, MessageLogAdmin, show_to
+from mailer.models import Message, MessageLog, RESULT_CODES
+
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 
 
 def custom_titled_filter(title: str):
@@ -36,9 +38,10 @@ def sent_to_mail_server(message: MessageLog) -> str:
 sent_to_mail_server.short_description = _("Sent to mail server")
 
 
-class KukkuuMessageLogAdmin(MessageLogAdmin):
+class KukkuuMessageLogAdmin(AuditlogAdminViewAccessLogMixin, MessageLogAdmin):
     """Override the MessageLogAdmin provided by django_mailer."""
 
+    enable_list_view_audit_logging = True
     list_display = [
         "id",
         show_to,
@@ -54,3 +57,15 @@ class KukkuuMessageLogAdmin(MessageLogAdmin):
 admin.site.unregister(MessageLog)
 # Register a new admin for the MessageLog.
 admin.site.register(MessageLog, KukkuuMessageLogAdmin)
+
+
+class KukkuuMessageAdmin(AuditlogAdminViewAccessLogMixin, MessageAdmin):
+    """Override the MessageAdmin provided by django_mailer."""
+
+    enable_list_view_audit_logging = True
+
+
+# Unregister the Message admin provided by the `django_mailer`.
+admin.site.unregister(Message)
+# Register a new admin for the Message.
+admin.site.register(Message, KukkuuMessageAdmin)

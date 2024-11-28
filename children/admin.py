@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from events.models import Enrolment, TicketSystemPassword
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from languages.models import Language
 from subscriptions.models import FreeSpotNotificationSubscription
 
@@ -54,7 +55,10 @@ class TicketSystemPasswordInline(admin.TabularInline):
 
 
 @admin.register(Child)
-class ChildAdmin(admin.ModelAdmin):
+class ChildAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    # To write access log to audit log of each instance in the admin list view
+    enable_list_view_audit_logging = True
+
     list_display = (
         "id",
         "name",
