@@ -1,5 +1,4 @@
 import logging
-import warnings
 from datetime import timedelta
 from typing import Optional
 
@@ -209,20 +208,17 @@ class EventQueryset(TranslatableQuerySet):
 
     def available(self, child):
         """
+        Child's available events without checking yearly enrolment limits
+
         A child's available events must match all the following rules:
             * the event must be published
             * the event must have at least one occurrence in the future
             * the child must not have enrolled to the event
             * the child must not have enrolled to any event in the same event group
               as the event
-        """
 
-        warnings.warn(
-            "Query doesn't exclude events when yearly "
-            "limit of enrolments have been exceeded.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        :note: Does NOT take yearly enrolment limits into account
+        """
 
         child_enrolled_event_groups = EventGroup.objects.filter(
             events__occurrences__in=child.occurrences.all()
