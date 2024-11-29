@@ -22,7 +22,7 @@ from common.schema import (
     set_obj_languages_spoken_at_home,
 )
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
-from events.models import Event, Occurrence
+from events.models import Event, EventGroup, EventQueryset, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -84,19 +84,18 @@ class ChildNotesNode(DjangoObjectType):
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField(
         "events.schema.EventConnection",
-        deprecation_reason=(
-            "Doesn't exclude events when yearly limit of enrolments have been exceeded."
-        ),
+        description="All available events for the child. "
+        "NOTE: Does NOT take yearly enrolment limits into account.",
     )
     available_events_and_event_groups = relay.ConnectionField(
         "events.schema.EventOrEventGroupConnection",
-        deprecation_reason=(
-            "Doesn't exclude events when yearly limit of enrolments have been exceeded."
-        ),
+        description="All available events and event groups for the child. "
+        "NOTE: Does NOT take yearly enrolment limits into account.",
     )
     upcoming_events_and_event_groups = relay.ConnectionField(
         "events.schema.EventOrEventGroupConnection",
-        description="All upcoming events and event groups for the child's project.",
+        description="All upcoming events and event groups for the child's project. "
+        "NOTE: Does NOT take yearly enrolment limits into account.",
     )
     past_events = relay.ConnectionField("events.schema.EventConnection")
     languages_spoken_at_home = DjangoConnectionField(LanguageNode)
@@ -204,10 +203,22 @@ class ChildNode(DjangoObjectType):
 
         return [x.event for x in occurrences_and_passwords]
 
-    def resolve_available_events(self: Child, info, **kwargs):
+    def resolve_available_events(self: Child, info, **kwargs) -> EventQueryset:
+        """
+        Child's available events without checking yearly enrolment limits
+
+        :note: Does NOT take yearly enrolment limits into account
+        """
         return self.project.events.user_can_view(info.context.user).available(self)
 
-    def resolve_upcoming_events_and_event_groups(self: Child, info, **kwargs):
+    def resolve_upcoming_events_and_event_groups(
+        self: Child, info, **kwargs
+    ) -> list[Event | EventGroup]:
+        """
+        Child's upcoming events & event groups without checking yearly enrolment limits
+
+        :note: Does NOT take yearly enrolment limits into account
+        """
         from events.schema import EventGroupNode, EventNode  # noqa
 
         upcoming_events = self.project.events.published().upcoming()
@@ -224,7 +235,14 @@ class ChildNode(DjangoObjectType):
             reverse=True,
         )
 
-    def resolve_available_events_and_event_groups(self: Child, info, **kwargs):
+    def resolve_available_events_and_event_groups(
+        self: Child, info, **kwargs
+    ) -> list[Event | EventGroup]:
+        """
+        Child's available events & event groups without checking yearly enrolment limits
+
+        :note: Does NOT take yearly enrolment limits into account
+        """
         from events.schema import EventGroupNode, EventNode  # noqa
 
         available_events = self.project.events.available(self)
