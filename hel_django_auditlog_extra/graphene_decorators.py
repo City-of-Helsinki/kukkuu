@@ -20,9 +20,9 @@ def auditlog_access(cls):
         node = old_get_node(info, id)
         try:
             if node:
-                accessed.send(
-                    sender=cls._meta.model, instance=node, actor=info.context.user
-                )
+                sender = getattr(cls, "_meta", getattr(cls, "Meta", None)).model
+                if sender:
+                    accessed.send(sender=sender, instance=node, actor=info.context.user)
         except Exception as e:
             logger.exception(f"Could not write access log for node {node}: {e}")
         return node
