@@ -187,3 +187,27 @@ Code reference: [mixins.py](./mixins.py).
                 write_accessed_from_list_view = True  # Enable list view logging
                 # ... other admin configurations ...
             ```
+
+### Utilities
+
+Code reference: [utils.py](./utils.py).
+
+- `AuditLogConfigurationHelper`
+
+        A helper class for managing audit log configuration in your Django project.
+
+        This class provides methods to:
+
+        - Retrieve all models in your project.
+        - Identify models that are not explicitly configured for audit logging.
+        - Raise an error if any models are not configured when
+            `AUDITLOG_INCLUDE_ALL_MODELS` is enabled.
+
+        This helps ensure that all models are either explicitly included or excluded
+        from audit logging, preventing accidental omissions.
+
+        Example usage: Use when the audit log registry is already configured...
+
+            ```python
+            AuditLogConfigurationHelper.raise_error_if_unconfigured_models()
+            ```
