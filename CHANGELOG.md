@@ -1,6 +1,17 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.10.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.10.0...kukkuu-v3.10.1) (2024-12-03)
+
+
+### Bug Fixes
+
+* "The USE_L10N setting is deprecated" deprecation warning ([9f0abc1](https://github.com/City-of-Helsinki/kukkuu/commit/9f0abc17873af8d26657c7abf64a7628701ce328))
+* DEFAULT_FILE_STORAGE deprecation warning by using STORAGES instead ([808d500](https://github.com/City-of-Helsinki/kukkuu/commit/808d500b0a3f30e79d20e19e7adaffc24346e068))
+* Graphene-django warning that DjangoObjectType needs fields/exclude ([8be20af](https://github.com/City-of-Helsinki/kukkuu/commit/8be20afc9b63898f4fe3c890e0b0a00c4a0bcbd4))
+* Remove ChildNode deprecation warnings and document fields' behavior ([00846ec](https://github.com/City-of-Helsinki/kukkuu/commit/00846ecc65240fd7b58ee4c8ca171687dd842ee7))
+* Sentry_sdk deprecation warning by using current scope ([ebc5d65](https://github.com/City-of-Helsinki/kukkuu/commit/ebc5d6563aade650907139dd362390d82a8a0e9f))
+
 ## [3.10.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.9.0...kukkuu-v3.10.0) (2024-11-25)
 
 
