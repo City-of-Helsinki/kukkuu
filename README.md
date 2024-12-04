@@ -13,17 +13,18 @@
   - [Installing Python requirements](#installing-python-requirements)
   - [Database](#database)
   - [Notification import](#notification-import)
-  - [Cron jobs](#cron-jobs)
-    - [Reminder notifications](#reminder-notifications)
-    - [Feedback notifications](#feedback-notifications)
-    - [Queued email sending](#queued-email-sending)
-    - [SMS notifications](#sms-notifications)
   - [Daily running, Debugging](#daily-running-debugging)
 - [Authorization](#authorization)
+- [Cron jobs](#cron-jobs)
+  - [Reminder notifications](#reminder-notifications)
+  - [Feedback notifications](#feedback-notifications)
+  - [Queued email sending](#queued-email-sending)
+  - [SMS notifications](#sms-notifications)
 - [GDPR API data export](#gdpr-api-data-export)
 - [GraphQL API Documentation](#graphql-api-documentation)
 - [Report API](#report-api)
 - [QR-code ticket verification](#qr-code-ticket-verification)
+- [Audit logging](#audit-logging)
 - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
 - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -93,53 +94,6 @@ The emails notifications that Kukkuu sends can be imported from a Google Sheets 
 1. run `python manage.py import_notifications` to import and update all the notifications, or
 2. use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
 
-### Cron jobs
-
-`cron` is required for sending reminder notifications, and for sending emails queued (optional).
-
-#### Reminder notifications
-
-To send reminder notifications on time, `send_reminder_notifications` management command needs to be executed (at least) daily.
-
-Example crontab for sending reminder notifications every day at 12am:
-
-    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
-    # An empty line is required at the end of this file for a valid cron file.
-
-#### Feedback notifications
-
-To send notifications asking for feedback of recently ended events occurrences, `send_feedback_notifications` management command needs to be executed periodically.
-
-An additional delay between an occurrence's end time and the notification's send time can be configured with setting `KUKKUU_FEEDBACK_NOTIFICATION_DELAY`. The default value is `15`(min).
-
-Example crontab for sending feedback notifications:
-
-    1,16,31,46 * * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
-    # An empty line is required at the end of this file for a valid cron file.
-
-#### Queued email sending
-
-By default email sending is queued, which means that you need to set `send_mail` and `retry_deferred` to be executed periodically to get emails actually sent.
-
-Example crontab for queued emails (includes reminder notification sending as well):
-
-    * * * * * (/path/to/your/python path/to/your/app/manage.py send_mail > /var/log/cron.log 2>&1)
-    0,20,40 * * * * (/path/to/your/python path/to/your/app/manage.py retry_deferred > /var/log/cron.log 2>&1)
-    0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
-    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
-    # An empty line is required at the end of this file for a valid cron file.
-
-It is also possible to get emails sent right away without any cronjobs by setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `False`, which can be convenient in development. **CAUTION** do not use this in production!
-
-#### SMS notifications
-
-To use the SMS notification functionality, you have to acquire the API_KEY from [Notification Service API](https://github.com/City-of-Helsinki/notification-service-api). The following environment variables are needed:
-
-        ```python
-        NOTIFICATION_SERVICE_API_TOKEN=your_api_key
-        NOTIFICATION_SERVICE_API_URL=notification_service_end_point
-        ```
-
 ### Daily running, Debugging
 
 - Create `.env` file: `touch .env`
@@ -157,6 +111,53 @@ The Tunnistamo can be configured to be used [locally](./docs/setup-tunnistamo.md
 The Keycloak test environment can also be configured to be used [locally](./docs/setup-keycloak.md).
 
 > NOTE: Also check the [GDPR API documentation](./gdpr/README.md) because there is much more detailed instructions how to setup the Tunnistamo and the Helsinki-Profile!
+
+## Cron jobs
+
+`cron` is required for sending reminder notifications, and for sending emails queued (optional).
+
+### Reminder notifications
+
+To send reminder notifications on time, `send_reminder_notifications` management command needs to be executed (at least) daily.
+
+Example crontab for sending reminder notifications every day at 12am:
+
+    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
+    # An empty line is required at the end of this file for a valid cron file.
+
+### Feedback notifications
+
+To send notifications asking for feedback of recently ended events occurrences, `send_feedback_notifications` management command needs to be executed periodically.
+
+An additional delay between an occurrence's end time and the notification's send time can be configured with setting `KUKKUU_FEEDBACK_NOTIFICATION_DELAY`. The default value is `15`(min).
+
+Example crontab for sending feedback notifications:
+
+    1,16,31,46 * * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
+    # An empty line is required at the end of this file for a valid cron file.
+
+### Queued email sending
+
+By default email sending is queued, which means that you need to set `send_mail` and `retry_deferred` to be executed periodically to get emails actually sent.
+
+Example crontab for queued emails (includes reminder notification sending as well):
+
+    * * * * * (/path/to/your/python path/to/your/app/manage.py send_mail > /var/log/cron.log 2>&1)
+    0,20,40 * * * * (/path/to/your/python path/to/your/app/manage.py retry_deferred > /var/log/cron.log 2>&1)
+    0 0 * * * (/path/to/your/python path/to/your/app/manage.py purge_mail_log 7 > /var/log/cron.log 2>&1)
+    0 12 * * * (/path/to/your/python path/to/your/app/manage.py send_reminder_notifications > /var/log/cron.log 2>&1)
+    # An empty line is required at the end of this file for a valid cron file.
+
+It is also possible to get emails sent right away without any cronjobs by setting `ILMOITIN_QUEUE_NOTIFICATIONS` to `False`, which can be convenient in development. **CAUTION** do not use this in production!
+
+### SMS notifications
+
+To use the SMS notification functionality, you have to acquire the API_KEY from [Notification Service API](https://github.com/City-of-Helsinki/notification-service-api). The following environment variables are needed:
+
+        ```python
+        NOTIFICATION_SERVICE_API_TOKEN=your_api_key
+        NOTIFICATION_SERVICE_API_URL=notification_service_end_point
+        ```
 
 ## GDPR API data export
 
@@ -186,6 +187,24 @@ The [Hashids](https://hashids.org/python/) is used to create the magic number th
 KUKKUU_HASHID_SALT=ULGd5YeRv6yVtvoj
 KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/check-ticket-validity/{reference_id}
 ```
+
+## Audit logging
+
+Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read it's [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
+
+The configuration to define which models are in the scope of the audit logging can be found from [auditlog_settings.py](./kukkuu/auditlog_settings.py).
+
+The GraphQL and admin site views can be logged by using the mixins and decorators that the `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
+
+**References**:
+
+- Django-auditlog
+
+  > PyPi: https://pypi.org/project/django-auditlog/.
+  >
+  > Github: https://github.com/jazzband/django-auditlog.
+  >
+  > Docs: https://django-auditlog.readthedocs.io/en/latest/index.html.
 
 ## Keeping Python requirements up to date
 
