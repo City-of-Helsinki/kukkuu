@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Helsinki-Profile with Tunnistamo](#helsinki-profile-with-tunnistamo)
+  - [OIDC provider clients](#oidc-provider-clients)
+    - [Helsinki-Profile API](#helsinki-profile-api)
+    - [Helsinki-Profile UI](#helsinki-profile-ui)
+  - [OIDC API](#oidc-api)
+    - [Helsinki-profile API](#helsinki-profile-api)
+  - [OIDC API scopes](#oidc-api-scopes)
+    - [Helsinki-profile API Scope](#helsinki-profile-api-scope)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Helsinki-Profile with Tunnistamo
 
 ## OIDC provider clients

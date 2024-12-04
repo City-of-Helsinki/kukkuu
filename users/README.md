@@ -1,3 +1,20 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Users app](#users-app)
+  - [Models](#models)
+    - [User](#user)
+    - [Guardian](#guardian)
+  - [GraphQL Schema](#graphql-schema)
+    - [Guardians](#guardians)
+    - [My profile](#my-profile)
+      - [Update the email](#update-the-email)
+      - [Manage communication subscriptions](#manage-communication-subscriptions)
+    - [My admin profile](#my-admin-profile)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ### Users app
 
 #### Models
