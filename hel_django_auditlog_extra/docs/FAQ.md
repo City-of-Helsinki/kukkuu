@@ -1,4 +1,24 @@
-# Django-auditlog incompatibility issues with Django-graphene
+# FAQ
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Django-auditlog incompatibility issues with Django-graphene](#django-auditlog-incompatibility-issues-with-django-graphene)
+  - [Graphene's Error Handling and its Impact on Authentication](#graphenes-error-handling-and-its-impact-on-authentication)
+  - [Graphene's Unique Authentication Challenges](#graphenes-unique-authentication-challenges)
+  - [A custom Django authentication middleware implemenation for GraphQL vs the initial one](#a-custom-django-authentication-middleware-implemenation-for-graphql-vs-the-initial-one)
+  - [Automatic logging doesn't log the Actor](#automatic-logging-doesnt-log-the-actor)
+- [Users can't remove their own account because of actor field](#users-cant-remove-their-own-account-because-of-actor-field)
+- [How does Django use SimpleLazyObject during the authentication?](#how-does-django-use-simplelazyobject-during-the-authentication)
+- [Why are login attempts not logged with auditlog?](#why-are-login-attempts-not-logged-with-auditlog)
+- [Does django-auditlog track failed actions (e.g., failed saves, deletes)?](#does-django-auditlog-track-failed-actions-eg-failed-saves-deletes)
+  - [Should I log failed actions with django-auditlog?](#should-i-log-failed-actions-with-django-auditlog)
+  - [How can I log failed actions with django-auditlog?](#how-can-i-log-failed-actions-with-django-auditlog)
+  - [How can I create a separate model for logging specific errors?](#how-can-i-create-a-separate-model-for-logging-specific-errors)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Django-auditlog incompatibility issues with Django-graphene
 
 The Django-auditlog does not provide any automatic support for writing access logs to the audit logs. It only provides an automated way to handle object write logs. By access logs, we mean logs that record when a user accesses or interacts with a particular view or resource, as opposed to modifying an object in the database.
 
@@ -6,7 +26,7 @@ While it is a widely used Django app, `django-auditlog` does not support writing
 
 For example, if a user accesses a GraphQL view to fetch data, the audit log entry created by `django-auditlog` might show the actor as `system` (which is used for `AnonymousUser` or `None`), even though the user was authenticated by Graphene's middleware. This is because `set_actor` was called in Django's middleware before Graphene had a chance to authenticate the user.
 
-## Graphene's Error Handling and its Impact on Authentication
+### Graphene's Error Handling and its Impact on Authentication
 
 > Why does the Django Graphene have it's own `GRAPHENE.MIDDLEWARE` configuration?
 
@@ -30,7 +50,7 @@ Django middleware -> Routing to a GraphQL view -> Graphene middleware -> Graphen
 
 In essence, Graphene's middleware provides a way to add a layer of processing and customization specifically tailored to your GraphQL API, separate from the broader Django application middleware.
 
-## Graphene's Unique Authentication Challenges
+### Graphene's Unique Authentication Challenges
 
 The Graphene can provide public and private query fields. The queries like `introspection query` are generally public. Because the Django middlewares are executed before the GraphQL view is, and because the Django generally handles the authentication with Django middlewares (in city of Helsinki context usually with `django-helusers` auth middlewares), **the authentication errors are raised before the request handling gets to the Graphene**.
 
@@ -38,7 +58,7 @@ Generally, the Graphene handles the GraphQL errors in it's own scope. Instead of
 
 > Question: Should we somehow set (or mark) the GraphQL endpoint public in the Django routing?
 
-## A custom Django authentication middleware implemenation for GraphQL vs the initial one
+### A custom Django authentication middleware implemenation for GraphQL vs the initial one
 
 > Installation instructions of the django-graphql-jwt: https://django-graphql-jwt.domake.io/quickstart.html#installation.
 
@@ -94,7 +114,7 @@ class JWTMiddleware:
 
 Since the JWTMiddleware is a Graphene middleware (not Django middleware), the `auth_error` is raised as a GraphQL error (HTTP200 with an `error` field populated in the response).
 
-## Automatic logging doesn't log the Actor
+### Automatic logging doesn't log the Actor
 
 "Automatic Logging doesn't log the Actor": This is an issue tracked in: https://github.com/jazzband/django-auditlog/issues/115.
 
@@ -124,7 +144,7 @@ Eventhough the `auditlog.middleware.AuditlogMiddleware` is applied after the `dj
 
 In this provided fix, the user is set as a `SimpleLazyObject`, which means that the actor won't be set immediately, but will be resolved later, when the authentication is (hopefully) already done.
 
-# Users can't remove their own account because of actor field
+## Users can't remove their own account because of actor field
 
 "Users can't remove their own account because of actor field": This is an issue tracked in https://github.com/jazzband/django-auditlog/issues/245.
 
@@ -135,7 +155,7 @@ with disable_auditlog():
     user.delete()
 ```
 
-# How does Django use SimpleLazyObject during the authentication?
+## How does Django use SimpleLazyObject during the authentication?
 
 Django uses `SimpleLazyObject` during authentication to optimize database access and improve performance. Here's how it works:
 
@@ -175,7 +195,7 @@ def my_view(request):
 
 In this example, the database query to fetch the user happens only when `request.user.username` is accessed. If the user isn't authenticated, the database is never queried.
 
-# Why are login attempts not logged with auditlog?
+## Why are login attempts not logged with auditlog?
 
 The city of Helsinki's audit logs do not typically record individual login attempts. This is because most of our services rely on external authorization instead of local logins.
 
@@ -187,11 +207,11 @@ Here's why:
 
 - **Reducing Log Volume**: Logging every API request would create an overwhelming amount of data, making it difficult to find relevant information.
 
-# Does django-auditlog track failed actions (e.g., failed saves, deletes)?
+## Does django-auditlog track failed actions (e.g., failed saves, deletes)?
 
 No, django-auditlog primarily focuses on logging successful changes to your models. It doesn't automatically record failed actions like validation errors or database exceptions.
 
-## Should I log failed actions with django-auditlog?
+### Should I log failed actions with django-auditlog?
 
 Logging every failed action can lead to very verbose logs, consume significant storage, and potentially impact performance. However, there are cases where it's beneficial:
 
@@ -200,11 +220,13 @@ Logging every failed action can lead to very verbose logs, consume significant s
 - **Business Logic:** Monitor failed actions related to core processes (e.g., payments, orders).
 - **Compliance:** Adhere to industry regulations that require logging specific failed actions.
 
-## How can I log failed actions with django-auditlog?
+By default, the `django-auditlog` does not log the failed actions. It would be better to do that with some other logger. Solution could be on web server's access log level and also some tools like `django-axe` could be used to prevent brute-forcing and attacking.
+
+### How can I log failed actions with django-auditlog?
 
 While you _could_ use `auditlog.LogEntry` for this, it's generally better to create a separate model (e.g., `ErrorLogEntry`) or use a different logging mechanism altogether. This provides clearer separation, more flexibility, and better performance.
 
-## How can I create a separate model for logging specific errors?
+### How can I create a separate model for logging specific errors?
 
 Define a new model to store the relevant information about the errors you want to track:
 
@@ -212,16 +234,15 @@ Define a new model to store the relevant information about the errors you want t
 from django.db import models
 
 class ErrorLogEntry(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True)
-    error_type = models.CharField(max_length=255)
-    message = models.TextField()
-    traceback = models.TextField(blank=True, null=True)
+    is_sent = models.BooleanField(default=False, verbose_name=_("is sent"))
+    message = models.JSONField(verbose_name=_("message"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("created at"))
     # Add other relevant fields like user, affected object, etc.
 ```
 
 Then, in your signal handlers, middleware, or decorators, catch the specific errors and create instances of this model to log them.
 
-Example (using signals and a separate model):
+**Example** (using signals and a separate model):
 
 ```python
 from django.db.models.signals import pre_save
@@ -234,8 +255,9 @@ def log_validation_error(sender, instance, **kwargs):
         instance.full_clean()
     except ValidationError as e:
         ErrorLogEntry.objects.create(
-            error_type="ValidationError",
-            message=str(e),
-            # ... other relevant fields
+            message={
+                "status": "ValidationError"
+                # ... other relevant fields
+            },
         )
 ```
