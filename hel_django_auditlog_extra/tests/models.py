@@ -21,3 +21,4 @@ class DummyTestModel(models.Model):
 
     class Meta:
         managed = False
+        app_label = "hel_django_auditlog_extra"
