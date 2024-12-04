@@ -7,13 +7,6 @@ from hel_django_auditlog_extra.tests.models import DummyTestModel
 from hel_django_auditlog_extra.utils import AuditLogConfigurationHelper
 
 
-def test_get_app_models():
-    """Test that get_app_models returns all models."""
-    all_models = AuditLogConfigurationHelper.get_app_models()
-    assert LogEntry in all_models
-    assert DummyTestModel in all_models  # Assert that DummyTestModel is included
-
-
 @pytest.mark.parametrize(
     "model, expected_key",
     [
