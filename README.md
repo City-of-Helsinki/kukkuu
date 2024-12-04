@@ -4,6 +4,33 @@
 
 [![status](https://travis-ci.com/City-of-Helsinki/kukkuu.svg)](https://github.com/City-of-Helsinki/kukkuu)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Environments](#environments)
+- [Development with Docker](#development-with-docker)
+- [Development without Docker](#development-without-docker)
+  - [Installing Python requirements](#installing-python-requirements)
+  - [Database](#database)
+  - [Notification import](#notification-import)
+  - [Cron jobs](#cron-jobs)
+    - [Reminder notifications](#reminder-notifications)
+    - [Feedback notifications](#feedback-notifications)
+    - [Queued email sending](#queued-email-sending)
+    - [SMS notifications](#sms-notifications)
+  - [Daily running, Debugging](#daily-running-debugging)
+- [Authorization](#authorization)
+- [GDPR API data export](#gdpr-api-data-export)
+- [GraphQL API Documentation](#graphql-api-documentation)
+- [Report API](#report-api)
+- [QR-code ticket verification](#qr-code-ticket-verification)
+- [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
+- [Code linting & formatting](#code-linting--formatting)
+  - [Pre-commit hooks](#pre-commit-hooks)
+- [Issues board](#issues-board)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Environments
 
 Production environment:
@@ -192,15 +219,18 @@ Basic `ruff` commands:
 - Format: `ruff format`
 
 Basically:
- - Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
- - Ruff formatter (i.e. `ruff format`) does what `black` did before.
+
+- Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
+- Ruff formatter (i.e. `ruff format`) does what `black` did before.
 
 Integrations for `ruff` are available for many editors:
- - https://docs.astral.sh/ruff/integrations/
+
+- https://docs.astral.sh/ruff/integrations/
 
 ### Pre-commit hooks
 
 You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
+
 1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
    - `pip install pre-commit`
 2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:

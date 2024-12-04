@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Setup Keycloak](#setup-keycloak)
+  - [Use the public test Keycloak](#use-the-public-test-keycloak)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Setup Keycloak
 
 ## Use the public test Keycloak
