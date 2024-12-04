@@ -18,6 +18,30 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Audit Logging Principles
+
+This project prioritizes reliable and efficient audit logging within Django applications. Focus is on capturing essential data changes while ensuring developer convenience and security.
+
+**Core Principles:**
+
+- **Automatic Tracking:** `django-auditlog` automatically records changes to your Django models, providing a comprehensive history of create, update, and delete actions. This ensures that crucial data modifications are never missed, even without explicit developer configuration.
+
+- **Object-Level Logging:** We emphasize object-level logging over request or view-level logging. This approach provides a more granular and trustworthy audit trail, directly linked to the affected data objects. It also facilitates seamless integration with Django's ORM signals for effortless automation.
+
+- **Focused Data Collection:** While prioritizing comprehensive logging, we recognize the sensitivity of audit data. `django-auditlog` allows for customization to avoid unnecessary data collection and protect confidential information.
+
+- **Developer Trust and Convenience:** We aim to provide a solution that developers can rely on. `django-auditlog` strives to be intuitive and easy to use, enabling developers to focus on their core tasks while ensuring their applications maintain robust audit trails.
+
+**Priorities:**
+
+To achieve these principles, we prioritize the following:
+
+1. **Automatic Change Logging:** Seamlessly record modifications (create, update, delete) to model instances.
+2. **Easy Access Logging:** Provide a simple and reliable mechanism for logging data access at the object level.
+3. **Flexibility:** Allow for customization and extensibility to meet diverse audit logging needs.
+
+By adhering to these principles, we aim to deliver a powerful and reliable audit logging solution that balances comprehensive data capture with developer ease of use and data security.
+
 ## Django-auditlog incompatibility issues with Django-graphene
 
 The Django-auditlog does not provide any automatic support for writing access logs to the audit logs. It only provides an automated way to handle object write logs. By access logs, we mean logs that record when a user accesses or interacts with a particular view or resource, as opposed to modifying an object in the database.
