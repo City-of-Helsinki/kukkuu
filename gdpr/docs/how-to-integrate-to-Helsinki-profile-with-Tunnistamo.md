@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Integrate the Culture Kids service to the Helsinki-Profile](#integrate-the-culture-kids-service-to-the-helsinki-profile)
+  - [1. Download and install all the needed services](#1-download-and-install-all-the-needed-services)
+  - [2. Setup the clients and their scopes in Tunnistamo](#2-setup-the-clients-and-their-scopes-in-tunnistamo)
+    - [Communication between the Culture kids apps and the Tunnistamo](#communication-between-the-culture-kids-apps-and-the-tunnistamo)
+    - [Communication between the Helsinki-profile and the Tunnistamo](#communication-between-the-helsinki-profile-and-the-tunnistamo)
+    - [Communication from Helsinki-profile to the Culture Kids through Tunnistamo](#communication-from-helsinki-profile-to-the-culture-kids-through-tunnistamo)
+  - [3. Setup the Helsinki-Profile](#3-setup-the-helsinki-profile)
+  - [4. Test that all the communication works](#4-test-that-all-the-communication-works)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Integrate the Culture Kids service to the Helsinki-Profile
 
 ## 1. Download and install all the needed services

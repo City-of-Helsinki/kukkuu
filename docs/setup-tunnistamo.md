@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Setup Tunnistamo](#setup-tunnistamo)
+  - [Use a local Tunnistamo](#use-a-local-tunnistamo)
+  - [Use the public test Tunnistamo](#use-the-public-test-tunnistamo)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Setup Tunnistamo
 
 ## Use a local Tunnistamo

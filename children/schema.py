@@ -10,7 +10,6 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone as django_utils_timezone
 from django.utils.timezone import localdate, make_aware
-from django_ilmoitin.utils import send_notification
 from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
@@ -22,7 +21,9 @@ from common.schema import (
     set_obj_languages_spoken_at_home,
 )
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from django_ilmoitin.utils import send_notification
 from events.models import Event, EventGroup, EventQueryset, Occurrence
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -52,6 +53,7 @@ class ChildrenConnection(graphene.Connection):
         return self.length
 
 
+@auditlog_access
 class ChildNotesNode(DjangoObjectType):
     """
     Node for handling child's notes separately from their other data.
@@ -81,6 +83,7 @@ class ChildNotesNode(DjangoObjectType):
             return None
 
 
+@auditlog_access
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField(
         "events.schema.EventConnection",
