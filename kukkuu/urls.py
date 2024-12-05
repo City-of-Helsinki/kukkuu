@@ -9,6 +9,7 @@ from helusers.admin_site import admin
 from rest_framework import routers
 
 from common.utils import get_api_version
+from custom_health_checks.views import HealthCheckJSONView
 from kukkuu.views import SentryGraphQLView
 from reports.api import ChildViewSet, EventGroupViewSet, EventViewSet, VenueViewSet
 
@@ -47,14 +48,15 @@ urlpatterns = [
 #
 # Kubernetes liveness & readiness probes
 #
-def healthz(*args, **kwargs):
-    return HttpResponse(status=200)
 
 
 def readiness(*args, **kwargs):
     return HttpResponse(status=200)
 
 
-urlpatterns += [path("healthz", healthz), path("readiness", readiness)]
+urlpatterns += [
+    path(r"healthz", HealthCheckJSONView.as_view(), name="healthz"),
+    path("readiness", readiness),
+]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

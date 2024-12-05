@@ -206,7 +206,9 @@ INSTALLED_APPS = [
     "guardian",
     "rest_framework",
     "drf_spectacular",
+    "health_check",  # requirement
     # local apps
+    "custom_health_checks",
     "users",
     "children",
     "utils",
