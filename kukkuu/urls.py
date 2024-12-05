@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +9,8 @@ from helusers.admin_site import admin
 from rest_framework import routers
 
 from common.utils import get_api_version
+from custom_health_checks.views import HealthCheckJSONView
+from kukkuu import __version__
 from kukkuu.views import SentryGraphQLView
 from reports.api import ChildViewSet, EventGroupViewSet, EventViewSet, VenueViewSet
 
@@ -47,14 +49,22 @@ urlpatterns = [
 #
 # Kubernetes liveness & readiness probes
 #
-def healthz(*args, **kwargs):
-    return HttpResponse(status=200)
 
 
 def readiness(*args, **kwargs):
-    return HttpResponse(status=200)
+    response_json = {
+        "status": "ok",
+        "release": settings.APP_RELEASE,
+        "packageVersion": __version__,
+        "commitHash": settings.REVISION,
+        "buildTime": settings.APP_BUILD_TIME.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+    }
+    return JsonResponse(response_json, status=200)
 
 
-urlpatterns += [path("healthz", healthz), path("readiness", readiness)]
+urlpatterns += [
+    path(r"healthz", HealthCheckJSONView.as_view(), name="healthz"),
+    path("readiness", readiness),
+]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

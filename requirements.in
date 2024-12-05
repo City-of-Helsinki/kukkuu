@@ -24,3 +24,4 @@ hashids
 qrcode
 helsinki-profile-gdpr-api
 markdown
+django-health-check
