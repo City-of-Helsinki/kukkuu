@@ -1,5 +1,6 @@
 import os
 import subprocess
+from datetime import datetime
 
 import environ
 import sentry_sdk
@@ -88,6 +89,7 @@ env = environ.Env(
     BROWSER_TEST_GROUP_NAME=(str, "Browser test"),
     BROWSER_TEST_AD_GROUP_NAME=(str, "kukkuu_browser_test"),
     KUKKUU_DEFAULT_LOGGING_LEVEL=(str, "INFO"),
+    APP_RELEASE=(str, ""),
 )
 
 if os.path.exists(env_file):
@@ -398,6 +400,11 @@ GDPR_API_USER_PROVIDER = "gdpr.service.get_user"
 GDPR_API_DELETER = "gdpr.service.clear_data"
 
 HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
+
+# release information
+APP_RELEASE = env("APP_RELEASE")
+# get build time from a file in docker image
+APP_BUILD_TIME = datetime.fromtimestamp(os.path.getmtime(__file__))
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
