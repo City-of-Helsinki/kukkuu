@@ -34,7 +34,7 @@ def test_get_excluded_models(excluded_model_apps, settings):
     settings.AUDITLOG_EXCLUDE_TRACKING_MODELS = excluded_model_apps
     excluded_models = AuditLogConfigurationHelper.get_excluded_models()
     assert (
-        excluded_models - AuditLogConfigurationHelper.get_defaulty_excluded()
+        excluded_models - AuditLogConfigurationHelper.get_defaultly_excluded()
     ) == set(
         AuditLogConfigurationHelper.get_model_classes(model_app)[0]
         for model_app in excluded_model_apps
@@ -64,7 +64,7 @@ def test_get_unconfigured_models(settings):
     settings.AUDITLOG_INCLUDE_ALL_MODELS = True
     settings.AUDITLOG_EXCLUDE_TRACKING_MODELS = []
     settings.AUDITLOG_INCLUDE_TRACKING_MODELS = []
-    defaulty_excluded = AuditLogConfigurationHelper.get_defaulty_excluded()
+    defaulty_excluded = AuditLogConfigurationHelper.get_defaultly_excluded()
     unconfigured_models = AuditLogConfigurationHelper.get_unconfigured_models()
     all_models = set(apps.get_models(include_auto_created=True))
     assert len(all_models) > 0
