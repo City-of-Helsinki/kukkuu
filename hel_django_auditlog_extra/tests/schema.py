@@ -3,6 +3,11 @@ from hel_django_auditlog_extra.tests.models import DummyTestModel
 
 
 class DjangoObjectType:
+    """
+    Mimic Django Graphene DjangoObjectType for test use,
+    because there is  no hard dependency to Graphene.
+    """
+
     @classmethod
     def get_node(cls, info, id):
         return DummyTestModel(text_field="text", number_field=1, boolean_field=True)
