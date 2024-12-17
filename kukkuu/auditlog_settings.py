@@ -14,24 +14,10 @@ AUDITLOG_DISABLE_ON_RAW_SAVE = True
 AUDITLOG_EXCLUDE_TRACKING_MODELS = (
     "admin.logentry",  # excluded by default
     "auditlog.logentry",  # excluded by default
-    "contenttypes.contenttype",
-    "sessions.session",
-    "helusers.oidcbackchannellogoutevent",
-    "mailer.dontsendentry",
-    "django_ilmoitin.notificationtemplatetranslation",
-    "projects.projecttranslation",
-    "events.eventtranslation",
-    "events.eventgrouptranslation",
-    "venues.venuetranslation",
-    "languages.languagetranslation",
-    "messaging.messagetranslation",
-    "users.guardian_languages_spoken_at_home",
-    "children.child_languages_spoken_at_home",
-    "messaging.message_occurrences",
-    "django_ilmoitin.notificationtemplate_admins_to_notify",
-    "mailer.message",
-    "mailer.messagelog",
-    "languages.language",
+    "contenttypes.contenttype",  # system model
+    "sessions.session",  # auth model
+    "helusers.oidcbackchannellogoutevent",  # auth model
+    "languages.language",  # system
 )
 
 # Configure models registration and other behaviours.
@@ -45,34 +31,23 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "auth.permission",
     "auth.group",
     "django_ilmoitin.notificationtemplate",
+    "django_ilmoitin.notificationtemplate_admins_to_notify",
     "guardian.groupobjectpermission",
     "guardian.userobjectpermission",
     {
         "model": "users.user",
         "exclude_fields": [
-            "last_login",
-        ],
-        "mask_fields": [
-            "first_name",
-            "last_name",
-            "email",
+            "last_login",  # don't write log of every request
         ],
         "serialize_data": True,
-        "serialize_auditlog_fields_only": False,
     },
     {
         "model": "users.guardian",
-        "mask_fields": ["first_name", "last_name", "email", "phone_number"],
         "serialize_data": True,
-        "serialize_auditlog_fields_only": False,
     },
     {
         "model": "children.child",
-        "mask_fields": [
-            "name",
-        ],
         "serialize_data": True,
-        "serialize_auditlog_fields_only": False,
     },
     "children.relationship",
     "projects.project",
@@ -86,4 +61,18 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "messaging.message",
     "reports.permission",
     "verification_tokens.verificationtoken",
+    # secondary
+    "django_ilmoitin.notificationtemplatetranslation",
+    "projects.projecttranslation",
+    "events.eventtranslation",
+    "events.eventgrouptranslation",
+    "venues.venuetranslation",
+    "languages.languagetranslation",
+    "messaging.messagetranslation",
+    "messaging.message_occurrences",
+    "users.guardian_languages_spoken_at_home",
+    "children.child_languages_spoken_at_home",
+    "mailer.dontsendentry",
+    "mailer.message",
+    "mailer.messagelog",
 )
