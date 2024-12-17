@@ -264,12 +264,12 @@ Code reference: [mixins.py](./mixins.py).
 
     By default, only access to individual object views (change, history, delete)
     is logged. To enable logging for the list view, set the
-    `write_accessed_from_list_view` attribute to `True` in your `ModelAdmin`.
+    `enable_list_view_audit_logging` attribute to `True` in your `ModelAdmin`.
     Please note that this will trigger a very intensive logging and a lots of
     access log data will be created and stored!
 
     Attributes:
-    write_accessed_from_list_view (bool):
+    enable_list_view_audit_logging (bool):
     A flag to enable/disable logging access from the list view.
     Defaults to `False`.
 
@@ -282,7 +282,7 @@ from .models import MyModel
 
 @admin.register(MyModel)
 class MyModelAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
-    write_accessed_from_list_view = True  # Enable list view logging
+    enable_list_view_audit_logging = True  # Enable list view logging
     # ... other admin configurations ...
 ```
 
@@ -369,22 +369,22 @@ AuditLogConfigurationHelper.raise_error_if_unconfigured_models()
           AuditLogConfigurationHelper.raise_error_if_unconfigured_models()
   ```
 
-  Remember that signals and receivers needs to be connected (for example in `apps.py`):
+  Remember that signals (and receivers) needs to be registered to Django after all the models are registered (for example in `apps.py`):
 
   ```python
   from django.apps import AppConfig
-  from django.core.signals import request_finished
-
 
   class MyAppConfig(AppConfig):
       ...
 
       def ready(self):
-          # Implicitly connect signal handlers decorated with @receiver.
-          from . import signals
-
-          # Explicitly connect a signal handler.
-          request_finished.connect(signals.my_callback)
+            # Implicitly connect signal handlers decorated with @receiver.
+            from . import signals
+            
+            # OR
+            # Explicitly connect a signal handler.
+            # from django.core.signals import post_migrate
+            # post_migrate.connect(signals.check_audit_log_configuration)
   ```
 
   Reference: https://docs.djangoproject.com/en/5.1/topics/signals/#listening-to-signals.

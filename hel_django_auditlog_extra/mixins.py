@@ -16,12 +16,12 @@ class AuditlogAdminViewAccessLogMixin:
 
     By default, only access to individual object views (change, history, delete)
     is logged. To enable logging for the list view, set the
-    `write_accessed_from_list_view` attribute to `True` in your `ModelAdmin`.
+    `enable_list_view_audit_logging` attribute to `True` in your `ModelAdmin`.
     Please note that this will trigger a very intensive logging and a lots of
     access log data will be created and stored!
 
     Attributes:
-        write_accessed_from_list_view (bool):
+        enable_list_view_audit_logging (bool):
             A flag to enable/disable logging access from the list view.
             Defaults to `False`.
 
@@ -34,18 +34,18 @@ class AuditlogAdminViewAccessLogMixin:
 
         @admin.register(MyModel)
         class MyModelAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
-            write_accessed_from_list_view = True  # Enable list view logging
+            enable_list_view_audit_logging = True  # Enable list view logging
             # ... other admin configurations ...
         ```
     """
 
-    # To write audit log of each instance in the admin view
-    write_accessed_from_list_view = False
+    # To write access log to audit log of each instance in the admin list view
+    enable_list_view_audit_logging = False
 
     def changelist_view(self, request, extra_context=None):
         """
         Handles the changelist view (list view) and logs access events for
-        objects on the current page if `write_accessed_from_list_view` is `True`.
+        objects on the current page if `enable_list_view_audit_logging` is `True`.
 
         The changelist in the response's context_data (i.e. "cl") should be set by the
         super().changelist_view call, see e.g.
@@ -59,7 +59,7 @@ class AuditlogAdminViewAccessLogMixin:
             The response from the superclass's `changelist_view` method.
         """
         response = super().changelist_view(request, extra_context)
-        if self.write_accessed_from_list_view:
+        if self.enable_list_view_audit_logging:
             changelist = response.context_data["cl"]
             for obj in changelist.result_list:
                 accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
