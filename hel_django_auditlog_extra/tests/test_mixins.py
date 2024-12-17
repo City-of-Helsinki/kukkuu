@@ -115,7 +115,7 @@ def model_admin(all_objects):
             Django admin views.
             """
 
-            write_accessed_from_list_view = False
+            enable_list_view_audit_logging = False
 
             def get_changelist(self, request, **kwargs):
                 return MockedChangeList
@@ -149,7 +149,7 @@ def test_changelist_view_logging(
     factory, user, model_admin, is_write_accessed_enabled, all_objects
 ):
     auditlog_count_on_start = LogEntry.objects.count()
-    model_admin.write_accessed_from_list_view = is_write_accessed_enabled
+    model_admin.enable_list_view_audit_logging = is_write_accessed_enabled
     request = factory.get("/admin/hel_django_auditlog_extra/dummytestmodel/")
     request.user = user
     with set_actor(request.user, remote_addr=REMOTE_ADDR):
