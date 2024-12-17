@@ -44,7 +44,7 @@ Here's a breakdown of what it offers:
 
 - **Automatic Change Logging**: It automatically logs changes to your Django models, including creation, updates, and deletion. You can easily track who made the changes and what those changes were.
 
-- **Customization**: You can customize which fields to track, the logging level (e.g., only log changes to specific fields), and even use signals to trigger actions based on logged events.
+- **Customization**: You can customize which fields to track, the logging level (e.g., only log changes without access log to specific fields), and even use signals to trigger actions based on logged events.
 
 - **Integration with Existing Models**: It seamlessly integrates with your existing Django models. You can easily add audit logging to new or existing models with minimal code changes.
 
@@ -82,22 +82,22 @@ Django Graphene is a library that integrates the Django web framework with Graph
 >
 > Docs: https://www.django-rest-framework.org/.
 
-Django REST framework is a powerful and flexible toolkit that makes it easier to build Web APIs using the Django framework.
+Django REST framework is a powerful and flexible toolkit that makes it easier to build Web REST APIs using the Django framework.
 
 ## FAQ
 
-There have been some incompatibility issues with `django-auditlog` and `django-graphene`. Some solutions to that and answers to some other common questions, issues and more details, see the [FAQ.md](./docs/FAQ.md).
+There have been some incompatibility issues with `django-auditlog` and `django-graphene`. Some solutions to them and answers to common questions and issues, see the [FAQ.md](./docs/FAQ.md).
 
 ## Installation
 
-**Dependencies (TODO):**
+**Dependencies:**
 For actor handling, django-auditlog and test usage:
 
 - **`django.contrib.auth`**: Django built-in
 - **`django.contrib.contenttypes`**: Django built-in
 - **`auditlog`**: django-auditlog
 
-**`settings.py`**:
+**`settings.py`:**
 
 ```python
 INSTALLED_APPS = [
@@ -107,6 +107,64 @@ INSTALLED_APPS = [
     # ...
     "hel_django_auditlog_extra.apps.HelDjangoAuditLogExtraConfig",
 ```
+
+**Configuration:**
+
+The base configuration comes from the Django Auditlog. See the installation and usage of `django-auditlog` from https://django-auditlog.readthedocs.io/en/latest/installation.html.
+
+The most important configurations for the audit log itself are:
+
+```python
+# Register all models by default
+AUDITLOG_INCLUDE_ALL_MODELS = True
+
+# Exclude the IP address from logging.
+# When using “AuditlogMiddleware”, the IP address is logged by default
+AUDITLOG_DISABLE_REMOTE_ADDR = False
+
+# Disables logging during raw save. (I.e. for instance using loaddata)
+# M2M operations will still be logged, since they’re never considered raw.
+AUDITLOG_DISABLE_ON_RAW_SAVE = True
+
+# Exclude models in registration process.
+# It will be considered when AUDITLOG_INCLUDE_ALL_MODELS is True.
+AUDITLOG_EXCLUDE_TRACKING_MODELS = [
+    # Some examples:
+    "contenttypes.contenttype",
+    "sessions.session",
+]
+
+# Configure models registration and other behaviours.
+AUDITLOG_INCLUDE_TRACKING_MODELS = [
+    # Some examples:
+    "auth.permission",
+    {
+      "model": "users.user",
+      "exclude_fields": [
+          "last_login",
+      ],
+      "mask_fields": [
+          "first_name",
+          "last_name",
+          "email",
+      ],
+      "serialize_data": True,
+      "serialize_auditlog_fields_only": False,
+    },
+]
+```
+
+Set the middleware in use to log the actor of the audit event:
+
+```python
+MIDDLEWARE = [
+    # ...other middlewares that manipulates request context...
+    "hel_django_auditlog_extra.middleware.AuditlogMiddleware",
+]
+```
+
+Optionally, you can also use a configuration utility that helps you configure all the models: [How to initialize the Auditlog Configuration helper](#initialization-examples-for-auditlogconfigurationhelper).
+
 
 ## Features
 
@@ -120,7 +178,9 @@ Code reference: [context.py](./context.py).
 
     This context manager uses a ContextVar to store the request path and
     connects a signal receiver to automatically add it to LogEntry instances.
-    It uses a unique signal_duid to prevent duplicate signals when nested.
+    It uses a unique signal dispatch uid to prevent duplicate signals when nested.
+
+    See the existing django-auditlog implementation to set the actor from: https://github.com/jazzband/django-auditlog/blob/6e51997728c819f9a19778e84d808546013b0242/auditlog/context.py.
 
 NOTE: This is used by the [`AuditlogMiddleware`](#middleware).
 
@@ -164,7 +224,7 @@ Code reference: [graphene_decorators.py](./graphene_decorators.py).
 
 #### `auditlog_access`
 
-    Decorator to init audit logging to a Graphene DjangoObjectType's get_node method.
+    Decorator to add audit logging to a Graphene DjangoObjectType's get_node method.
 
     Uses the `accessed` signal to log the access of the node.
 

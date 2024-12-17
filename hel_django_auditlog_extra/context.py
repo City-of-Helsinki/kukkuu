@@ -20,7 +20,10 @@ def set_request_path(request_path: Optional[str] = None):
 
     This context manager uses a ContextVar to store the request path and
     connects a signal receiver to automatically add it to LogEntry instances.
-    It uses a unique signal_duid to prevent duplicate signals when nested.
+    It uses a unique signal dispatch uid to prevent duplicate signals when nested.
+
+    NOTE: the idea for the implemenation is copied from the django-auditlog itself:
+    https://github.com/jazzband/django-auditlog/blob/6e51997728c819f9a19778e84d808546013b0242/auditlog/context.py
     """
     # Initialize thread local storage
     context_data = {

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def auditlog_access(cls):
     """
-    Decorator to init audit logging to a Graphene DjangoObjectType's get_node method.
+    Decorator to add audit logging to a Graphene DjangoObjectType's get_node method.
 
     Uses the `accessed` signal to log the access of the node.
     """
