@@ -6,10 +6,10 @@ from typing import List, Optional, TYPE_CHECKING, Union
 from django.conf import settings
 from django.db.models import QuerySet
 from django.utils import timezone
-from django_ilmoitin.utils import send_notification
 from parler.utils.context import switch_language
 
 from common.utils import get_global_id
+from django_ilmoitin.utils import send_notification
 from users.utils import get_communication_unsubscribe_ui_url
 
 if TYPE_CHECKING:

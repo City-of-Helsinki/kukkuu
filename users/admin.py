@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import markdown
 from django import forms
@@ -11,11 +11,11 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django_ilmoitin.models import NotificationTemplate
-from django_ilmoitin.utils import render_notification_template
 from guardian.admin import GuardedModelAdmin
 
 from children.models import Relationship
+from django_ilmoitin.models import NotificationTemplate
+from django_ilmoitin.utils import render_notification_template
 from languages.models import Language
 from projects.models import Project
 from reports.models import Permission as ReportPermission
@@ -55,7 +55,7 @@ class LanguagesSpokenAtHomeInline(admin.TabularInline):
 
 def _generate_children_event_history_markdown(
     modeladmin, request, queryset
-) -> Tuple[Guardian, str]:
+) -> Optional[Tuple[Guardian, str]]:
     if queryset.count() != 1:
         modeladmin.message_user(
             request,
@@ -283,10 +283,10 @@ class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
         "date_joined",
         "last_login",
     )
-    fieldsets = DjangoUserAdmin.fieldsets + (
+    fieldsets = list(DjangoUserAdmin.fieldsets) + [
         ("UUID", {"fields": ("uuid",)}),
         ("Auth", {"fields": ("is_obsolete",)}),
-    )
+    ]
     readonly_fields = ("uuid",)
     list_filter = (
         ("guardian", admin.EmptyFieldListFilter),
@@ -298,7 +298,9 @@ class UserAdmin(PermissionFilterMixin, GuardedModelAdmin, DjangoUserAdmin):
         "date_joined",
         "last_login",
     )
-    search_fields = DjangoUserAdmin.search_fields + ("uuid",)
+    search_fields = list(DjangoUserAdmin.search_fields) + [
+        "uuid",
+    ]
     date_hierarchy = "date_joined"
     actions = [make_obsoleted]
 
