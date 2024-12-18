@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import QuerySet
 from django.template import Context, Template
-from django_ilmoitin.utils import send_notification
 
+from django_ilmoitin.utils import send_notification
 from users.models import Guardian
 from users.utils import get_communication_unsubscribe_ui_url
 

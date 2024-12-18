@@ -1,9 +1,9 @@
 import pytest
 import responses
 from django.conf import settings
-from django_ilmoitin.models import NotificationTemplate
 
 from common.tests.utils import create_notification_template_in_language
+from django_ilmoitin.models import NotificationTemplate
 from events.notifications import NotificationType
 
 from ..notification_importer import NotificationImporter
