@@ -35,6 +35,7 @@ from events.exceptions import (
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,
@@ -567,6 +568,7 @@ class OccurrenceNode(DjangoObjectType):
         )
 
 
+@auditlog_access
 class EnrolmentNode(DjangoObjectType):
     reference_id = graphene.String(description="An unique encoded reference id")
 
@@ -584,6 +586,7 @@ class EnrolmentNode(DjangoObjectType):
         return self.reference_id
 
 
+@auditlog_access
 class ExternalTicketSystemEnrolmentNode(DjangoObjectType):
     created_at = graphene.DateTime(required=True)
 
