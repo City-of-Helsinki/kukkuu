@@ -23,6 +23,7 @@ from common.schema import (
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from django_ilmoitin.utils import send_notification
 from events.models import Event, EventGroup, EventQueryset, Occurrence
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -52,6 +53,7 @@ class ChildrenConnection(graphene.Connection):
         return self.length
 
 
+@auditlog_access
 class ChildNotesNode(DjangoObjectType):
     """
     Node for handling child's notes separately from their other data.
@@ -81,6 +83,7 @@ class ChildNotesNode(DjangoObjectType):
             return None
 
 
+@auditlog_access
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField(
         "events.schema.EventConnection",
