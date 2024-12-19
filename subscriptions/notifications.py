@@ -2,10 +2,10 @@ from uuid import uuid4
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-from children.factories import ChildWithGuardianFactory
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
+
+from children.factories import ChildWithGuardianFactory
 from events.factories import EventFactory, OccurrenceFactory
 from events.utils import (
     get_event_ui_url,

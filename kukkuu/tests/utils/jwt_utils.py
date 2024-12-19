@@ -1,6 +1,6 @@
 import time
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
 from jose import jwt

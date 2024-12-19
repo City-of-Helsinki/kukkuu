@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model

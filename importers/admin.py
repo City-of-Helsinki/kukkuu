@@ -6,7 +6,6 @@ from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext_lazy
-
 from django_ilmoitin.admin import NotificationTemplateAdmin
 from django_ilmoitin.models import NotificationTemplate
 
