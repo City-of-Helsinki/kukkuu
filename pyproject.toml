@@ -29,6 +29,7 @@ ignore = [
 # isort options for ruff:
 # https://docs.astral.sh/ruff/settings/#lintisort
 order-by-type = false # Don't use type (i.e. case) to sort imports
+known-first-party = ["kukkuu"]
 
 [tool.ruff.format]
 docstring-code-format = true # Format code in docstrings
