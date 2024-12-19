@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import pytest
 import pytz
+from auditlog.context import disable_auditlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.utils import timezone
@@ -1477,7 +1478,8 @@ def test_children_pagination_result_set(
     limit = 20  # There should be more than 2 pages.
     offset = (page - 1) * limit
 
-    ChildWithGuardianFactory.create_batch(total_count, project=project)
+    with disable_auditlog():
+        ChildWithGuardianFactory.create_batch(total_count, project=project)
 
     variables = {"projectId": get_global_id(project), "limit": limit, "offset": offset}
     executed = project_user_api_client.execute(
@@ -1562,7 +1564,8 @@ def test_children_pagination_cursor_generation(
     total_count = 100
     offset = (page - 1) * limit
 
-    ChildWithGuardianFactory.create_batch(total_count, project=project)
+    with disable_auditlog():
+        ChildWithGuardianFactory.create_batch(total_count, project=project)
 
     query = """
     query Children($projectId: ID!, $limit: Int, $offset: Int) {
