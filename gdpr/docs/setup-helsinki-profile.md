@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Setup the Helsinki-Profile for internal use and for UI](#setup-the-helsinki-profile-for-internal-use-and-for-ui)
+  - [Configure the internal service (for Helsinki-Profile-UI and internal Graphql-UI)](#configure-the-internal-service-for-helsinki-profile-ui-and-internal-graphql-ui)
+  - [Configure the Culture kids service](#configure-the-culture-kids-service)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Setup the Helsinki-Profile for internal use and for UI
 
 In order to get the Helsinki-Profile UI to work with API, The Helsinki-Profile services needs to be set so that they match with the Tunnistamo client ids. Also, the Helsinki-Profile API itself needs an internal service.

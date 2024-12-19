@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Culture Kids with Tunnistamo](#culture-kids-with-tunnistamo)
+  - [OIDC provider clients](#oidc-provider-clients)
+    - [Kukkuu API](#kukkuu-api)
+    - [Kukkuu UI](#kukkuu-ui)
+    - [Kukkuu Admin UI](#kukkuu-admin-ui)
+  - [OIDC API](#oidc-api)
+    - [Kukkuu API](#kukkuu-api-1)
+  - [OIDC API scopes](#oidc-api-scopes)
+    - [Kukkuu API Scope](#kukkuu-api-scope)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Culture Kids with Tunnistamo
 
 ## OIDC provider clients
