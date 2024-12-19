@@ -1,4 +1,9 @@
+from contextvars import ContextVar
+
 from auditlog.signals import accessed
+
+# Create a ContextVar to store the accessed flag
+_auditlog_accessed_sent = ContextVar("_auditlog_accessed_sent", default=False)
 
 
 class AuditlogAdminViewAccessLogMixin:
@@ -60,54 +65,29 @@ class AuditlogAdminViewAccessLogMixin:
                 accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
         return response
 
-    def change_view(self, request, object_id, form_url="", extra_context=None):
+    def get_object(self, request, object_id, from_field=None):
         """
-        Logs the access event when the change view of an object is accessed.
+        Retrieves the object for the admin view and sends the `accessed` signal.
+
+        This method overrides the default `get_object` to include sending the
+        `accessed` signal from `django-auditlog`. It uses a `ContextVar` to
+        ensure the signal is sent only once per request, even if `get_object`
+        is called multiple times.
 
         Args:
             request: The HTTP request object.
-            object_id: The ID of the object being changed.
-            form_url: The URL of the change form.
-            extra_context: Optional extra context to pass to the template.
+            object_id: The ID of the object to retrieve.
+            from_field: The field to use to retrieve the object.
 
         Returns:
-            The response from the superclass's `change_view` method.
+            The retrieved object, or None if the object does not exist.
         """
-        obj = self.get_object(request, object_id)
-        if obj is not None:
+        accessed_sent = _auditlog_accessed_sent.get()
+        obj = super().get_object(request, object_id, from_field)
+        if obj is not None and not accessed_sent:
             accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
-        return super().change_view(request, object_id, form_url, extra_context)
-
-    def history_view(self, request, object_id, extra_context=None):
-        """
-        Logs the access event when the history view of an object is accessed.
-
-        Args:
-            request: The HTTP request object.
-            object_id: The ID of the object whose history is being viewed.
-            extra_context: Optional extra context to pass to the template.
-
-        Returns:
-            The response from the superclass's `history_view` method.
-        """
-        obj = self.get_object(request, object_id)
-        if obj is not None:
-            accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
-        return super().history_view(request, object_id, extra_context)
-
-    def delete_view(self, request, object_id, extra_context=None):
-        """
-        Logs the access event when the delete view of an object is accessed.
-
-        Args:
-            request: The HTTP request object.
-            object_id: The ID of the object being deleted.
-            extra_context: Optional extra context to pass to the template.
-
-        Returns:
-            The response from the superclass's `delete_view` method.
-        """
-        obj = self.get_object(request, object_id)
-        if obj is not None:
-            accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
-        return super().delete_view(request, object_id, extra_context)
+            # get_object can be called multiple times,
+            # so prevent signalling the accessed,
+            # if it has already been signalled.
+            _auditlog_accessed_sent.set(True)
+        return obj

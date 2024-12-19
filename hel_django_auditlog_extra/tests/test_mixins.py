@@ -1,4 +1,5 @@
 from typing import List, Optional
+from unittest import mock
 
 import pytest
 from auditlog.context import set_actor
@@ -10,7 +11,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
 
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
+from hel_django_auditlog_extra.mixins import (
+    _auditlog_accessed_sent,
+    AuditlogAdminViewAccessLogMixin,
+)
 from hel_django_auditlog_extra.tests.models import DummyTestModel
 
 User = get_user_model()
@@ -23,6 +27,16 @@ def register_auditlog():
     auditlog.register(DummyTestModel)
     yield
     ContentType.objects.clear_cache()
+
+
+@pytest.fixture(autouse=True)
+def reset_contextvars():
+    """
+    pytest, by default, reuses the same context for all tests within a session,
+    so the contextvar needs to be reset
+    """
+    _auditlog_accessed_sent.set(False)
+    yield
 
 
 @pytest.fixture
@@ -109,9 +123,6 @@ def model_admin(all_objects):
             def to_field_allowed(self, request, to_field):
                 return True
 
-            def get_object(self, request, object_id, from_field=None):
-                return obj1
-
             def get_deleted_objects(self, objs, request):
                 return [
                     self.get_object(request, obj1.pk),
@@ -156,46 +167,55 @@ def test_changelist_view_logging(
 
 @pytest.mark.django_db
 def test_change_view(factory, user, model_admin, obj1):
-    request = factory.get(
-        f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/change/"
-    )
-    request.user = user
-    auditlog_count_on_start = LogEntry.objects.count()
-    with set_actor(request.user, remote_addr=REMOTE_ADDR):
-        response = model_admin.change_view(request, str(obj1.pk))
-        assert response.status_code == 200
-        assert LogEntry.objects.count() == auditlog_count_on_start + 1
+    with mock.patch(
+        "django.contrib.admin.options.ModelAdmin.get_object", return_value=obj1
+    ):
+        request = factory.get(
+            f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/change/"
+        )
+        request.user = user
+        auditlog_count_on_start = LogEntry.objects.count()
+        with set_actor(request.user, remote_addr=REMOTE_ADDR):
+            response = model_admin.change_view(request, str(obj1.pk))
+            assert response.status_code == 200
+            assert LogEntry.objects.count() == auditlog_count_on_start + 1
 
-        log = LogEntry.objects.first()
-        assert_access_log(log, obj1, user)
+            log = LogEntry.objects.first()
+            assert_access_log(log, obj1, user)
 
 
 @pytest.mark.django_db
 def test_history_view(factory, user, model_admin, obj1):
-    request = factory.get(
-        f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/history/"
-    )
-    request.user = user
-    auditlog_count_on_start = LogEntry.objects.count()
-    with set_actor(request.user, remote_addr=REMOTE_ADDR):
-        response = model_admin.history_view(request, str(obj1.pk))
-        assert response.status_code == 200
-        assert LogEntry.objects.count() == auditlog_count_on_start + 1
+    with mock.patch(
+        "django.contrib.admin.options.ModelAdmin.get_object", return_value=obj1
+    ):
+        request = factory.get(
+            f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/history/"
+        )
+        request.user = user
+        auditlog_count_on_start = LogEntry.objects.count()
+        with set_actor(request.user, remote_addr=REMOTE_ADDR):
+            response = model_admin.history_view(request, str(obj1.pk))
+            assert response.status_code == 200
+            assert LogEntry.objects.count() == auditlog_count_on_start + 1
 
-        log = LogEntry.objects.first()
-        assert_access_log(log, obj1, user)
+            log = LogEntry.objects.first()
+            assert_access_log(log, obj1, user)
 
 
 @pytest.mark.django_db
 def test_delete_view(factory, user, model_admin, obj1):
-    request = factory.get(
-        f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/delete/"
-    )
-    request.user = user
-    auditlog_count_on_start = LogEntry.objects.count()
-    with set_actor(request.user, remote_addr=REMOTE_ADDR):
-        response = model_admin.delete_view(request, str(obj1.pk))
-        assert response.status_code == 200
-        assert LogEntry.objects.count() == auditlog_count_on_start + 1
-        log = LogEntry.objects.first()
-        assert_access_log(log, obj1, user)
+    with mock.patch(
+        "django.contrib.admin.options.ModelAdmin.get_object", return_value=obj1
+    ):
+        request = factory.get(
+            f"/admin/hel_django_auditlog_extra/dummytestmodel/{obj1.pk}/delete/"
+        )
+        request.user = user
+        auditlog_count_on_start = LogEntry.objects.count()
+        with set_actor(request.user, remote_addr=REMOTE_ADDR):
+            response = model_admin.delete_view(request, str(obj1.pk))
+            assert response.status_code == 200
+            assert LogEntry.objects.count() == auditlog_count_on_start + 1
+            log = LogEntry.objects.first()
+            assert_access_log(log, obj1, user)
