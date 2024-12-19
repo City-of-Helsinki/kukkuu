@@ -30,6 +30,14 @@ ignore = [
 # https://docs.astral.sh/ruff/settings/#lintisort
 order-by-type = false # Don't use type (i.e. case) to sort imports
 known-first-party = ["kukkuu"]
+default-section= "third-party"
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
 
 [tool.ruff.format]
 docstring-code-format = true # Format code in docstrings
