@@ -14,6 +14,7 @@ from common.utils import (
 )
 from events.models import Occurrence
 from events.schema import OccurrenceNode
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 from kukkuu.exceptions import (
     AlreadySubscribedError,
@@ -27,6 +28,7 @@ from verification_tokens.decorators import user_from_auth_verification_token
 logger = logging.getLogger(__name__)
 
 
+@auditlog_access
 class FreeSpotNotificationSubscriptionNode(DjangoObjectType):
     occurrence = graphene.Field(OccurrenceNode)  # WORKAROUND: See resolve_occurrence
 

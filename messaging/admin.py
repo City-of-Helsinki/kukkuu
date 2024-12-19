@@ -4,13 +4,15 @@ from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from messaging.exceptions import AlreadySentError
 
 from .models import Message
 
 
 @admin.register(Message)
-class MessageAdmin(TranslatableAdmin):
+class MessageAdmin(AuditlogAdminViewAccessLogMixin, TranslatableAdmin):
+    enable_list_view_audit_logging = True
     list_display = (
         "id",
         "get_subject_with_fallback",

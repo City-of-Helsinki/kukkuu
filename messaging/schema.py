@@ -19,6 +19,7 @@ from common.utils import (
     update_object_with_translations,
 )
 from events.models import Event, Occurrence
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
 from projects.models import Project
 from users.models import User
@@ -122,6 +123,7 @@ class MessageFilter(django_filters.FilterSet):
         return {**data, "occurrences": occurrences_ids}
 
 
+@auditlog_access
 class MessageNode(DjangoObjectType):
     subject = graphene.String()
     body_text = graphene.String()

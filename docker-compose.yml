@@ -21,6 +21,7 @@ services:
         environment:
             DATABASE_URL: postgres://kukkuu:kukkuu@kukkuu-db/kukkuu
             DATABASE_HOST: kukkuu-db.helsinki
+            SKIP_DATABASE_CHECK: 1
         volumes:
             - .:/app
         ports:

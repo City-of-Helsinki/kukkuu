@@ -1,5 +1,7 @@
-# [project]
-# requires-python = ">=3.9"
+[project]
+name = "kukkuu"
+version="3.10.0"
+requires-python = ">=3.11"
 
 [tool.ruff]
 extend-exclude = ["migrations", "snapshots"]
@@ -27,6 +29,15 @@ ignore = [
 # isort options for ruff:
 # https://docs.astral.sh/ruff/settings/#lintisort
 order-by-type = false # Don't use type (i.e. case) to sort imports
+known-first-party = ["kukkuu"]
+default-section= "third-party"
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+]
 
 [tool.ruff.format]
 docstring-code-format = true # Format code in docstrings

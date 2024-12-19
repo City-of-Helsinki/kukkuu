@@ -9,6 +9,7 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from events.ticket_service import check_ticket_validity
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from subscriptions.models import FreeSpotNotificationSubscription
 
 from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
@@ -159,7 +160,8 @@ class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
 
 
 @admin.register(Occurrence)
-class OccurrenceAdmin(admin.ModelAdmin):
+class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    enable_list_view_audit_logging = False  # Not needed in list view
     list_display = (
         "time",
         "event",
@@ -339,7 +341,8 @@ class PasswordAssignedListFilter(BaseBooleanListFilter):
 
 
 @admin.register(TicketSystemPassword)
-class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
+class TicketSystemChildPasswordAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    enable_list_view_audit_logging = True
     fields = (
         "value",
         "event",
@@ -384,7 +387,8 @@ class TicketSystemChildPasswordAdmin(admin.ModelAdmin):
 
 
 @admin.register(Enrolment)
-class EnrolmentAdmin(admin.ModelAdmin):
+class EnrolmentAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    enable_list_view_audit_logging = True
     list_display = (
         "id",
         "child",

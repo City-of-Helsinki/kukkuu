@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Culture Kids with Helsinki-Profile GDPR API through Tunnistamo](#culture-kids-with-helsinki-profile-gdpr-api-through-tunnistamo)
+  - [OIDC API scopes](#oidc-api-scopes)
+    - [Kukkuu GDPR Query API Scope Specifier](#kukkuu-gdpr-query-api-scope-specifier)
+    - [Kukkuu GDPR Delete API Scope Specifier](#kukkuu-gdpr-delete-api-scope-specifier)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Culture Kids with Helsinki-Profile GDPR API through Tunnistamo
 
 ## OIDC API scopes

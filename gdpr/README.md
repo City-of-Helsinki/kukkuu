@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [How to integrate the Culture Kids to Helsinki-Profile GDPR API](#how-to-integrate-the-culture-kids-to-helsinki-profile-gdpr-api)
+- [GDPR API data export](#gdpr-api-data-export)
+- [Kukkuu GDPR API tester](#kukkuu-gdpr-api-tester)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # How to integrate the Culture Kids to Helsinki-Profile GDPR API
 
 As background information and instructions for integrating the service with Helsinki-Profile, see the documentation for [How to integrate to Helsinki-Profile through Tunnistamo](./docs/how-to-integrate-to-Helsinki-profile-with-Tunnistamo.md).
