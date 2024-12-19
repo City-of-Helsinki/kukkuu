@@ -1,6 +1,6 @@
 [project]
 name = "kukkuu"
-version="3.10.0"
+version = "3.10.0"
 requires-python = ">=3.11"
 
 [tool.ruff]
@@ -28,7 +28,7 @@ ignore = [
 [tool.ruff.lint.isort]
 # isort options for ruff:
 # https://docs.astral.sh/ruff/settings/#lintisort
-order-by-type = false # Don't use type (i.e. case) to sort imports
+known-first-party = ["kukkuu"]
 
 [tool.ruff.format]
 docstring-code-format = true # Format code in docstrings

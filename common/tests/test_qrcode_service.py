@@ -1,6 +1,6 @@
 import pytest
 
-from common.qrcode_service import create_qrcode, QRCodeFileFormatEnum
+from common.qrcode_service import QRCodeFileFormatEnum, create_qrcode
 from kukkuu.service import get_hashid_service
 
 

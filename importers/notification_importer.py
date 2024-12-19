@@ -8,12 +8,11 @@ import requests
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from parler.utils.context import switch_language
-from requests import RequestException
-
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.models import NotificationTemplate, NotificationTemplateException
 from django_ilmoitin.utils import render_notification_template
+from parler.utils.context import switch_language
+from requests import RequestException
 
 # {
 #     "<notification type>": {

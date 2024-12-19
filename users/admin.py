@@ -11,11 +11,11 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
+from django_ilmoitin.models import NotificationTemplate
+from django_ilmoitin.utils import render_notification_template
 from guardian.admin import GuardedModelAdmin
 
 from children.models import Relationship
-from django_ilmoitin.models import NotificationTemplate
-from django_ilmoitin.utils import render_notification_template
 from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from languages.models import Language
 from projects.models import Project

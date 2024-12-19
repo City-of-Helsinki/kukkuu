@@ -12,8 +12,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
 
 from hel_django_auditlog_extra.mixins import (
-    _auditlog_accessed_sent,
     AuditlogAdminViewAccessLogMixin,
+    _auditlog_accessed_sent,
 )
 from hel_django_auditlog_extra.tests.models import DummyTestModel
 

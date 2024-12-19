@@ -2,11 +2,11 @@ from uuid import uuid4
 
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django_ilmoitin.dummy_context import dummy_context
+from django_ilmoitin.registry import notifications
 
 from children.factories import ChildWithGuardianFactory
 from common.utils import get_global_id
-from django_ilmoitin.dummy_context import dummy_context
-from django_ilmoitin.registry import notifications
 from events.consts import NotificationType
 from events.factories import (
     EnrolmentFactory,

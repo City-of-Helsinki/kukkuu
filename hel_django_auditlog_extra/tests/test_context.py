@@ -5,9 +5,9 @@ from auditlog.models import LogEntry
 from django.db.models.signals import pre_save
 
 from hel_django_auditlog_extra.context import (
+    AuditLogContextService,
     _set_request_path,
     auditlog_request_context_value,
-    AuditLogContextService,
     set_request_path,
 )
 

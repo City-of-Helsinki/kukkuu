@@ -1,8 +1,8 @@
 from django.core import mail
+from django_ilmoitin.models import NotificationTemplate
 from parler.utils.context import switch_language
 from requests.exceptions import HTTPError
 
-from django_ilmoitin.models import NotificationTemplate
 from kukkuu.consts import GENERAL_ERROR, PERMISSION_DENIED_ERROR
 
 

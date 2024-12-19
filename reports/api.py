@@ -1,9 +1,9 @@
 from django.db.models import Prefetch
 from drf_spectacular.utils import (
+    OpenApiExample,
     extend_schema,
     extend_schema_serializer,
     extend_schema_view,
-    OpenApiExample,
 )
 from rest_framework import mixins, viewsets
 

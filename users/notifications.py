@@ -1,7 +1,6 @@
 from datetime import date
 
 from django.utils.translation import gettext_lazy as _
-
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.registry import notifications
 
