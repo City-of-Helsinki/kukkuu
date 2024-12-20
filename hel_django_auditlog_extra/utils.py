@@ -49,7 +49,7 @@ class AuditLogConfigurationHelper:
             print(cls.get_app_model_key(model))
 
     @classmethod
-    def get_defaultly_excluded(cls):
+    def get_excluded_by_default(cls):
         return set(
             cls.get_model_classes(app_model)[0]
             for app_model in auditlog.DEFAULT_EXCLUDE_MODELS
@@ -71,7 +71,7 @@ class AuditLogConfigurationHelper:
                 )
             )
 
-        return excluded_models | cls.get_defaultly_excluded()
+        return excluded_models | cls.get_excluded_by_default()
 
     @classmethod
     def get_included_models(cls) -> Set[ModelBase]:
