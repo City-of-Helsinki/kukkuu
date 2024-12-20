@@ -1,8 +1,8 @@
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 from django.conf import settings
 
-from common.qrcode_service import create_qrcode, MIME_TYPES, QRCodeFileFormatEnum
+from common.qrcode_service import MIME_TYPES, QRCodeFileFormatEnum, create_qrcode
 from events.consts import NotificationType
 from events.utils import send_event_notifications_to_guardians
 

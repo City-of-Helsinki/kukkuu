@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
+
 from .models import VerificationToken
 
 
@@ -13,7 +15,8 @@ verification_token_user_full_name.short_description = "Name"
 
 
 @admin.register(VerificationToken)
-class VerificationTokenAdmin(admin.ModelAdmin):
+class VerificationTokenAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+    enable_list_view_audit_logging = True
     list_display = (
         "key",
         "verification_type",

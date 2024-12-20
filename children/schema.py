@@ -23,6 +23,7 @@ from common.schema import (
 )
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from events.models import Event, EventGroup, EventQueryset, Occurrence
+from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
@@ -35,7 +36,7 @@ from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
 from users.utils import get_communication_unsubscribe_ui_url
 
-from .models import Child, postal_code_validator, Relationship
+from .models import Child, Relationship, postal_code_validator
 
 User = get_user_model()
 
@@ -52,6 +53,7 @@ class ChildrenConnection(graphene.Connection):
         return self.length
 
 
+@auditlog_access
 class ChildNotesNode(DjangoObjectType):
     """
     Node for handling child's notes separately from their other data.
@@ -81,6 +83,7 @@ class ChildNotesNode(DjangoObjectType):
             return None
 
 
+@auditlog_access
 class ChildNode(DjangoObjectType):
     available_events = relay.ConnectionField(
         "events.schema.EventConnection",

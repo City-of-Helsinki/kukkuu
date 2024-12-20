@@ -41,6 +41,7 @@ django==4.2.16
     # via
     #   -r requirements.in
     #   django-anymail
+    #   django-auditlog
     #   django-cors-headers
     #   django-filter
     #   django-graphql-jwt
@@ -58,6 +59,8 @@ django==4.2.16
     #   helsinki-profile-gdpr-api
 django-anymail==12.0
     # via django-ilmoitin
+django-auditlog==3.0.0
+    # via -r requirements.in
 django-cleanup==9.0.0
     # via -r requirements.in
 django-cors-headers==4.6.0
@@ -163,6 +166,7 @@ pyjwt==2.10.0
     # via django-graphql-jwt
 python-dateutil==2.9.0.post0
     # via
+    #   django-auditlog
     #   faker
     #   graphene
 python-jose==3.3.0

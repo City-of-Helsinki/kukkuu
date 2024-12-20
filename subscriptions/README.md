@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Subscriptions app](#subscriptions-app)
+  - [Free spot notifications](#free-spot-notifications)
+    - [Authenticated users](#authenticated-users)
+    - [Authorization with a token](#authorization-with-a-token)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ### Subscriptions app
 
 #### Free spot notifications
