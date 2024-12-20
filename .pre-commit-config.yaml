@@ -12,11 +12,11 @@ repos:
     # the ruff's version line, it is used by test_pre_commit_ruff_version.py
     # test case in order not to have to add a YAML library dependency just
     # to test this version:
-    rev: v0.8.0  # ruff-pre-commit version
+    rev: v0.8.4 # ruff-pre-commit version
     hooks:
       # Run the linter
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
       # Run the formatter
       - id: ruff-format
   - repo: https://github.com/compilerla/conventional-pre-commit
@@ -26,11 +26,11 @@ repos:
         stages: [commit-msg]
         args: []
   - repo: https://github.com/jorisroovers/gitlint
-    rev:  v0.19.1
+    rev: v0.19.1
     hooks:
       - id: gitlint
         stages: [commit-msg]
   - repo: https://github.com/thlorenz/doctoc
-    rev: v2.2.0 
+    rev: v2.2.0
     hooks:
       - id: doctoc
