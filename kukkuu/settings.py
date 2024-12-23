@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from sentry_sdk.integrations.django import DjangoIntegration
 
+from kukkuu.consts import CSP
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
 checkout_dir = environ.Path(__file__) - 2
@@ -198,6 +199,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "csp",
     "graphene_django",
     "parler",
     "anymail",
@@ -233,6 +235,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "csp.middleware.CSPMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -260,6 +263,12 @@ TEMPLATES = [
 
 CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
+
+# Configure the default CSP rule for different source types
+CSP_DEFAULT_SRC = [CSP.SELF]
+# NOTE: CSP_STYLE_SRC="'unsafe-inline'" is needed for the inline styles that are added
+# by the `django-helusers` to the base_admin_site.html
+CSP_STYLE_SRC = [CSP.SELF, CSP.UNSAFE_INLINE]
 
 AUTH_USER_MODEL = "users.User"
 
