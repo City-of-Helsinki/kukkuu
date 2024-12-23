@@ -4,7 +4,6 @@ from typing import List
 from django.conf import settings
 
 from common.notification_service import SMSNotificationService
-from kukkuu.consts import DEFAULT_LANGUAGE
 
 sms_notification_service = SMSNotificationService(
     settings.NOTIFICATION_SERVICE_API_TOKEN, settings.NOTIFICATION_SERVICE_API_URL
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def send_sms_notification(destinations: List[str], body_text: str, language=None):
     if not language:
-        language = DEFAULT_LANGUAGE
+        language = settings.LANGUAGE_CODE
 
     if (
         language in getattr(settings, "TRANSLATED_SMS_SENDER", {})
