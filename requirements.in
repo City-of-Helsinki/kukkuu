@@ -26,3 +26,4 @@ helsinki-profile-gdpr-api
 django-health-check
 markdown
 django-auditlog
+django-csp

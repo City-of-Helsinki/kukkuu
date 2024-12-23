@@ -43,6 +43,7 @@ django==4.2.17
     #   django-anymail
     #   django-auditlog
     #   django-cors-headers
+    #   django-csp
     #   django-filter
     #   django-graphql-jwt
     #   django-guardian
@@ -64,6 +65,8 @@ django-auditlog==3.0.0
 django-cleanup==9.0.0
     # via -r requirements.in
 django-cors-headers==4.6.0
+    # via -r requirements.in
+django-csp==3.8
     # via -r requirements.in
 django-environ==0.11.2
     # via -r requirements.in
