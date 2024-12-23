@@ -1,9 +1,4 @@
-from contextvars import ContextVar
-
 from auditlog.signals import accessed
-
-# Create a ContextVar to store the accessed flag
-_auditlog_accessed_sent = ContextVar("_auditlog_accessed_sent", default=False)
 
 
 class AuditlogAdminViewAccessLogMixin:
@@ -39,6 +34,8 @@ class AuditlogAdminViewAccessLogMixin:
         ```
     """
 
+    _request_obj_accessed_sent_key = "_auditlog_accessed_sent"
+
     # To write access log to audit log of each instance in the admin list view
     enable_list_view_audit_logging = False
 
@@ -70,9 +67,9 @@ class AuditlogAdminViewAccessLogMixin:
         Retrieves the object for the admin view and sends the `accessed` signal.
 
         This method overrides the default `get_object` to include sending the
-        `accessed` signal from `django-auditlog`. It uses a `ContextVar` to
-        ensure the signal is sent only once per request, even if `get_object`
-        is called multiple times.
+        `accessed` signal from `django-auditlog`. It uses a flag in the request
+        object to ensure the signal is sent only once per request, even if
+        `get_object` is called multiple times.
 
         Args:
             request: The HTTP request object.
@@ -82,12 +79,16 @@ class AuditlogAdminViewAccessLogMixin:
         Returns:
             The retrieved object, or None if the object does not exist.
         """
-        accessed_sent = _auditlog_accessed_sent.get()
+        if not hasattr(request, self._request_obj_accessed_sent_key):
+            setattr(request, self._request_obj_accessed_sent_key, False)
+
         obj = super().get_object(request, object_id, from_field)
-        if obj is not None and not accessed_sent:
+        if obj is not None and not getattr(
+            request, self._request_obj_accessed_sent_key
+        ):
             accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
             # get_object can be called multiple times,
             # so prevent signalling the accessed,
             # if it has already been signalled.
-            _auditlog_accessed_sent.set(True)
+            setattr(request, self._request_obj_accessed_sent_key, True)
         return obj
