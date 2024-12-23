@@ -19,7 +19,6 @@ from common.models import TimestampedModel, UUIDPrimaryKeyModel
 from events.consts import notification_types_that_need_communication_acceptance
 from gdpr.consts import CLEARED_VALUE
 from gdpr.models import GDPRModel
-from kukkuu.consts import DEFAULT_LANGUAGE
 from languages.models import Language
 from projects.models import (
     PERM_CAN_MANAGE_EVENT_GROUPS,
@@ -277,7 +276,7 @@ class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMix
         verbose_name=_("phone number"), max_length=64, blank=True
     )
     language = models.CharField(
-        verbose_name=_("language"), max_length=10, default=DEFAULT_LANGUAGE
+        verbose_name=_("language"), max_length=10, default=settings.LANGUAGE_CODE
     )
     email = models.EmailField(
         _("email address"),
