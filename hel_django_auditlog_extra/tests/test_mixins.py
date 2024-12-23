@@ -11,10 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.test import RequestFactory
 
-from hel_django_auditlog_extra.mixins import (
-    AuditlogAdminViewAccessLogMixin,
-    _auditlog_accessed_sent,
-)
+from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from hel_django_auditlog_extra.tests.models import DummyTestModel
 
 User = get_user_model()
@@ -27,16 +24,6 @@ def register_auditlog():
     auditlog.register(DummyTestModel)
     yield
     ContentType.objects.clear_cache()
-
-
-@pytest.fixture(autouse=True)
-def reset_contextvars():
-    """
-    pytest, by default, reuses the same context for all tests within a session,
-    so the contextvar needs to be reset
-    """
-    _auditlog_accessed_sent.set(False)
-    yield
 
 
 @pytest.fixture
