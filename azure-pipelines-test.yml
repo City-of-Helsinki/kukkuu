@@ -7,9 +7,9 @@ trigger:
       - master
   paths:
     exclude:
-    - '*release-please*'
-    - '**/*.md'
-    - '.github/'
+      - "*release-please*"
+      - "**/*.md"
+      - ".github/"
 
 # Pull request (PR) triggers cause a pipeline to run whenever a pull request is
 # opened with one of the specified target branches, or when updates are made to
@@ -52,4 +52,4 @@ extends:
     # buildArgs:
     configMap: # pod environment variables
       TOKEN_AUTH_BROWSER_TEST_ENABLED: 1
-      TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER: https://kukkuu-ui.test.hel.ninja,https://kukkuu-admin-ui.test.hel.ninja
+      TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER: https://kukkuu-ui.test.hel.ninja,https://kukkuu-admin.test.hel.ninja
