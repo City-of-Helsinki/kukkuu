@@ -4,17 +4,17 @@
 #
 #    pip-compile requirements-dev.in
 #
-asttokens==2.4.1
+asttokens==3.0.0
     # via stack-data
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
     #   requests
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via
     #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
     #   requests
-coverage[toml]==7.6.7
+coverage[toml]==7.6.10
     # via pytest-cov
 decorator==5.1.1
     # via ipython
@@ -30,7 +30,7 @@ idna==3.10
     #   requests
 iniconfig==2.0.0
     # via pytest
-ipython==8.29.0
+ipython==8.31.0
     # via -r requirements-dev.in
 jedi==0.19.2
     # via ipython
@@ -54,7 +54,7 @@ pure-eval==0.2.3
     # via stack-data
 pygments==2.18.0
     # via ipython
-pytest==8.3.3
+pytest==8.3.4
     # via
     #   -r requirements-dev.in
     #   pytest-cov
@@ -82,10 +82,9 @@ responses==0.25.3
     # via -r requirements-dev.in
 ruff==0.8.4
     # via -r requirements-dev.in
-six==1.16.0
+six==1.17.0
     # via
     #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
-    #   asttokens
     #   python-dateutil
     #   snapshottest
 snapshottest==0.6.0
@@ -102,7 +101,7 @@ typing-extensions==4.12.2
     # via
     #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
     #   ipython
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
     #   requests

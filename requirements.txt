@@ -8,11 +8,11 @@ asgiref==3.8.1
     # via
     #   django
     #   django-cors-headers
-attrs==24.2.0
+attrs==24.3.0
     # via
     #   jsonschema
     #   referencing
-authlib==1.3.2
+authlib==1.4.0
     # via drf-oidc-auth
 azure-core==1.32.0
     # via
@@ -22,22 +22,22 @@ azure-storage-blob==12.24.0
     # via django-storages
 cachetools==5.5.0
     # via django-helusers
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   requests
     #   sentry-sdk
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-cryptography==43.0.3
+cryptography==44.0.0
     # via
     #   authlib
     #   azure-storage-blob
     #   drf-oidc-auth
 deprecation==2.1.0
     # via django-helusers
-django==4.2.16
+django==4.2.17
     # via
     #   -r requirements.in
     #   django-anymail
@@ -97,13 +97,13 @@ djangorestframework==3.15.2
     #   helsinki-profile-gdpr-api
 drf-oidc-auth==3.0.0
     # via helsinki-profile-gdpr-api
-drf-spectacular==0.27.2
+drf-spectacular==0.28.0
     # via -r requirements.in
 ecdsa==0.19.0
     # via python-jose
 factory-boy==3.3.1
     # via -r requirements.in
-faker==33.0.0
+faker==33.1.0
     # via factory-boy
 graphene==3.4.3
     # via
@@ -134,7 +134,7 @@ inflection==0.5.1
     # via drf-spectacular
 isodate==0.7.2
     # via azure-storage-blob
-jinja2==3.1.4
+jinja2==3.1.5
     # via django-ilmoitin
 jsonschema==4.23.0
     # via drf-spectacular
@@ -162,7 +162,7 @@ pycountry==24.6.1
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pyjwt==2.10.0
+pyjwt==2.10.1
     # via django-graphql-jwt
 python-dateutil==2.9.0.post0
     # via
@@ -188,22 +188,22 @@ requests==2.32.3
     #   django-anymail
     #   django-helusers
     #   drf-oidc-auth
-rpds-py==0.21.0
+rpds-py==0.22.3
     # via
     #   jsonschema
     #   referencing
 rsa==4.9
     # via python-jose
-sentry-sdk==2.19.0
+sentry-sdk==2.19.2
     # via -r requirements.in
-six==1.16.0
+six==1.17.0
     # via
     #   azure-core
     #   ecdsa
     #   graphene-file-upload
     #   promise
     #   python-dateutil
-sqlparse==0.5.2
+sqlparse==0.5.3
     # via django
 text-unidecode==1.3
     # via graphene-django
@@ -215,7 +215,7 @@ typing-extensions==4.12.2
     #   graphene
 uritemplate==4.1.1
     # via drf-spectacular
-urllib3==2.2.3
+urllib3==2.3.0
     # via
     #   django-anymail
     #   requests
