@@ -18,6 +18,9 @@ AUDITLOG_EXCLUDE_TRACKING_MODELS = (
     "sessions.session",  # auth model
     "helusers.oidcbackchannellogoutevent",  # auth model
     "languages.language",  # system
+    "mailer.dontsendentry",  # system
+    "mailer.message",  # system
+    "mailer.messagelog",  # system
 )
 
 # Configure models registration and other behaviours.
@@ -72,7 +75,4 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "messaging.message_occurrences",
     "users.guardian_languages_spoken_at_home",
     "children.child_languages_spoken_at_home",
-    "mailer.dontsendentry",
-    "mailer.message",
-    "mailer.messagelog",
 )
