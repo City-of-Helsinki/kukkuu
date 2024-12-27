@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest import mock
 
 import pytest
+from auditlog.context import disable_auditlog
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.utils import timezone
@@ -214,11 +215,12 @@ def test_command_obsolete_handled_users_with_batch_size(
     Test that "-o" or "--obsolete_handled_users" argument
     marks the handled users as obsolete with different batch sizes.
     """
-    GuardianFactory.create_batch(
-        size=guardian_count,
-        user__date_joined=timezone.now() - timedelta(days=1),
-        user__is_obsolete=False,
-    )
+    with disable_auditlog():
+        GuardianFactory.create_batch(
+            size=guardian_count,
+            user__date_joined=timezone.now() - timedelta(days=1),
+            user__is_obsolete=False,
+        )
     assert Guardian.objects.count() == guardian_count
     assert Guardian.objects.filter(user__is_obsolete=False).count() == guardian_count
 

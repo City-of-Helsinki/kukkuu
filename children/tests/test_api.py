@@ -1520,29 +1520,29 @@ def test_children_pagination_cursor_works_the_same_with_offset_and_after(
     with disable_auditlog():
         ChildWithGuardianFactory.create_batch(110, project=project)
 
-    offset = (page - 1) * limit
-    executed_with_offset = project_user_api_client.execute(
-        query,
-        variables={
-            "projectId": get_global_id(project),
-            "limit": limit,
-            "offset": offset,
-        },
-    )
+        offset = (page - 1) * limit
+        executed_with_offset = project_user_api_client.execute(
+            query,
+            variables={
+                "projectId": get_global_id(project),
+                "limit": limit,
+                "offset": offset,
+            },
+        )
 
-    # NOTE: There will be 1 result less in the after-query,
-    # because the after-parameter is read from the first result
-    # and the cursor set in after, is not included in the result set.
-    first = limit - 1
-    after = executed_with_offset["data"]["children"]["edges"][0]["cursor"]
-    executed_with_after = project_user_api_client.execute(
-        query,
-        variables={
-            "projectId": get_global_id(project),
-            "first": first,
-            "after": after,
-        },
-    )
+        # NOTE: There will be 1 result less in the after-query,
+        # because the after-parameter is read from the first result
+        # and the cursor set in after, is not included in the result set.
+        first = limit - 1
+        after = executed_with_offset["data"]["children"]["edges"][0]["cursor"]
+        executed_with_after = project_user_api_client.execute(
+            query,
+            variables={
+                "projectId": get_global_id(project),
+                "first": first,
+                "after": after,
+            },
+        )
 
     assert len(executed_with_after["data"]["children"]["edges"]) == first
     assert (
@@ -1568,28 +1568,28 @@ def test_children_pagination_cursor_generation(
     with disable_auditlog():
         ChildWithGuardianFactory.create_batch(total_count, project=project)
 
-    query = """
-    query Children($projectId: ID!, $limit: Int, $offset: Int) {
-        children(projectId: $projectId, limit: $limit, offset: $offset) {
-            edges {
-                cursor
+        query = """
+        query Children($projectId: ID!, $limit: Int, $offset: Int) {
+            children(projectId: $projectId, limit: $limit, offset: $offset) {
+                edges {
+                    cursor
+                }
             }
         }
-    }
-    """  # noqa: E501
+        """  # noqa: E501
 
-    executed_with_offset = project_user_api_client.execute(
-        query,
-        variables={
-            "projectId": get_global_id(project),
-            "limit": limit,
-            "offset": offset,
-        },
-    )
+        executed_with_offset = project_user_api_client.execute(
+            query,
+            variables={
+                "projectId": get_global_id(project),
+                "limit": limit,
+                "offset": offset,
+            },
+        )
 
-    cursors = [
-        edge["cursor"] for edge in executed_with_offset["data"]["children"]["edges"]
-    ]
+        cursors = [
+            edge["cursor"] for edge in executed_with_offset["data"]["children"]["edges"]
+        ]
     assert len(cursors) == limit
 
     expected_cursors = [
