@@ -29,8 +29,8 @@
   "devDependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@testing-library/testcafe": "^5.0.0",
+    "dotenv": "^16.0.0",
     "testcafe": "^3.1.0",
-    "testcafe-reporter-html": "^1.4.6",
-    "dotenv": "^16.0.0"
+    "testcafe-reporter-html": "^1.4.6"
   }
 }
