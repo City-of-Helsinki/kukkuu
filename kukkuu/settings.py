@@ -265,10 +265,40 @@ CORS_ORIGIN_WHITELIST = env.list("CORS_ORIGIN_WHITELIST")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
 
 # Configure the default CSP rule for different source types
-CSP_DEFAULT_SRC = [CSP.SELF]
-# NOTE: CSP_STYLE_SRC="'unsafe-inline'" is needed for the inline styles that are added
-# by the `django-helusers` to the base_admin_site.html
-CSP_STYLE_SRC = [CSP.SELF, CSP.UNSAFE_INLINE]
+CSP_DEFAULT_SRC = ["'self'"]
+
+# CSP_STYLE_SRC includes 'unsafe-inline' for inline styles added by `django-helusers`
+# and `SpectacularRedocView`.
+CSP_STYLE_SRC = [
+    CSP.SELF,
+    CSP.UNSAFE_INLINE,
+    "cdn.jsdelivr.net",
+    "fonts.googleapis.com",
+]
+
+# CSP_SCRIPT_SRC includes 'unsafe-eval' for inline scripts added by
+# `SpectacularRedocView`
+CSP_SCRIPT_SRC = [
+    CSP.SELF,
+    CSP.UNSAFE_EVAL,
+    "cdn.jsdelivr.net",
+    "blob:",
+]
+
+# CSP_FONT_SRC includes Google fonts fetched by `SpectacularRedocView`
+CSP_FONT_SRC = [
+    CSP.SELF,
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+]
+
+# CSP_IMG_SRC includes sources for images fetched by `SpectacularRedocView`
+CSP_IMG_SRC = [
+    CSP.SELF,
+    "cdn.redoc.ly",
+    "blob:",
+    "data:",
+]
 
 AUTH_USER_MODEL = "users.User"
 
