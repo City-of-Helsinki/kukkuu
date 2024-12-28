@@ -26,6 +26,7 @@ services:
             - .:/app
         ports:
             - 8081:8081
+            - 8000:8000
         depends_on:
             - postgres
         container_name: kukkuu-backend
