@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from django.utils.timezone import localdate
 from drf_spectacular.utils import (
@@ -357,5 +357,5 @@ class EventSerializer(serializers.ModelSerializer):
 
     # NOTE: Fetching the translations from django-parler table
     # can cause lots of sub queries.
-    def get_name(self, obj: Project):
+    def get_name(self, obj: Project) -> dict[Any, str]:
         return obj.name_with_translations
