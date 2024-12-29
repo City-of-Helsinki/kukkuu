@@ -3,6 +3,7 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Audit Logging Principles](#audit-logging-principles)
 - [Django-auditlog incompatibility issues with Django-graphene](#django-auditlog-incompatibility-issues-with-django-graphene)
   - [Graphene's Error Handling and its Impact on Authentication](#graphenes-error-handling-and-its-impact-on-authentication)
   - [Graphene's Unique Authentication Challenges](#graphenes-unique-authentication-challenges)
