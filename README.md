@@ -1,13 +1,14 @@
-# Kukkuu
+# Kukkuu API documentation
 
-:baby: Culture Kids (kulttuurin kummilapset) API :violin:
+:baby: The Culture Kids (Kulttuurin kummilapset) API :violin:
 
 [![status](https://travis-ci.com/City-of-Helsinki/kukkuu.svg)](https://github.com/City-of-Helsinki/kukkuu)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Environments](#environments)
+- [Service architecture](#service-architecture)
+  - [Environments](#environments)
 - [Development](#development)
   - [Development with Docker](#development-with-docker)
   - [Development without Docker](#development-without-docker)
@@ -33,15 +34,42 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Environments
+## Service architecture
 
-Production environment:
+The Culture kids service consists from:
 
-- https://kukkuu-api.prod.hel.ninja/kukkuu/graphql
+- **Kukkuu API:** The (this) backend service. 
+- **[Public UI](https://github.com/City-of-Helsinki/kukkuu-ui):** The frontend service where the kids can view and enrol to culture events.
+- **[Admin UI](https://github.com/City-of-Helsinki/kukkuu-admin):** A restricted UI where the events are maintained and published.
+- **[Headless CMS](https://github.com/City-of-Helsinki/headless-cms):** Content Management Service that provides dynamic pages and dynamic content for the public UI. It also provides content for the header and the footer. A React component library can be found from https://github.com/City-of-Helsinki/react-helsinki-headless-cms.
+- **[Notification Service API](https://github.com/City-of-Helsinki/notification-service-api):** A service used by the Kukkuu API to send SMS messages.
+- **Mailer:** A service used by the Kukkuu API to send emails.
 
-Testing environment:
+### Environments
 
-- https://kukkuu.api.test.hel.ninja/graphql
+The API environments:
+- **Production environment:** https://kukkuu.api.hel.fi/graphql
+- **Staging environment:** https://kukkuu.api.stage.hel.ninja/graphql
+- **Testing environment:** https://kukkuu.api.test.hel.ninja/graphql
+
+The public client environments:
+- **Production environment:** https://kummilapset.hel.fi/
+- **Staging environment:** https://kukkuu-ui.stage.hel.ninja/
+- **Testing environment:** https://kukkuu-ui.test.hel.ninja/
+
+The admin client environments:
+- **Production environment:** https://kummilapset-admin.hel.fi/
+- **Staging environment:** https://kukkuu-admin.stage.hel.ninja/
+- **Testing environment:** https://kukkuu-admin.test.hel.ninja/
+
+The headless CMS environments:
+- **Production environment:** https://kukkuu.content.api.hel.fi/graphql
+- **Testing environment:** https://kukkuu.app-staging.hkih.hion.dev/graphql
+
+The notification service environments: 
+- **Production environment:** https://kuva-notification-service.api.hel.fi/
+- **Staging environment:** https://kuva-notification-service.api.stage.hel.ninja/
+- **Testing environment:** https://kuva-notification-service.api.test.hel.ninja/
 
 ## Development
 
