@@ -8,11 +8,12 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 - [Environments](#environments)
-- [Development with Docker](#development-with-docker)
-- [Development without Docker](#development-without-docker)
-  - [Installing Python requirements](#installing-python-requirements)
-  - [Database](#database)
-  - [Notification import](#notification-import)
+- [Development](#development)
+  - [Development with Docker](#development-with-docker)
+  - [Development without Docker](#development-without-docker)
+    - [Installing Python requirements](#installing-python-requirements)
+    - [Database](#database)
+    - [Notification import](#notification-import)
   - [Daily running, Debugging](#daily-running-debugging)
 - [Authorization](#authorization)
 - [Cron jobs](#cron-jobs)
@@ -42,7 +43,9 @@ Testing environment:
 
 - https://kukkuu.api.test.hel.ninja/graphql
 
-## Development with Docker
+## Development
+
+### Development with Docker
 
 1. Copy `docker-compose.env.yaml.example` to `docker-compose.env.yaml` and modify it if needed.
 
@@ -52,19 +55,19 @@ If you do not have a super user / admin to administrate the API yet, you can cre
 
 The project is now running at [localhost:8081](http://localhost:8081)
 
-## Development without Docker
+### Development without Docker
 
 Prerequisites:
 
 - PostgreSQL 13
 - Python 3.11
 
-### Installing Python requirements
+#### Installing Python requirements
 
 - Run `pip install -r requirements.txt`
 - Run `pip install -r requirements-dev.txt` (development requirements)
 
-### Database
+#### Database
 
 To setup a database compatible with default database settings:
 
@@ -87,7 +90,7 @@ Add admin user (optional)
 
     python manage.py add_admin_user -u admin -p admin -e admin@example.com
 
-### Notification import
+#### Notification import
 
 The emails notifications that Kukkuu sends can be imported from a Google Sheets spreadsheet. To do that, first configure setting `KUKKUU_NOTIFICATIONS_SHEET_ID`, and then either
 
