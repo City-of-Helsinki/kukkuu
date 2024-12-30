@@ -16,12 +16,9 @@
     - [Database](#database)
     - [Notification import](#notification-import)
   - [Daily running, Debugging](#daily-running-debugging)
-- [Authorization](#authorization)
-- [Cron jobs](#cron-jobs)
-  - [Reminder notifications](#reminder-notifications)
-  - [Feedback notifications](#feedback-notifications)
-  - [Queued email sending](#queued-email-sending)
-  - [SMS notifications](#sms-notifications)
+  - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
+  - [Code linting & formatting](#code-linting--formatting)
+  - [Pre-commit hooks](#pre-commit-hooks)
 - [Application programming interfaces](#application-programming-interfaces)
   - [GraphQL API Documentation](#graphql-api-documentation)
   - [Report API](#report-api)
@@ -29,10 +26,13 @@
 - [Event Ticketing](#event-ticketing)
   - [Internal Ticketing](#internal-ticketing)
   - [External Ticketing](#external-ticketing)
+- [Authorization](#authorization)
 - [Audit logging](#audit-logging)
-- [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
-- [Code linting & formatting](#code-linting--formatting)
-  - [Pre-commit hooks](#pre-commit-hooks)
+- [Cron jobs](#cron-jobs)
+  - [Reminder notifications](#reminder-notifications)
+  - [Feedback notifications](#feedback-notifications)
+  - [Queued email sending](#queued-email-sending)
+  - [SMS notifications](#sms-notifications)
 - [Issues board](#issues-board)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -136,6 +136,123 @@ The emails notifications that Kukkuu sends can be imported from a Google Sheets 
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at [localhost:8081](http://localhost:8081)
 
+### Keeping Python requirements up to date
+
+1. Install `pip-tools`:
+
+   - `pip install pip-tools`
+
+2. Add new packages to `requirements.in` or `requirements-dev.in`
+
+3. Update `.txt` file for the changed requirements file:
+
+   - `pip-compile requirements.in`
+   - `pip-compile requirements-dev.in`
+
+4. If you want to update dependencies to their newest versions, run:
+
+   - `pip-compile --upgrade requirements.in`
+
+5. To install Python requirements run:
+
+   - `pip-sync requirements.txt`
+
+### Code linting & formatting
+
+This project uses [ruff](https://github.com/astral-sh/ruff) for Python code linting and formatting.
+Ruff is configured through [pyproject.toml](./pyproject.toml).
+Basic `ruff` commands:
+
+- Check linting: `ruff check` or `ruff check --fix` to auto-fix
+- Check & auto-fix linting: `ruff check --fix`
+- Format: `ruff format`
+
+Basically:
+
+- Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
+- Ruff formatter (i.e. `ruff format`) does what `black` did before.
+
+Integrations for `ruff` are available for many editors:
+
+- https://docs.astral.sh/ruff/integrations/
+
+### Pre-commit hooks
+
+You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
+
+1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
+   - `pip install pre-commit`
+2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
+   - `pre-commit install` for code formatting & linting
+   - `pre-commit install --hook-type commit-msg` for commit message linting
+
+After that, linting and formatting hooks will run against all changed files before committing.
+
+Git commit message linting is configured in [.gitlint](./.gitlint)
+
+
+## Application programming interfaces
+
+### GraphQL API Documentation
+
+The primary API to fetch Kukkuu related data is a GraphQL API created with Graphene. To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section.
+
+### Report API
+
+For fetching data for reporting purposes, there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/). Unlike the primary API which is created with Graphene, the Report API is created with Django REST Framework.
+
+The API requires authentication via HTTP basic authentication, or alternatively session authentication when DEBUG is `True`. The accessing user must also have Django permission `reports.access_report_api`.
+
+API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
+
+
+### GDPR API data export
+
+The [GDPR API data export and API tester documentation](./gdpr/README.MD).
+
+
+
+## Event Ticketing
+
+Kukkuu handles event ticketing in two ways: **internal** and **external**. This allows flexibility for managing different types of events and integrating with existing ticketing systems.
+
+A child is always associated with a specific "year project" based on their birth year. Events are also linked to these year projects.  Typically, a child can attend 2-3 events per calendar year, but this can be configured per project.
+
+### Internal Ticketing
+
+For events managed internally, Kukkuu provides the following features:
+
+* **Enrolment Management:**  
+    * Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
+    * Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
+* **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API.  Admins have access only to events within their assigned projects.
+* **QR Code Ticket Verification:**
+    * Enrolment confirmation emails include a QR code for easy ticket verification.
+    * This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
+
+    ```
+    KUKKUU_HASHID_SALT=your_secret_salt
+    KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
+    ```
+
+### External Ticketing
+
+Kukkuu integrates with the following external ticketing systems:
+
+* Ticketmaster
+* Lippu.fi
+* Tixly
+
+When an event uses an external ticketing system:
+
+* **Coupon-Based Enrolment:** Kukkuu provides pre-stored coupon codes that can be used to "purchase" tickets through the external system.
+* **No Internal Enrolment:** Instead of creating an `Enrolment` instance, Kukkuu links a coupon code to the child when they are enrolled in an externally ticketed event.
+* **Ticket Management:**  Enrolment details are managed within the external ticketing system, not within Kukkuu.
+
+**Managing Coupon Codes:**
+
+Coupon codes for external ticketing systems can be added through the Kukkuu Admin UI or the API. These codes are stored as `TicketSystemPassword` model instances.
+
 ## Authorization
 
 Kukkuu uses Keycloak, an open-source identity and access management solution, for user authentication and authorization. Keycloak is integrated with the Helsinki-Profile service environment.
@@ -168,6 +285,25 @@ This approach allows for realistic browser testing while safeguarding sensitive 
 **Further Information:**
 
 *   For detailed instructions on setting up Tunnistamo (the previous authentication system) and Helsinki-Profile, refer to the [GDPR API documentation](./gdpr/README.md).
+
+
+## Audit logging
+
+Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read it's [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
+
+The configuration to define which models are in the scope of the audit logging can be found from [auditlog_settings.py](./kukkuu/auditlog_settings.py).
+
+The GraphQL and admin site views can be logged by using the mixins and decorators that the `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
+
+**References**:
+
+- Django-auditlog
+
+  > PyPi: https://pypi.org/project/django-auditlog/.
+  >
+  > Github: https://github.com/jazzband/django-auditlog.
+  >
+  > Docs: https://django-auditlog.readthedocs.io/en/latest/index.html.
 
 ## Cron jobs
 
@@ -216,139 +352,6 @@ To use the SMS notification functionality, you have to acquire the API_KEY from 
         NOTIFICATION_SERVICE_API_URL=notification_service_end_point
         ```
 
-## Application programming interfaces
-
-### GraphQL API Documentation
-
-The primary API to fetch Kukkuu related data is a GraphQL API created with Graphene. To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section.
-
-### Report API
-
-For fetching data for reporting purposes, there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/). Unlike the primary API which is created with Graphene, the Report API is created with Django REST Framework.
-
-The API requires authentication via HTTP basic authentication, or alternatively session authentication when DEBUG is `True`. The accessing user must also have Django permission `reports.access_report_api`.
-
-API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
-
-
-### GDPR API data export
-
-The [GDPR API data export and API tester documentation](./gdpr/README.MD).
-
-
-## Event Ticketing
-
-Kukkuu handles event ticketing in two ways: **internal** and **external**. This allows flexibility for managing different types of events and integrating with existing ticketing systems.
-
-A child is always associated with a specific "year project" based on their birth year. Events are also linked to these year projects.  Typically, a child can attend 2-3 events per calendar year, but this can be configured per project.
-
-### Internal Ticketing
-
-For events managed internally, Kukkuu provides the following features:
-
-* **Enrolment Management:**  
-    * Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
-    * Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
-* **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API.  Admins have access only to events within their assigned projects.
-* **QR Code Ticket Verification:**
-    * Enrolment confirmation emails include a QR code for easy ticket verification.
-    * This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
-
-    ```
-    KUKKUU_HASHID_SALT=your_secret_salt
-    KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
-    ```
-
-### External Ticketing
-
-Kukkuu integrates with the following external ticketing systems:
-
-* Ticketmaster
-* Lippu.fi
-* Tixly
-
-When an event uses an external ticketing system:
-
-* **Coupon-Based Enrolment:** Kukkuu provides pre-stored coupon codes that can be used to "purchase" tickets through the external system.
-* **No Internal Enrolment:** Instead of creating an `Enrolment` instance, Kukkuu links a coupon code to the child when they are enrolled in an externally ticketed event.
-* **Ticket Management:**  Enrolment details are managed within the external ticketing system, not within Kukkuu.
-
-**Managing Coupon Codes:**
-
-Coupon codes for external ticketing systems can be added through the Kukkuu Admin UI or the API. These codes are stored as `TicketSystemPassword` model instances.
-
-
-## Audit logging
-
-Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read it's [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
-
-The configuration to define which models are in the scope of the audit logging can be found from [auditlog_settings.py](./kukkuu/auditlog_settings.py).
-
-The GraphQL and admin site views can be logged by using the mixins and decorators that the `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
-
-**References**:
-
-- Django-auditlog
-
-  > PyPi: https://pypi.org/project/django-auditlog/.
-  >
-  > Github: https://github.com/jazzband/django-auditlog.
-  >
-  > Docs: https://django-auditlog.readthedocs.io/en/latest/index.html.
-
-## Keeping Python requirements up to date
-
-1. Install `pip-tools`:
-
-   - `pip install pip-tools`
-
-2. Add new packages to `requirements.in` or `requirements-dev.in`
-
-3. Update `.txt` file for the changed requirements file:
-
-   - `pip-compile requirements.in`
-   - `pip-compile requirements-dev.in`
-
-4. If you want to update dependencies to their newest versions, run:
-
-   - `pip-compile --upgrade requirements.in`
-
-5. To install Python requirements run:
-
-   - `pip-sync requirements.txt`
-
-## Code linting & formatting
-
-This project uses [ruff](https://github.com/astral-sh/ruff) for Python code linting and formatting.
-Ruff is configured through [pyproject.toml](./pyproject.toml).
-Basic `ruff` commands:
-
-- Check linting: `ruff check` or `ruff check --fix` to auto-fix
-- Check & auto-fix linting: `ruff check --fix`
-- Format: `ruff format`
-
-Basically:
-
-- Ruff linter (i.e. `ruff check --fix`) does what `flake8` and `isort` did before.
-- Ruff formatter (i.e. `ruff format`) does what `black` did before.
-
-Integrations for `ruff` are available for many editors:
-
-- https://docs.astral.sh/ruff/integrations/
-
-### Pre-commit hooks
-
-You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
-
-1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
-   - `pip install pre-commit`
-2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
-   - `pre-commit install` for code formatting & linting
-   - `pre-commit install --hook-type commit-msg` for commit message linting
-
-After that, linting and formatting hooks will run against all changed files before committing.
-
-Git commit message linting is configured in [.gitlint](./.gitlint)
 
 ## Issues board
 
