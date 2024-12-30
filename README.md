@@ -138,13 +138,36 @@ The emails notifications that Kukkuu sends can be imported from a Google Sheets 
 
 ## Authorization
 
-The user profiles authenticates themselves in a centralized authentication server of the city of Helsinki. For long it was [Tunnistamo](https://github.com/City-of-Helsinki/tunnistamo), but during autumn 2024, it was changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile) service environment.
+Kukkuu uses Keycloak, an open-source identity and access management solution, for user authentication and authorization. Keycloak is integrated with the Helsinki-Profile service environment.
 
-The Tunnistamo can be configured to be used [locally](./docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](./docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
+**Keycloak Setup:**
 
-The Keycloak test environment can also be configured to be used [locally](./docs/setup-keycloak.md).
+*   **Local Development:** You can configure Keycloak for local development by following the instructions in [this guide](./docs/setup-keycloak.md). This allows you to test authentication flows without relying on external services.
 
-> NOTE: Also check the [GDPR API documentation](./gdpr/README.md) because there is much more detailed instructions how to setup the Tunnistamo and the Helsinki-Profile!
+
+**Browser Testing and Authorization:**
+
+Protecting sensitive data while enabling effective browser testing requires a secure authorization process. To avoid the limitations of mocking responses, Kukkuu utilizes symmetrically signed JWTs (JSON Web Tokens) specifically for browser testing.
+
+> The symmetrically signed JWT means that both ends, the client and the API both needs to share a shared secret between each other, that can be used to sign the JWT. Also, the API needs to be configured so that it allows JWT issued by the client (and not the actual authorization service).
+
+**How it works:**
+
+1.  **Shared Secret:**  The client (browser) and the Kukkuu API share a secret key.
+2.  **JWT Signing:** The client uses the shared secret to sign a JWT, effectively asserting its identity for testing purposes.
+3.  **API Configuration:** The API is configured to trust JWTs signed with the shared secret, bypassing the standard Keycloak authentication flow for browser testing.
+
+This approach allows for realistic browser testing while safeguarding sensitive data.
+
+**Important Notes:**
+
+*   Ensure the shared secret used for browser testing is kept secure and separate from production secrets.
+*   For production environments, Kukkuu relies on standard Keycloak authentication flows through the Helsinki-Profile.
+
+
+**Further Information:**
+
+*   For detailed instructions on setting up Tunnistamo (the previous authentication system) and Helsinki-Profile, refer to the [GDPR API documentation](./gdpr/README.md).
 
 ## Cron jobs
 
