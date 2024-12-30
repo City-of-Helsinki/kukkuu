@@ -2,7 +2,7 @@
 
 :baby: The Culture Kids (Kulttuurin kummilapset) API :violin:
 
-[![status](https://travis-ci.com/City-of-Helsinki/kukkuu.svg)](https://github.com/City-of-Helsinki/kukkuu)
+
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -127,6 +127,14 @@ The emails notifications that Kukkuu sends can be imported from a Google Sheets 
 
 1. run `python manage.py import_notifications` to import and update all the notifications, or
 2. use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
+
+The notification templates primary import source is https://docs.google.com/spreadsheets/d/1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M. 
+
+The environment variable should then be set to:
+
+```
+KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
+```
 
 ### Daily running, Debugging
 
