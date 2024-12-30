@@ -22,10 +22,13 @@
   - [Feedback notifications](#feedback-notifications)
   - [Queued email sending](#queued-email-sending)
   - [SMS notifications](#sms-notifications)
-- [GDPR API data export](#gdpr-api-data-export)
-- [GraphQL API Documentation](#graphql-api-documentation)
-- [Report API](#report-api)
-- [QR-code ticket verification](#qr-code-ticket-verification)
+- [Application programming interfaces](#application-programming-interfaces)
+  - [GraphQL API Documentation](#graphql-api-documentation)
+  - [Report API](#report-api)
+  - [GDPR API data export](#gdpr-api-data-export)
+- [Event Ticketing](#event-ticketing)
+  - [Internal Ticketing](#internal-ticketing)
+  - [External Ticketing](#external-ticketing)
 - [Audit logging](#audit-logging)
 - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
 - [Code linting & formatting](#code-linting--formatting)
@@ -190,34 +193,67 @@ To use the SMS notification functionality, you have to acquire the API_KEY from 
         NOTIFICATION_SERVICE_API_URL=notification_service_end_point
         ```
 
-## GDPR API data export
+## Application programming interfaces
 
-The [GDPR API data export and API tester documentation](./gdpr/README.MD).
+### GraphQL API Documentation
 
-## GraphQL API Documentation
+The primary API to fetch Kukkuu related data is a GraphQL API created with Graphene. To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section.
 
-To view the GraphQL API documentation, in DEBUG mode visit: http://localhost:8081/graphql and checkout the `Documentation Explorer` section
+### Report API
 
-## Report API
-
-For fetching data for reporting purposes there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/).
+For fetching data for reporting purposes, there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/). Unlike the primary API which is created with Graphene, the Report API is created with Django REST Framework.
 
 The API requires authentication via HTTP basic authentication, or alternatively session authentication when DEBUG is `True`. The accessing user must also have Django permission `reports.access_report_api`.
 
 API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
 
-## QR-code ticket verification
 
-When an enrolment is created, the guardian has get a mail in a text format. This pull request adds a QR-code to the mail's attachments. The QR-code is created from the ticket verification url and the enrolment's reference id, which is 5 chars code (lowercased alphabets) that is easy to write manually in the urls if needed.
+### GDPR API data export
 
-If KUKKUU_TICKET_VERIFICATION_URL is set to None, the QR-code won't be attached to the enrolment notification email. Use {reference_id} as a specified value in the given string, e.g http://localhost:3000/check-ticket-validity/{reference_id}.
+The [GDPR API data export and API tester documentation](./gdpr/README.MD).
 
-The [Hashids](https://hashids.org/python/) is used to create the magic number that is used as a reference id to Enrolment instance. A salt is needed to prevent the malicious users to guess the magic numbers to tickets.
 
-```
-KUKKUU_HASHID_SALT=ULGd5YeRv6yVtvoj
-KUKKUU_TICKET_VERIFICATION_URL=http://localhost:3000/check-ticket-validity/{reference_id}
-```
+## Event Ticketing
+
+Kukkuu handles event ticketing in two ways: **internal** and **external**. This allows flexibility for managing different types of events and integrating with existing ticketing systems.
+
+A child is always associated with a specific "year project" based on their birth year. Events are also linked to these year projects.  Typically, a child can attend 2-3 events per calendar year, but this can be configured per project.
+
+### Internal Ticketing
+
+For events managed internally, Kukkuu provides the following features:
+
+* **Enrolment Management:**  
+    * Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
+    * Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
+* **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API.  Admins have access only to events within their assigned projects.
+* **QR Code Ticket Verification:**
+    * Enrolment confirmation emails include a QR code for easy ticket verification.
+    * This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
+
+    ```
+    KUKKUU_HASHID_SALT=your_secret_salt
+    KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
+    ```
+
+### External Ticketing
+
+Kukkuu integrates with the following external ticketing systems:
+
+* Ticketmaster
+* Lippu.fi
+* Tixly
+
+When an event uses an external ticketing system:
+
+* **Coupon-Based Enrolment:** Kukkuu provides pre-stored coupon codes that can be used to "purchase" tickets through the external system.
+* **No Internal Enrolment:** Instead of creating an `Enrolment` instance, Kukkuu links a coupon code to the child when they are enrolled in an externally ticketed event.
+* **Ticket Management:**  Enrolment details are managed within the external ticketing system, not within Kukkuu.
+
+**Managing Coupon Codes:**
+
+Coupon codes for external ticketing systems can be added through the Kukkuu Admin UI or the API. These codes are stored as `TicketSystemPassword` model instances.
+
 
 ## Audit logging
 
