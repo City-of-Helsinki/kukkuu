@@ -41,7 +41,7 @@
 
 The Culture kids service consists from:
 
-- **Kukkuu API:** The (this) backend service. 
+- **[Kukkuu API](https://github.com/City-of-Helsinki/kukkuu):** The (this) backend service. 
 - **[Public UI](https://github.com/City-of-Helsinki/kukkuu-ui):** The frontend service where the kids can view and enrol to culture events.
 - **[Admin UI](https://github.com/City-of-Helsinki/kukkuu-admin):** A restricted UI where the events are maintained and published.
 - **[Headless CMS](https://github.com/City-of-Helsinki/headless-cms):** Content Management Service that provides dynamic pages and dynamic content for the public UI. It also provides content for the header and the footer. A React component library can be found from https://github.com/City-of-Helsinki/react-helsinki-headless-cms.
