@@ -44,10 +44,6 @@ class AuditlogAdminViewAccessLogMixin:
         Handles the changelist view (list view) and logs access events for
         objects on the current page if `enable_list_view_audit_logging` is `True`.
 
-        The changelist in the response's context_data (i.e. "cl") should be set by the
-        super().changelist_view call, see e.g.
-        https://github.com/django/django/blob/4.2.16/django/contrib/admin/options.py#L2071
-
         Args:
             request: The HTTP request object.
             extra_context: Optional extra context to pass to the template.
@@ -56,8 +52,8 @@ class AuditlogAdminViewAccessLogMixin:
             The response from the superclass's `changelist_view` method.
         """
         response = super().changelist_view(request, extra_context)
-        if self.enable_list_view_audit_logging:
-            changelist = response.context_data["cl"]
+        if self.enable_list_view_audit_logging and request.method == "GET":
+            changelist = super().get_changelist_instance(request)
             for obj in changelist.result_list:
                 accessed.send(sender=obj.__class__, instance=obj, actor=request.user)
         return response
