@@ -2,6 +2,58 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.11.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.10.0...kukkuu-v3.11.0) (2025-01-03)
+
+
+### Features
+
+* **auditlog-extra:** Add request path to additional data in LogEntry ([59c3d46](https://github.com/City-of-Helsinki/kukkuu/commit/59c3d4685e65808a399d7b58d85280d7e35145de))
+* **auditlog-extra:** Admin mixin ([8f4e56a](https://github.com/City-of-Helsinki/kukkuu/commit/8f4e56a4f394769741f6d61607c1e5a36bd8d550))
+* **auditlog-extra:** Configuration helper ([00165e6](https://github.com/City-of-Helsinki/kukkuu/commit/00165e6ad89bf0a1bca6f83b55d65597808c0cde))
+* **auditlog-extra:** Decorator ([e7b9257](https://github.com/City-of-Helsinki/kukkuu/commit/e7b92579e3fc08e5ac6ea7b851bb144a8e3b6bad))
+* **auditlog-extra:** Middleware ([0e63451](https://github.com/City-of-Helsinki/kukkuu/commit/0e63451fc9771c7c39d81bb5b6e658e9e353407b))
+* **auditlog:** Installed django-auditlog ([e0f2f04](https://github.com/City-of-Helsinki/kukkuu/commit/e0f2f04b837d9561576659b67304fe043db7dbd7))
+* **auditlog:** Write access log of restricted graphene nodes ([9ba8fad](https://github.com/City-of-Helsinki/kukkuu/commit/9ba8fad2c93d1454500d1d3eb2864c2739aa6786))
+* **auditlog:** Write access logs of restricted admin models ([e4fa72d](https://github.com/City-of-Helsinki/kukkuu/commit/e4fa72daa683d73dc7f1a4c29bbb8c2a39765385))
+* **csp:** Install and configure django-csp ([8c6bb7d](https://github.com/City-of-Helsinki/kukkuu/commit/8c6bb7d5f8b251da5cd048630f273a709e9950dc))
+* **devops:** Liveness probe to test the database connection ([1dcc0ff](https://github.com/City-of-Helsinki/kukkuu/commit/1dcc0ff2ba76819fd3e8235da0a07e622a573c1b))
+* **devops:** Readiness probe to give build and release info ([f8db348](https://github.com/City-of-Helsinki/kukkuu/commit/f8db34822e3d94ef85f0ca112354982d48abc3a8))
+
+
+### Bug Fixes
+
+* "The USE_L10N setting is deprecated" deprecation warning ([9f0abc1](https://github.com/City-of-Helsinki/kukkuu/commit/9f0abc17873af8d26657c7abf64a7628701ce328))
+* **auditlog-extra:** Admin mixin should use get_changelist_instance ([7d71f4c](https://github.com/City-of-Helsinki/kukkuu/commit/7d71f4c94ce7ee829880c726c5caf19c4d41d870))
+* **auditlog-extra:** Duplicated log creation prevention in admin mixin ([a427992](https://github.com/City-of-Helsinki/kukkuu/commit/a427992e21f969825f520badd426a646e84b320f))
+* **auditlog-extra:** Explicitly define app_label for DummyTestModel ([551eb46](https://github.com/City-of-Helsinki/kukkuu/commit/551eb4616c65d3b426317bffa4f3b20f337bd89b))
+* **auditlog:** Exclude mailer models from auditlog ([3f06c0b](https://github.com/City-of-Helsinki/kukkuu/commit/3f06c0bb503854d582b80d9b535393f236f288fc))
+* **config:** Admin ui url ([f5e0d24](https://github.com/City-of-Helsinki/kukkuu/commit/f5e0d2418516e9745d06c9c1992af7f6a502ff71))
+* **csp:** Circular import in settings ([38ff1b5](https://github.com/City-of-Helsinki/kukkuu/commit/38ff1b5e6a60154cb8b7b82b9cf98f4e23bf81af))
+* **csp:** Spectacular redoc view ([f6ee5b6](https://github.com/City-of-Helsinki/kukkuu/commit/f6ee5b62eebc3a698e21c293b667f4c5c3f0cde5))
+* DEFAULT_FILE_STORAGE deprecation warning by using STORAGES instead ([808d500](https://github.com/City-of-Helsinki/kukkuu/commit/808d500b0a3f30e79d20e19e7adaffc24346e068))
+* **docker:** Docker compose should use expose 8000 port for prod target ([ee8dfae](https://github.com/City-of-Helsinki/kukkuu/commit/ee8dfaed023f252e2520f4216a4e6f820999d4be))
+* Graphene-django warning that DjangoObjectType needs fields/exclude ([8be20af](https://github.com/City-of-Helsinki/kukkuu/commit/8be20afc9b63898f4fe3c890e0b0a00c4a0bcbd4))
+* Remove ChildNode deprecation warnings and document fields' behavior ([00846ec](https://github.com/City-of-Helsinki/kukkuu/commit/00846ecc65240fd7b58ee4c8ca171687dd842ee7))
+* Report event serializer type hint warning ([ebf0b8a](https://github.com/City-of-Helsinki/kukkuu/commit/ebf0b8a5b4f6494667304ad5e45b8ebcb4a96c9c))
+* Sentry_sdk deprecation warning by using current scope ([ebc5d65](https://github.com/City-of-Helsinki/kukkuu/commit/ebc5d6563aade650907139dd362390d82a8a0e9f))
+
+
+### Documentation
+
+* Add kukkuu api link ([c745b14](https://github.com/City-of-Helsinki/kukkuu/commit/c745b14a2be15a280911fd74284e0728ddcdc071))
+* Architecture and environments ([4a8002e](https://github.com/City-of-Helsinki/kukkuu/commit/4a8002ee89e6a6e7141ab8c227f69c11fffbf709))
+* **auditlog-extra:** Add a note to test schema ([cfcc44b](https://github.com/City-of-Helsinki/kukkuu/commit/cfcc44bfc0e8b3c003903d2a1569a05b4e280f32))
+* **auditlog-extra:** Add toc, refactor the api section, improve ([a5f4c81](https://github.com/City-of-Helsinki/kukkuu/commit/a5f4c81d4385d771b5688e1d211c7a111d33c942))
+* **auditlog-extra:** Audit logging principles ([0398b3a](https://github.com/City-of-Helsinki/kukkuu/commit/0398b3a26fa479c65936b320e0019f547486c8b4))
+* **auditlog-extra:** Readme and FAQ ([4804965](https://github.com/City-of-Helsinki/kukkuu/commit/480496504c12d6ea0328f59a48b7050e1ebcd31c))
+* **auditlog:** Add audit logging to the project readme ([fefcfb5](https://github.com/City-of-Helsinki/kukkuu/commit/fefcfb5f979873e283fd96c2176edb2234055cc1))
+* Browser testing jwt ([bade39f](https://github.com/City-of-Helsinki/kukkuu/commit/bade39f231c9c754cf5ddf972f0f059c5362d760))
+* Correct the facts in readme ([caf2fbc](https://github.com/City-of-Helsinki/kukkuu/commit/caf2fbccef27943dd74ac39dfdb311bb61c9f384))
+* Notification import source ([2c2e677](https://github.com/City-of-Helsinki/kukkuu/commit/2c2e677647693d96b6b8ded0056b863986dc2486))
+* Refactor the content order ([c0eefa2](https://github.com/City-of-Helsinki/kukkuu/commit/c0eefa28ea2fc85c3b03dc59356c19e52411d61d))
+* Ticketing systems ([cc4c014](https://github.com/City-of-Helsinki/kukkuu/commit/cc4c014bbc0e2799c1617ad596fdb5f80725f8f4))
+* Update headings and table of contents ([23b75fc](https://github.com/City-of-Helsinki/kukkuu/commit/23b75fccfc5a6699422139328a9630814ed7e531))
+
 ## [3.10.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.9.0...kukkuu-v3.10.0) (2024-11-25)
 
 
