@@ -188,7 +188,7 @@ This project uses [ruff](https://github.com/astral-sh/ruff) for Python code lint
 Ruff is configured through [pyproject.toml](./pyproject.toml).
 Basic `ruff` commands:
 
-- Check linting: `ruff check` or `ruff check --fix` to auto-fix
+- Check linting: `ruff check`
 - Check & auto-fix linting: `ruff check --fix`
 - Format: `ruff format`
 
