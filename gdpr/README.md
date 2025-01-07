@@ -12,7 +12,10 @@
 
 As background information and instructions for integrating the service with Helsinki-Profile, see the documentation for [How to integrate to Helsinki-Profile through Tunnistamo](./docs/how-to-integrate-to-Helsinki-profile-with-Tunnistamo.md).
 
-> NOTE: The user profiles authenticates themselves in a centralized authentication server of the city of Helsinki. For long it has been [Tunnistamo](https://github.com/City-of-Helsinki/tunnistamo), but in the summer of the year 2024, it should be changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile) service environment.
+> NOTE: The user profiles authenticates themselves in a centralized authentication server of the city of Helsinki.
+> For long it was [Tunnistamo](https://github.com/City-of-Helsinki/tunnistamo), but in the summer of the year 2024,
+> it was changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile)
+> service environment.
 
 The Tunnistamo can be configured to be used [locally](../docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](../docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
 
