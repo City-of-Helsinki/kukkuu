@@ -89,7 +89,11 @@ The notification service environments:
 
 2. Run `docker compose up`
 
-If you do not have a super user / admin to administrate the API yet, you can create one with `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`.
+If you do not have a super user / admin to administrate the API yet, you can create one with:
+- `docker exec -it kukkuu-backend python manage.py add_admin_user -u admin -p admin -e admin@example.com`
+  - In case you have running container already
+- `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`
+  - In case you don't have a running container yet
 
 The project is now running at [localhost:8081](http://localhost:8081)
 
