@@ -297,7 +297,10 @@ Kukkuu uses Keycloak, an open-source identity and access management solution, fo
 
 Protecting sensitive data while enabling effective browser testing requires a secure authorization process. To avoid the limitations of mocking responses, Kukkuu utilizes symmetrically signed JWTs (JSON Web Tokens) specifically for browser testing.
 
-> The symmetrically signed JWT means that both ends, the client and the API both needs to share a shared secret between each other, that can be used to sign the JWT. Also, the API needs to be configured so that it allows JWT issued by the client (and not the actual authorization service).
+> The symmetrically signed JWT means that both ends, the client and the API both
+> need to share a shared secret between each other, that can be used to sign the JWT.
+> Also, the API needs to be configured so that it allows JWT issued by the client
+> (and not the actual authorization service).
 
 **How it works:**
 
