@@ -85,7 +85,7 @@ The notification service environments:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.yaml.example` to `docker-compose.env.yaml` and modify it if needed.
+1. Copy `docker-compose.env.example` to `docker-compose.env` and modify it if needed.
 
 2. Run `docker compose up`
 

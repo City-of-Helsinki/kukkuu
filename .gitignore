@@ -77,6 +77,7 @@ target/
 var/
 venv/
 .pytest_cache/
+docker-compose.env
 docker-compose.env.yaml
 pyrightconfig.json
 .vscode/
