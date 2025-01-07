@@ -1,3 +1,4 @@
+from csp.decorators import csp_update
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
@@ -11,6 +12,7 @@ from rest_framework import routers
 from common.utils import get_api_version
 from custom_health_checks.views import HealthCheckJSONView
 from kukkuu import __version__
+from kukkuu.consts import CSP
 from kukkuu.views import SentryGraphQLView
 from reports.api import ChildViewSet, EventGroupViewSet, EventViewSet, VenueViewSet
 
@@ -24,17 +26,24 @@ router.register(r"event", EventViewSet)
 router.register(r"event-group", EventGroupViewSet)
 router.register(r"venue", VenueViewSet)
 
+IS_GRAPHIQL_ENABLED = settings.ENABLE_GRAPHIQL or settings.DEBUG
+
+
+# Add unsafe-inline to enable GraphiQL interface at /graphql/
+@csp_update(
+    SCRIPT_SRC=settings.CSP_SCRIPT_SRC
+    + ([CSP.UNSAFE_INLINE] if IS_GRAPHIQL_ENABLED else [])
+)
+@csrf_exempt
+def graphql_view(request, *args, **kwargs):
+    return SentryGraphQLView.as_view(graphiql=IS_GRAPHIQL_ENABLED)(
+        request, *args, **kwargs
+    )
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    re_path(
-        r"^graphql/?$",
-        csrf_exempt(
-            SentryGraphQLView.as_view(
-                graphiql=settings.ENABLE_GRAPHIQL or settings.DEBUG
-            )
-        ),
-    ),
+    re_path(r"^graphql/?$", graphql_view),
     path("reports/", include(router.urls)),
     path("reports/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

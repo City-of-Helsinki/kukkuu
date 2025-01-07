@@ -292,6 +292,7 @@ CSP_FONT_SRC = [
     CSP.SELF,
     "fonts.googleapis.com",
     "fonts.gstatic.com",
+    "data:",  # /graphql/ endpoint uses "data:font/woff2"
 ]
 
 # CSP_IMG_SRC includes sources for images fetched by `SpectacularRedocView`
