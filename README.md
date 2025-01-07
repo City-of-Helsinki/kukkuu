@@ -205,11 +205,11 @@ Integrations for `ruff` are available for many editors:
 
 You can use [`pre-commit`](https://pre-commit.com/) to lint and format your code before committing:
 
-1. Install `pre-commit` (there are many ways to do but let's use pip as an example):
+1. Install `pre-commit` (there are many ways to do that, but let's use pip as an example):
    - `pip install pre-commit`
-2. Set up git hooks from `.pre-commit-config.yaml`, run this command from project root:
-   - `pre-commit install` for code formatting & linting
-   - `pre-commit install --hook-type commit-msg` for commit message linting
+2. Set up git hooks from `.pre-commit-config.yaml` by running these commands from project root:
+   - `pre-commit install` to enable pre-commit code formatting & linting
+   - `pre-commit install --hook-type commit-msg` to enable pre-commit commit message linting
 
 After that, linting and formatting hooks will run against all changed files before committing.
 
