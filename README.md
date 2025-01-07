@@ -278,6 +278,12 @@ When an event uses an external ticketing system:
 
 Coupon codes for external ticketing systems can be added through the Kukkuu Admin UI or the API. These codes are stored as `TicketSystemPassword` model instances.
 
+The easiest way to add multiple ticket system passwords (i.e. coupon codes) is to add them
+using Kukkuu Admin UI. One needs to create/open an event, and
+add coupon codes to it under tab "Salasanat" (i.e. passwords in Finnish)
+with "Lisää salasanoja" (i.e. add passwords in Finnish). This interface
+supports pasting a list of passwords as text, so mass adding is easy.
+
 ## Authorization
 
 Kukkuu uses Keycloak, an open-source identity and access management solution, for user authentication and authorization. Keycloak is integrated with the Helsinki-Profile service environment.
