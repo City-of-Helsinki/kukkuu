@@ -95,7 +95,7 @@ If you do not have a super user / admin to administrate the API yet, you can cre
 - `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`
   - In case you don't have a running container yet
 
-The project is now running at [localhost:8081](http://localhost:8081)
+The project is now running at http://localhost:8081
 
 ### Development without Docker
 
@@ -153,7 +153,7 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 - Set the `DEBUG` environment variable to `1`.
 - Run `python manage.py migrate`
 - Run `python manage.py runserver localhost:8081`
-- The project is now running at [localhost:8081](http://localhost:8081)
+- The project is now running at http://localhost:8081
 
 ### Keeping Python requirements up to date
 
@@ -218,11 +218,11 @@ The primary API to fetch Kukkuu related data is a GraphQL API created with Graph
 
 ### Report API
 
-For fetching data for reporting purposes, there is a separate REST API located at [localhost:8081/reports/](http://localhost:8081/reports/). Unlike the primary API which is created with Graphene, the Report API is created with Django REST Framework.
+For fetching data for reporting purposes, there is a separate REST API located at http://localhost:8081/reports/. Unlike the primary API which is created with Graphene, the Report API is created with Django REST Framework.
 
 The API requires authentication via HTTP basic authentication, or alternatively session authentication when DEBUG is `True`. The accessing user must also have Django permission `reports.access_report_api`.
 
-API documentation of the report API can be viewed at [localhost:8081/reports/schema/redoc/](http://localhost:8081/reports/schema/redoc/).
+API documentation of the report API can be viewed at http://localhost:8081/reports/schema/redoc/.
 
 
 ### GDPR API data export
@@ -426,7 +426,7 @@ Sometimes there might be a merge conflict in release PR - this should resolve it
 
 #### Fix merge conflicts by running release-please -action manually
 
-1. Open [release-please github action](https://github.com/City-of-Helsinki/kukkuu-/actions/workflows/release-please.yml)
+1. Open [release-please github action](https://github.com/City-of-Helsinki/kukkuu/actions/workflows/release-please.yml)
 2. Click **Run workflow**
 3. Check Branch is **master**
 4. Leave label field empty. New label is not needed to fix merge issues
