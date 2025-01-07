@@ -28,18 +28,20 @@ Django model hierarchy used in GDPR API data export (This graph is based on the 
 ```mermaid
 erDiagram
     User ||--o{ Project : "administers"
-    User ||--|| Guardian : "is"
-      Guardian ||--o{ Child : "has"
-        Child ||--|| Enrolment : "has"
-          Enrolment ||--o{ Occurrence : "has"
-            Occurrence ||--|| Event : "is for"
+    User ||--o| Guardian : "is"
+      Guardian }|--o{ Child : "is guardian of"
+        Child }o--|| Project : "belongs to"
+        Child ||--o{ Enrolment : "has"
+          Enrolment }o--|| Occurrence : "has"
+            Occurrence }o--|| Event : "is for"
               Event ||--o{ EventGroup : "is part of"
-                EventGroup ||--|| Project : "is for"
-              Event ||--|| Project : "is for"
-            Occurrence ||--|| Venue : "is at"
-        Child ||--o{ TicketSystemPassword : "has"
-          TicketSystemPassword ||--|| Event : "is for"
+                EventGroup }o--|| Project : "is for"
+              Event }o--|| Project : "is for"
+            Occurrence }o--|| Venue : "is at"
+        Child |o--o{ TicketSystemPassword : "has"
+          TicketSystemPassword }o--|| Event : "is for"
         Child ||--o{ FreeSpotNotificationSubscription : "has"
+          FreeSpotNotificationSubscription }o--|| Occurrence : "is to"
 ```
 
 # Kukkuu GDPR API tester
