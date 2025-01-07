@@ -157,6 +157,9 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 
 ### Keeping Python requirements up to date
 
+If you're using Docker, spin up the container using `docker compose up`
+and go into it with `docker exec -it kukkuu-backend bash` first.
+
 1. Install `pip-tools`:
 
    - `pip install pip-tools`
@@ -175,6 +178,9 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 5. To install Python requirements run:
 
    - `pip-sync requirements.txt`
+   - Or if you're using Docker and the previous command fails:
+     - Spin down the container with `docker compose down`
+     - Rebuild the container with `docker compose up --build` to take the package changes into account
 
 ### Code linting & formatting
 
