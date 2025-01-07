@@ -147,7 +147,7 @@ The environment variable should then be set to:
 KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 ```
 
-### Daily running, Debugging
+#### Daily running, Debugging
 
 - Create `.env` file: `touch .env`
 - Set the `DEBUG` environment variable to `1`.
