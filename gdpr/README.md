@@ -17,7 +17,7 @@ As background information and instructions for integrating the service with Hels
 > it was changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile)
 > service environment.
 
-The Tunnistamo can be configured to be used [locally](../docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](../docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
+Tunnistamo can be configured to be used [locally](../docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](../docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
 
 The Keycloak test environment can also be configured to be used [locally](./docs/setup-keycloak.md).
 

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             name="is_obsolete",
             field=models.BooleanField(
                 default=False,
-                help_text="Designates whether the user account is obsoleted and cannot be anymore accessed, e.g. after an auth service change process (when the Tunnistamo is changed to a Keycloak service).",
+                help_text="Designates whether the user account is obsoleted and cannot be anymore accessed, e.g. after an auth service change process (when Tunnistamo is changed to a Keycloak service).",
                 verbose_name="obsoleted",
             ),
         ),

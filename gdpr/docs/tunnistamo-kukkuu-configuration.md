@@ -39,7 +39,7 @@ Important fields with their values:
 }
 ```
 
-The following command can be used to create the client in the Tunnistamo:
+The following command can be used to create the client in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_client \
@@ -75,7 +75,7 @@ Important fields with their values:
 
 > NOTE: The Kukkuu UI has been using the implicit flow, but it probably needs to be changed when the Keycloak is taken in use.
 
-The following command can be used to create the client in the Tunnistamo:
+The following command can be used to create the client in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_client \
@@ -110,7 +110,7 @@ Important fields with their values:
 
 > NOTE: The Kukkuu Admin UI has been using the implicit flow, but it probably needs to be changed when the Keycloak is taken in use.
 
-The following command can be used to create the client in the Tunnistamo:
+The following command can be used to create the client in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_client \
@@ -140,7 +140,7 @@ Important fields with their values:
 }
 ```
 
-The following command can be used to create the API in the Tunnistamo:
+The following command can be used to create the API in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_api \
@@ -169,7 +169,7 @@ Important fields with their values:
 }
 ```
 
-The following command can be used to create the API scope in the Tunnistamo:
+The following command can be used to create the API scope in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_api_scope \
