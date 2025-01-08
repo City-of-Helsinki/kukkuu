@@ -16,6 +16,7 @@
     - [Database](#database)
     - [Notification import](#notification-import)
   - [Daily running, Debugging](#daily-running-debugging)
+    - [Data fixtures](#data-fixtures)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
   - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -150,6 +151,10 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 - Run `python manage.py migrate`
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at [localhost:8081](http://localhost:8081)
+
+#### Data fixtures
+
+- **Projects:** `python manage.py loaddata projects` to add a "mandatory year project" (for every year when the Kukkuu has been active). The projects needs to exist when children are added for the related year (generally the birth year is the project year).
 
 ### Keeping Python requirements up to date
 

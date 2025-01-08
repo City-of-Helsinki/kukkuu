@@ -1,0 +1,182 @@
+[
+    {
+        "model": "projects.projecttranslation",
+        "pk": 1,
+        "fields": {
+            "language_code": "fi",
+            "name": "Helsingin kaupunginorkesteri",
+            "master": 1
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 2,
+        "fields": {
+            "language_code": "sv",
+            "name": "Helsingfors stadsorkester",
+            "master": 1
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 3,
+        "fields": {
+            "language_code": "en",
+            "name": "Helsinki Philharmonic Orchestra",
+            "master": 1
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 4,
+        "fields": {
+            "language_code": "fi",
+            "name": "Helsingin Kaupunginteatteri, Suomen Kansallisteatteri, Svenska Teatern, Teatteri ILMI Ö., Q-teatteri ja Nukketeatteri Sampo",
+            "master": 2
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 5,
+        "fields": {
+            "language_code": "sv",
+            "name": "Helsingfors Stadsteater, Finlands Nationalteater, Svenska Teatern, Teatteri ILMI Ö., Q-teatteri och Dockteatern Sampo",
+            "master": 2
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 6,
+        "fields": {
+            "language_code": "en",
+            "name": "Helsinki City Theatre, Finnish National Theatre, Svenska Teatern, Theatre ILMI Ö., Q-teatteri and Puppet Theatre Sampo",
+            "master": 2
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 7,
+        "fields": {
+            "language_code": "fi",
+            "name": "Cirko - uuden sirkuksen keskus, Hotelli- ja ravintolamuseo, Suomen valokuvataiteen museo, Tanssin talo, Tanssiteatteri Hurjaruuth ja Teatterimuseo",
+            "master": 3
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 8,
+        "fields": {
+            "language_code": "sv",
+            "name": "Cirko - Centrumet för nycirkus, Hotell- och restaurangmuseet, Dansens hus Helsingfors, Finlands fotografiska museum, Dansteatern Hurjaruuth och Teatermuseet",
+            "master": 3
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 9,
+        "fields": {
+            "language_code": "en",
+            "name": "Cirko – Center for New Circus, Hotel and Restaurant Museum, Finnish Museum of Photography, Dance House Helsinki, Dance Theatre Hurjaruuth and Theatre Museum",
+            "master": 3
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 10,
+        "fields": {
+            "language_code": "fi",
+            "name": "Arkkitehtuurimuseo, Designmuseo, Helsingin kaupunginmuseo, Suomen kansallismuseo, Suomen kulttuuriperintökasvatuksen seura ja Tiedemuseo Liekki",
+            "master": 4
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 11,
+        "fields": {
+            "language_code": "sv",
+            "name": "Finlands Arkitekturmuseum, Designmuseet, Helsingfors stadsmuseum, Finlands Nationalmuseum, Föreningen för kulturarvsfostran i Finland och Vetenskapsmuseet Lågan",
+            "master": 4
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 12,
+        "fields": {
+            "language_code": "en",
+            "name": "Museum of Finnish Architecture, Design Museum, Helsinki City Museum, National Museum of Finland, Association of Cultural Heritage Education in Finland and Helsinki University Museum Flame",
+            "master": 4
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 13,
+        "fields": {
+            "language_code": "fi",
+            "name": "Helsingin kirjasto- ja liikuntapalvelut",
+            "master": 5
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 14,
+        "fields": {
+            "language_code": "en",
+            "name": "Helsinki City Library and Helsinki City Sports Services",
+            "master": 5
+        }
+    },
+    {
+        "model": "projects.projecttranslation",
+        "pk": 15,
+        "fields": {
+            "language_code": "sv",
+            "name": "Helsingfors biblioteks– och idrottstjänster",
+            "master": 5
+        }
+    },
+    {
+        "model": "projects.project",
+        "pk": 1,
+        "fields": {
+            "year": 2020,
+            "single_events_allowed": true,
+            "enrolment_limit": 2
+        }
+    },
+    {
+        "model": "projects.project",
+        "pk": 2,
+        "fields": {
+            "year": 2021,
+            "single_events_allowed": false,
+            "enrolment_limit": 2
+        }
+    },
+    {
+        "model": "projects.project",
+        "pk": 3,
+        "fields": {
+            "year": 2022,
+            "single_events_allowed": false,
+            "enrolment_limit": 3
+        }
+    },
+    {
+        "model": "projects.project",
+        "pk": 4,
+        "fields": {
+            "year": 2023,
+            "single_events_allowed": false,
+            "enrolment_limit": 100
+        }
+    },
+    {
+        "model": "projects.project",
+        "pk": 5,
+        "fields": {
+            "year": 2024,
+            "single_events_allowed": false,
+            "enrolment_limit": 2
+        }
+    }
+]

@@ -3,29 +3,6 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-PROJECT_NAME_2020 = (
-    ("fi", "Helsingin kaupunginorkesteri"),
-    ("sv", "Helsingfors stadsorkester"),
-    ("en", "Helsinki Philharmonic Orchestra"),
-)
-
-
-def populate_name_for_year_2020(apps, schema_editor):
-    Project = apps.get_model("projects", "Project")
-    ProjectTranslation = apps.get_model("projects", "ProjectTranslation")
-
-    try:
-        project_2020 = Project.objects.get(year=2020)
-    except Project.DoesNotExist:
-        return
-
-    for language_code, name in PROJECT_NAME_2020:
-        ProjectTranslation.objects.create(
-            master_id=project_2020.pk,
-            language_code=language_code,
-            name=name,
-        )
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -72,5 +49,4 @@ class Migration(migrations.Migration):
                 "unique_together": {("language_code", "master")},
             },
         ),
-        migrations.RunPython(populate_name_for_year_2020, migrations.RunPython.noop),
     ]
