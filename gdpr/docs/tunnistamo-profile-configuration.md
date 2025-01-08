@@ -40,7 +40,7 @@ Important fields with their values:
 
 > NOTE: The `client_secret` will be automatically generated when the client type is set to `confidential`.
 
-The following command can be used to create the client in the Tunnistamo:
+The following command can be used to create the client in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_client \
@@ -69,7 +69,7 @@ The following command can be used to create the client in the Tunnistamo:
  "_scope": "openid profile https://api.hel.fi/auth/helsinkiprofile"}
 ```
 
-The following command can be used to create the client in the Tunnistamo:
+The following command can be used to create the client in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_client \
@@ -97,7 +97,7 @@ Important fields with their values:
 }
 ```
 
-The following command can be used to create the API in the Tunnistamo:
+The following command can be used to create the API in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_api \
@@ -122,7 +122,7 @@ Model: `oidc_apis.models.ApiScope`
 }
 ```
 
-The following command can be used to create the API scope in the Tunnistamo:
+The following command can be used to create the API scope in Tunnistamo:
 
 ```shell
 ./manage.py add_oidc_api_scope \

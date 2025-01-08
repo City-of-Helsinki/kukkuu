@@ -186,7 +186,7 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         The user account might have been obsoleted and
         cannot be accessed anymore,
         e.g. after an auth service change process
-        (when the Tunnistamo is changed to a Keycloak service).
+        (when Tunnistamo is changed to a Keycloak service).
 
         Returns:
             bool: returns True, if there are no guardians or

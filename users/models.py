@@ -78,7 +78,7 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
             "Designates whether the user account is obsoleted "
             "and cannot be anymore accessed, "
             "e.g. after an auth service change process "
-            "(when the Tunnistamo is changed to a Keycloak service)."
+            "(when Tunnistamo is changed to a Keycloak service)."
         ),
     )
 
