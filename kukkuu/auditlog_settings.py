@@ -1,8 +1,8 @@
 # Register all models by default
 AUDITLOG_INCLUDE_ALL_MODELS = True
 
-# Exclude the IP address from logging.
-# When using “AuditlogMiddleware”, the IP address is logged by default
+# Exclude the IP address from logging?
+# When using AuditlogMiddleware, the IP address is logged by default
 AUDITLOG_DISABLE_REMOTE_ADDR = False
 
 # Disables logging during raw save. (I.e. for instance using loaddata)
@@ -10,7 +10,7 @@ AUDITLOG_DISABLE_REMOTE_ADDR = False
 AUDITLOG_DISABLE_ON_RAW_SAVE = True
 
 # Exclude models in registration process.
-# It will be considered when AUDITLOG_INCLUDE_ALL_MODELS is True.
+# This setting will only be considered when AUDITLOG_INCLUDE_ALL_MODELS is True.
 AUDITLOG_EXCLUDE_TRACKING_MODELS = (
     "admin.logentry",  # excluded by default
     "auditlog.logentry",  # excluded by default

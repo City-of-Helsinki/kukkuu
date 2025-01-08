@@ -323,11 +323,11 @@ This approach allows for realistic browser testing while safeguarding sensitive 
 
 ## Audit logging
 
-Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read it's [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
+Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read its [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
 
-The configuration to define which models are in the scope of the audit logging can be found from [auditlog_settings.py](./kukkuu/auditlog_settings.py).
+The configuration to define which models are in the scope of the audit logging can be found in [auditlog_settings.py](./kukkuu/auditlog_settings.py).
 
-The GraphQL and admin site views can be logged by using the mixins and decorators that the `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
+The GraphQL query/mutation and admin site views can be logged by using the mixins and decorators that `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
 
 **References**:
 
@@ -379,13 +379,15 @@ It is also possible to get emails sent right away without any cronjobs by settin
 
 ### SMS notifications
 
-To use the SMS notification functionality, you have to acquire the API_KEY from [Notification Service API](https://github.com/City-of-Helsinki/notification-service-api). The following environment variables are needed:
+To use the SMS notification functionality, you have to acquire an API key from
+[Notification Service API](https://github.com/City-of-Helsinki/notification-service-api)
+(See [README](https://github.com/City-of-Helsinki/notification-service-api/tree/notification-service-api-v0.5.0?tab=readme-ov-file#api-authentication)).
+The following environment variables are needed:
 
-        ```python
-        NOTIFICATION_SERVICE_API_TOKEN=your_api_key
-        NOTIFICATION_SERVICE_API_URL=notification_service_end_point
-        ```
-
+```python
+NOTIFICATION_SERVICE_API_TOKEN=your_api_key
+NOTIFICATION_SERVICE_API_URL=notification_service_end_point
+```
 
 ## Releases, changelogs and deployments
 
