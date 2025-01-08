@@ -3,6 +3,8 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [How to integrate the Culture Kids to Helsinki-Profile GDPR API](#how-to-integrate-the-culture-kids-to-helsinki-profile-gdpr-api)
+  - [Using Keycloak](#using-keycloak)
+  - [Using Tunnistamo](#using-tunnistamo)
 - [GDPR API data export](#gdpr-api-data-export)
 - [Kukkuu GDPR API tester](#kukkuu-gdpr-api-tester)
 
@@ -10,16 +12,22 @@
 
 # How to integrate the Culture Kids to Helsinki-Profile GDPR API
 
-As background information and instructions for integrating the service with Helsinki-Profile, see the documentation for [How to integrate to Helsinki-Profile through Tunnistamo](./docs/how-to-integrate-to-Helsinki-profile-with-Tunnistamo.md).
-
 > NOTE: The user profiles authenticates themselves in a centralized authentication server of the city of Helsinki.
 > For long it was [Tunnistamo](https://github.com/City-of-Helsinki/tunnistamo), but in the summer of the year 2024,
 > it was changed to a Keycloak service of the [Helsinki-Profile](https://github.com/City-of-Helsinki/open-city-profile)
 > service environment.
 
+## Using Keycloak
+
+Keycloak is the current authentication service being used.
+The Keycloak test environment can be configured to be used [locally](./docs/setup-keycloak.md).
+
+## Using Tunnistamo
+
+Tunnistamo was the authentication service used until summer 2024.
 Tunnistamo can be configured to be used [locally](../docs/setup-tunnistamo.md#use-a-local-tunnistamo) or from the [test environment](../docs/setup-tunnistamo.md#use-the-public-test-tunnistamo).
 
-The Keycloak test environment can also be configured to be used [locally](./docs/setup-keycloak.md).
+As background information and instructions for integrating the service with Helsinki-Profile through Tunnistamo, see the documentation for [How to integrate to Helsinki-Profile through Tunnistamo](./docs/how-to-integrate-to-Helsinki-profile-with-Tunnistamo.md).
 
 # GDPR API data export
 
