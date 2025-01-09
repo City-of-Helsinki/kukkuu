@@ -161,7 +161,7 @@ snapshots['test_assign_ticket_system_password 1'] = {
     }
 }
 
-snapshots['test_child_enrol_occurence_from_different_project 1'] = {
+snapshots['test_child_enrol_occurrence_from_different_project 1'] = {
     'data': {
         'enrolOccurrence': {
             'enrolment': {

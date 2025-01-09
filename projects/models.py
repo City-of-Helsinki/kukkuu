@@ -83,7 +83,8 @@ class Project(TranslatableModel, SerializableMixin):
         return [codename for codename, _ in cls._meta.permissions]
 
     def __str__(self):
-        return f"{self.name} {self.year}".strip()
+        name = self.safe_translation_getter("name", any_language=True)
+        return f"{name} {self.year}".strip()
 
     def can_user_administer(self, user):
         return user.can_administer_project(self)
