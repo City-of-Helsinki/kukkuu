@@ -15,7 +15,7 @@
     - [Installing Python requirements](#installing-python-requirements)
     - [Database](#database)
     - [Notification import](#notification-import)
-  - [Daily running, Debugging](#daily-running-debugging)
+    - [Daily running, Debugging](#daily-running-debugging)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
   - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -95,7 +95,7 @@ If you do not have a super user / admin to administrate the API yet, you can cre
 - `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`
   - In case you don't have a running container yet
 
-The project is now running at http://localhost:8081
+The project is now running at http://localhost:8081 and using public Keycloak test environment for authentication.
 
 ### Development without Docker
 
