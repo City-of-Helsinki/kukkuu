@@ -2,6 +2,7 @@ import pytest
 from graphql_relay import to_global_id
 
 from common.tests.utils import assert_permission_denied
+from projects.models import Project
 
 
 @pytest.fixture(autouse=True)
@@ -60,12 +61,16 @@ def test_project_query_unauthenticated(snapshot, api_client, project):
     assert_permission_denied(executed)
 
 
-def test_projects_query_normal_user(settings, snapshot, guardian_api_client, project):
+def test_projects_query_normal_user(settings, snapshot, guardian_api_client):
+    project_count = Project.objects.all().count()
+    assert (
+        project_count == 6
+        if settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"]
+        else 5
+    )
     executed = guardian_api_client.execute(PROJECTS_QUERY)
     # projects.apps might add a browser testing project
-    assert len(executed["data"]["projects"]["edges"]) == (
-        2 if settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["ENABLED"] else 1
-    )
+    assert len(executed["data"]["projects"]["edges"]) == project_count
     snapshot.assert_match(executed)
 
 

@@ -119,6 +119,56 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                                 'manageEventGroups': True,
                                 'publish': True
                             },
+                            'name': 'Helsingin Kaupunginteatteri, Suomen Kansallisteatteri, Svenska Teatern, Teatteri ILMI Ö., Q-teatteri ja Nukketeatteri Sampo'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
+                            'name': 'Cirko - uuden sirkuksen keskus, Hotelli- ja ravintolamuseo, Suomen valokuvataiteen museo, Tanssin talo, Tanssiteatteri Hurjaruuth ja Teatterimuseo'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
+                            'name': 'Arkkitehtuurimuseo, Designmuseo, Helsingin kaupunginmuseo, Suomen kansallismuseo, Suomen kulttuuriperintökasvatuksen seura ja Tiedemuseo Liekki'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
+                            'name': 'Helsingin kirjasto- ja liikuntapalvelut'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
+                            'name': 'project where no object perms'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
                             'name': 'project where base admin object perm but no other object perms'
                         }
                     },
@@ -130,16 +180,6 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                                 'publish': True
                             },
                             'name': 'project where base admin object perm and other object perms'
-                        }
-                    },
-                    {
-                        'node': {
-                            'myPermissions': {
-                                'canSendToAllInProject': True,
-                                'manageEventGroups': True,
-                                'publish': True
-                            },
-                            'name': 'project where no object perms'
                         }
                     }
                 ]

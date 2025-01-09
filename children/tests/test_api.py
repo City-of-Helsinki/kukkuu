@@ -1165,10 +1165,10 @@ def test_get_available_events(
     unpublished_event,
     child_with_user_guardian,
     project,
+    another_project,
     venue,
 ):
     variables = {"id": to_global_id("ChildNode", child_with_user_guardian.id)}
-    next_project = ProjectFactory(year=2021)
     # Unpublished occurrences
     OccurrenceFactory(time=timezone.now(), event=unpublished_event, venue=venue)
 
@@ -1190,7 +1190,7 @@ def test_get_available_events(
     OccurrenceFactory(
         time=timezone.now(),
         event__published_at=timezone.now(),
-        event__project=next_project,
+        event__project=another_project,
         venue=venue,
     )
 

@@ -396,7 +396,7 @@ def test_my_admin_profile_unauthenticated(api_client):
 
 
 def test_my_admin_profile_normal_user(user_api_client):
-    ProjectFactory(year=2021, name="some project")
+    ProjectFactory(year=2031, name="some project")
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
     assert executed["data"]["myAdminProfile"]["projects"]["edges"] == []
 
@@ -408,10 +408,10 @@ def test_my_admin_profile_project_admin(
     snapshot, user_api_client, has_also_model_perms
 ):
     project_1 = ProjectFactory(
-        year=2021, name="project where base admin object perm but no other object perms"
+        year=2031, name="project where base admin object perm but no other object perms"
     )
     project_2 = ProjectFactory(
-        year=2022, name="project where base admin object perm and other object perms"
+        year=2032, name="project where base admin object perm and other object perms"
     )
     assign_perm(
         ProjectPermission.ADMIN.value, user_api_client.user, [project_1, project_2]

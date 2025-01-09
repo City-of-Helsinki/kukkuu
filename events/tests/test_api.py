@@ -93,7 +93,6 @@ from kukkuu.consts import (
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
-from projects.factories import ProjectFactory
 from projects.models import Project
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from users.factories import GuardianFactory, UserFactory
@@ -1438,14 +1437,13 @@ def test_update_field_with_null_value(project_user_api_client, project):
     assert "cannot be null" in str(executed["errors"])
 
 
-def test_child_enrol_occurence_from_different_project(
-    snapshot, guardian_api_client, child_with_user_guardian, occurrence
+def test_child_enrol_occurrence_from_different_project(
+    snapshot, guardian_api_client, child_with_user_guardian, occurrence, another_project
 ):
-    next_project = ProjectFactory(year=2021)
     another_occurrence = OccurrenceFactory(
-        event__project=next_project,
+        event__project=another_project,
         event__published_at=timezone.now(),
-        venue__project=next_project,
+        venue__project=another_project,
     )
     assert Occurrence.objects.count() == 2
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
