@@ -143,6 +143,29 @@ snapshots['test_projects_query_normal_user 1'] = {
                         ],
                         'year': 2024
                     }
+                },
+                {
+                    'node': {
+                        'enrolmentLimit': 2,
+                        'id': 'UHJvamVjdE5vZGU6Ng==',
+                        'name': 'HAM Helsingin taidemuseo, Amos Rex, Sointi Jazz Orchestra, UMO Helsinki Jazz Orchestra ja Kansallisgalleria: Ateneumin taidemuseo, Nykytaiteen museo Kiasma ja Sinebrychoffin taidemuseo',
+                        'singleEventsAllowed': True,
+                        'translations': [
+                            {
+                                'languageCode': 'EN',
+                                'name': 'HAM Helsinki Art Museum, Amos Rex, Sointi Jazz Orchestra, UMO Helsinki Jazz Orchestra, Ateneum Art Museum, Museum of Contemporary Art Kiasma and Sinebrychoff Art Museum'
+                            },
+                            {
+                                'languageCode': 'FI',
+                                'name': 'HAM Helsingin taidemuseo, Amos Rex, Sointi Jazz Orchestra, UMO Helsinki Jazz Orchestra ja Kansallisgalleria: Ateneumin taidemuseo, Nykytaiteen museo Kiasma ja Sinebrychoffin taidemuseo'
+                            },
+                            {
+                                'languageCode': 'SV',
+                                'name': 'HAM Helsingfors konstmuseum, Amos Rex, Sointi Jazz Orchestra, UMO Helsinki Jazz Orchestra och Nationalgalleriet dvs. Ateneum, Kiasma och Konstmuseet Sinebrychoff'
+                            }
+                        ],
+                        'year': 2025
+                    }
                 }
             ]
         }

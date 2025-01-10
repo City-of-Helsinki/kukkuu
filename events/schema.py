@@ -1307,7 +1307,7 @@ class AddEventGroupMutation(graphene.relay.ClientIDMutation):
         event_group = EventGroup.objects.create_translatable_object(**kwargs)
 
         logger.info(
-            f"user {user.uuid} added event group {event_group} " f"with data {kwargs}"
+            f"user {user.uuid} added event group {event_group} with data {kwargs}"
         )
 
         return AddEventGroupMutation(event_group=event_group)
@@ -1342,7 +1342,7 @@ class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
         update_object_with_translations(event_group, kwargs)
 
         logger.info(
-            f"user {user.uuid} updated event group {event_group} " f"with data {kwargs}"
+            f"user {user.uuid} updated event group {event_group} with data {kwargs}"
         )
 
         return UpdateEventGroupMutation(event_group=event_group)

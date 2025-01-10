@@ -1,9 +1,12 @@
+# Data taken from production Kukkuu API at
+# https://kukkuu.api.hel.fi/admin/projects/project/
 (
     PROJECT_DATA_2020,
     PROJECT_DATA_2021,
     PROJECT_DATA_2022,
     PROJECT_DATA_2023,
     PROJECT_DATA_2024,
+    PROJECT_DATA_2025,
 ) = PROJECTS_DATA = [
     {
         "year": 2020,
@@ -77,6 +80,27 @@
             "en": "Helsinki City Library and Helsinki City Sports Services",
             "fi": "Helsingin kirjasto- ja liikuntapalvelut",
             "sv": "Helsingfors biblioteks– och idrottstjänster",
+        },
+    },
+    {
+        "year": 2025,
+        "translations": {
+            "en": (
+                "HAM Helsinki Art Museum, Amos Rex, Sointi Jazz Orchestra, "
+                "UMO Helsinki Jazz Orchestra, Ateneum Art Museum, "
+                "Museum of Contemporary Art Kiasma and Sinebrychoff Art Museum"
+            ),
+            "fi": (
+                "HAM Helsingin taidemuseo, Amos Rex, Sointi Jazz Orchestra, "
+                "UMO Helsinki Jazz Orchestra ja Kansallisgalleria: "
+                "Ateneumin taidemuseo, Nykytaiteen museo Kiasma "
+                "ja Sinebrychoffin taidemuseo"
+            ),
+            "sv": (
+                "HAM Helsingfors konstmuseum, Amos Rex, Sointi Jazz Orchestra, "
+                "UMO Helsinki Jazz Orchestra och Nationalgalleriet dvs. Ateneum, "
+                "Kiasma och Konstmuseet Sinebrychoff"
+            ),
         },
     },
 ]
