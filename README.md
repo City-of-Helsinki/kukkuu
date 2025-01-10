@@ -103,6 +103,7 @@ Prerequisites:
 
 - PostgreSQL 13
 - Python 3.11
+- Node.js 20 or newer **ONLY** for using pre-commit hook's `doctoc`
 
 #### Installing Python requirements
 
