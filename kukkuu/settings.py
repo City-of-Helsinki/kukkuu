@@ -167,9 +167,17 @@ def sentry_before_send(event: Event, hint: Hint):
     """
 
     IGNORED_ERRORS_CLASSES = (ExpiredSignatureError, AuthenticationExpiredError)
+    IGNORED_ERROR_MESSAGES = [
+        # This is raised when an id in URL or form input does not match.
+        # It is easily triggered by the user when URL is modified
+        # and does not need to be reported.
+        "Unable to parse global ID",
+    ]
     if "exc_info" in hint:
         exc_type, exc_value, traceback = hint["exc_info"]
         if isinstance(exc_value, IGNORED_ERRORS_CLASSES):
+            return None
+        if any(msg in str(exc_value) for msg in IGNORED_ERROR_MESSAGES):
             return None
     return event
 
