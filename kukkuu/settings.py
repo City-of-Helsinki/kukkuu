@@ -6,9 +6,12 @@ import environ
 import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
+from jose import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.types import Event, Hint
 
 from kukkuu.consts import CSP
+from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
 checkout_dir = environ.Path(__file__) - 2
@@ -143,11 +146,40 @@ try:
 except Exception:
     REVISION = "n/a"
 
+
+def sentry_before_send(event: Event, hint: Hint):
+    """
+    Filter out uninformative errors from being sent to Sentry.
+
+    Some Graphene errors are generic Exceptions with unhelpful messages.
+    This function filters them out to reduce noise in Sentry.
+
+    NOTE: The `ignore_errors` option is actually deprecated,
+    nevertheless it's included in the init configuration.
+    See https://github.com/getsentry/sentry-python/issues/149
+
+    Args:
+        event: The event that is being sent to Sentry.
+        hint: A dictionary containing additional information about the event.
+
+    Returns:
+        The event if it should be sent to Sentry, or None if it should be ignored.
+    """
+
+    IGNORED_ERRORS_CLASSES = (ExpiredSignatureError, AuthenticationExpiredError)
+    if "exc_info" in hint:
+        exc_type, exc_value, traceback = hint["exc_info"]
+        if isinstance(exc_value, IGNORED_ERRORS_CLASSES):
+            return None
+    return event
+
+
 sentry_sdk.init(
     dsn=env.str("SENTRY_DSN"),
     release=REVISION,
     environment=env("SENTRY_ENVIRONMENT"),
     integrations=[DjangoIntegration()],
+    before_send=sentry_before_send,
 )
 sentry_sdk.integrations.logging.ignore_logger("graphql.execution.utils")
 
