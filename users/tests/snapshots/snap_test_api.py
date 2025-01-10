@@ -159,6 +159,16 @@ snapshots['test_my_admin_profile_project_admin[has_also_model_perm] 1'] = {
                                 'manageEventGroups': True,
                                 'publish': True
                             },
+                            'name': 'HAM Helsingin taidemuseo, Amos Rex, Sointi Jazz Orchestra, UMO Helsinki Jazz Orchestra ja Kansallisgalleria: Ateneumin taidemuseo, Nykytaiteen museo Kiasma ja Sinebrychoffin taidemuseo'
+                        }
+                    },
+                    {
+                        'node': {
+                            'myPermissions': {
+                                'canSendToAllInProject': True,
+                                'manageEventGroups': True,
+                                'publish': True
+                            },
                             'name': 'project where no object perms'
                         }
                     },

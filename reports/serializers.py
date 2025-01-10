@@ -181,8 +181,7 @@ class OccurrenceSerializer(serializers.ModelSerializer):
     )
 
     attended_count = serializers.SerializerMethodField(
-        help_text="Count of how many children atteded "
-        "in this occurrence of an event."
+        help_text="Count of how many children atteded in this occurrence of an event."
     )
 
     capacity = serializers.SerializerMethodField(
@@ -321,7 +320,7 @@ class EventSerializer(serializers.ModelSerializer):
         "in this event's occurrences."
     )
     attended_count = serializers.SerializerMethodField(
-        help_text="Count of how many children atteded " "in this event's occurrences."
+        help_text="Count of how many children atteded in this event's occurrences."
     )
     capacity = serializers.SerializerMethodField(
         help_text="The total capacity of how many children can there participate "

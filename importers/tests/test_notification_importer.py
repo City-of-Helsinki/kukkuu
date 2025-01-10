@@ -35,8 +35,7 @@ def event_published_notification():
         create_notification_template_in_language(
             NotificationType.EVENT_PUBLISHED,
             language,
-            subject=f"{NotificationType.EVENT_PUBLISHED} "
-            f"{language} original subject",
+            subject=f"{NotificationType.EVENT_PUBLISHED} {language} original subject",
             body_text=f"{NotificationType.EVENT_PUBLISHED} "
             f"{language} original body_text",
         )

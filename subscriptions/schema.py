@@ -199,7 +199,7 @@ class UnsubscribeFromAllNotificationsMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         user = info.context.user
         user.unsubscribe_all_notification_subscriptions()
-        logger.info(f"User {user.uuid} unsubscribed from all notifications." "")
+        logger.info(f"User {user.uuid} unsubscribed from all notifications.")
         return UnsubscribeFromAllNotificationsMutation(
             guardian=user.guardian, unsubscribed=True
         )
