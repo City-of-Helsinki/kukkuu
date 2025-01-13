@@ -52,3 +52,11 @@ doctest_optionflags = [
     "IGNORE_EXCEPTION_DETAIL",
     "ALLOW_UNICODE",
 ]
+
+[tool.sonar]
+projectKey = "City-of-Helsinki_kukkuu"
+organization = "city-of-helsinki"
+python.version = "3.11"
+python.coverage.reportPaths = "coverage.xml"
+test.inclusions = "**/tests/**/*"
+exclusions = "**/migrations/*, **/snapshots/*"
