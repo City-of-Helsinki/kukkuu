@@ -10,6 +10,7 @@
 - [Service architecture](#service-architecture)
   - [Environments](#environments)
 - [Development](#development)
+  - [Requirements](#requirements)
   - [Development with Docker](#development-with-docker)
   - [Development without Docker](#development-without-docker)
     - [Installing Python requirements](#installing-python-requirements)
@@ -83,6 +84,17 @@ The notification service environments:
 
 ## Development
 
+### Requirements
+
+Compatibility defined by [Dockerfile](./Dockerfile) and [compose.yaml](./compose.yaml):
+
+- PostgreSQL 13
+- Python 3.11
+
+Optionally if you want to use pre-commit hooks:
+- Node.js 20 for using pre-commit hook's `doctoc`
+  - Has been tested with Node.js 20, might work with other versions too
+
 ### Development with Docker
 
 1. Copy `docker-compose.env.example` to `docker-compose.env` and modify it if needed.
@@ -99,11 +111,7 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 
 ### Development without Docker
 
-Prerequisites:
-
-- PostgreSQL 13
-- Python 3.11
-- Node.js 20 or newer **ONLY** for using pre-commit hook's `doctoc`
+Start by installing the [requirements](#requirements).
 
 #### Installing Python requirements
 
