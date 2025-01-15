@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 
 import markdown
+from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
@@ -16,7 +17,6 @@ from django_ilmoitin.utils import render_notification_template
 from guardian.admin import GuardedModelAdmin
 
 from children.models import Relationship
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from languages.models import Language
 from projects.models import Project
 from reports.models import Permission as ReportPermission

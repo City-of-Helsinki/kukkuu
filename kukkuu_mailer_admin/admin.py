@@ -1,9 +1,8 @@
+from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from mailer.admin import MessageAdmin, MessageLogAdmin, show_to
 from mailer.models import RESULT_CODES, Message, MessageLog
-
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 
 
 def custom_titled_filter(title: str):

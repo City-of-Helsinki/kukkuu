@@ -1,6 +1,7 @@
 import logging
 
 import graphene
+from auditlog_extra.graphene_decorators import auditlog_access
 from django.core.exceptions import ValidationError
 from graphene import relay
 from graphene_django import DjangoObjectType
@@ -14,7 +15,6 @@ from common.utils import (
 )
 from events.models import Occurrence
 from events.schema import OccurrenceNode
-from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 from kukkuu.exceptions import (
     AlreadySubscribedError,

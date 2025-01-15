@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import django_filters
 import graphene
+from auditlog_extra.graphene_decorators import auditlog_access
 from django.apps import apps
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -19,7 +20,6 @@ from common.utils import (
     update_object_with_translations,
 )
 from events.models import Event, Occurrence
-from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import DataValidationError, MessageAlreadySentError
 from projects.models import Project
 from users.models import User

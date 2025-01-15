@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import List, Optional
 
 import graphene
+from auditlog_extra.graphene_decorators import auditlog_access
 from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -35,7 +36,6 @@ from events.exceptions import (
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
-from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ChildAlreadyJoinedEventError,
     DataValidationError,

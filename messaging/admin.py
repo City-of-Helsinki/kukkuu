@@ -1,10 +1,10 @@
+from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from django.conf import settings
 from django.contrib import admin
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from messaging.exceptions import AlreadySentError
 
 from .models import Message

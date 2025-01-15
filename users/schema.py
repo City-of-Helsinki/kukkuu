@@ -1,4 +1,5 @@
 import graphene
+from auditlog_extra.graphene_decorators import auditlog_access
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from graphene import relay
@@ -7,7 +8,6 @@ from graphene_django.types import DjangoObjectType
 
 from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
-from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
 from verification_tokens.decorators import user_from_auth_verification_token

@@ -4,7 +4,10 @@ version = "3.10.0"
 requires-python = ">=3.11"
 
 [tool.ruff]
-extend-exclude = ["migrations", "snapshots"]
+# While `django-auditlog-extra` is installed directly from Github (instead of Pypi),
+# it needs to be excluded, because otherwise CI-environment acts differently with the 
+# src -python path and it will fail while linting the code.
+extend-exclude = ["migrations", "snapshots", "django-auditlog-extra"]
 
 [tool.ruff.lint]
 # See https://docs.astral.sh/ruff/rules/ for documentation of rules
