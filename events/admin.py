@@ -1,3 +1,4 @@
+from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -9,7 +10,6 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from events.ticket_service import check_ticket_validity
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from subscriptions.models import FreeSpotNotificationSubscription
 
 from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword

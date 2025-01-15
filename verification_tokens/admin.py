@@ -1,6 +1,5 @@
+from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 from django.contrib import admin
-
-from hel_django_auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
 
 from .models import VerificationToken
 
