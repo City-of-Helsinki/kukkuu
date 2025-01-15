@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 import graphene
+from auditlog_extra.graphene_decorators import auditlog_access
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -23,7 +24,6 @@ from common.schema import (
 )
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from events.models import Event, EventGroup, EventQueryset, Occurrence
-from hel_django_auditlog_extra.graphene_decorators import auditlog_access
 from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
