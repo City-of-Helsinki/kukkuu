@@ -332,11 +332,11 @@ This approach allows for realistic browser testing while safeguarding sensitive 
 
 ## Audit logging
 
-Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [hel_django_auditlog_extra](./hel_django_auditlog_extra/) -app. To see documentation related to that, read its [README](./hel_django_auditlog_extra/README.md) and [FAQ](./hel_django_auditlog_extra/docs/FAQ.md).
+Audit logging is implemented with `django-auditlog`, but it has some extended features applied with [auditlog_extra](https://github.com/City-of-Helsinki/django-auditlog-extra) -app.
 
 The configuration to define which models are in the scope of the audit logging can be found in [auditlog_settings.py](./kukkuu/auditlog_settings.py).
 
-The GraphQL query/mutation and admin site views can be logged by using the mixins and decorators that `hel_django_auditlog_extra` provides (see: [README](./hel_django_auditlog_extra/README.md#features)).
+The GraphQL query/mutation and admin site views can be logged by using the mixins and decorators that `auditlog_extra` provides.
 
 **References**:
 

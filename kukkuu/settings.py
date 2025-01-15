@@ -259,7 +259,7 @@ INSTALLED_APPS = [
     "importers",
     "reports",
     "verification_tokens",
-    "hel_django_auditlog_extra.apps.HelDjangoAuditLogExtraConfig",
+    "auditlog_extra",
     "kukkuu",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
@@ -275,7 +275,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "hel_django_auditlog_extra.middleware.AuditlogMiddleware",
+    "auditlog_extra.middleware.AuditlogMiddleware",
 ]
 
 TEMPLATES = [

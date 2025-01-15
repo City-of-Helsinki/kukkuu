@@ -29,6 +29,7 @@ ignore = [
 # isort options for ruff:
 # https://docs.astral.sh/ruff/settings/#lintisort
 known-first-party = ["kukkuu"]
+known-third-party = ["auditlog_extra"]
 
 [tool.ruff.format]
 docstring-code-format = true # Format code in docstrings
