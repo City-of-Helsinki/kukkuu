@@ -400,6 +400,17 @@ def test_children_query_project_user(
     snapshot.assert_match(executed)
 
 
+def test_children_query_project_user_no_child_list_permission(
+    project_user_no_child_list_perm_api_client, project
+):
+    """
+    Test that project user without child list permission can't see others' children.
+    """
+    ChildWithGuardianFactory.create_batch(10, project=project)
+    executed = project_user_no_child_list_perm_api_client.execute(CHILDREN_QUERY)
+    assert executed == {"data": {"children": {"edges": []}}}
+
+
 def test_children_query_project_user_and_guardian(
     snapshot, project_user_api_client, project, another_project
 ):
@@ -481,6 +492,21 @@ def test_child_query_not_own_child_project_user(
     executed = project_user_api_client.execute(CHILD_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
+
+
+def test_child_query_not_own_child_project_user_no_child_list_perm(
+    project_user_no_child_list_perm_api_client, child_with_random_guardian
+):
+    """
+    Test that project user without child list permission can't see others' child info
+    """
+    variables = {"id": to_global_id("ChildNode", child_with_random_guardian.id)}
+
+    executed = project_user_no_child_list_perm_api_client.execute(
+        CHILD_QUERY, variables=variables
+    )
+
+    assert executed == {"data": {"child": None}}
 
 
 ADD_CHILD_VARIABLES = {

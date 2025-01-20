@@ -50,6 +50,18 @@ class GuardianNode(DjangoObjectType):
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
 
+    @staticmethod
+    def resolve_phone_number(guardian: Guardian, info) -> str:
+        if not guardian.user_can_view_contact_info(info.context.user):
+            return ""
+        return guardian.phone_number
+
+    @staticmethod
+    def resolve_email(guardian: Guardian, info) -> str:
+        if not guardian.user_can_view_contact_info(info.context.user):
+            return ""
+        return guardian.email
+
 
 class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
     class Meta:

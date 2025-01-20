@@ -112,6 +112,17 @@ def guardian_api_client():
 @pytest.fixture()
 def project_user_api_client(project):
     user = UserFactory()
+    for perm in [
+        ProjectPermission.ADMIN,
+        ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO,
+    ]:
+        assign_perm(perm.value, user, project)
+    return create_api_client_with_user(user)
+
+
+@pytest.fixture()
+def project_user_no_child_list_perm_api_client(project):
+    user = UserFactory()
     assign_perm(ProjectPermission.ADMIN.value, user, project)
     return create_api_client_with_user(user)
 
@@ -189,14 +200,22 @@ def event_group():
 @pytest.fixture()
 def wrong_project_api_client(another_project):
     user = UserFactory()
-    assign_perm(ProjectPermission.ADMIN.value, user, another_project)
+    for perm in [
+        ProjectPermission.ADMIN,
+        ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO,
+    ]:
+        assign_perm(perm.value, user, another_project)
     return create_api_client_with_user(user)
 
 
 @pytest.fixture
 def two_project_user_api_client(project, another_project):
     user = UserFactory()
-    assign_perm(ProjectPermission.ADMIN.value, user, [project, another_project])
+    for perm in [
+        ProjectPermission.ADMIN,
+        ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO,
+    ]:
+        assign_perm(perm.value, user, [project, another_project])
     return create_api_client_with_user(user)
 
 

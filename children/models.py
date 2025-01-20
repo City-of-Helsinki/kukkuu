@@ -17,8 +17,11 @@ from users.models import Guardian
 
 class ChildQuerySet(models.QuerySet):
     def user_can_view(self, user):
+        viewable_projects = set(user.administered_projects) & set(
+            user.child_listable_projects
+        )
         return self.filter(
-            Q(guardians__user=user) | Q(project__in=user.administered_projects)
+            Q(guardians__user=user) | Q(project__in=viewable_projects)
         ).distinct()
 
     def user_can_update(self, user):

@@ -8,6 +8,7 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from common.models import TranslatableQuerySet
 from common.utils import get_translations_dict
+from projects.utils import project_permission_name
 
 
 class ProjectPermission(Enum):
@@ -15,13 +16,22 @@ class ProjectPermission(Enum):
     PUBLISH = "publish"
     MANAGE_EVENT_GROUPS = "manage_event_groups"
     SEND_MESSAGE_TO_ALL_IN_PROJECT = "can_send_to_all_in_project"
+    SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO = (
+        "can_see_child_list_and_guardian_contact_info"
+    )
+
+    def permission_name(self):
+        return project_permission_name(self.value)
 
 
-PERM_CAN_ADMINISTRATE_PROJECT = f"projects.{ProjectPermission.ADMIN.value}"
-PERM_CAN_PUBLISH_EVENTS = f"projects.{ProjectPermission.PUBLISH.value}"
-PERM_CAN_MANAGE_EVENT_GROUPS = f"projects.{ProjectPermission.MANAGE_EVENT_GROUPS.value}"
+PERM_CAN_ADMINISTRATE_PROJECT = ProjectPermission.ADMIN.permission_name()
+PERM_CAN_PUBLISH_EVENTS = ProjectPermission.PUBLISH.permission_name()
+PERM_CAN_MANAGE_EVENT_GROUPS = ProjectPermission.MANAGE_EVENT_GROUPS.permission_name()
 PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT = (
-    f"projects.{ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value}"
+    ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.permission_name()
+)
+PERM_CAN_SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO = (
+    ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO.permission_name()
 )
 
 
@@ -71,6 +81,10 @@ class Project(TranslatableModel, SerializableMixin):
             (
                 ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
                 _("Can send messages to all recipients in project"),
+            ),
+            (
+                ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO.value,
+                _("Can see child list and guardian contact info"),
             ),
         )
 

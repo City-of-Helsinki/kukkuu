@@ -20,15 +20,11 @@ from events.consts import notification_types_that_need_communication_acceptance
 from gdpr.consts import CLEARED_VALUE
 from gdpr.models import GDPRModel
 from languages.models import Language
-from projects.models import (
-    PERM_CAN_MANAGE_EVENT_GROUPS,
-    PERM_CAN_PUBLISH_EVENTS,
-    PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT,
-    ProjectPermission,
-)
+from projects.models import ProjectPermission
 
 if TYPE_CHECKING:
     from children.models import Child
+    from projects.models import Project
     from subscriptions.models import FreeSpotNotificationSubscription
     from verification_tokens.models import VerificationToken
 
@@ -93,29 +89,55 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
     def __str__(self):
         return super().__str__() or self.username
 
+    def projects_with_permission(
+        self, permission: ProjectPermission
+    ) -> list["Project"]:
+        from projects.models import Project
+
+        return list(get_objects_for_user(self, permission.value, Project))
+
     @cached_property
-    def administered_projects(self):
-        from projects.models import Project  # noqa
+    def administered_projects(self) -> list["Project"]:
+        return self.projects_with_permission(ProjectPermission.ADMIN)
 
-        return list(get_objects_for_user(self, ProjectPermission.ADMIN.value, Project))
-
-    def can_administer_project(self, project):
-        return project in self.administered_projects
-
-    def can_publish_in_project(self, project):
-        return self.has_perm(ProjectPermission.PUBLISH.value, project) or self.has_perm(
-            PERM_CAN_PUBLISH_EVENTS
+    @property
+    def child_listable_projects(self) -> list["Project"]:
+        return self.projects_with_permission(
+            ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO
         )
 
-    def can_manage_event_groups_in_project(self, project):
-        return self.has_perm(
-            ProjectPermission.MANAGE_EVENT_GROUPS.value, project
-        ) or self.has_perm(PERM_CAN_MANAGE_EVENT_GROUPS)
+    def has_global_permission(self, project_permission: ProjectPermission) -> bool:
+        return self.has_perm(project_permission.permission_name())
 
-    def can_send_messages_to_all_in_project(self, project):
+    def has_project_permission(
+        self, project_permission: ProjectPermission, project: "Project"
+    ) -> bool:
         return self.has_perm(
-            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value, project
-        ) or self.has_perm(PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT)
+            project_permission.value, project
+        ) or self.has_global_permission(project_permission)
+
+    def can_administer_project(self, project: "Project") -> bool:
+        return project in self.administered_projects
+
+    def can_publish_in_project(self, project: "Project") -> bool:
+        return self.has_project_permission(ProjectPermission.PUBLISH, project)
+
+    def can_manage_event_groups_in_project(self, project: "Project") -> bool:
+        return self.has_project_permission(
+            ProjectPermission.MANAGE_EVENT_GROUPS, project
+        )
+
+    def can_send_messages_to_all_in_project(self, project: "Project") -> bool:
+        return self.has_project_permission(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT, project
+        )
+
+    def can_see_child_list_and_guardian_contact_info_in_project(
+        self, project: "Project"
+    ) -> bool:
+        return self.has_project_permission(
+            ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO, project
+        )
 
     def get_active_verification_tokens(
         self, verification_type: Optional[str] = None
@@ -334,3 +356,17 @@ class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMix
             if child.guardians.count() == 1:
                 child.delete()
         return super().delete(*args, **kwargs)
+
+    def user_can_view_contact_info(self, user: User) -> bool:
+        return (
+            self.user == user
+            or user.has_global_permission(
+                ProjectPermission.SEE_CHILD_LIST_AND_GUARDIAN_CONTACT_INFO
+            )
+            or any(
+                user.can_see_child_list_and_guardian_contact_info_in_project(
+                    child.project
+                )
+                for child in self.children.all()
+            )
+        )
