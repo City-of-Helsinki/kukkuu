@@ -14,13 +14,7 @@ from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
 from projects.factories import ProjectFactory
-from projects.models import (
-    PERM_CAN_ADMINISTRATE_PROJECT,
-    PERM_CAN_MANAGE_EVENT_GROUPS,
-    PERM_CAN_PUBLISH_EVENTS,
-    PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT,
-    ProjectPermission,
-)
+from projects.models import ProjectPermission
 from users.factories import GuardianFactory
 from users.models import Guardian
 from users.tests.mutations import (
@@ -52,22 +46,30 @@ def test_guardians_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_guardians_query_normal_user(snapshot, user_api_client, project):
-    GuardianFactory(relationships__count=1, relationships__child__project=project)
-    GuardianFactory(
-        user=user_api_client.user,
-        relationships__count=1,
-        relationships__child__project=project,
-    )
-
+def test_guardians_query_normal_user(user_api_client):
     executed = user_api_client.execute(GUARDIANS_QUERY)
 
-    snapshot.assert_match(executed)
+    assert_permission_denied(executed)
 
 
-def test_guardians_query_project_user(
+def test_guardians_query_project_user(project_user_api_client):
+    """
+    Test that project user with a project specific permission, but no global
+    permission, to view families will get permission denied, if trying to
+    query all guardians in all projects.
+    """
+    executed = project_user_api_client.execute(GUARDIANS_QUERY)
+    assert_permission_denied(executed)
+
+
+def test_guardians_query_project_user_with_global_view_families_perm(
     snapshot, project_user_api_client, project, another_project
 ):
+    """
+    Test that project user with a global permission to view families, and
+    admin permission to a project, will get all guardians from the project
+    they have admin permission to, but not from other projects.
+    """
     guardian_1 = GuardianFactory(
         first_name="Guardian having children in own and another project",
         last_name="Should be visible 1/2",
@@ -95,9 +97,21 @@ def test_guardians_query_project_user(
         relationships__child__project=another_project,
     )
 
+    # Give user global permission to view families
+    assign_perm(
+        ProjectPermission.VIEW_FAMILIES.permission_name, project_user_api_client.user
+    )
+
     executed = project_user_api_client.execute(GUARDIANS_QUERY)
 
     snapshot.assert_match(executed)
+
+
+def test_guardians_query_project_user_no_view_families_perm(
+    project_user_no_view_families_perm_api_client,
+):
+    executed = project_user_no_view_families_perm_api_client.execute(GUARDIANS_QUERY)
+    assert_permission_denied(executed)
 
 
 def test_my_profile_query_unauthenticated(api_client):
@@ -427,10 +441,15 @@ def test_my_admin_profile_project_admin(
     )
 
     if has_also_model_perms:
-        assign_perm(PERM_CAN_ADMINISTRATE_PROJECT, user_api_client.user)
-        assign_perm(PERM_CAN_PUBLISH_EVENTS, user_api_client.user)
-        assign_perm(PERM_CAN_MANAGE_EVENT_GROUPS, user_api_client.user)
-        assign_perm(PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT, user_api_client.user)
+        assign_perm(ProjectPermission.ADMIN.permission_name, user_api_client.user)
+        assign_perm(ProjectPermission.PUBLISH.permission_name, user_api_client.user)
+        assign_perm(
+            ProjectPermission.MANAGE_EVENT_GROUPS.permission_name, user_api_client.user
+        )
+        assign_perm(
+            ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.permission_name,
+            user_api_client.user,
+        )
 
     ProjectFactory(year=2030, name="project where no object perms")
 

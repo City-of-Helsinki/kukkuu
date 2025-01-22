@@ -14,6 +14,7 @@ class ProjectPermissionsType(ObjectType):
     publish = graphene.Boolean()
     manage_event_groups = graphene.Boolean()
     can_send_to_all_in_project = graphene.Boolean()
+    view_families = graphene.Boolean()
 
     @staticmethod
     def resolve_publish(parent, info):
@@ -29,6 +30,11 @@ class ProjectPermissionsType(ObjectType):
     def resolve_can_send_to_all_in_project(parent, info):
         project, user = parent
         return user.can_send_messages_to_all_in_project(project)
+
+    @staticmethod
+    def resolve_view_families(parent, info):
+        project, user = parent
+        return user.can_view_families_in_project(project)
 
 
 class ProjectTranslationType(DjangoObjectType):

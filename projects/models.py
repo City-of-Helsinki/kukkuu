@@ -1,5 +1,3 @@
-from enum import Enum
-
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -9,20 +7,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from common.models import TranslatableQuerySet
 from common.utils import get_translations_dict
 
-
-class ProjectPermission(Enum):
-    ADMIN = "admin"
-    PUBLISH = "publish"
-    MANAGE_EVENT_GROUPS = "manage_event_groups"
-    SEND_MESSAGE_TO_ALL_IN_PROJECT = "can_send_to_all_in_project"
-
-
-PERM_CAN_ADMINISTRATE_PROJECT = f"projects.{ProjectPermission.ADMIN.value}"
-PERM_CAN_PUBLISH_EVENTS = f"projects.{ProjectPermission.PUBLISH.value}"
-PERM_CAN_MANAGE_EVENT_GROUPS = f"projects.{ProjectPermission.MANAGE_EVENT_GROUPS.value}"
-PERM_CAN_SEND_MESSAGE_TO_ALL_IN_PROJECT = (
-    f"projects.{ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value}"
-)
+from .enums import ProjectPermission
 
 
 class Project(TranslatableModel, SerializableMixin):
@@ -71,6 +56,10 @@ class Project(TranslatableModel, SerializableMixin):
             (
                 ProjectPermission.SEND_MESSAGE_TO_ALL_IN_PROJECT.value,
                 _("Can send messages to all recipients in project"),
+            ),
+            (
+                ProjectPermission.VIEW_FAMILIES.value,
+                _("Can view families"),
             ),
         )
 

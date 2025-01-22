@@ -20,7 +20,6 @@ from kukkuu.views import SentryGraphQLView
 from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import (
-    PERM_CAN_PUBLISH_EVENTS,
     Project,
     ProjectPermission,
 )
@@ -109,11 +108,44 @@ def guardian_api_client():
     return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
 
 
+def _projects_user_api_client(
+    projects: list[Project],
+    permissions: list[ProjectPermission],
+    global_permissions: list[ProjectPermission] | None = None,
+) -> Client:
+    """
+    Create an API client with a random user with the given permissions
+    in the given projects and the given, if any, global permissions.
+    """
+    user = UserFactory()
+    for project in projects:
+        for permission in permissions:
+            assign_perm(permission.value, user, project)
+    if global_permissions:
+        for global_permission in global_permissions:
+            assign_perm(global_permission.permission_name, user)
+    return create_api_client_with_user(user)
+
+
 @pytest.fixture()
 def project_user_api_client(project):
-    user = UserFactory()
-    assign_perm(ProjectPermission.ADMIN.value, user, project)
-    return create_api_client_with_user(user)
+    return _projects_user_api_client(
+        [project], [ProjectPermission.ADMIN, ProjectPermission.VIEW_FAMILIES]
+    )
+
+
+@pytest.fixture
+def project_user_with_global_view_families_perm_api_client(project):
+    return _projects_user_api_client(
+        [project],
+        [ProjectPermission.ADMIN, ProjectPermission.VIEW_FAMILIES],
+        [ProjectPermission.VIEW_FAMILIES],
+    )
+
+
+@pytest.fixture()
+def project_user_no_view_families_perm_api_client(project):
+    return _projects_user_api_client([project], [ProjectPermission.ADMIN])
 
 
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
@@ -124,7 +156,7 @@ def publisher_api_client(request, project):
     if request.param:
         assign_perm(ProjectPermission.PUBLISH.value, user, project)
     else:
-        assign_perm(PERM_CAN_PUBLISH_EVENTS, user)
+        assign_perm(ProjectPermission.PUBLISH.permission_name, user)
 
     return create_api_client_with_user(user)
 
@@ -188,16 +220,15 @@ def event_group():
 
 @pytest.fixture()
 def wrong_project_api_client(another_project):
-    user = UserFactory()
-    assign_perm(ProjectPermission.ADMIN.value, user, another_project)
-    return create_api_client_with_user(user)
+    return _projects_user_api_client([another_project], [ProjectPermission.ADMIN])
 
 
 @pytest.fixture
 def two_project_user_api_client(project, another_project):
-    user = UserFactory()
-    assign_perm(ProjectPermission.ADMIN.value, user, [project, another_project])
-    return create_api_client_with_user(user)
+    return _projects_user_api_client(
+        [project, another_project],
+        [ProjectPermission.ADMIN, ProjectPermission.VIEW_FAMILIES],
+    )
 
 
 @pytest.fixture(
@@ -209,7 +240,7 @@ def unauthorized_user_api_client(
     return (api_client, user_api_client, wrong_project_api_client)[request.param]
 
 
-def create_api_client_with_user(user):
+def create_api_client_with_user(user) -> Client:
     request = RequestFactory().post("/graphql")
     request.user = user
     client = Client(

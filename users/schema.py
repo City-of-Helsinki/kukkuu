@@ -6,7 +6,11 @@ from graphene import relay
 from graphene_django import DjangoConnectionField
 from graphene_django.types import DjangoObjectType
 
-from common.schema import LanguageEnum, set_obj_languages_spoken_at_home
+from common.schema import (
+    LanguageEnum,
+    ViewFamiliesPermissionRequiredConnectionField,
+    set_obj_languages_spoken_at_home,
+)
 from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
 from kukkuu.exceptions import ObjectDoesNotExistError
 from projects.schema import ProjectNode
@@ -49,6 +53,18 @@ class GuardianNode(DjangoObjectType):
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset.user_can_view(info.context.user).order_by("last_name")
+
+    @staticmethod
+    def resolve_phone_number(guardian: Guardian, info) -> str:
+        if not guardian.user_can_view_contact_info(info.context.user):
+            return ""
+        return guardian.phone_number
+
+    @staticmethod
+    def resolve_email(guardian: Guardian, info) -> str:
+        if not guardian.user_can_view_contact_info(info.context.user):
+            return ""
+        return guardian.email
 
 
 class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
@@ -230,7 +246,7 @@ class UpdateMyCommunicationSubscriptionsMutation(graphene.relay.ClientIDMutation
 
 
 class Query:
-    guardians = DjangoConnectionField(GuardianNode)
+    guardians = ViewFamiliesPermissionRequiredConnectionField(GuardianNode)
     my_profile = graphene.Field(GuardianNode)
     my_admin_profile = graphene.Field(AdminNode)
     my_communication_subscriptions = graphene.Field(

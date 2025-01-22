@@ -7,6 +7,8 @@ from django.db import transaction
 from django.db.models.signals import post_migrate
 from django.utils import translation
 
+from projects.enums import ProjectPermission
+
 logger = logging.getLogger(__name__)
 
 
@@ -107,7 +109,8 @@ def _set_group_project_permissions(project, group):
     from projects.models import Project
 
     project_perms = [
-        f"projects.{project_perm[0]}" for project_perm in Project._meta.permissions
+        ProjectPermission.get_project_permission_name(project_perm_value)
+        for project_perm_value, project_perm_name in Project._meta.permissions
     ]
     for perm in project_perms:
         try:

@@ -19,10 +19,14 @@ from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
 from common.schema import (
-    DjangoFilterAndOffsetConnectionField,
+    ViewFamiliesPermissionRequiredFilterOffsetConnectionField,
     set_obj_languages_spoken_at_home,
 )
-from common.utils import login_required, map_enums_to_values_in_kwargs, update_object
+from common.utils import (
+    login_required,
+    map_enums_to_values_in_kwargs,
+    update_object,
+)
 from events.models import Event, EventGroup, EventQueryset, Occurrence
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -633,7 +637,9 @@ class UpdateChildNotesMutation(graphene.relay.ClientIDMutation):
 
 
 class Query:
-    children = DjangoFilterAndOffsetConnectionField(ChildNode, projectId=graphene.ID())
+    children = ViewFamiliesPermissionRequiredFilterOffsetConnectionField(
+        ChildNode, projectId=graphene.ID()
+    )
     child = relay.Node.Field(ChildNode)
     child_notes = graphene.Field(ChildNotesNode, id=graphene.ID(required=True))
 
