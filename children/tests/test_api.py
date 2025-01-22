@@ -63,6 +63,7 @@ from kukkuu.consts import (
 )
 from languages.models import Language
 from projects.factories import ProjectFactory
+from projects.models import ProjectPermission
 from users.factories import GuardianFactory
 from users.models import Guardian
 
@@ -374,17 +375,23 @@ def test_children_query_unauthenticated(api_client):
     assert_permission_denied(executed)
 
 
-def test_children_query_normal_user(snapshot, user_api_client, project):
+def test_children_query_normal_user(user_api_client, project):
     ChildWithGuardianFactory(
         relationship__guardian__user=user_api_client.user, project=project
     )
 
     executed = user_api_client.execute(CHILDREN_QUERY)
 
-    snapshot.assert_match(executed)
+    assert_permission_denied(executed)
 
 
-def test_children_query_project_user(
+def test_children_query_project_user(project_user_api_client):
+    executed = project_user_api_client.execute(CHILDREN_QUERY)
+
+    assert_permission_denied(executed)
+
+
+def test_children_query_project_user_with_global_view_families_perm(
     snapshot, project_user_api_client, project, another_project
 ):
     ChildWithGuardianFactory(
@@ -395,38 +402,21 @@ def test_children_query_project_user(
         project=another_project,
     )
 
+    # Give user global permission to view families
+    assign_perm(
+        ProjectPermission.VIEW_FAMILIES.permission_name, project_user_api_client.user
+    )
+
     executed = project_user_api_client.execute(CHILDREN_QUERY)
 
     snapshot.assert_match(executed)
 
 
-def test_children_query_project_user_and_guardian(
-    snapshot, project_user_api_client, project, another_project
+def test_children_query_project_user_no_view_families_perm(
+    project_user_no_view_families_perm_api_client, project
 ):
-    guardian = GuardianFactory(user=project_user_api_client.user)
-
-    ChildWithGuardianFactory(
-        name="Own child same project - Should be returned 1/3",
-        project=project,
-        relationship__guardian=guardian,
-    )
-    ChildWithGuardianFactory(
-        name="Own child another project - Should be returned 2/3",
-        project=project,
-        relationship__guardian=guardian,
-    )
-    ChildWithGuardianFactory(
-        name="Not own child same project - Should be returned 3/3",
-        project=project,
-    )
-    ChildWithGuardianFactory(
-        name="Not own child another project - Should NOT be returned",
-        project=another_project,
-    )
-
-    executed = project_user_api_client.execute(CHILDREN_QUERY)
-
-    snapshot.assert_match(executed)
+    executed = project_user_no_view_families_perm_api_client.execute(CHILDREN_QUERY)
+    assert_permission_denied(executed)
 
 
 def test_children_project_filter(
@@ -481,6 +471,116 @@ def test_child_query_not_own_child_project_user(
     executed = project_user_api_client.execute(CHILD_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
+
+
+def test_child_query_not_own_child_project_user_no_view_families_perm(
+    project_user_no_view_families_perm_api_client, project
+):
+    """
+    Test that project user without view families permission sees others' child info
+    using Child query, but the guardian's email and phone number are empty.
+    """
+    child = ChildWithGuardianFactory(
+        name="Test child name",
+        birthyear=2020,
+        postal_code="00100",
+        relationship__type=Relationship.PARENT,
+        relationship__guardian=GuardianFactory(
+            first_name="Test first name",
+            last_name="Test last name",
+            email="test@example.org",
+            phone_number="123456789",
+        ),
+        project=project,
+    )
+
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = project_user_no_view_families_perm_api_client.execute(
+        CHILD_QUERY, variables=variables
+    )
+
+    assert executed == {
+        "data": {
+            "child": {
+                "name": "Test child name",
+                "birthyear": 2020,
+                "postalCode": "00100",
+                "relationships": {
+                    "edges": [
+                        {
+                            "node": {
+                                "type": "PARENT",
+                                "guardian": {
+                                    "firstName": "Test first name",
+                                    "lastName": "Test last name",
+                                    # Guardian's contact info should be empty
+                                    "email": "",
+                                    "phoneNumber": "",
+                                },
+                            }
+                        }
+                    ]
+                },
+            }
+        }
+    }
+
+
+def test_child_query_own_child_project_user_no_view_families_perm(
+    project_user_no_view_families_perm_api_client, project
+):
+    """
+    Test that project user without view families permission sees their own child
+    using Child query, and the guardian's email and phone number are visible too.
+    """
+    user = project_user_no_view_families_perm_api_client.user
+    child = ChildWithGuardianFactory(
+        name="Test child name",
+        birthyear=2020,
+        postal_code="00100",
+        relationship__type=Relationship.PARENT,
+        relationship__guardian=GuardianFactory(
+            user=user,
+            first_name="Test first name",
+            last_name="Test last name",
+            email="test@example.org",
+            phone_number="123456789",
+        ),
+        project=project,
+    )
+
+    variables = {"id": to_global_id("ChildNode", child.id)}
+
+    executed = project_user_no_view_families_perm_api_client.execute(
+        CHILD_QUERY, variables=variables
+    )
+
+    assert executed == {
+        "data": {
+            "child": {
+                "name": "Test child name",
+                "birthyear": 2020,
+                "postalCode": "00100",
+                "relationships": {
+                    "edges": [
+                        {
+                            "node": {
+                                "type": "PARENT",
+                                "guardian": {
+                                    "firstName": "Test first name",
+                                    "lastName": "Test last name",
+                                    # Guardian's contact info should be visible
+                                    "email": "test@example.org",
+                                    "phoneNumber": "123456789",
+                                },
+                            }
+                        }
+                    ]
+                },
+            }
+        }
+    }
 
 
 ADD_CHILD_VARIABLES = {
@@ -1621,7 +1721,9 @@ query Children($projectId: ID!, $limit: Int, $first: Int) {
     snapshot.assert_match(executed)
 
 
-def test_children_query_ordering(snapshot, project, project_user_api_client):
+def test_children_query_ordering(
+    snapshot, project, project_user_with_global_view_families_perm_api_client
+):
     with freeze_time("2020-12-12"):
         ChildWithGuardianFactory(name="Alpha", project=project)
         ChildWithGuardianFactory(name="Bravo", project=project)
@@ -1633,7 +1735,7 @@ def test_children_query_ordering(snapshot, project, project_user_api_client):
         ChildWithGuardianFactory(name="", project=project)
         ChildWithGuardianFactory(name="Charlie", project=project)
 
-    executed = project_user_api_client.execute(
+    executed = project_user_with_global_view_families_perm_api_client.execute(
         """
     query Children {
       children {

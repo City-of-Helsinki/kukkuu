@@ -281,37 +281,6 @@ snapshots['test_children_project_filter 1'] = {
     }
 }
 
-snapshots['test_children_query_normal_user 1'] = {
-    'data': {
-        'children': {
-            'edges': [
-                {
-                    'node': {
-                        'birthyear': 2019,
-                        'name': 'Richard Hayes',
-                        'postalCode': '57776',
-                        'relationships': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'guardian': {
-                                            'email': 'michellewalker@example.net',
-                                            'firstName': 'Denise',
-                                            'lastName': 'Thompson',
-                                            'phoneNumber': '001-206-575-0649x7638'
-                                        },
-                                        'type': 'OTHER_RELATION'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
-    }
-}
-
 snapshots['test_children_query_ordering 1'] = {
     'data': {
         'children': {
@@ -369,7 +338,7 @@ snapshots['test_children_query_ordering 1'] = {
     }
 }
 
-snapshots['test_children_query_project_user 1'] = {
+snapshots['test_children_query_project_user_with_global_view_families_perm 1'] = {
     'data': {
         'children': {
             'edges': [
@@ -389,81 +358,6 @@ snapshots['test_children_query_project_user 1'] = {
                                             'phoneNumber': '497-963-8034x6697'
                                         },
                                         'type': 'PARENT'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
-    }
-}
-
-snapshots['test_children_query_project_user_and_guardian 1'] = {
-    'data': {
-        'children': {
-            'edges': [
-                {
-                    'node': {
-                        'birthyear': 2021,
-                        'name': 'Not own child same project - Should be returned 3/3',
-                        'postalCode': '11715',
-                        'relationships': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'guardian': {
-                                            'email': 'anthonycross@example.com',
-                                            'firstName': 'Sarah',
-                                            'lastName': 'Larsen',
-                                            'phoneNumber': '4895817101'
-                                        },
-                                        'type': 'OTHER_RELATION'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    'node': {
-                        'birthyear': 2022,
-                        'name': 'Own child another project - Should be returned 2/3',
-                        'postalCode': '34669',
-                        'relationships': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'guardian': {
-                                            'email': 'michellewalker@example.net',
-                                            'firstName': 'Michael',
-                                            'lastName': 'Patton',
-                                            'phoneNumber': '235.857.7767x124'
-                                        },
-                                        'type': 'OTHER_GUARDIAN'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    'node': {
-                        'birthyear': 2021,
-                        'name': 'Own child same project - Should be returned 1/3',
-                        'postalCode': '06497',
-                        'relationships': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'guardian': {
-                                            'email': 'michellewalker@example.net',
-                                            'firstName': 'Michael',
-                                            'lastName': 'Patton',
-                                            'phoneNumber': '235.857.7767x124'
-                                        },
-                                        'type': 'OTHER_GUARDIAN'
                                     }
                                 }
                             ]

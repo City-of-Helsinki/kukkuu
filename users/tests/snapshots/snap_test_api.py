@@ -7,40 +7,7 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['test_guardians_query_normal_user 1'] = {
-    'data': {
-        'guardians': {
-            'edges': [
-                {
-                    'node': {
-                        'email': 'michellewalker@example.net',
-                        'firstName': 'Andrew',
-                        'lastName': 'Eaton',
-                        'phoneNumber': '001-311-571-5910x23202',
-                        'relationships': {
-                            'edges': [
-                                {
-                                    'node': {
-                                        'child': {
-                                            'birthyear': 2023,
-                                            'name': 'Nicholas Chavez',
-                                            'project': {
-                                                'year': 2020
-                                            }
-                                        },
-                                        'type': 'PARENT'
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
-        }
-    }
-}
-
-snapshots['test_guardians_query_project_user 1'] = {
+snapshots['test_guardians_query_project_user_with_global_view_families_perm 1'] = {
     'data': {
         'guardians': {
             'edges': [
