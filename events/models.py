@@ -105,6 +105,9 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_GROUP_NOT_PUBLISHED
 
+        if child.project != self.project:
+            return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_GROUP_PROJECT
+
         # We check only the year based on the first occurrence or the first external
         # ticket system event's published_at field. That has obvious shortcomings when
         # the events span on multiple years. However, this should be good enough, and
@@ -396,6 +399,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_NOT_PUBLISHED
 
+        if child.project != self.project:
+            return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_PROJECT
+
         if self.ticket_system == Event.INTERNAL:
             if not (occurrence := Occurrence.objects.filter(event=self).first()):
                 # Internal events need to have at least one occurrence
@@ -666,6 +672,33 @@ class Occurrence(TimestampedModel, SerializableMixin):
     def get_remaining_capacity(self) -> int:
         capacity = self.get_capacity() or 0
         return max(capacity - self.get_enrolment_count(), 0)
+
+    def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
+        """
+        Why, if for any reason, the given child can't enrol to this occurrence?
+
+        :return: None if the child can enrol, otherwise the reason why not.
+        """
+        if reason := self.event.get_enrolment_denied_reason(child):
+            return reason
+
+        if self.enrolments.count() >= self.get_capacity():
+            return EnrolmentDeniedReason.OCCURRENCE_FULL
+
+        if self.time < timezone.now():
+            return EnrolmentDeniedReason.PAST_OCCURRENCE
+
+        if (
+            child.get_enrolment_count(year=self.time.year)
+            >= self.event.project.enrolment_limit
+        ):
+            return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
+
+        return None
+
+    def can_child_enroll(self, child: Child) -> bool:
+        """Check if the child can enroll to this occurrence."""
+        return self.get_enrolment_denied_reason(child) is None
 
     def can_user_administer(self, user):
         # There shouldn't ever be a situation where event.project != venue.project
