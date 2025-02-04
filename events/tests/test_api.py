@@ -15,6 +15,7 @@ from graphql_relay import to_global_id
 from parler.utils.context import switch_language
 
 from children.factories import ChildWithGuardianFactory
+from children.models import Child
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
 from events.factories import (
@@ -70,6 +71,7 @@ from events.tests.queries import (
 )
 from events.ticket_service import check_ticket_validity
 from kukkuu.consts import (
+    API_USAGE_ERROR,
     CHILD_ALREADY_JOINED_EVENT_ERROR,
     DATA_VALIDATION_ERROR,
     EVENT_ALREADY_PUBLISHED_ERROR,
@@ -93,6 +95,7 @@ from kukkuu.consts import (
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
+from projects.factories import ProjectFactory
 from projects.models import Project
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from users.factories import GuardianFactory, UserFactory
@@ -2284,21 +2287,7 @@ def test_import_ticket_system_passwords_invalid_permissions(guardian_api_client)
     assert_match_error_code(executed, PERMISSION_DENIED_ERROR)
 
 
-def test_assign_ticket_system_password(snapshot, guardian_api_client):
-    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
-    child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
-    )
-    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK", assigned_at=now()
-    )
-    free_password = TicketSystemPasswordFactory(
-        event=event, child=None, value="the correct password"
-    )
-    another_free_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, child=None, value="wrong password"
-    )
-
+def _assign_ticket_system_password(client, event, child) -> dict:
     variables = {
         "input": {
             "eventId": get_global_id(event),
@@ -2306,19 +2295,65 @@ def test_assign_ticket_system_password(snapshot, guardian_api_client):
         }
     }
 
-    executed = guardian_api_client.execute(
+    return client.execute(
         ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
         variables=variables,
     )
 
-    snapshot.assert_match(executed)
+
+def test_assign_ticket_system_password_success(guardian_api_client):
+    """
+    Test that a free password can be assigned to a child.
+    """
+    event = EventFactory(
+        name="Test event", ticket_system=Event.TICKETMASTER, published_at=now()
+    )
+    child = ChildWithGuardianFactory(
+        name="Test child",
+        relationship__guardian__user=guardian_api_client.user.guardian.user,
+    )
+    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, value="FATAL LEAK", assigned_at=now()
+    )
+    free_password = TicketSystemPasswordFactory(
+        event=event, child=None, value="The correct password"
+    )
+    another_free_password = TicketSystemPasswordFactory(  # noqa: F841
+        event=event, child=None, value="Wrong password"
+    )
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert executed == {
+        "data": {
+            "assignTicketSystemPassword": {
+                "child": {"name": "Test child"},
+                "event": {"name": "Test event"},
+                "password": "The correct password",
+            }
+        }
+    }
+
     assert child.ticket_system_passwords.get(event=event) == free_password
 
-    # second mutation should result in password already assigned error
-    executed = guardian_api_client.execute(
-        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
-        variables=variables,
+
+def test_assign_ticket_system_password_already_assigned(guardian_api_client):
+    """
+    Test that a password can not be assigned to a child who already has it.
+    """
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
     )
+    used_password = TicketSystemPasswordFactory(
+        event=event, child=child, value="Used password"
+    )
+    free_password = TicketSystemPasswordFactory(
+        event=event, child=None, value="Free password"
+    )
+    assert set(TicketSystemPassword.objects.all()) == {used_password, free_password}
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
 
     assert_match_error_code(executed, TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR)
 
@@ -2326,43 +2361,234 @@ def test_assign_ticket_system_password(snapshot, guardian_api_client):
 def test_assign_ticket_system_password_no_free_passwords(
     guardian_api_client,
 ):
+    """
+    Test that if there are no free passwords available, then a password can not be
+    assigned because of this.
+    """
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user.guardian.user
     )
-    someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
-        event=event, value="FATAL LEAK", assigned_at=now()
+    TicketSystemPasswordFactory(
+        event=event, value="Someone else's password", assigned_at=now()
     )
 
-    variables = {
-        "input": {"eventId": get_global_id(event), "childId": get_global_id(child)}
-    }
-
-    executed = guardian_api_client.execute(
-        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
-        variables=variables,
-    )
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
 
     assert_match_error_code(executed, NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR)
 
 
+def test_assign_ticket_system_password_internal_event(guardian_api_client):
+    """
+    Test that a password can not be assigned to an internal ticket system event.
+    """
+    event = EventFactory(ticket_system=Event.INTERNAL, published_at=now())
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
+    )
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert executed["errors"][0]["message"] == (
+        "Password can not be assigned to internal ticket system event"
+    )
+
+
+def test_assign_ticket_system_password_not_published_event(guardian_api_client):
+    """
+    Test that event that has not been published is not visible to
+    AssignTicketSystemPassword mutation.
+    """
+    event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=None)
+    child = ChildWithGuardianFactory(
+        relationship__guardian__user=guardian_api_client.user.guardian.user
+    )
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests(
+    client, enrolment_limit, existing_enrolment_count
+) -> tuple[Event, Child, TicketSystemPassword]:
+    """
+    Create test data for testing the AssignTicketSystemPassword mutation
+    with only external ticket system events & existing ticket system passwords.
+    """
+    project = ProjectFactory(enrolment_limit=enrolment_limit)
+    event = EventFactory(
+        name="Test event",
+        project=project,
+        ticket_system=Event.TICKETMASTER,
+        published_at=now(),
+    )
+    child = ChildWithGuardianFactory(
+        name="Test child",
+        project=project,
+        relationship__guardian__user=client.user.guardian.user,
+    )
+    TicketSystemPasswordFactory.create_batch(
+        size=existing_enrolment_count,
+        child=child,
+        event__project=project,
+        event__published_at=now(),
+    )
+    free_password = TicketSystemPasswordFactory(
+        event=event, child=None, value="Free password"
+    )
+    return event, child, free_password
+
+
+@pytest.mark.parametrize(
+    "enrolment_limit, existing_enrolment_count",
+    [
+        (1, 0),
+        (2, 0),
+        (2, 1),
+        (3, 0),
+        (3, 1),
+        (3, 2),
+        (10, 1),
+        (10, 9),
+        (100, 99),
+    ],
+)
+def test_assign_ticket_system_password_only_externals_enrolment_limit_not_full(
+    guardian_api_client, enrolment_limit, existing_enrolment_count
+):
+    """
+    Test that a free password can be assigned to a child when the yearly enrolment limit
+    has not been reached. Tests without internal event enrolments.
+    """
+    event, child, free_password = (
+        _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests(
+            guardian_api_client, enrolment_limit, existing_enrolment_count
+        )
+    )
+    assert child.ticket_system_passwords.count() == existing_enrolment_count
+    assert not Enrolment.objects.exists()
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert "errors" not in executed
+    assert child.ticket_system_passwords.count() == (existing_enrolment_count + 1)
+    assert child.ticket_system_passwords.get(event=event) == free_password
+
+
+@pytest.mark.parametrize(
+    "enrolment_limit, existing_enrolment_count",
+    [
+        (1, 1),
+        (1, 2),
+        (2, 2),
+        (2, 3),
+        (3, 3),
+        (3, 4),
+        (10, 10),
+        (20, 30),
+    ],
+)
+def test_assign_ticket_system_password_only_externals_enrolment_limit_full(
+    guardian_api_client,
+    enrolment_limit,
+    existing_enrolment_count,
+):
+    """
+    Test that a free password can not be assigned to a child when the yearly enrolment
+    limit has been reached. Tests without internal event enrolments.
+    """
+    event, child, free_password = (
+        _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests(
+            guardian_api_client, enrolment_limit, existing_enrolment_count
+        )
+    )
+    assert child.ticket_system_passwords.count() == existing_enrolment_count
+    assert not Enrolment.objects.exists()
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
+    assert executed["errors"][0]["message"] == "Yearly enrolment limit has been reached"
+    assert child.ticket_system_passwords.count() == existing_enrolment_count
+    assert not child.ticket_system_passwords.filter(event=event).exists()
+
+
+def test_assign_ticket_system_password_internal_and_external_enrolment_limit(
+    guardian_api_client,
+):
+    """
+    Test that a free password can not be assigned to a child when the yearly enrolment
+    limit is reached by the sum of both internal and external events.
+    """
+    project = ProjectFactory(enrolment_limit=3)
+    external_event = EventFactory(
+        name="Test event",
+        project=project,
+        ticket_system=Event.TICKETMASTER,
+        published_at=now(),
+    )
+    another_external_event = EventFactory(
+        name="Second test event",
+        project=project,
+        ticket_system=Event.TICKETMASTER,
+        published_at=now(),
+    )
+    child = ChildWithGuardianFactory(
+        name="Test child",
+        project=project,
+        relationship__guardian__user=guardian_api_client.user.guardian.user,
+    )
+    TicketSystemPasswordFactory(
+        child=child,
+        event__project=project,
+        event__published_at=now(),
+    )
+    TicketSystemPasswordFactory(event=external_event, child=None, value="Free password")
+    internal_event = EventFactory(
+        project=project,
+        ticket_system=Event.INTERNAL,
+        published_at=now(),
+    )
+    EnrolmentFactory(
+        child=child,
+        occurrence__time=now() + timedelta(hours=1),
+        occurrence__event=internal_event,
+    )
+    assert child.enrolments.count() == 1
+    assert child.ticket_system_passwords.count() == 1
+    assert child.get_enrolment_count(now().year) == 2
+
+    # Yearly limit has not been reached yet, so should be successful
+    executed = _assign_ticket_system_password(
+        guardian_api_client, external_event, child
+    )
+
+    assert "errors" not in executed
+    assert child.ticket_system_passwords.count() == 2
+    assert child.get_enrolment_count(now().year) == 3
+
+    # Now the yearly limit has been reached, so this should fail
+    executed = _assign_ticket_system_password(
+        guardian_api_client, another_external_event, child
+    )
+
+    assert_match_error_code(executed, INELIGIBLE_OCCURRENCE_ENROLMENT)
+    assert executed["errors"][0]["message"] == "Yearly enrolment limit has been reached"
+    assert child.ticket_system_passwords.count() == 2
+    assert child.get_enrolment_count(now().year) == 3
+
+
 def test_assign_ticket_system_password_not_own_child(guardian_api_client):
+    """
+    Test that the user does not see someone else's child using
+    AssignTicketSystemPassword mutation, and can not assign a password to them.
+    """
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     another_child = ChildWithGuardianFactory()
     some_free_password = TicketSystemPasswordFactory(event=event)  # noqa: F841
 
-    variables = {
-        "input": {
-            "eventId": get_global_id(event),
-            "childId": get_global_id(another_child),
-        }
-    }
-
     # try to assign a password to someone else's child
-    executed = guardian_api_client.execute(
-        ASSIGN_TICKET_SYSTEM_PASSWORD_MUTATION,
-        variables=variables,
-    )
+    executed = _assign_ticket_system_password(guardian_api_client, event, another_child)
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
     assert not another_child.ticket_system_passwords.filter(event=event).exists()
