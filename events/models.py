@@ -18,6 +18,7 @@ from common.decorators import execute_in_background
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from common.utils import get_translations_dict
 from events.consts import NotificationType
+from events.enums import EnrolmentDeniedReason
 from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
 from events.utils import (
     send_event_group_notifications_to_guardians,
@@ -94,11 +95,15 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
 
-    def can_child_enroll(self, child: Child) -> bool:
-        """Check if the child can enroll to an event in the event group."""
+    def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
+        """
+        Why, if for any reason, the given child can't enrol to an event
+        in this event group?
 
+        :return: None if the child can enrol, otherwise the reason why not.
+        """
         if not self.is_published():
-            return False
+            return EnrolmentDeniedReason.EVENT_GROUP_NOT_PUBLISHED
 
         # We check only the year based on the first occurrence or the first external
         # ticket system event's published_at field. That has obvious shortcomings when
@@ -116,18 +121,22 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         else:
             # Need to have at least one occurrence or at least one external ticket
             # system event
-            return False
+            return EnrolmentDeniedReason.EMPTY_EVENT_GROUP
 
         if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
-            return False
+            return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
 
         if child.occurrences.filter(event__event_group=self).exists():
-            return False
+            return EnrolmentDeniedReason.ALREADY_JOINED_EVENT_GROUP
 
         if child.ticket_system_passwords.filter(event__event_group=self).exists():
-            return False
+            return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT_GROUP
 
-        return True
+        return None
+
+    def can_child_enroll(self, child: Child) -> bool:
+        """Check if the child can enroll to an event in the event group."""
+        return self.get_enrolment_denied_reason(child) is None
 
     @execute_in_background(thread_name="eventgroup-notification-sender", daemonic=False)
     def _send_event_group_notifications_to_guardians_in_background(
@@ -377,16 +386,20 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     def can_user_publish(self, user):
         return user.can_publish_in_project(self.project)
 
-    def can_child_enroll(self, child: Child) -> bool:
-        """Check if the child can enroll to the event."""
+    def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
+        """
+        Why, if for any reason, the given child can't enrol to this event?
+
+        :return: None if the child can enrol, otherwise the reason why not.
+        """
 
         if not self.is_published():
-            return False
+            return EnrolmentDeniedReason.EVENT_NOT_PUBLISHED
 
         if self.ticket_system == Event.INTERNAL:
             if not (occurrence := Occurrence.objects.filter(event=self).first()):
                 # Internal events need to have at least one occurrence
-                return False
+                return EnrolmentDeniedReason.EMPTY_EVENT
             year = occurrence.time.year
         else:
             # For external ticket system events published_at field is used to determine
@@ -394,19 +407,25 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             # we can do with the current data, and most probably good enough.
             year = self.published_at.year
 
-        if self.event_group and not self.event_group.can_child_enroll(child):
-            return False
+        if self.event_group and (
+            reason := self.event_group.get_enrolment_denied_reason(child)
+        ):
+            return reason
 
         if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
-            return False
+            return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
 
         if child.occurrences.filter(event=self).exists():
-            return False
+            return EnrolmentDeniedReason.ALREADY_JOINED_EVENT
 
         if child.ticket_system_passwords.filter(event=self).exists():
-            return False
+            return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT
 
-        return True
+        return None
+
+    def can_child_enroll(self, child: Child) -> bool:
+        """Check if the child can enroll to the event."""
+        return self.get_enrolment_denied_reason(child) is None
 
     @execute_in_background(thread_name="event-notification-sender", daemonic=False)
     def _send_event_notifications_to_guardians_in_background(self, *args, **kwargs):
