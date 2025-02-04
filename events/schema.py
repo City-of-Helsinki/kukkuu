@@ -37,6 +37,7 @@ from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
+    ApiUsageError,
     DataValidationError,
     EventAlreadyPublishedError,
     EventGroupAlreadyPublishedError,
@@ -823,6 +824,14 @@ class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
             child = Child.objects.user_can_update(info.context.user).get(pk=child_id)
         except (Event.DoesNotExist, Child.DoesNotExist) as e:
             raise ObjectDoesNotExistError(e)
+
+        if event.ticket_system == Event.INTERNAL:
+            raise ApiUsageError(
+                "Password can not be assigned to internal ticket system event"
+            )
+
+        if reason := event.get_enrolment_denied_reason(child):
+            raise ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR[reason]
 
         try:
             password = TicketSystemPassword.objects.assign(event=event, child=child)
