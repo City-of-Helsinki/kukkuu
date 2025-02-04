@@ -8,7 +8,6 @@ from django.apps import apps
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
-from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
@@ -29,6 +28,7 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
+from events.consts import ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR
 from events.exceptions import (
     NoFreePasswordsError,
     PasswordAlreadyAssignedError,
@@ -37,18 +37,13 @@ from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
-    ChildAlreadyJoinedEventError,
     DataValidationError,
     EventAlreadyPublishedError,
     EventGroupAlreadyPublishedError,
-    EventNotPublishedError,
-    IneligibleOccurrenceEnrolment,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
-    OccurrenceIsFullError,
     OccurrenceYearMismatchError,
     PastEnrolmentError,
-    PastOccurrenceError,
     SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
@@ -65,32 +60,9 @@ EventTranslation = apps.get_model("events", "EventTranslation")
 EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
-def validate_enrolment(child, occurrence):
-    if not occurrence.event.is_published():
-        raise EventNotPublishedError("Event is not published")
-
-    if child.project != occurrence.event.project:
-        raise IneligibleOccurrenceEnrolment(
-            "Child does not belong to the project event"
-        )
-    if child.occurrences.filter(event=occurrence.event).exists():
-        raise ChildAlreadyJoinedEventError("Child already joined this event")
-    if occurrence.event.event_group and child.occurrences.filter(
-        event__event_group=occurrence.event.event_group
-    ):
-        raise ChildAlreadyJoinedEventError(
-            "Child already joined an event of this event group"
-        )
-    if occurrence.enrolments.count() >= occurrence.get_capacity():
-        raise OccurrenceIsFullError("Maximum enrolments created")
-    if occurrence.time < timezone.now():
-        raise PastOccurrenceError("Cannot join occurrence in the past")
-
-    if (
-        child.get_enrolment_count(year=occurrence.time.year)
-        >= occurrence.event.project.enrolment_limit
-    ):
-        raise IneligibleOccurrenceEnrolment("Yearly enrolment limit has been reached")
+def validate_enrolment(child: Child, occurrence: Occurrence):
+    if reason := occurrence.get_enrolment_denied_reason(child):
+        raise ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR[reason]
 
 
 def validate_enrolment_deletion(enrolment):

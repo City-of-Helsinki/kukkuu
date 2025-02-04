@@ -278,6 +278,7 @@ def test_event_can_child_enroll_project_limit_reached(
         )
         enrolled_occurrence = OccurrenceFactory(
             time=future,
+            event__project=project,
             event__published_at=now(),
             event__ticket_system=(
                 Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
@@ -301,6 +302,7 @@ def test_event_can_child_enroll_project_limit_reached(
     )
     occurrence = OccurrenceFactory(
         time=future,
+        event__project=project,
         event__published_at=now(),
         event__event_group=event_group,
     )
