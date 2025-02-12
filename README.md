@@ -115,7 +115,8 @@ Start by installing the [requirements](#requirements).
 
 #### Installing Python requirements
 
-- Run `pip install -r requirements.txt`
+- Run `pip install -r requirements.txt` (base requirements)
+- Run `pip install -r requirements-not-from-pypi.txt` (packages not available from PyPI)
 - Run `pip install -r requirements-dev.txt` (development requirements)
 
 #### Database

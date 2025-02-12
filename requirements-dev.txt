@@ -8,11 +8,11 @@ asttokens==3.0.0
     # via stack-data
 certifi==2024.12.14
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   requests
 charset-normalizer==3.4.1
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   requests
 coverage[toml]==7.6.10
     # via pytest-cov
@@ -26,7 +26,7 @@ freezegun==1.5.1
     # via -r requirements-dev.in
 idna==3.10
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   requests
 iniconfig==2.0.0
     # via pytest
@@ -38,7 +38,7 @@ matplotlib-inline==0.1.7
     # via ipython
 packaging==24.2
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   pytest
 parso==0.8.4
     # via jedi
@@ -65,15 +65,15 @@ pytest-django==4.9.0
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   freezegun
 pyyaml==6.0.2
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   responses
 requests==2.32.3
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   requests-mock
     #   responses
 requests-mock==1.12.1
@@ -84,7 +84,7 @@ ruff==0.8.4
     # via -r requirements-dev.in
 six==1.17.0
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   python-dateutil
     #   snapshottest
 snapshottest==0.6.0
@@ -99,11 +99,11 @@ traitlets==5.14.3
     #   matplotlib-inline
 typing-extensions==4.12.2
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   ipython
 urllib3==2.3.0
     # via
-    #   -c /Users/nikojmakela/Code/ratkaisutoimisto/kukkuu/requirements.txt
+    #   -c /app/requirements.txt
     #   requests
     #   responses
 wasmer==1.1.0

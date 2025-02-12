@@ -4,8 +4,6 @@
 #
 #    pip-compile requirements.in
 #
--e git+https://github.com/City-of-Helsinki/django-auditlog-extra.git@191cb992b7bab0f8c334628f23f6f12b24e92773#egg=django-auditlog-extra
-    # via -r requirements.in
 asgiref==3.8.1
     # via
     #   django
@@ -44,7 +42,6 @@ django==4.2.18
     #   -r requirements.in
     #   django-anymail
     #   django-auditlog
-    #   django-auditlog-extra
     #   django-cors-headers
     #   django-csp
     #   django-filter
@@ -64,9 +61,7 @@ django==4.2.18
 django-anymail==12.0
     # via django-ilmoitin
 django-auditlog==3.0.0
-    # via
-    #   -r requirements.in
-    #   django-auditlog-extra
+    # via -r requirements.in
 django-cleanup==9.0.0
     # via -r requirements.in
 django-cors-headers==4.6.0
