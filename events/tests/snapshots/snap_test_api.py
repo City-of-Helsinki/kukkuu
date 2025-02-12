@@ -147,20 +147,6 @@ snapshots['test_add_ticketmaster_event 1'] = {
     }
 }
 
-snapshots['test_assign_ticket_system_password 1'] = {
-    'data': {
-        'assignTicketSystemPassword': {
-            'child': {
-                'name': 'Luis Lawson'
-            },
-            'event': {
-                'name': 'Dog hospital number.'
-            },
-            'password': 'the correct password'
-        }
-    }
-}
-
 snapshots['test_child_enrol_occurrence_from_different_project 1'] = {
     'data': {
         'enrolOccurrence': {
