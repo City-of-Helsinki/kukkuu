@@ -1,0 +1,10 @@
+# This file is only for packages that are not available from PyPI,
+# i.e. ones installed using "-e" option / editable packages.
+#
+# Other packages can be put into the *.in files, but editable packages
+# can not be used as constraints, see https://github.com/pypa/pip/issues/8210
+#
+# Because requirements-dev.in includes requirements.txt as a constraint
+# using "-c requirements.txt" an editable package can not be put into it
+# or its source file requirements.in.
+-e git+https://github.com/City-of-Helsinki/django-auditlog-extra.git@191cb992b7bab0f8c334628f23f6f12b24e92773#egg=django-auditlog-extra

@@ -1,4 +1,3 @@
--e git+https://github.com/City-of-Helsinki/django-auditlog-extra.git@191cb992b7bab0f8c334628f23f6f12b24e92773#egg=django-auditlog-extra
 django-auditlog
 django-cleanup
 django-cors-headers
