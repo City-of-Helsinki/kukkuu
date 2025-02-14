@@ -6,6 +6,7 @@ import environ
 import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
+from helusers.defaults import SOCIAL_AUTH_PIPELINE  # noqa: F401
 from jose import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.types import Event, Hint
@@ -52,6 +53,9 @@ env = environ.Env(
     CORS_ALLOWED_ORIGINS=(list, []),
     CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
+    SOCIAL_AUTH_TUNNISTAMO_KEY=(str, ""),
+    SOCIAL_AUTH_TUNNISTAMO_SECRET=(str, ""),
+    SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT=(str, ""),
     TOKEN_AUTH_ACCEPTED_SCOPE_PREFIX=(str, ""),
     TOKEN_AUTH_REQUIRE_SCOPE_PREFIX=(bool, False),
     TOKEN_AUTH_ACCEPTED_AUDIENCE=(list, ["https://api.hel.fi/auth/kukkuu"]),
@@ -78,6 +82,8 @@ env = environ.Env(
     KUKKUU_REMINDER_DAYS_IN_ADVANCE=(int, 1),
     KUKKUU_FEEDBACK_NOTIFICATION_DELAY=(int, 15),
     KUKKUU_NOTIFICATIONS_SHEET_ID=(str, ""),
+    LOGIN_REDIRECT_URL=(str, "/admin/"),
+    LOGOUT_REDIRECT_URL=(str, "/admin/"),
     VERIFICATION_TOKEN_VALID_MINUTES=(int, 15),
     VERIFICATION_TOKEN_LENGTH=(int, 8),
     SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES=(int, 30 * 24 * 60),  # 30 days
@@ -86,6 +92,7 @@ env = environ.Env(
     GDPR_API_DELETE_SCOPE=(str, "gdprdelete"),
     GDPR_API_AUTHORIZATION_FIELD=(str, "authorization.permissions.scopes"),
     HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED=(bool, False),
+    HELUSERS_PASSWORD_LOGIN_DISABLED=(bool, False),
     TOKEN_AUTH_BROWSER_TEST_JWT_256BIT_SIGN_SECRET=(str, None),
     TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER=(list, None),
     TOKEN_AUTH_BROWSER_TEST_ENABLED=(bool, False),
@@ -245,6 +252,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "health_check",  # requirement
+    "social_django",  # For django-admin Keycloak login
     # local apps
     "custom_health_checks",
     "users",
@@ -338,10 +346,27 @@ CSP_IMG_SRC = [
 AUTH_USER_MODEL = "users.User"
 
 AUTHENTICATION_BACKENDS = [
+    "helusers.tunnistamo_oidc.TunnistamoOIDCAuth",  # For django-admin Keycloak login
     "django.contrib.auth.backends.ModelBackend",
     "kukkuu.oidc.BrowserTestAwareJWTAuthentication",
     "guardian.backends.ObjectPermissionBackend",
 ]
+
+# Environment variables required for django-admin Keycloak login:
+# (See https://github.com/City-of-Helsinki/django-helusers/blob/v0.13.0/README.md)
+LOGIN_REDIRECT_URL = env.str("LOGIN_REDIRECT_URL")
+LOGOUT_REDIRECT_URL = env.str("LOGOUT_REDIRECT_URL")
+SOCIAL_AUTH_TUNNISTAMO_KEY = env.str("SOCIAL_AUTH_TUNNISTAMO_KEY")
+SOCIAL_AUTH_TUNNISTAMO_SECRET = env.str("SOCIAL_AUTH_TUNNISTAMO_SECRET")
+SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT = env.str("SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT")
+if not SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT:
+    try:
+        SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT = env.list("TOKEN_AUTH_AUTHSERVER_URL")[0]
+    except IndexError:
+        raise ImproperlyConfigured(
+            "Either SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT or TOKEN_AUTH_AUTHSERVER_URL "
+            "is needed to enable django-admin Keycloak login"
+        )
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -479,7 +504,12 @@ GDPR_API_URL_PATTERN = "v1/user/<uuid:uuid>"
 GDPR_API_USER_PROVIDER = "gdpr.service.get_user"
 GDPR_API_DELETER = "gdpr.service.clear_data"
 
-HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
+HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env.bool("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
+HELUSERS_PASSWORD_LOGIN_DISABLED = env.bool("HELUSERS_PASSWORD_LOGIN_DISABLED")
+
+# django-helusers stores access token expiration time as datetime
+# and needs a custom serializer to make it serializable to/from JSON:
+SESSION_SERIALIZER = "helusers.sessions.TunnistamoOIDCSerializer"
 
 # release information
 APP_RELEASE = env("APP_RELEASE")

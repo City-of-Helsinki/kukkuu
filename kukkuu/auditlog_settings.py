@@ -21,6 +21,12 @@ AUDITLOG_EXCLUDE_TRACKING_MODELS = (
     "mailer.dontsendentry",  # system
     "mailer.message",  # system
     "mailer.messagelog",  # system
+    # social-auth-app-django models
+    # https://github.com/python-social-auth/social-app-django/blob/master/social_django/models.py
+    "social_django.association",  # auth model
+    "social_django.code",  # auth model
+    "social_django.nonce",  # auth model
+    "social_django.partial",  # auth model
 )
 
 # Configure models registration and other behaviours.
@@ -37,6 +43,12 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "django_ilmoitin.notificationtemplate_admins_to_notify",
     "guardian.groupobjectpermission",
     "guardian.userobjectpermission",
+    {
+        # social-auth-app-django UserSocialAuth model, see
+        # https://github.com/python-social-auth/social-app-django/blob/master/social_django/models.py
+        "model": "social_django.usersocialauth",
+        "serialize_data": True,
+    },
     {
         "model": "users.user",
         "exclude_fields": [

@@ -27,3 +27,4 @@ pytz
 qrcode
 requests
 sentry-sdk
+social-auth-app-django
