@@ -35,6 +35,11 @@ cryptography==44.0.1
     #   authlib
     #   azure-storage-blob
     #   drf-oidc-auth
+    #   social-auth-core
+defusedxml==0.8.0rc2
+    # via
+    #   python3-openid
+    #   social-auth-core
 deprecation==2.1.0
     # via django-helusers
 django==4.2.18
@@ -58,6 +63,7 @@ django==4.2.18
     #   drf-spectacular
     #   graphene-django
     #   helsinki-profile-gdpr-api
+    #   social-auth-app-django
 django-anymail==12.0
     # via django-ilmoitin
 django-auditlog==3.0.0
@@ -149,6 +155,10 @@ markdown==3.7
     # via -r requirements.in
 markupsafe==3.0.2
     # via jinja2
+oauthlib==3.2.2
+    # via
+    #   requests-oauthlib
+    #   social-auth-core
 packaging==24.2
     # via deprecation
 pillow==11.0.0
@@ -166,7 +176,9 @@ pycountry==24.6.1
 pycparser==2.22
     # via cffi
 pyjwt==2.10.1
-    # via django-graphql-jwt
+    # via
+    #   django-graphql-jwt
+    #   social-auth-core
 python-dateutil==2.9.0.post0
     # via
     #   django-auditlog
@@ -174,6 +186,8 @@ python-dateutil==2.9.0.post0
     #   graphene
 python-jose==3.3.0
     # via django-helusers
+python3-openid==3.2.0
+    # via social-auth-core
 pytz==2024.2
     # via -r requirements.in
 pyyaml==6.0.2
@@ -191,6 +205,10 @@ requests==2.32.3
     #   django-anymail
     #   django-helusers
     #   drf-oidc-auth
+    #   requests-oauthlib
+    #   social-auth-core
+requests-oauthlib==2.0.0
+    # via social-auth-core
 rpds-py==0.22.3
     # via
     #   jsonschema
@@ -206,6 +224,10 @@ six==1.17.0
     #   graphene-file-upload
     #   promise
     #   python-dateutil
+social-auth-app-django==5.4.2
+    # via -r requirements.in
+social-auth-core==4.5.4
+    # via social-auth-app-django
 sqlparse==0.5.3
     # via django
 text-unidecode==1.3
