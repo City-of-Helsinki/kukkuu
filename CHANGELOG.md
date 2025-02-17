@@ -2,6 +2,24 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.11.0...kukkuu-v3.12.0) (2025-02-17)
+
+
+### Features
+
+* Enable Helsinki city employees' django-admin Keycloak login ([e83b768](https://github.com/City-of-Helsinki/kukkuu/commit/e83b7685b4740734883b7b3760ef0eaab6df1923))
+
+
+### Bug Fixes
+
+* Django-admin logout by not importing helusers SOCIAL_AUTH_PIPELINE ([2d14cbe](https://github.com/City-of-Helsinki/kukkuu/commit/2d14cbe34119a8fbce8216ea8f838724ae9a92b1))
+* Updating requirements by moving non-PyPI packages to own .txt file ([afb0d4f](https://github.com/City-of-Helsinki/kukkuu/commit/afb0d4f20e7fe3c84d99d730adc853121941ef93))
+
+
+### Dependencies
+
+* Bump cryptography from 44.0.0 to 44.0.1 ([6ee4a51](https://github.com/City-of-Helsinki/kukkuu/commit/6ee4a5190ed93eb799303c5cfaf25f01bf9145ae))
+
 ## [3.11.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.10.0...kukkuu-v3.11.0) (2025-02-06)
 
 
