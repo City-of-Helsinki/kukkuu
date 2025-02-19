@@ -6,7 +6,7 @@
 #
 asttokens==3.0.0
     # via stack-data
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   -c /app/requirements.txt
     #   requests
@@ -14,11 +14,11 @@ charset-normalizer==3.4.1
     # via
     #   -c /app/requirements.txt
     #   requests
-coverage[toml]==7.6.10
+coverage[toml]==7.6.12
     # via pytest-cov
 decorator==5.1.1
     # via ipython
-executing==2.1.0
+executing==2.2.0
     # via stack-data
 fastdiff==0.3.0
     # via snapshottest
@@ -30,7 +30,7 @@ idna==3.10
     #   requests
 iniconfig==2.0.0
     # via pytest
-ipython==8.31.0
+ipython==8.32.0
     # via -r requirements-dev.in
 jedi==0.19.2
     # via ipython
@@ -46,13 +46,13 @@ pexpect==4.9.0
     # via ipython
 pluggy==1.5.0
     # via pytest
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
-pygments==2.18.0
+pygments==2.19.1
     # via ipython
 pytest==8.3.4
     # via
@@ -61,7 +61,7 @@ pytest==8.3.4
     #   pytest-django
 pytest-cov==6.0.0
     # via -r requirements-dev.in
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
@@ -78,9 +78,9 @@ requests==2.32.3
     #   responses
 requests-mock==1.12.1
     # via -r requirements-dev.in
-responses==0.25.3
+responses==0.25.6
     # via -r requirements-dev.in
-ruff==0.8.4
+ruff==0.9.6
     # via -r requirements-dev.in
 six==1.17.0
     # via

@@ -8,21 +8,21 @@ asgiref==3.8.1
     # via
     #   django
     #   django-cors-headers
-attrs==24.3.0
+attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
-authlib==1.4.0
+authlib==1.4.1
     # via drf-oidc-auth
 azure-core==1.32.0
     # via
     #   azure-storage-blob
     #   django-storages
-azure-storage-blob==12.24.0
+azure-storage-blob==12.24.1
     # via django-storages
-cachetools==5.5.0
+cachetools==5.5.1
     # via django-helusers
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   requests
     #   sentry-sdk
@@ -38,11 +38,12 @@ cryptography==44.0.1
     #   social-auth-core
 defusedxml==0.8.0rc2
     # via
+    #   -r requirements.in
     #   python3-openid
     #   social-auth-core
 deprecation==2.1.0
     # via django-helusers
-django==4.2.18
+django==4.2.19
     # via
     #   -r requirements.in
     #   django-anymail
@@ -70,13 +71,13 @@ django-auditlog==3.0.0
     # via -r requirements.in
 django-cleanup==9.0.0
     # via -r requirements.in
-django-cors-headers==4.6.0
+django-cors-headers==4.7.0
     # via -r requirements.in
 django-csp==3.8
     # via -r requirements.in
-django-environ==0.11.2
+django-environ==0.12.0
     # via -r requirements.in
-django-filter==24.3
+django-filter==25.1
     # via -r requirements.in
 django-graphql-jwt==0.4.0
     # via -r requirements.in
@@ -96,7 +97,7 @@ django-parler==2.3
     # via
     #   -r requirements.in
     #   django-ilmoitin
-django-storages[azure]==1.14.4
+django-storages[azure]==1.14.5
     # via -r requirements.in
 djangorestframework==3.15.2
     # via
@@ -110,9 +111,9 @@ drf-spectacular==0.28.0
     # via -r requirements.in
 ecdsa==0.19.0
     # via python-jose
-factory-boy==3.3.1
+factory-boy==3.3.3
     # via -r requirements.in
-faker==33.1.0
+faker==36.1.1
     # via factory-boy
 graphene==3.4.3
     # via
@@ -124,7 +125,7 @@ graphene-django==3.2.2
     #   django-graphql-jwt
 graphene-file-upload==1.3.0
     # via -r requirements.in
-graphql-core==3.2.5
+graphql-core==3.2.6
     # via
     #   graphene
     #   graphene-django
@@ -161,13 +162,13 @@ oauthlib==3.2.2
     #   social-auth-core
 packaging==24.2
     # via deprecation
-pillow==11.0.0
+pillow==11.1.0
     # via -r requirements.in
 promise==2.3
     # via graphene-django
 psycopg2==2.9.10
     # via -r requirements.in
-pyasn1==0.6.1
+pyasn1==0.4.8
     # via
     #   python-jose
     #   rsa
@@ -182,19 +183,18 @@ pyjwt==2.10.1
 python-dateutil==2.9.0.post0
     # via
     #   django-auditlog
-    #   faker
     #   graphene
-python-jose==3.3.0
+python-jose==3.4.0
     # via django-helusers
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2024.2
+pytz==2025.1
     # via -r requirements.in
 pyyaml==6.0.2
     # via drf-spectacular
 qrcode==8.0
     # via -r requirements.in
-referencing==0.35.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -215,7 +215,7 @@ rpds-py==0.22.3
     #   referencing
 rsa==4.9
     # via python-jose
-sentry-sdk==2.19.2
+sentry-sdk==2.22.0
     # via -r requirements.in
 six==1.17.0
     # via
@@ -224,9 +224,9 @@ six==1.17.0
     #   graphene-file-upload
     #   promise
     #   python-dateutil
-social-auth-app-django==5.4.2
+social-auth-app-django==5.4.3
     # via -r requirements.in
-social-auth-core==4.5.4
+social-auth-core==4.5.6
     # via social-auth-app-django
 sqlparse==0.5.3
     # via django
@@ -236,8 +236,10 @@ typing-extensions==4.12.2
     # via
     #   azure-core
     #   azure-storage-blob
-    #   faker
     #   graphene
+    #   referencing
+tzdata==2025.1
+    # via faker
 uritemplate==4.1.1
     # via drf-spectacular
 urllib3==2.3.0
