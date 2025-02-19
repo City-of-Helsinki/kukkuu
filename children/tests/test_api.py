@@ -1,8 +1,8 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
-import pytz
 from auditlog.context import disable_auditlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -1297,7 +1297,7 @@ def test_get_available_events(
     # Past occurrences
     OccurrenceFactory.create_batch(
         3,
-        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=pytz.timezone(settings.TIME_ZONE)),
+        time=datetime(1970, 1, 1, 0, 0, 0, tzinfo=ZoneInfo(settings.TIME_ZONE)),
         event__project=project,
         venue=venue,
     )

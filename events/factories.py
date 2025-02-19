@@ -1,7 +1,7 @@
 import random
+from zoneinfo import ZoneInfo
 
 import factory
-import pytz
 from django.utils import timezone
 
 from children.factories import ChildFactory
@@ -70,7 +70,7 @@ class TixlyEventFactory(RandomExternalTicketSystemEventFactory):
 class OccurrenceFactory(
     SaveAfterPostGenerationMixin, factory.django.DjangoModelFactory
 ):
-    time = factory.Faker("date_time", tzinfo=pytz.timezone("Europe/Helsinki"))
+    time = factory.Faker("date_time", tzinfo=ZoneInfo("Europe/Helsinki"))
     event = factory.SubFactory(EventFactory)
     venue = factory.SubFactory(VenueFactory)
 

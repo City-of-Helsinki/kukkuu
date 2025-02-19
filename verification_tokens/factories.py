@@ -1,5 +1,6 @@
+from zoneinfo import ZoneInfo
+
 import factory.django
-import pytz
 from django.contrib.contenttypes.models import ContentType
 
 from users.factories import UserFactory
@@ -15,7 +16,7 @@ class VerificationTokenFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     key = VerificationToken.generate_key()
     expiry_date = factory.Faker(
-        "future_datetime", end_date="+15m", tzinfo=pytz.timezone("Europe/Helsinki")
+        "future_datetime", end_date="+15m", tzinfo=ZoneInfo("Europe/Helsinki")
     )
     is_active = True
 

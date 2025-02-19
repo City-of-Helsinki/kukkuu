@@ -76,17 +76,17 @@ snapshots['test_add_message[occurrences] 1'] = {
                     'edges': [
                         {
                             'node': {
-                                'time': '1970-12-29T14:27:50.629900+00:00'
+                                'time': '1970-12-29T14:07:50.629900+00:00'
                             }
                         },
                         {
                             'node': {
-                                'time': '1977-02-25T23:14:59.889967+00:00'
+                                'time': '1977-02-25T22:54:59.889967+00:00'
                             }
                         },
                         {
                             'node': {
-                                'time': '1997-09-11T01:32:17.610651+00:00'
+                                'time': '1997-09-11T00:12:17.610651+00:00'
                             }
                         }
                     ]
@@ -191,7 +191,7 @@ snapshots['test_messages_query_occurrences_filter 1'] = {
                             'edges': [
                                 {
                                     'node': {
-                                        'time': '1980-08-23T04:46:09.363315+00:00'
+                                        'time': '1980-08-23T04:26:09.363315+00:00'
                                     }
                                 }
                             ]
@@ -214,7 +214,7 @@ snapshots['test_messages_query_occurrences_filter 1'] = {
                             'edges': [
                                 {
                                     'node': {
-                                        'time': '1980-08-23T04:46:09.363315+00:00'
+                                        'time': '1980-08-23T04:26:09.363315+00:00'
                                     }
                                 }
                             ]
@@ -237,7 +237,7 @@ snapshots['test_messages_query_occurrences_filter 1'] = {
                             'edges': [
                                 {
                                     'node': {
-                                        'time': '2003-01-02T18:10:46.571751+00:00'
+                                        'time': '2003-01-02T17:50:46.571751+00:00'
                                     }
                                 }
                             ]
@@ -260,7 +260,7 @@ snapshots['test_messages_query_occurrences_filter 1'] = {
                             'edges': [
                                 {
                                     'node': {
-                                        'time': '2003-01-02T18:10:46.571751+00:00'
+                                        'time': '2003-01-02T17:50:46.571751+00:00'
                                     }
                                 }
                             ]

@@ -24,7 +24,6 @@ markdown
 Pillow
 psycopg2
 pycountry
-pytz
 qrcode
 requests
 sentry-sdk
