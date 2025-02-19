@@ -1,3 +1,4 @@
+defusedxml>=0.8.0rc2  # Allow pre-release version, please remove when stable up-to-date
 django-auditlog
 django-cleanup
 django-cors-headers
