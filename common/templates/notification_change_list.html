@@ -3,7 +3,7 @@
 
 {% block object-tools-items %}
 {{ block.super }}
-<li>
+<li> <!-- //NOSONAR No need to wrap with <ul> here, base template does that -->
     <a href="{% url 'admin:import-new-notifications' %}" class="btn btn-high btn-success">{% trans "Import new notifications from the spreadsheet" %}</a>
 </li>
 {% endblock %}
