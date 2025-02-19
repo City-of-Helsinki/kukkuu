@@ -540,7 +540,7 @@ Agree room laugh prevent make. Our very television beat at success decade.''',
                             'ticketSystem': {
                                 'type': 'INTERNAL'
                             },
-                            'time': '1970-12-29T14:27:50.629900+00:00',
+                            'time': '1970-12-29T14:07:50.629900+00:00',
                             'venue': {
                                 'translations': [
                                     {
@@ -794,7 +794,7 @@ Agree room laugh prevent make. Our very television beat at success decade.''',
                                         'ticketSystem': {
                                             'type': 'INTERNAL'
                                         },
-                                        'time': '1970-12-29T14:27:50.629900+00:00',
+                                        'time': '1970-12-29T14:07:50.629900+00:00',
                                         'venue': {
                                             'translations': [
                                                 {
@@ -858,7 +858,7 @@ Agree room laugh prevent make. Our very television beat at success decade.''',
                                         'ticketSystem': {
                                             'type': 'INTERNAL'
                                         },
-                                        'time': '2004-11-06T11:51:21.341823+00:00',
+                                        'time': '2004-11-06T11:31:21.341823+00:00',
                                         'venue': {
                                             'translations': [
                                                 {
@@ -913,7 +913,7 @@ If his their best. Election stay every something base.''',
                                         'ticketSystem': {
                                             'type': 'INTERNAL'
                                         },
-                                        'time': '1975-04-24T16:02:40.246613+00:00',
+                                        'time': '1975-04-24T15:42:40.246613+00:00',
                                         'venue': {
                                             'translations': [
                                                 {
@@ -1258,12 +1258,12 @@ snapshots['test_occurrences_filter_by_language 1'] = {
             'edges': [
                 {
                     'node': {
-                        'time': '1988-06-02T19:08:36.943149+00:00'
+                        'time': '1988-06-02T17:48:36.943149+00:00'
                     }
                 },
                 {
                     'node': {
-                        'time': '1998-01-14T19:16:11.484399+00:00'
+                        'time': '1998-01-14T18:56:11.484399+00:00'
                     }
                 }
             ]
@@ -1395,17 +1395,17 @@ snapshots['test_occurrences_filter_by_venue 1'] = {
             'edges': [
                 {
                     'node': {
-                        'time': '1971-09-03T06:53:22.223652+00:00'
+                        'time': '1971-09-03T06:33:22.223652+00:00'
                     }
                 },
                 {
                     'node': {
-                        'time': '1981-10-20T21:01:52.047649+00:00'
+                        'time': '1981-10-20T20:41:52.047649+00:00'
                     }
                 },
                 {
                     'node': {
-                        'time': '2017-01-24T18:52:46.127687+00:00'
+                        'time': '2017-01-24T18:32:46.127687+00:00'
                     }
                 }
             ]
