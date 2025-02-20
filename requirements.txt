@@ -167,7 +167,7 @@ promise==2.3
     # via graphene-django
 psycopg2==2.9.10
     # via -r requirements.in
-pyasn1==0.6.1
+pyasn1==0.4.8
     # via
     #   python-jose
     #   rsa
@@ -184,7 +184,7 @@ python-dateutil==2.9.0.post0
     #   django-auditlog
     #   faker
     #   graphene
-python-jose==3.3.0
+python-jose==3.4.0
     # via django-helusers
 python3-openid==3.2.0
     # via social-auth-core
