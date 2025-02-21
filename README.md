@@ -17,6 +17,7 @@
     - [Database](#database)
     - [Notification import](#notification-import)
     - [Daily running, Debugging](#daily-running-debugging)
+  - [Generating secret key for Django](#generating-secret-key-for-django)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
   - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -97,9 +98,9 @@ Optionally if you want to use pre-commit hooks:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.example` to `docker-compose.env` and modify it if needed.
-
-2. Run `docker compose up`
+1. Copy `docker-compose.env.example` to `docker-compose.env`
+2. Set value for `SECRET_KEY` to `docker-compose.env` with [instructions](#generating-secret-key-for-django)
+3. Run `docker compose up`
 
 If you do not have a super user / admin to administrate the API yet, you can create one with:
 - `docker exec -it kukkuu-backend python manage.py add_admin_user -u admin -p admin -e admin@example.com`
@@ -111,7 +112,8 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 
 ### Development without Docker
 
-Start by installing the [requirements](#requirements).
+Start by installing the [requirements](#requirements), and then setting a value for `SECRET_KEY` using
+[instructions](#generating-secret-key-for-django).
 
 #### Installing Python requirements
 
@@ -164,6 +166,28 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 - Run `python manage.py migrate`
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at http://localhost:8081
+
+### Generating secret key for Django
+
+Django needs a value for `SECRET_KEY` to start, and a default value for it has been intentionally left out for security
+purposes, see SonarCloud rule [secrets:S6687](https://rules.sonarsource.com/secrets/RSPEC-6687/) i.e. "Django secret
+keys should not be disclosed".
+
+You can generate a value for Django's [SECRET_KEY](https://docs.djangoproject.com/en/4.2/ref/settings/#secret-key)
+variable with Python & Django:
+```python
+from django.core.management.utils import get_random_secret_key
+get_random_secret_key()
+```
+
+or just Python (adapted from Django's
+[get_random_secret_key](https://github.com/django/django/blob/5.1.6/django/core/management/utils.py#L79C5-L84) &
+[get_random_string](https://github.com/django/django/blob/5.1.6/django/utils/crypto.py#L51-L62)):
+```python
+import secrets, string
+allowed_chars = string.ascii_lowercase + string.digits + "!@#$%^&*(-_=+)"
+"".join(secrets.choice(allowed_chars) for i in range(50))
+```
 
 ### Keeping Python requirements up to date
 
