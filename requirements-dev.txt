@@ -10,13 +10,21 @@ certifi==2025.1.31
     # via
     #   -c /app/requirements.txt
     #   requests
+cffi==1.17.1
+    # via
+    #   -c /app/requirements.txt
+    #   cryptography
 charset-normalizer==3.4.1
     # via
     #   -c /app/requirements.txt
     #   requests
 coverage[toml]==7.6.12
     # via pytest-cov
-decorator==5.1.1
+cryptography==44.0.2
+    # via
+    #   -c /app/requirements.txt
+    #   -r requirements-dev.in
+decorator==5.2.1
     # via ipython
 executing==2.2.0
     # via stack-data
@@ -30,8 +38,10 @@ idna==3.10
     #   requests
 iniconfig==2.0.0
     # via pytest
-ipython==8.32.0
+ipython==9.0.1
     # via -r requirements-dev.in
+ipython-pygments-lexers==1.1.1
+    # via ipython
 jedi==0.19.2
     # via ipython
 matplotlib-inline==0.1.7
@@ -52,9 +62,15 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
     # via stack-data
+pycparser==2.22
+    # via
+    #   -c /app/requirements.txt
+    #   cffi
 pygments==2.19.1
-    # via ipython
-pytest==8.3.4
+    # via
+    #   ipython
+    #   ipython-pygments-lexers
+pytest==8.3.5
     # via
     #   -r requirements-dev.in
     #   pytest-cov
@@ -80,7 +96,7 @@ requests-mock==1.12.1
     # via -r requirements-dev.in
 responses==0.25.6
     # via -r requirements-dev.in
-ruff==0.9.6
+ruff==0.9.9
     # via -r requirements-dev.in
 six==1.17.0
     # via
