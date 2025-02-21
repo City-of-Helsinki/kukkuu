@@ -15,6 +15,8 @@
     - [Database](#database)
     - [Notification import](#notification-import)
     - [Daily running, Debugging](#daily-running-debugging)
+  - [Generating secret key for Django](#generating-secret-key-for-django)
+  - [Getting secret for django-admin login](#getting-secret-for-django-admin-login)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
   - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -101,9 +103,10 @@ Optionally if you want to use pre-commit hooks:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.example` to `docker-compose.env`, then modify it as needed. At a minimum, ensure that `SOCIAL_AUTH_TUNNISTAMO_SECRET` is set using the secret from keyvault.
-
-2. Run `docker compose up`
+1. Copy `docker-compose.env.example` to `docker-compose.env`
+2. Set value for `SECRET_KEY` to `docker-compose.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
+3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+4. Run `docker compose up`
 
 If you do not have a super user / admin to administrate the API yet, you can create one with:
 
@@ -116,7 +119,9 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 
 ### Development without Docker
 
-Start by installing the [requirements](#requirements).
+1. Install [requirements](#requirements)
+2. Set value for `SECRET_KEY` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
+3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
 
 #### Installing Python requirements
 
@@ -168,6 +173,41 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 - Run `python manage.py migrate`
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at http://localhost:8081
+
+### Generating secret key for Django
+
+Django needs a value for [SECRET_KEY](https://docs.djangoproject.com/en/4.2/ref/settings/#secret-key) to start.
+
+For production, you should use a strong, long, randomly generated key.
+
+For local development, if you prefer, you can alternatively use a shorter, manually generated key.
+
+Here's how you can generate a value for `SECRET_KEY` using Python (Based on Django v5.1.6's
+[get_random_secret_key](https://github.com/django/django/blob/5.1.6/django/core/management/utils.py#L79C5-L84) &
+[get_random_string](https://github.com/django/django/blob/5.1.6/django/utils/crypto.py#L51-L62)):
+```python
+import secrets, string
+allowed_chars = string.ascii_lowercase + string.digits + "!@#$%^&*(-_=+)"
+"".join(secrets.choice(allowed_chars) for i in range(50))
+```
+
+### Getting secret for django-admin login
+
+To be able to log in to django-admin with Keycloak you need to set `SOCIAL_AUTH_TUNNISTAMO_SECRET`
+in your environment—it is for Keycloak even though it's named Tunnistamo. Here's how you can get a
+value for local development i.e. `kukkuu-django-admin-dev` client:
+
+- Go to City of Helsinki's Azure DevOps [kukkuu project](https://dev.azure.com/City-of-Helsinki/kukkuu)
+- Open `Pipelines > Library > development-kv` for the development keyvault library
+- Read `Key vault name` value
+- Open [Azure Portal](https://portal.azure.com/)
+- Search Azure Portal with the key vault name you just read, and open the found key vault
+- Open `Objects > Secrets`
+- Find `SOCIAL-AUTH-TUNNISTAMO-SECRET` (may need pressing `Load more`), and open it
+- Click on the hexadecimal current version value to open the secret's current version
+- Click on the "Copy to clipboard" icon after the `Secret value` to copy it to clipboard
+- Paste the value into your env file (`.env` or `docker-compose.env` depending on your setup)
+  as `SOCIAL_AUTH_TUNNISTAMO_SECRET=paste-the-copied-value-here`
 
 ### Keeping Python requirements up to date
 
