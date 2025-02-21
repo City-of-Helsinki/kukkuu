@@ -25,8 +25,7 @@ HELUSERS_PASSWORD_LOGIN_DISABLED=False
 
 # Django-admin Keycloak login related variables:
 SOCIAL_AUTH_TUNNISTAMO_KEY=kukkuu-django-admin-dev
-# Get secret from development-kv library → hki-CpsLjsaY-dev-kv keyvault → SOCIAL-AUTH-TUNNISTAMO-SECRET:
-# https://portal.azure.com/#@helsinginkaupunki.onmicrosoft.com/asset/Microsoft_Azure_KeyVault/Secret/https://hki-cpsljsay-dev-kv.vault.azure.net/secrets/SOCIAL-AUTH-TUNNISTAMO-SECRET
-SOCIAL_AUTH_TUNNISTAMO_SECRET=please-get-secret-from-keyvault
+# Get secret from keyvault, see README.md for instructions:
+SOCIAL_AUTH_TUNNISTAMO_SECRET=
 SOCIAL_AUTH_TUNNISTAMO_OIDC_ENDPOINT=https://tunnistus.test.hel.ninja/auth/realms/helsinki-tunnistus
 ```
