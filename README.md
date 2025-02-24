@@ -19,6 +19,7 @@
     - [Daily running, Debugging](#daily-running-debugging)
   - [Generating secret key for Django](#generating-secret-key-for-django)
   - [Getting secret for django-admin login](#getting-secret-for-django-admin-login)
+  - [Adding new files to repository](#adding-new-files-to-repository)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
   - [Code linting & formatting](#code-linting--formatting)
   - [Pre-commit hooks](#pre-commit-hooks)
@@ -102,7 +103,8 @@ Optionally if you want to use pre-commit hooks:
 1. Copy `docker-compose.env.example` to `docker-compose.env`
 2. Set value for `SECRET_KEY` to `docker-compose.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
 3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
-4. Run `docker compose up`
+4. **BE AWARE** of the extra care needed when [adding new files to repository](#adding-new-files-to-repository)
+5. Run `docker compose up`
 
 If you do not have a super user / admin to administrate the API yet, you can create one with:
 - `docker exec -it kukkuu-backend python manage.py add_admin_user -u admin -p admin -e admin@example.com`
@@ -117,6 +119,7 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 1. Install [requirements](#requirements)
 2. Set value for `SECRET_KEY` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
 3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+4. **BE AWARE** of the extra care needed when [adding new files to repository](#adding-new-files-to-repository)
 
 #### Installing Python requirements
 
@@ -205,6 +208,14 @@ value for local development i.e. `kukkuu-django-admin-dev` client:
 - Click on the "Copy to clipboard" icon after the `Secret value` to copy it to clipboard
 - Paste the value into your env file (`.env` or `docker-compose.env` depending on your setup)
   as `SOCIAL_AUTH_TUNNISTAMO_SECRET=paste-the-copied-value-here`
+
+### Adding new files to repository
+
+**BE AWARE** even when not developing with Docker:
+- You need to **update** the **copied files** in [Dockerfile](./Dockerfile) **when adding new files/dirs** to
+  repository, unless the file/dir you're adding is such that it is not needed in the Docker container at all.
+  Otherwise, it won't be copied to the Docker container, and won't affect Docker's development nor production stage.
+  And as the production deployment uses Docker, it will not work as expected.
 
 ### Keeping Python requirements up to date
 
