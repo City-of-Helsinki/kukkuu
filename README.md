@@ -97,7 +97,7 @@ Optionally if you want to use pre-commit hooks:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.example` to `docker-compose.env` and modify it if needed.
+1. Copy `docker-compose.env.example` to `docker-compose.env`, then modify it as needed. At a minimum, ensure that `SOCIAL_AUTH_TUNNISTAMO_SECRET` is set using the secret from keyvault.
 
 2. Run `docker compose up`
 
