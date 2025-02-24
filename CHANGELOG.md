@@ -2,6 +2,21 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.0...kukkuu-v3.12.1) (2025-02-24)
+
+
+### Bug Fixes
+
+* **security:** Upgrade all dependencies, incl. python-jose v3.3 → v3.4 ([6effbf6](https://github.com/City-of-Helsinki/kukkuu/commit/6effbf64326fb1eb58a1e2faf5b3fa452c64c68c))
+* **sonarcloud:** Ignore ul-wrapping of li with //NOSONAR, django does it ([82b09d2](https://github.com/City-of-Helsinki/kukkuu/commit/82b09d2a5962b0d29098b347573626e6df0623d2))
+* **sonarcloud:** Use None for verification_token_user_full_name w/o user ([35932bd](https://github.com/City-of-Helsinki/kukkuu/commit/35932bd635dafc22a32d0a594ec9a121d02c9ef6))
+* **sonarcloud:** Use zoneinfo.ZoneInfo instead of pytz.timezone ([d2937b8](https://github.com/City-of-Helsinki/kukkuu/commit/d2937b81877b6495cfb8812fb4dd2b459ffa08bb))
+
+
+### Documentation
+
+* Add mention to set secret from the keyvault ([e8f3537](https://github.com/City-of-Helsinki/kukkuu/commit/e8f3537d87771a69899312db4475335543376ae6))
+
 ## [3.12.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.11.0...kukkuu-v3.12.0) (2025-02-17)
 
 
