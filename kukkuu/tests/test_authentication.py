@@ -57,7 +57,18 @@ def set_authenticated_user(user):
         yield
 
 
-def graphql_request(live_server, query=MY_PROFILE_QUERY, headers=None):
+def graphql_request(live_server, query=MY_PROFILE_QUERY, headers: dict | None = None):
+    # Get CSRF token by making a GET request to the GraphQL endpoint,
+    # see https://docs.djangoproject.com/en/4.2/ref/csrf/ for CSRF protection details
+    client = requests.session()
+    client.get(live_server.url + "/graphql")
+    csrf_token = client.cookies["csrftoken"]
+
+    # Set the CSRF token to the headers
+    headers = headers or {}
+    headers["X-CSRFToken"] = csrf_token
+    headers["Cookie"] = f"csrftoken={csrf_token}"
+
     return requests.post(
         live_server.url + "/graphql", json={"query": query}, headers=headers
     )

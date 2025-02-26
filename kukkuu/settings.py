@@ -51,6 +51,7 @@ env = environ.Env(
     NOTIFICATION_SERVICE_API_URL=(str, "https://notification-service.hel.fi/v1/"),
     SENTRY_DSN=(str, ""),
     SENTRY_ENVIRONMENT=(str, ""),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     CORS_ALLOWED_ORIGINS=(list, []),
     CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     CORS_ORIGIN_ALLOW_ALL=(bool, False),
@@ -320,6 +321,7 @@ TEMPLATES = [
     }
 ]
 
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES")
 CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL")
