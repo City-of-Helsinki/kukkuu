@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.http import JsonResponse
 from django.urls import include, path, re_path
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView
 from helusers.admin_site import admin
 from rest_framework import routers
@@ -34,7 +34,6 @@ IS_GRAPHIQL_ENABLED = settings.ENABLE_GRAPHIQL or settings.DEBUG
     SCRIPT_SRC=settings.CSP_SCRIPT_SRC
     + ([CSP.UNSAFE_INLINE] if IS_GRAPHIQL_ENABLED else [])
 )
-@csrf_exempt
 def graphql_view(request, *args, **kwargs):
     return SentryGraphQLView.as_view(graphiql=IS_GRAPHIQL_ENABLED)(
         request, *args, **kwargs
@@ -68,6 +67,7 @@ urlpatterns = [
 #
 
 
+@require_http_methods(["GET", "HEAD"])
 def readiness(*args, **kwargs):
     response_json = {
         "status": "ok",

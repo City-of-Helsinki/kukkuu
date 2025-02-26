@@ -121,7 +121,24 @@ sentry_ignored_errors = (
 error_codes = {**error_codes_shared, **error_codes_kukkuu}
 
 
-class SentryGraphQLView(FileUploadGraphQLView):
+class FileUploadGraphQLViewWithCSRF(FileUploadGraphQLView):
+    """
+    FileUploadGraphQLView with CSRF token support
+    """
+
+    graphiql_template = "csrf_tokenized_graphiql.html"
+
+    def render_graphiql(self, request, **data):
+        """
+        Render GraphiQL interface with CSRF token and header name
+        """
+        # Set CSRF token and header name to be used in GraphiQL
+        data["csrf_token"] = request.META.get("CSRF_COOKIE")
+        data["csrf_header_name"] = "X-CSRFToken"
+        return super().render_graphiql(request, **data)
+
+
+class SentryGraphQLView(FileUploadGraphQLViewWithCSRF):
     def __init__(self, *args, **kwargs):
         super().__init__(
             validation_rules=[
