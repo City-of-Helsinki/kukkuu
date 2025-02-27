@@ -7,4 +7,4 @@
 # Because requirements-dev.in includes requirements.txt as a constraint
 # using "-c requirements.txt" an editable package can not be put into it
 # or its source file requirements.in.
--e git+https://github.com/City-of-Helsinki/django-auditlog-extra.git@bc5202cc4cd1bb6125874a624f1b4c8796ebc304#egg=django-auditlog-extra
+-e git+https://github.com/City-of-Helsinki/django-auditlog-extra.git@bff5fa3921d6821bebdd6be6c9fd20db39d32d54#egg=django-auditlog-extra
