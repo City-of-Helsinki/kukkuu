@@ -8,14 +8,12 @@ WORKDIR /app
 RUN mkdir /entrypoint
 
 COPY --chown=default:root requirements.txt /app/requirements.txt
-COPY --chown=default:root requirements-not-from-pypi.txt /app/requirements-not-from-pypi.txt
 COPY --chown=default:root requirements-prod.txt /app/requirements-prod.txt
 
 RUN yum update -y && yum install -y \
     nc \
     && pip install -U pip \
     && pip install --no-cache-dir -r /app/requirements.txt \
-    && pip install --no-cache-dir -r /app/requirements-not-from-pypi.txt \
     && pip install --no-cache-dir  -r /app/requirements-prod.txt
 
 COPY --chown=default:root docker-entrypoint.sh /entrypoint/docker-entrypoint.sh
