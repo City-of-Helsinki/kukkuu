@@ -2,8 +2,6 @@
 
 :baby: The Culture Kids (Kulttuurin kummilapset) API :violin:
 
-
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
@@ -49,7 +47,7 @@
 
 The Culture kids service consists from:
 
-- **[Kukkuu API](https://github.com/City-of-Helsinki/kukkuu):** The (this) backend service. 
+- **[Kukkuu API](https://github.com/City-of-Helsinki/kukkuu):** The (this) backend service.
 - **[Public UI](https://github.com/City-of-Helsinki/kukkuu-ui):** The frontend service where the kids can view and enrol to culture events.
 - **[Admin UI](https://github.com/City-of-Helsinki/kukkuu-admin):** A restricted UI where the events are maintained and published.
 - **[Headless CMS](https://github.com/City-of-Helsinki/headless-cms):** Content Management Service that provides dynamic pages and dynamic content for the public UI. It also provides content for the header and the footer. A React component library can be found from https://github.com/City-of-Helsinki/react-helsinki-headless-cms.
@@ -59,25 +57,30 @@ The Culture kids service consists from:
 ### Environments
 
 The API environments:
+
 - **Production environment:** https://kukkuu.api.hel.fi/graphql
 - **Staging environment:** https://kukkuu.api.stage.hel.ninja/graphql
 - **Testing environment:** https://kukkuu.api.test.hel.ninja/graphql
 
 The public client environments:
+
 - **Production environment:** https://kummilapset.hel.fi/
 - **Staging environment:** https://kukkuu-ui.stage.hel.ninja/
 - **Testing environment:** https://kukkuu-ui.test.hel.ninja/
 
 The admin client environments:
+
 - **Production environment:** https://kummilapset-admin.hel.fi/
 - **Staging environment:** https://kukkuu-admin.stage.hel.ninja/
 - **Testing environment:** https://kukkuu-admin.test.hel.ninja/
 
 The headless CMS environments:
+
 - **Production environment:** https://kukkuu.content.api.hel.fi/graphql
 - **Testing environment:** https://kukkuu.app-staging.hkih.hion.dev/graphql
 
-The notification service environments: 
+The notification service environments:
+
 - **Production environment:** https://kuva-notification-service.api.hel.fi/
 - **Staging environment:** https://kuva-notification-service.api.stage.hel.ninja/
 - **Testing environment:** https://kuva-notification-service.api.test.hel.ninja/
@@ -92,6 +95,7 @@ Compatibility defined by [Dockerfile](./Dockerfile) and [compose.yaml](./compose
 - Python 3.11
 
 Optionally if you want to use pre-commit hooks:
+
 - Node.js 20 for using pre-commit hook's `doctoc`
   - Has been tested with Node.js 20, might work with other versions too
 
@@ -102,6 +106,7 @@ Optionally if you want to use pre-commit hooks:
 2. Run `docker compose up`
 
 If you do not have a super user / admin to administrate the API yet, you can create one with:
+
 - `docker exec -it kukkuu-backend python manage.py add_admin_user -u admin -p admin -e admin@example.com`
   - In case you have running container already
 - `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`
@@ -116,7 +121,6 @@ Start by installing the [requirements](#requirements).
 #### Installing Python requirements
 
 - Run `pip install -r requirements.txt` (base requirements)
-- Run `pip install -r requirements-not-from-pypi.txt` (packages not available from PyPI)
 - Run `pip install -r requirements-dev.txt` (development requirements)
 
 #### Database
@@ -149,7 +153,7 @@ The emails notifications that Kukkuu sends can be imported from a Google Sheets 
 1. run `python manage.py import_notifications` to import and update all the notifications, or
 2. use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
 
-The notification templates primary import source is https://docs.google.com/spreadsheets/d/1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M. 
+The notification templates primary import source is https://docs.google.com/spreadsheets/d/1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M.
 
 The environment variable should then be set to:
 
@@ -225,7 +229,6 @@ After that, linting and formatting hooks will run against all changed files befo
 
 Git commit message linting is configured in [.gitlint](./.gitlint)
 
-
 ## Application programming interfaces
 
 ### GraphQL API Documentation
@@ -240,49 +243,47 @@ The API requires authentication via HTTP basic authentication, or alternatively 
 
 API documentation of the report API can be viewed at http://localhost:8081/reports/schema/redoc/.
 
-
 ### GDPR API data export
 
 The [GDPR API data export and API tester documentation](./gdpr/README.MD).
-
-
 
 ## Event Ticketing
 
 Kukkuu handles event ticketing in two ways: **internal** and **external**. This allows flexibility for managing different types of events and integrating with existing ticketing systems.
 
-A child is always associated with a specific "year project" based on their birth year. Events are also linked to these year projects.  Typically, a child can attend 2-3 events per calendar year, but this can be configured per project.
+A child is always associated with a specific "year project" based on their birth year. Events are also linked to these year projects. Typically, a child can attend 2-3 events per calendar year, but this can be configured per project.
 
 ### Internal Ticketing
 
 For events managed internally, Kukkuu provides the following features:
 
-* **Enrolment Management:**  
-    * Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
-    * Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
-* **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API.  Admins have access only to events within their assigned projects.
-* **QR Code Ticket Verification:**
-    * Enrolment confirmation emails include a QR code for easy ticket verification.
-    * This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
+- **Enrolment Management:**
+  - Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
+  - Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
+- **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API. Admins have access only to events within their assigned projects.
+- **QR Code Ticket Verification:**
 
-    ```
-    KUKKUU_HASHID_SALT=your_secret_salt
-    KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
-    ```
+  - Enrolment confirmation emails include a QR code for easy ticket verification.
+  - This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
+
+  ```
+  KUKKUU_HASHID_SALT=your_secret_salt
+  KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
+  ```
 
 ### External Ticketing
 
 Kukkuu integrates with the following external ticketing systems:
 
-* Ticketmaster
-* Lippu.fi
-* Tixly
+- Ticketmaster
+- Lippu.fi
+- Tixly
 
 When an event uses an external ticketing system:
 
-* **Coupon-Based Enrolment:** Kukkuu provides pre-stored coupon codes that can be used to "purchase" tickets through the external system.
-* **No Internal Enrolment:** Instead of creating an `Enrolment` instance, Kukkuu links a coupon code to the child when they are enrolled in an externally ticketed event.
-* **Ticket Management:**  Enrolment details are managed within the external ticketing system, not within Kukkuu.
+- **Coupon-Based Enrolment:** Kukkuu provides pre-stored coupon codes that can be used to "purchase" tickets through the external system.
+- **No Internal Enrolment:** Instead of creating an `Enrolment` instance, Kukkuu links a coupon code to the child when they are enrolled in an externally ticketed event.
+- **Ticket Management:** Enrolment details are managed within the external ticketing system, not within Kukkuu.
 
 **Managing Coupon Codes:**
 
@@ -300,8 +301,7 @@ Kukkuu uses Keycloak, an open-source identity and access management solution, fo
 
 **Keycloak Setup:**
 
-*   **Local Development:** You can configure Keycloak for local development by following the instructions in [this guide](./docs/setup-keycloak.md). This allows you to test authentication flows without relying on external services.
-
+- **Local Development:** You can configure Keycloak for local development by following the instructions in [this guide](./docs/setup-keycloak.md). This allows you to test authentication flows without relying on external services.
 
 **Browser Testing and Authorization:**
 
@@ -314,7 +314,7 @@ Protecting sensitive data while enabling effective browser testing requires a se
 
 **How it works:**
 
-1.  **Shared Secret:**  The client (browser) and the Kukkuu API share a secret key.
+1.  **Shared Secret:** The client (browser) and the Kukkuu API share a secret key.
 2.  **JWT Signing:** The client uses the shared secret to sign a JWT, effectively asserting its identity for testing purposes.
 3.  **API Configuration:** The API is configured to trust JWTs signed with the shared secret, bypassing the standard Keycloak authentication flow for browser testing.
 
@@ -322,14 +322,12 @@ This approach allows for realistic browser testing while safeguarding sensitive 
 
 **Important Notes:**
 
-*   Ensure the shared secret used for browser testing is kept secure and separate from production secrets.
-*   For production environments, Kukkuu relies on standard Keycloak authentication flows through the Helsinki-Profile.
-
+- Ensure the shared secret used for browser testing is kept secure and separate from production secrets.
+- For production environments, Kukkuu relies on standard Keycloak authentication flows through the Helsinki-Profile.
 
 **Further Information:**
 
-*   For detailed instructions on setting up Tunnistamo (the previous authentication system) and Helsinki-Profile, refer to the [GDPR API documentation](./gdpr/README.md).
-
+- For detailed instructions on setting up Tunnistamo (the previous authentication system) and Helsinki-Profile, refer to the [GDPR API documentation](./gdpr/README.md).
 
 ## Audit logging
 
@@ -466,7 +464,6 @@ There's also a CLI for debugging and manually running releases available for rel
 When a Release-Please pull request is merged and a version tag is created (or a proper tag name for a commit is manually created), this tag will be picked by Azure pipeline, which then triggers a new deployment to staging. From there, the deployment needs to be manually approved to allow it to proceed to the production environment.
 
 The tag name is defined in the [azure-pipelines-release.yml](./azure-pipelines-release.yml).
-
 
 ## Issues board
 
