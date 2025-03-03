@@ -50,3 +50,50 @@ class CSP:
     NONE = "'none'"
     UNSAFE_INLINE = "'unsafe-inline'"
     UNSAFE_EVAL = "'unsafe-eval'"
+
+
+class PostgresSslMode:
+    """
+    PostgreSQL database connection's SSL mode values.
+
+    Documentation copied from https://www.postgresql.org/docs/13/libpq-connect.html
+
+    For a detailed description of how these modes work, see PostgreSQL documentation
+    at https://www.postgresql.org/docs/13/libpq-ssl.html
+
+    "This option determines whether or with what priority a secure SSL TCP/IP
+    connection will be negotiated with the server. There are six modes:
+
+    disable
+        only try a non-SSL connection
+
+    allow
+        first try a non-SSL connection; if that fails, try an SSL connection
+
+    prefer (default)
+        first try an SSL connection; if that fails, try a non-SSL connection
+
+    require
+        only try an SSL connection. If a root CA file is present, verify the
+        certificate in the same way as if verify-ca was specified
+
+    verify-ca
+        only try an SSL connection, and verify that the server certificate is
+        issued by a trusted certificate authority (CA)
+
+    verify-full
+        only try an SSL connection, verify that the server certificate is issued
+        by a trusted CA and that the requested server host name matches that in
+        the certificate"
+    """
+
+    DISABLE = "disable"
+    ALLOW = "allow"
+    PREFER = "prefer"
+    REQUIRE = "require"
+    VERIFY_CA = "verify-ca"
+    VERIFY_FULL = "verify-full"
+
+    @staticmethod
+    def get_default():
+        return PostgresSslMode.PREFER

@@ -12,7 +12,7 @@ from jose import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.types import Event, Hint
 
-from kukkuu.consts import CSP
+from kukkuu.consts import CSP, PostgresSslMode
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
@@ -36,7 +36,12 @@ env = environ.Env(
     STATIC_URL=(str, "/static/"),
     ALLOWED_HOSTS=(list, []),
     USE_X_FORWARDED_HOST=(bool, False),
-    DATABASE_URL=(str, "postgres://kukkuu:kukkuu@localhost/kukkuu"),
+    POSTGRES_DB=(str, "kukkuu"),
+    POSTGRES_HOST=(str, "localhost"),
+    POSTGRES_PASSWORD=(str, ""),
+    POSTGRES_PORT=(int, 5432),
+    POSTGRES_USER=(str, "kukkuu"),
+    POSTGRES_SSLMODE=(str, PostgresSslMode.get_default()),
     CACHE_URL=(str, "locmemcache://"),
     MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
     MAILER_LOCK_PATH=(str, ""),
@@ -121,7 +126,30 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST")
 
-DATABASES = {"default": env.db()}
+_db_env_variables = [
+    "POSTGRES_DB",
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_HOST",
+    "POSTGRES_PORT",
+]
+
+# Make sure that all required database settings are set
+for db_env_variable in _db_env_variables:
+    if not env(db_env_variable):
+        raise ImproperlyConfigured(f"The {db_env_variable} setting must not be empty.")
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env.str("POSTGRES_DB"),
+        "USER": env.str("POSTGRES_USER"),
+        "PASSWORD": env.str("POSTGRES_PASSWORD"),
+        "HOST": env.str("POSTGRES_HOST"),
+        "PORT": env.int("POSTGRES_PORT"),
+        "OPTIONS": {"sslmode": env.str("POSTGRES_SSLMODE")},
+    }
+}
 
 CACHES = {"default": env.cache()}
 

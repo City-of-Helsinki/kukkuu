@@ -10,7 +10,7 @@ class Command(BaseCommand):
             "-u", "--username", type=str, help="Username", default="admin"
         )
         parser.add_argument(
-            "-p", "--password", type=str, help="Password", default="admin"
+            "-p", "--password", type=str, help="Password", required=True
         )
         parser.add_argument(
             "-e", "--email", type=str, help="Email", default="admin@example.com"

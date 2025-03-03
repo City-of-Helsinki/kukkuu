@@ -12,9 +12,10 @@
   - [Development with Docker](#development-with-docker)
   - [Development without Docker](#development-without-docker)
     - [Installing Python requirements](#installing-python-requirements)
-    - [Database](#database)
+    - [Setting up database](#setting-up-database)
     - [Notification import](#notification-import)
     - [Daily running, Debugging](#daily-running-debugging)
+  - [Setting up environment variables](#setting-up-environment-variables)
   - [Generating secret key for Django](#generating-secret-key-for-django)
   - [Getting secret for django-admin login](#getting-secret-for-django-admin-login)
   - [Keeping Python requirements up to date](#keeping-python-requirements-up-to-date)
@@ -103,53 +104,68 @@ Optionally if you want to use pre-commit hooks:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.example` to `docker-compose.env`
-2. Set value for `SECRET_KEY` to `docker-compose.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
-3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
-4. Run `docker compose up`
+1. [Set up environment variables](#setting-up-environment-variables)
+2. Run `docker compose up`
+3. [Create superuser](https://docs.djangoproject.com/en/4.2/ref/django-admin/#createsuperuser) to the API (optional):
+    ```bash
+    docker exec -it kukkuu-backend python manage.py createsuperuser
+    ```
+4. [Import notifications](#notification-import) (optional)
 
-If you do not have a super user / admin to administrate the API yet, you can create one with:
-
-- `docker exec -it kukkuu-backend python manage.py add_admin_user -u admin -p admin -e admin@example.com`
-  - In case you have running container already
-- `docker compose run django python manage.py add_admin_user -u admin -p admin -e admin@example.com`
-  - In case you don't have a running container yet
-
-The project is now running at http://localhost:8081 and using public Keycloak test environment for authentication.
+The project is now running at http://localhost:8081 using public Keycloak test environment for authentication.
 
 ### Development without Docker
 
 1. Install [requirements](#requirements)
-2. Set value for `SECRET_KEY` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
-3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+2. [Set up environment variables](#setting-up-environment-variables)
+3. [Install Python requirements](#installing-python-requirements)
+4. [Set up database](#setting-up-database)
+5. Run database migrations with `python manage.py migrate`
+6. [Import notifications](#notification-import) (optional)
+7. Run the development server with `python manage.py runserver localhost:8081`
+
+The project is now running at http://localhost:8081 using public Keycloak test environment for authentication.
 
 #### Installing Python requirements
 
 - Run `pip install -r requirements.txt` (base requirements)
 - Run `pip install -r requirements-dev.txt` (development requirements)
 
-#### Database
+#### Setting up database
 
-To setup a database compatible with default database settings:
+To set up a database compatible with default database settings:
 
-Create user and database
+1. Create database user using [createuser](https://www.postgresql.org/docs/current/app-createuser.html):
+    ```bash
+    sudo -u postgres createuser -P -R -S kukkuu  # use password you set to POSTGRES_PASSWORD
+    ```
+    - Where `-P` is for password prompt, `-R` is for no create role privileges,
+      `-S` is for no superuser privileges, and the last argument is the username.
 
-    sudo -u postgres createuser -P -R -S kukkuu  # use password `kukkuu`
+
+2. Create database using [createdb](https://www.postgresql.org/docs/current/app-createdb.html):
+    ```bash
     sudo -u postgres createdb -O kukkuu kukkuu
+    ```
+    - Where `-O` is for the owner, and the last argument is the database name.
 
-Allow user to create test database
 
+3. Allow user to create test database:
+    ```bash
     sudo -u postgres psql -c "ALTER USER kukkuu CREATEDB;"
+    ```
 
-Add default languages (optional)
-
+4. Add default languages (optional):
+    ```bash
     python manage.py add_languages --default
+    ```
 
 **NOTE:** A few of the default languages may not have a properly translated name in all languages.
 
-Add admin user (optional)
-
-    python manage.py add_admin_user -u admin -p admin -e admin@example.com
+5. Add admin user (optional):
+    ```bash
+    python manage.py createsuperuser
+    ```
 
 #### Notification import
 
@@ -168,11 +184,21 @@ KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 
 #### Daily running, Debugging
 
-- Create `.env` file: `touch .env`
-- Set the `DEBUG` environment variable to `1`.
+- Make sure `DEBUG` environment variable is set to `1` in `.env`
 - Run `python manage.py migrate`
 - Run `python manage.py runserver localhost:8081`
 - The project is now running at http://localhost:8081
+
+### Setting up environment variables
+
+1. Copy `.env.example` to `.env`
+2. Set values for required environment variables to `.env`:
+   - Set value for `POSTGRES_PASSWORD` using any password you want
+   - Set value for `KUKKUU_HASHID_SALT` using any at least 5 character length alphanumeric string
+   - Set value for `SECRET_KEY` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
+   - Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+3. If you're not using Docker:
+   - Set `POSTGRES_HOST` to `localhost` in `.env`
 
 ### Generating secret key for Django
 
