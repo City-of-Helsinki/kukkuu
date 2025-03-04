@@ -1,4 +1,3 @@
-import random
 from zoneinfo import ZoneInfo
 
 import factory
@@ -42,14 +41,12 @@ class EventFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
-def get_external_ticket_system():
-    "Return a random external ticket system from available choices"
-    return random.choice(list(zip(*Event.EXTERNAL_TICKET_SYSTEM_CHOICES))[0])
-
-
 class RandomExternalTicketSystemEventFactory(EventFactory):
     published_at = factory.LazyFunction(lambda: timezone.now())
-    ticket_system = factory.LazyFunction(get_external_ticket_system)
+    ticket_system = factory.Faker(
+        "random_element",
+        elements=[choice[0] for choice in Event.EXTERNAL_TICKET_SYSTEM_CHOICES],
+    )
     ticket_system_url = factory.Faker("url")
     capacity_per_occurrence = None
     duration = None

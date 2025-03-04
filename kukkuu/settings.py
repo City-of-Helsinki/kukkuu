@@ -1,6 +1,8 @@
 import os
 import subprocess
+import tempfile
 from datetime import datetime
+from pathlib import Path
 
 import environ
 import sentry_sdk
@@ -34,10 +36,10 @@ env = environ.Env(
     STATIC_URL=(str, "/static/"),
     ALLOWED_HOSTS=(list, []),
     USE_X_FORWARDED_HOST=(bool, False),
-    DATABASE_URL=(str, "postgres://kukkuu:kukkuu@localhost/kukkuu"),
+    DATABASE_URL=(str, ""),
     CACHE_URL=(str, "locmemcache://"),
     MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
-    MAILER_LOCK_PATH=(str, "/tmp/mailer_lockfile"),
+    MAILER_LOCK_PATH=(str, ""),
     DEFAULT_FROM_EMAIL=(str, "kukkuu@example.com"),
     DEFAULT_SMS_SENDER=(str, "Hel.fi"),
     ILMOITIN_TRANSLATED_FROM_EMAIL=(dict, {}),
@@ -110,8 +112,11 @@ BASE_DIR = str(checkout_dir)
 
 DEBUG = env.bool("DEBUG")
 SECRET_KEY = env.str("SECRET_KEY")
-if DEBUG and not SECRET_KEY:
-    SECRET_KEY = "xxx"
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "The SECRET_KEY setting must not be empty. "
+        "See README.md for instructions how to generate a new secret key."
+    )
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST")
@@ -130,8 +135,22 @@ if env("MAIL_MAILGUN_KEY"):
     }
 EMAIL_BACKEND = "mailer.backend.DbBackend"
 MAILER_EMAIL_BACKEND = env.str("MAILER_EMAIL_BACKEND")
+
+_tmp_mailer_dir = None
 if env("MAILER_LOCK_PATH"):
     MAILER_LOCK_PATH = env.str("MAILER_LOCK_PATH")
+else:
+    # Create a temporary directory for mailer lock file.
+    # Stored as a module-level variable to keep the TemporaryDirectory instance
+    # alive for the entire process lifetime.
+    #
+    # From https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryDirectory
+    # "This class securely creates a temporary directory" and
+    # "On completion of the context or destruction of the temporary directory object,
+    # the newly created temporary directory and all its contents are removed from
+    # the filesystem."
+    _tmp_mailer_dir = tempfile.TemporaryDirectory(prefix="kukkuu-mailer-")
+    MAILER_LOCK_PATH = Path(_tmp_mailer_dir.name) / "mailer_lockfile"
 
 ILMOITIN_TRANSLATED_FROM_EMAIL = env("ILMOITIN_TRANSLATED_FROM_EMAIL")
 ILMOITIN_QUEUE_NOTIFICATIONS = env("ILMOITIN_QUEUE_NOTIFICATIONS")

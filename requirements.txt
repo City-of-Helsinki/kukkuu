@@ -12,7 +12,7 @@ attrs==25.1.0
     # via
     #   jsonschema
     #   referencing
-authlib==1.4.1
+authlib==1.5.1
     # via drf-oidc-auth
 azure-core==1.32.0
     # via
@@ -20,7 +20,7 @@ azure-core==1.32.0
     #   django-storages
 azure-storage-blob==12.24.1
     # via django-storages
-cachetools==5.5.1
+cachetools==5.5.2
     # via django-helusers
 certifi==2025.1.31
     # via
@@ -30,7 +30,7 @@ cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.1
     # via requests
-cryptography==44.0.1
+cryptography==44.0.2
     # via
     #   authlib
     #   azure-storage-blob
@@ -212,7 +212,7 @@ requests==2.32.3
     #   social-auth-core
 requests-oauthlib==2.0.0
     # via social-auth-core
-rpds-py==0.22.3
+rpds-py==0.23.1
     # via
     #   jsonschema
     #   referencing

@@ -2,10 +2,8 @@ services:
     postgres:
         image: postgres:13
         restart: on-failure
-        environment:
-            POSTGRES_USER: kukkuu
-            POSTGRES_PASSWORD: kukkuu
-            POSTGRES_DB: kukkuu
+        env_file:
+            - .env  # For POSTGRES_USER, POSTGRES_PASSWORD and POSTGRES_DB
         ports:
             - 5434:5432
         volumes:
@@ -15,13 +13,9 @@ services:
     django:
         build:
             context: .
-            target: ${DOCKER_TARGET:-development}
+            target: ${DOCKER_TARGET:-development}  # stage of Dockerfile to build
         env_file:
-            - docker-compose.env
-        environment:
-            DATABASE_URL: postgres://kukkuu:kukkuu@kukkuu-db/kukkuu
-            DATABASE_HOST: kukkuu-db.helsinki
-            SKIP_DATABASE_CHECK: 1
+            - .env
         volumes:
             - .:/app
         ports:

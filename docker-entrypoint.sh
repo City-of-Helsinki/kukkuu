@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# -z for empty / not assigned variable or -o to check whether the value is 0 (=should be skipped)
+# -z for empty / not assigned variable or -o to check whether the value is 0 (=should not be skipped)
 if [ -z "$SKIP_DATABASE_CHECK" -o "$SKIP_DATABASE_CHECK" = "0" ]; then
   until nc -z -v -w30 "$DATABASE_HOST" 5432
   do
