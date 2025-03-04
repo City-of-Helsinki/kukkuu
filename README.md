@@ -103,9 +103,9 @@ Optionally if you want to use pre-commit hooks:
 
 ### Development with Docker
 
-1. Copy `docker-compose.env.example` to `docker-compose.env`
-2. Set value for `SECRET_KEY` to `docker-compose.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
-3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+1. Copy `.env.example` to `.env`
+2. Set value for `SECRET_KEY` to `.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
+3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` to `.env` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
 4. Run `docker compose up`
 
 If you do not have a super user / admin to administrate the API yet, you can create one with:
@@ -120,8 +120,10 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 ### Development without Docker
 
 1. Install [requirements](#requirements)
-2. Set value for `SECRET_KEY` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
-3. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+2. Copy `.env.example` to `.env`
+3. Set value for `SECRET_KEY` to `.env` with [Generating secret key for Django](#generating-secret-key-for-django) instructions
+4. Set value for `SOCIAL_AUTH_TUNNISTAMO_SECRET` to `.env` with [Getting secret for django admin login](#getting-secret-for-django-admin-login) instructions
+5. Modify `DATABASE_URL` and `DATABASE_HOST` in your `.env` file based on where your PostgreSQL database is set up
 
 #### Installing Python requirements
 
@@ -206,8 +208,7 @@ value for local development i.e. `kukkuu-django-admin-dev` client:
 - Find `SOCIAL-AUTH-TUNNISTAMO-SECRET` (may need pressing `Load more`), and open it
 - Click on the hexadecimal current version value to open the secret's current version
 - Click on the "Copy to clipboard" icon after the `Secret value` to copy it to clipboard
-- Paste the value into your env file (`.env` or `docker-compose.env` depending on your setup)
-  as `SOCIAL_AUTH_TUNNISTAMO_SECRET=paste-the-copied-value-here`
+- Paste the value into your `.env` file as `SOCIAL_AUTH_TUNNISTAMO_SECRET=paste-the-copied-value-here`
 
 ### Keeping Python requirements up to date
 
