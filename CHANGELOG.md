@@ -2,6 +2,29 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.0...kukkuu-v3.12.1) (2025-03-05)
+
+
+### Bug Fixes
+
+* **keycloak:** Use helusers.defaults.SOCIAL_AUTH_PIPELINE ([53dde11](https://github.com/City-of-Helsinki/kukkuu/commit/53dde1146834c96395c603fe03bd5973b4ead8f1))
+* **security:** Upgrade all dependencies, incl. python-jose v3.3 → v3.4 ([6effbf6](https://github.com/City-of-Helsinki/kukkuu/commit/6effbf64326fb1eb58a1e2faf5b3fa452c64c68c))
+* **sonarcloud:** Dockerfile docker:S6504 security hotspots ([b7d1645](https://github.com/City-of-Helsinki/kukkuu/commit/b7d1645114190138d86504eee6e826021b6e41c1))
+* **sonarcloud:** Don't hardcode debug mode SECRET_KEY, update README ([1431d6b](https://github.com/City-of-Helsinki/kukkuu/commit/1431d6b3dc71375d8ad482a14fd4b624362350ad))
+* **sonarcloud:** Generate PEM key pair in tests instead of hardcoding it ([bb127eb](https://github.com/City-of-Helsinki/kukkuu/commit/bb127ebade1bb712637c9617d3c32ed1230a914e))
+* **sonarcloud:** Ignore ul-wrapping of li with //NOSONAR, django does it ([82b09d2](https://github.com/City-of-Helsinki/kukkuu/commit/82b09d2a5962b0d29098b347573626e6df0623d2))
+* **sonarcloud:** Move DATABASE_URL default to .env.example ([0461678](https://github.com/City-of-Helsinki/kukkuu/commit/04616781f075d3f4da32dff2ef74459b1b0679dc))
+* **sonarcloud:** Only allow safe methods for readiness endpoint ([085336c](https://github.com/City-of-Helsinki/kukkuu/commit/085336ce0663d171cb5489a452e1e5b8d5c7fb49))
+* **sonarcloud:** Use faker's random_element, not random.choice ([c4f7f0a](https://github.com/City-of-Helsinki/kukkuu/commit/c4f7f0a39a25919ca2c39c6b82fd7d3b0a17b1fe))
+* **sonarcloud:** Use None for verification_token_user_full_name w/o user ([35932bd](https://github.com/City-of-Helsinki/kukkuu/commit/35932bd635dafc22a32d0a594ec9a121d02c9ef6))
+* **sonarcloud:** Use tempfile for creating MAILER_LOCK_PATH default ([2b4e89f](https://github.com/City-of-Helsinki/kukkuu/commit/2b4e89fde5316cf04adc81ab2e889873ed382228))
+* **sonarcloud:** Use zoneinfo.ZoneInfo instead of pytz.timezone ([d2937b8](https://github.com/City-of-Helsinki/kukkuu/commit/d2937b81877b6495cfb8812fb4dd2b459ffa08bb))
+
+
+### Documentation
+
+* Add mention to set secret from the keyvault ([e8f3537](https://github.com/City-of-Helsinki/kukkuu/commit/e8f3537d87771a69899312db4475335543376ae6))
+
 ## [3.12.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.11.0...kukkuu-v3.12.0) (2025-02-17)
 
 
