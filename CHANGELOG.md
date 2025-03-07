@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.1...kukkuu-v3.12.2) (2025-03-07)
+
+
+### Bug Fixes
+
+* Disable browser tests by default in .env.example ([3e7ef79](https://github.com/City-of-Helsinki/kukkuu/commit/3e7ef791e8c44cc0f3b653f6e498dd89cd5b8230))
+* **security:** Update dependencies to latest ([69e42ba](https://github.com/City-of-Helsinki/kukkuu/commit/69e42ba067874cfcd5107a29fbeb461ed505a048))
+
 ## [3.12.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.0...kukkuu-v3.12.1) (2025-03-05)
 
 
