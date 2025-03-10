@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.2...kukkuu-v3.12.3) (2025-03-10)
+
+
+### Bug Fixes
+
+* Logout by upgrading deps to latest, incl. django-helusers v0.13.3 ([cf4cd41](https://github.com/City-of-Helsinki/kukkuu/commit/cf4cd41a04fcfe16510abae84d2b6ff8d6374566))
+
 ## [3.12.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.1...kukkuu-v3.12.2) (2025-03-07)
 
 
