@@ -38,7 +38,7 @@ idna==3.10
     #   requests
 iniconfig==2.0.0
     # via pytest
-ipython==9.0.1
+ipython==9.0.2
     # via -r requirements-dev.in
 ipython-pygments-lexers==1.1.1
     # via ipython
@@ -96,7 +96,7 @@ requests-mock==1.12.1
     # via -r requirements-dev.in
 responses==0.25.6
     # via -r requirements-dev.in
-ruff==0.9.9
+ruff==0.9.10
     # via -r requirements-dev.in
 six==1.17.0
     # via
