@@ -33,13 +33,14 @@ resources:
     # Azure DevOps repository
     - repository: kukkuu-pipelines
       type: git
+      ref: refs/heads/ansible_automation_update
       # Azure DevOps project/repository
       name: kukkuu/kukkuu-pipelines
 
 extends:
   # Filename in Azure DevOps Repository
   template: components/kukkuu-api/pipelines/kukkuu-api-dev.yml@kukkuu-pipelines
-  # parameters:
+  parameters:
     # Application build arguments and config map values as key value pairs.
     # Does not contain all buildArguments or configMap values, the rest located in kukkuu-pipelines
     # The values here will override the values defined in the kukkuu-pipelines repository
