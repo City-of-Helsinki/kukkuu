@@ -2,14 +2,9 @@
 # an update to the specified branches or you push specified tags.
 trigger:
   batch: true
-  branches:
+  tags:
     include:
-      - master
-  paths:
-    exclude:
-      - "*release-please*"
-      - "**/*.md"
-      - ".github/"
+      - kukkuu-v*
 
 # Pull request (PR) triggers cause a pipeline to run whenever a pull request is
 # opened with one of the specified target branches, or when updates are made to
@@ -25,13 +20,6 @@ pr: none
 # By default, use self-hosted agents
 pool: Default
 
-# Image tag name for Fuse projects
-#parameters:
-#- name: imagetag
-#  displayName: Image tag to be built and/or deployed
-#  type: string
-#  default: latest
-
 resources:
   repositories:
     # Azure DevOps repository
@@ -41,15 +29,21 @@ resources:
       name: kukkuu/kukkuu-pipelines
 
 extends:
-  # Filename in Azure DevOps Repository (note possible -ui or -api)
-  # Django example: azure-pipelines-PROJECTNAME-api-release.yml
-  # Drupal example: azure-pipelines-drupal-release.yml
-  template: azure-pipelines-kukkuu-api-test.yml@kukkuu-pipelines
-  parameters:
+  # Filename in Azure DevOps Repository
+  template: components/kukkuu-api/pipelines/kukkuu-api-release.yml@kukkuu-pipelines
+  # parameters:
     # Application build arguments and config map values as key value pairs.
-    # Does not contain all buildArguments, the rest located in kukkuu-pipelines/kukkuu-variables-development.yml and kukkuu-variables-common.yml
+    # Does not contain all buildArguments or configMap values, the rest located in kukkuu-pipelines
     # The values here will override the values defined in the kukkuu-pipelines repository
-    # buildArgs:
-    configMap: # pod environment variables
-      TOKEN_AUTH_BROWSER_TEST_ENABLED: 1
-      TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER: https://kukkuu-ui.test.hel.ninja,https://kukkuu-admin.test.hel.ninja
+    ## Staging definitions
+    # buildArgsStage:
+    #   DEBUG: 1
+    # configMapStage: # pod environment variables
+    #   DEBUG: 1
+    ## Production definitions
+    ## Production is using staging image
+    # configMap: # pod environment variables
+    #   DEBUG: 1
+    ## Default value to pythonVersion is set on template.
+    ## Used tool version
+    # pythonVersion: 3.11
