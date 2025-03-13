@@ -55,4 +55,4 @@ extends:
       DEBUG: 1
       ADD_DEFAULT_LANGUAGES: 1
       TOKEN_AUTH_BROWSER_TEST_ENABLED: 1
-      TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER: https://kukkuu-ui.test.hel.ninja,https://kukkuu-admin.test.hel.ninja
+      TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER: https://kukkuu-ui.dev.hel.ninja,https://kukkuu-admin.dev.hel.ninja
