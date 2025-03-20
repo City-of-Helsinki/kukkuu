@@ -7,9 +7,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  KUKKUU_HASHID_SALT: almosttopsecret123
-
 jobs:
   common:
     uses: City-of-Helsinki/.github/.github/workflows/ci-django-api.yml@main
@@ -17,3 +14,5 @@ jobs:
     with:
       python-version: 3.11
       postgres-major-version: 13
+      extra-commands: |
+        echo 'KUKKUU_HASHID_SALT=almosttopsecret123' >> .env
