@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.12.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.3...kukkuu-v3.12.4) (2025-03-24)
+
+
+### Bug Fixes
+
+* Set dependabot reviewers for ratkaisutoimisto ([2fdef9f](https://github.com/City-of-Helsinki/kukkuu/commit/2fdef9f317d3511a193fe794718495d73d23e9a8))
+
 ## [3.12.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.2...kukkuu-v3.12.3) (2025-03-10)
 
 
