@@ -5,6 +5,8 @@ from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.settings import sentry_before_send
 
 test_cases = [
+    (Exception("Unable to parse global ID."), True),
+    (Exception('Unable to parse global ID "some_id".'), True),
     (ExpiredSignatureError("Expired signature"), True),
     (AuthenticationExpiredError("Authentication expired"), True),
     (Exception("Some other error"), False),
