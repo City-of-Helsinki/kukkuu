@@ -1,4 +1,4 @@
-// @ts-ignore  
+// @ts-ignore
 import * as dotenv from 'dotenv';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -32,4 +32,3 @@ export const envUrl = (): string => getApiBaseUrl(getOrError('BROWSER_TESTS_API_
 export const testUiUsername = (): string => getOrError('BROWSER_TESTS_USER_NAME');
 
 export const testUiUserPassword = (): string => getOrError('BROWSER_TESTS_USER_PASSWORD');
-

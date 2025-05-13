@@ -60,7 +60,7 @@ Occurrence: {{enrolment.occurrence.time}}
 {% endfor %}
 {% endif %}
 {% if children_event_history_markdown %}
-Markdown: 
+Markdown:
 {{children_event_history_markdown}}
 {% endif %}"""  # noqa W291
 

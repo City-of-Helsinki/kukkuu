@@ -22,22 +22,22 @@ from projects.models import ProjectPermission
 
 MESSAGES_QUERY = """
 query Messages(
-    $projectId: ID, 
-    $protocol: MessagingMessageProtocolChoices, 
+    $projectId: ID,
+    $protocol: MessagingMessageProtocolChoices,
     $occurrences: [ID],
-    $limit: Int, 
-    $offset: Int, 
-    $after: String, 
+    $limit: Int,
+    $offset: Int,
+    $after: String,
     $first: Int,
     $orderBy: String
 ) {
     messages(
-        projectId: $projectId, 
-        protocol: $protocol, 
+        projectId: $projectId,
+        protocol: $protocol,
         occurrences: $occurrences,
-        limit: $limit, 
-        offset: $offset, 
-        after: $after, 
+        limit: $limit,
+        offset: $offset,
+        after: $after,
         first: $first,
         orderBy: $orderBy
     ) {
