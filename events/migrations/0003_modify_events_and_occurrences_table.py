@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name="participants_per_invite",
             field=models.CharField(
                 choices=[
-                    ("child_and_guardian", "Child and " "Guardian"),
+                    ("child_and_guardian", "Child and Guardian"),
                     ("family", "Family"),
                 ],
                 max_length=255,

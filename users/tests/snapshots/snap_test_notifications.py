@@ -56,7 +56,7 @@ Occurrence: 1970-12-08 12:26:35.206162+00:00
 Event: Democratic focus significant kind various laugh.
 Occurrence: 1973-04-20 19:00:51.908992+00:00
 
-Markdown: 
+Markdown:
 # Jason Berg
 
 
