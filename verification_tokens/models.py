@@ -28,16 +28,12 @@ class VerificationTokenManager(models.Manager):
         user,
         verification_type,
         email=None,
-        expiry_minutes=None,
-        token_length=None,
+        expiry_minutes=settings.VERIFICATION_TOKEN_VALID_MINUTES,
+        token_length=settings.VERIFICATION_TOKEN_LENGTH,
     ):
         """
         Deactivate old tokens (of a type) and create a new one.
         """
-        if expiry_minutes is None:
-            expiry_minutes = getattr(settings, "VERIFICATION_TOKEN_VALID_MINUTES", 15)
-        if token_length is None:
-            token_length = getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8)
         self.deactivate_token(obj, verification_type=verification_type, user=user)
         return self.create_token(
             obj, user, verification_type, email, expiry_minutes, token_length
@@ -49,14 +45,9 @@ class VerificationTokenManager(models.Manager):
         user,
         verification_type,
         email=None,
-        expiry_minutes=None,
-        token_length=None,
+        expiry_minutes=settings.VERIFICATION_TOKEN_VALID_MINUTES,
+        token_length=settings.VERIFICATION_TOKEN_LENGTH,
     ):
-        if expiry_minutes is None:
-            expiry_minutes = getattr(settings, "VERIFICATION_TOKEN_VALID_MINUTES", 15)
-        if token_length is None:
-            token_length = getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8)
-
         key = self.model.generate_key(token_length=token_length)
 
         if expiry_minutes:
@@ -149,11 +140,8 @@ class VerificationToken(models.Model):
     objects = VerificationTokenManager()
 
     @classmethod
-    def generate_key(cls, token_length=None):
+    def generate_key(cls, token_length=settings.VERIFICATION_TOKEN_LENGTH):
         """Generates a new key for a verification token."""
-        if token_length is None:
-            token_length = getattr(settings, "VERIFICATION_TOKEN_LENGTH", 8)
-
         return token_urlsafe(token_length)
 
     def is_valid(self):
