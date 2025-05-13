@@ -5,11 +5,11 @@ class TicketVerificationError(Exception):
     """General error related to ticket verfication"""
 
 
-class IllegalEnrolmentReferenceId(TicketVerificationError):
+class IllegalEnrolmentReferenceId(TicketVerificationError):  # noqa: N818
     """Illegal Enrolment reference id"""
 
 
-class EnrolmentReferenceIdDoesNotExist(TicketVerificationError):
+class EnrolmentReferenceIdDoesNotExist(TicketVerificationError):  # noqa: N818
     """
     The decoded enrolment reference id
     could not be linked to any of the enrolments
@@ -75,7 +75,7 @@ class MissingDefaultTranslationError(KukkuuGraphQLError):
     """Missing default translation for translatable object"""
 
 
-class IneligibleOccurrenceEnrolment(KukkuuGraphQLError):
+class IneligibleOccurrenceEnrolment(KukkuuGraphQLError):  # noqa: N818
     """Ineligible to enrol event"""
 
 

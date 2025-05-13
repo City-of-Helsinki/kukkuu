@@ -30,7 +30,7 @@ SheetData = Mapping[str, Mapping[str, Mapping[str, str]]]
 logger = getLogger(__name__)
 
 
-class NotificationImporterException(Exception):
+class NotificationImporterException(Exception):  # noqa: N818
     pass
 
 

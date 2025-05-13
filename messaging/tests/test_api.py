@@ -389,10 +389,14 @@ def get_add_message_variables(
     project,
     event=None,
     occurrences=None,
-    recipient=Message.ALL.upper(),
-    protocol=Message.EMAIL.upper(),
+    recipient=None,
+    protocol=None,
     send_directly=False,
 ):
+    if recipient is None:
+        recipient = Message.ALL.upper()
+    if protocol is None:
+        protocol = Message.EMAIL.upper()
     variables = {
         "input": {
             "translations": [
@@ -554,9 +558,12 @@ def get_update_message_variables(
     message,
     event=None,
     occurrences=None,
-    recipient=Message.ATTENDED.upper(),
+    recipient=None,
     **kwargs,
 ):
+    if recipient is None:
+        recipient = Message.ATTENDED.upper()
+
     variables = {
         "input": {
             "translations": [

@@ -67,4 +67,3 @@ def clear_data(user: "UserType", dry_run: bool) -> Optional[ErrorResponse]:
             "Could not call 'clear_gdpr_sensitive_data_fields' for a guardian object, "
             f"since there is no guardian linked to the user {user.uuid}."
         )
-        pass
