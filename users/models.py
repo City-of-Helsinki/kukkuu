@@ -221,10 +221,8 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
             self,
             VerificationToken.VERIFICATION_TYPE_SUBSCRIPTIONS_AUTH,
             email=email,
-            expiry_minutes=getattr(
-                settings, "SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES", 30 * 24 * 60
-            ),  # 30 days
-            token_length=getattr(settings, "SUBSCRIPTIONS_AUTH_TOKEN_LENGTH", 16),
+            expiry_minutes=settings.SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES,
+            token_length=settings.SUBSCRIPTIONS_AUTH_TOKEN_LENGTH,
         )
 
     def clear_gdpr_sensitive_data_fields(self):

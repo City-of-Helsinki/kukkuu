@@ -34,7 +34,7 @@ def send_message(message: "Message", *, force=False):
             elif message.protocol == Message.SMS:
                 send_sms_notification([guardian.phone_number], message.body_text)
 
-    if not getattr(settings, "ILMOITIN_QUEUE_NOTIFICATIONS", False):
+    if not settings.ILMOITIN_QUEUE_NOTIFICATIONS:
         MailerMessage.objects.retry_deferred()
         send_all()
 
