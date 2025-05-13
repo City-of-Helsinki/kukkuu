@@ -16,11 +16,11 @@ User = get_user_model()
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "Factory",
+    "model_factory",
     [UserEmailVerificationTokenFactory, UserSubscriptionsAuthVerificationTokenFactory],
 )
-def test_verification_token_creation(Factory):
-    verification_token = Factory()
+def test_verification_token_creation(model_factory):
+    verification_token = model_factory()
     assert VerificationToken.objects.count() == 1
     assert verification_token.content_object.__class__ == User
     assert verification_token.key is not None

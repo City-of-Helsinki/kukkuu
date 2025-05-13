@@ -1399,7 +1399,7 @@ def test_required_translation(project_user_api_client, snapshot, project):
     # Test delete default translation
     event = EventFactory(project=project)
     if not event.has_translation("fi"):
-        event.create_translation(language_code="fi", **{"name": "Finnish translation"})
+        event.create_translation(language_code="fi", name="Finnish translation")
     event_variables = {
         "input": {
             "id": "",
@@ -1428,7 +1428,7 @@ def test_update_field_with_null_value(project_user_api_client, project):
     event = EventFactory(project=project)
     # To make sure event has Finnish translation and bypass the language validation
     if not event.has_translation("fi"):
-        event.create_translation(language_code="fi", **{"name": "Finnish translation"})
+        event.create_translation(language_code="fi", name="Finnish translation")
     event_variables = deepcopy(UPDATE_EVENT_VARIABLES)
     event_variables["input"]["id"] = to_global_id("EventNode", event.id)
     # Null value for not-nullable field

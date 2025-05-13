@@ -1197,14 +1197,14 @@ def test_child_past_enrolment_count(
     past = timezone.now() - timedelta(hours=1)
     future = timezone.now() + timedelta(hours=1)
 
-    for i in range(past_enrolment_count):
+    for _i in range(past_enrolment_count):
         EnrolmentFactory(
             child=child_with_user_guardian,
             occurrence__time=past,
             occurrence__event__published_at=past,
         )
 
-    for i in range(2 - past_enrolment_count):
+    for _i in range(2 - past_enrolment_count):
         EnrolmentFactory(
             child=child_with_user_guardian,
             occurrence__time=future,
@@ -1231,7 +1231,7 @@ def test_child_past_enrolment_count_with_ticket_system_passwords(
     past = timezone.now() - timedelta(hours=1)
     future = timezone.now() + timedelta(hours=1)
 
-    for i in range(past_enrolment_count):
+    for _i in range(past_enrolment_count):
         # some other past event
         RandomExternalTicketSystemEventFactory(published_at=past)
 
@@ -1246,7 +1246,7 @@ def test_child_past_enrolment_count_with_ticket_system_passwords(
         )
         TicketSystemPasswordFactory(event=enrolled_past_event, child=child)
 
-    for i in range(2 - past_enrolment_count):
+    for _i in range(2 - past_enrolment_count):
         future_event = EventFactory(
             published_at=future,
         )

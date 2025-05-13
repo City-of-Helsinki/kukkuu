@@ -66,11 +66,14 @@ def user_from_auth_verification_token(
 
     def _use_auth_token(
         context,
-        permissionDeniedError=PermissionDenied(
-            "You do not have permission to perform this action"
-        ),
+        permissionDeniedError=None,  # noqa: N803
         **kwargs,
     ):
+        if permissionDeniedError is None:
+            permissionDeniedError = PermissionDenied(  # noqa: N806
+                "You do not have permission to perform this action"
+            )
+
         if auth_verification_token := _get_verification_token(**kwargs):
             context.user = auth_verification_token.content_object
         else:

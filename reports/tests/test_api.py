@@ -352,7 +352,7 @@ def test_venues_endpoint(
     json_data = response.json()
 
     assert len(json_data) == 5
-    for i in range(0, 5):
+    for i in range(5):
         for lang_code, _ in settings.LANGUAGES:
             assert "Example Venue" in json_data[i]["name"][lang_code]
             assert "Example Address" in json_data[i]["address"][lang_code]

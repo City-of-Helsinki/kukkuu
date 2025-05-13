@@ -41,9 +41,9 @@ query MyProfile {
 
 @pytest.fixture
 def request_factory(get_browser_test_bearer_token_for_user):
-    def _request_factory(
-        auth_header=get_browser_test_bearer_token_for_user(),
-    ):
+    auth_header = get_browser_test_bearer_token_for_user()
+
+    def _request_factory(auth_header=auth_header):
         request = HttpRequest()
         request.headers = {"Authorization": auth_header}
         return request

@@ -124,11 +124,11 @@ error_codes = {**error_codes_shared, **error_codes_kukkuu}
 class SentryGraphQLView(FileUploadGraphQLView):
     def __init__(self, *args, **kwargs):
         super().__init__(
+            *args,
+            **kwargs,
             validation_rules=[
                 depth_limit_validator(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
             ],
-            *args,
-            **kwargs,
         )
 
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
@@ -161,9 +161,9 @@ class SentryGraphQLView(FileUploadGraphQLView):
     def format_error(error):
         def get_error_code(exception):
             """Get the most specific error code for the exception via superclass"""
-            for exception in exception.mro():
+            for exc in exception.mro():
                 try:
-                    return error_codes[exception]
+                    return error_codes[exc]
                 except KeyError:
                     continue
 

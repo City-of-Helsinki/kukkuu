@@ -192,10 +192,10 @@ def sentry_before_send(event: Event, hint: Hint):
         The event if it should be sent to Sentry, or None if it should be ignored.
     """
 
-    IGNORED_ERRORS_CLASSES = (ExpiredSignatureError, AuthenticationExpiredError)
+    ignored_error_classes = (ExpiredSignatureError, AuthenticationExpiredError)
     if "exc_info" in hint:
         exc_type, exc_value, traceback = hint["exc_info"]
-        if isinstance(exc_value, IGNORED_ERRORS_CLASSES):
+        if isinstance(exc_value, ignored_error_classes):
             return None
     return event
 
