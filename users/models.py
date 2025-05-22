@@ -245,26 +245,32 @@ class GuardianQuerySet(models.QuerySet):
             child.delete()
 
     def has_accepted_communication_for_notification(self, notification_type: str):
-        """Filter guardians who have accepted communication of the type.
-        If the given notification type is included in the types that
-        needs an acceptance, the queryset will be filtered to guardians
-        who has True in `has_accepted_communication`.
+        """Filters guardians who have accepted communication for the given notification
+        type.
+
+        Initially, the queryset is filtered to include only **active**
+        (`user__is_active=True`) and **non-obsolete** (`is_obsolete=False`) guardians.
+        If the `notification_type` requires explicit acceptance (i.e., it is found
+        within `notification_types_that_need_communication_acceptance`), the queryset
+        will be further filtered to include only guardians for whom
+        `has_accepted_communication` is True.
 
         Args:
-            notification_type (str, NotificationType constant string literals):
-                notification type.
+            notification_type (str): The type of notification. This should be one of the
+                `NotificationType` constant string literals.
 
         Returns:
-            GuardianQuerySet: a filtered queryset if notification type needs acceptance,
-                otherwise returns self.
-
+            GuardianQuerySet: A filtered queryset of guardians if the
+                `notification_type` requires acceptance; otherwise, returns
+                the initially filtered queryset (active and non-obsolete guardians).
         """
+        queryset = self.filter(user__is_active=True, user__is_obsolete=False)
         if (
             notification_type
             not in notification_types_that_need_communication_acceptance
         ):
-            return self
-        return self.filter(has_accepted_communication=True)
+            return queryset
+        return queryset.filter(has_accepted_communication=True)
 
     def for_auth_service_is_changing_notification(
         self,
