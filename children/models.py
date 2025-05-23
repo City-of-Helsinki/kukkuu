@@ -30,7 +30,7 @@ class ChildQuerySet(models.QuerySet):
     def obsoleted(self, is_obsolete: bool = True):
         """The child is considered obsoleted
         if the child does not have any guardians or
-        all the guardian users linked to it are obsoleted.
+        all the guardian users linked to it are deactivated.
 
         Args:
             is_obsolete (bool, optional): filter by the obsolete
@@ -40,10 +40,8 @@ class ChildQuerySet(models.QuerySet):
             QuerySet: a list of obsoleted or non-obsoleted children
         """
         if is_obsolete:
-            return self.filter(
-                ~Q(guardians__user__is_obsolete=False) | Q(guardians=None)
-            )
-        return self.filter(guardians__user__is_obsolete=False)
+            return self.filter(~Q(guardians__user__is_active=True) | Q(guardians=None))
+        return self.filter(guardians__user__is_active=True)
 
     @transaction.atomic()
     def delete(self):
@@ -181,20 +179,15 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
     @property
     def is_obsolete(self) -> bool:
         """The child is obsoleted if they don't have any guardians or
-        all the related user objects of the guardians are obsoleted.
-
-        The user account might have been obsoleted and
-        cannot be accessed anymore,
-        e.g. after an auth service change process
-        (when Tunnistamo is changed to a Keycloak service).
+        all the related user objects of the guardians are deactivated.
 
         Returns:
             bool: returns True, if there are no guardians or
-            all the users are marked as obsoleted,
+            all the users are marked as deactivated,
             otherwise False.
         """
         return self.guardians.count() == 0 or all(
-            guardian.user.is_obsolete for guardian in self.guardians.all()
+            not guardian.user.is_active for guardian in self.guardians.all()
         )
 
 
