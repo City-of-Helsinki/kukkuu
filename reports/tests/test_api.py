@@ -156,8 +156,8 @@ def test_get_primary_contact_language(contact_languages, language):
 
 @pytest.mark.django_db
 def test_filter_by_is_obsolete(user_api_client):
-    ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=False)
-    ChildWithGuardianFactory(relationship__guardian__user__is_obsolete=True)
+    ChildWithGuardianFactory(relationship__guardian__user__is_active=True)
+    ChildWithGuardianFactory(relationship__guardian__user__is_active=False)
 
     # Test filtering by is_obsolete=True, to fetch all child that are obsolete
     response = user_api_client.get(CHILDREN_ENDPOINT + "?is_obsolete=true")

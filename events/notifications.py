@@ -58,7 +58,6 @@ common_event_context = {
     "localtime": timezone.template_localtime,
     "get_global_id": get_global_id,
     "unsubscribe_url": unsubscribe_url,
-    "is_obsolete": True,
 }
 
 common_occurrence_context = {
@@ -94,7 +93,6 @@ dummy_context.update(
             "localtime": timezone.template_localtime,
             "get_global_id": get_global_id,
             "unsubscribe_url": unsubscribe_url,
-            "is_obsolete": True,
         },
     }
 )
