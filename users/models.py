@@ -66,6 +66,20 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
         {"name": "guardian"},
     )
 
+    # NOTE: `is_obsolete` is deprecated after the migration process
+    # that deactivates the obsoleted users (`0014_deactivate_obsolete_users.py`).
+    # When Tunnistamo was changed to a Keycloak service,
+    # the field has been used to mark the users that are not anymore
+    # accessible, but are still in the database and need to receive
+    # notifications (like emails). The users are not deleted, because
+    # they might have children or other objects linked to them and
+    # it was important that they were not deactivated or deleted,
+    # but just set as unaccessible by the auth service migration process.
+    #
+    # The `is_active` field is used to mark the users that are
+    # not anymore able to log in to the system and the `is_obsolete`
+    # users should be deactivated at some point, which then makes this
+    # field needless as well.
     is_obsolete = models.BooleanField(
         _("obsoleted"),
         null=False,
