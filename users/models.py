@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
 from django.conf import settings
@@ -8,7 +7,6 @@ from django.contrib.auth.models import UserManager as OriginalUserManager
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
-from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from guardian.shortcuts import get_objects_for_user
@@ -64,32 +62,6 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
         {"name": "last_login", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "date_joined", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "guardian"},
-    )
-
-    # NOTE: `is_obsolete` is deprecated after the migration process
-    # that deactivates the obsoleted users (`0014_deactivate_obsolete_users.py`).
-    # When Tunnistamo was changed to a Keycloak service,
-    # the field has been used to mark the users that are not anymore
-    # accessible, but are still in the database and need to receive
-    # notifications (like emails). The users are not deleted, because
-    # they might have children or other objects linked to them and
-    # it was important that they were not deactivated or deleted,
-    # but just set as unaccessible by the auth service migration process.
-    #
-    # The `is_active` field is used to mark the users that are
-    # not anymore able to log in to the system and the `is_obsolete`
-    # users should be deactivated at some point, which then makes this
-    # field needless as well.
-    is_obsolete = models.BooleanField(
-        _("obsoleted"),
-        null=False,
-        default=False,
-        help_text=_(
-            "Designates whether the user account is obsoleted "
-            "and cannot be anymore accessed, "
-            "e.g. after an auth service change process "
-            "(when Tunnistamo is changed to a Keycloak service)."
-        ),
     )
 
     objects = UserManager()
@@ -263,7 +235,7 @@ class GuardianQuerySet(models.QuerySet):
         type.
 
         Initially, the queryset is filtered to include only **active**
-        (`user__is_active=True`) and **non-obsolete** (`is_obsolete=False`) guardians.
+        (`user__is_active=True`) guardians.
         If the `notification_type` requires explicit acceptance (i.e., it is found
         within `notification_types_that_need_communication_acceptance`), the queryset
         will be further filtered to include only guardians for whom
@@ -278,29 +250,13 @@ class GuardianQuerySet(models.QuerySet):
                 `notification_type` requires acceptance; otherwise, returns
                 the initially filtered queryset (active and non-obsolete guardians).
         """
-        queryset = self.filter(user__is_active=True, user__is_obsolete=False)
+        queryset = self.filter(user__is_active=True)
         if (
             notification_type
             not in notification_types_that_need_communication_acceptance
         ):
             return queryset
         return queryset.filter(has_accepted_communication=True)
-
-    def for_auth_service_is_changing_notification(
-        self,
-        user_joined_before: Optional[datetime] = None,
-        obsoleted_users_only=True,
-        guardian_emails: Optional[list[str]] = None,
-    ):
-        if user_joined_before and user_joined_before > timezone.now():
-            raise ValueError("The user_joined_before cannot be set in future.")
-
-        qs_filters = {"user__date_joined__lte": (user_joined_before or timezone.now())}
-        if obsoleted_users_only:
-            qs_filters.update({"user__is_obsolete": True})
-        if guardian_emails:
-            qs_filters.update({"email__in": guardian_emails})
-        return self.filter(**qs_filters)
 
 
 class Guardian(GDPRModel, UUIDPrimaryKeyModel, TimestampedModel, SerializableMixin):
