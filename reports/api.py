@@ -63,7 +63,10 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         filters = {}
         if is_obsolete := self.request.query_params.get("is_obsolete"):  # type: ignore
             try:
-                filters["guardians__user__is_obsolete"] = bool(strtobool(is_obsolete))
+                # when the `user__is_obsolete` was removed,
+                # `user__is_active` should be used instead.
+                is_active = not bool(strtobool(is_obsolete))
+                filters["guardians__user__is_active"] = is_active
             except ValueError:
                 pass
         return super().get_queryset().filter(**filters)
