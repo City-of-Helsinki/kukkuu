@@ -3,16 +3,13 @@ from unittest.mock import patch
 import pytest
 from django.core import mail
 
-from children.factories import ChildWithGuardianFactory
 from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import (
     assert_mails_match_snapshot,
     create_notification_template_in_language,
 )
-from events.factories import EnrolmentFactory
 from users.factories import GuardianFactory
 from users.notifications import NotificationType
-from users.services import AuthServiceNotificationService
 from users.tests.mutations import (
     REQUEST_EMAIL_CHANGE_TOKEN_MUTATION,
     UPDATE_MY_EMAIL_MUTATION,
@@ -131,43 +128,4 @@ def test_guardian_change_email_token_requested_notification(
         )
         assert executed["data"]["requestEmailUpdateToken"]["email"] == new_email
     assert len(mail.outbox) == (1 if new_email else 0)
-    assert_mails_match_snapshot(snapshot)
-
-
-@pytest.mark.django_db
-def test_send_user_auth_service_is_changing_notifications(
-    notification_template_user_auth_service_is_changing_fi,
-):
-    GuardianFactory.create_batch(3, user__is_obsolete=True)
-    AuthServiceNotificationService.send_user_auth_service_is_changing_notifications()
-    assert len(mail.outbox) == 3
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("date_of_change_str", [None, "", "24.12.2024"])
-def test_send_user_auth_service_is_changing_with_date_of_change_str_param(
-    date_of_change_str, snapshot, notification_template_user_auth_service_is_changing_fi
-):
-    """if no date_of_change_str is given, the default should be used.
-    The default is set in `notification_template_user_auth_service_is_changing_fi`:
-    "The change is happening 17.6.2024".
-    """
-    GuardianFactory(user__is_obsolete=True)
-    AuthServiceNotificationService.send_user_auth_service_is_changing_notifications(
-        date_of_change_str=date_of_change_str
-    )
-    assert len(mail.outbox) == 1
-    assert_mails_match_snapshot(snapshot)
-
-
-@pytest.mark.django_db
-def test_send_user_auth_service_is_changing_with_children(
-    snapshot, notification_template_user_auth_service_is_changing_fi
-):
-    guardian = GuardianFactory(user__is_obsolete=True)
-    children = ChildWithGuardianFactory.create_batch(2, relationship__guardian=guardian)
-    for child in children:
-        EnrolmentFactory.create_batch(2, child=child)
-    AuthServiceNotificationService.send_user_auth_service_is_changing_notifications()
-    assert len(mail.outbox) == 1
     assert_mails_match_snapshot(snapshot)
