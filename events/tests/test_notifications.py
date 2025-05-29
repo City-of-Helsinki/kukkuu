@@ -360,7 +360,9 @@ def test_unenrol_occurrence_notification(
     occurrence,
     notification_template_occurrence_unenrolment_fi,
     mock_user_create_subscriptions_management_auth_token,
+    settings,
 ):
+    settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 0
     child = ChildWithGuardianFactory(
         relationship__guardian__user=guardian_api_client.user,
         project=project,
