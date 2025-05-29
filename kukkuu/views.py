@@ -38,6 +38,7 @@ from kukkuu.consts import (
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
+    TOO_LATE_TO_UNENROL_ERROR,
     VERIFICATION_TOKEN_INVALID_ERROR,
 )
 from kukkuu.exceptions import (
@@ -67,6 +68,7 @@ from kukkuu.exceptions import (
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
     TicketSystemUrlMissingError,
+    TooLateToUnenrolError,
     VerificationTokenInvalidError,
 )
 
@@ -97,6 +99,7 @@ error_codes_kukkuu = {
     EventGroupNotReadyForPublishingError: EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     EventNotPublishedError: EVENT_NOT_PUBLISHED_ERROR,
     PastEnrolmentError: PAST_ENROLMENT_ERROR,
+    TooLateToUnenrolError: TOO_LATE_TO_UNENROL_ERROR,
     SingleEventsDisallowedError: SINGLE_EVENTS_DISALLOWED_ERROR,
     TicketSystemUrlMissingError: TICKET_SYSTEM_URL_MISSING_ERROR,
     NoFreeTicketSystemPasswordsError: NO_FREE_TICKET_SYSTEM_PASSWORDS_ERROR,

@@ -979,7 +979,9 @@ def test_unenrol_occurrence(
     occurrence,
     project,
     child_with_random_guardian,
+    settings,
 ):
+    settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 0
     non_authen_executed = api_client.execute(
         UNENROL_OCCURRENCE_MUTATION, variables=ENROL_OCCURRENCE_VARIABLES
     )
@@ -1021,7 +1023,8 @@ def test_unenrol_occurrence(
     snapshot.assert_match(executed)
 
 
-def test_ticket_not_valid_after_unenrol(user_api_client, occurrence, project):
+def test_ticket_not_valid_after_unenrol(user_api_client, occurrence, project, settings):
+    settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 0
     child = ChildWithGuardianFactory(
         relationship__guardian__user=user_api_client.user, project=project
     )
@@ -1057,6 +1060,50 @@ def test_cannot_unenrol_from_occurrence_in_past(
     )
 
     assert_match_error_code(executed, PAST_ENROLMENT_ERROR)
+
+
+@freeze_time("2024-01-01 12:00:00")
+def test_cannot_unenrol_within_48_hours(
+    guardian_api_client, child_with_user_guardian, settings
+):
+    settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 48
+    # Create occurrence 47 hours in future (within 48 hour limit)
+    future_time = timezone.now() + timedelta(hours=47)
+    enrolment = EnrolmentFactory(
+        occurrence__time=future_time, child=child_with_user_guardian
+    )
+
+    variables = deepcopy(UNENROL_OCCURRENCE_VARIABLES)
+    variables["input"]["occurrenceId"] = get_global_id(enrolment.occurrence)
+    variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, "TOO_LATE_TO_UNENROL_ERROR")
+
+
+@freeze_time("2024-01-01 12:00:00")
+def test_can_unenrol_outside_48_hours(
+    guardian_api_client, child_with_user_guardian, settings
+):
+    settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 48
+    # Create occurrence 49 hours in future (outside 48 hour limit)
+    future_time = timezone.now() + timedelta(hours=49)
+    enrolment = EnrolmentFactory(
+        occurrence__time=future_time, child=child_with_user_guardian
+    )
+
+    variables = deepcopy(UNENROL_OCCURRENCE_VARIABLES)
+    variables["input"]["occurrenceId"] = get_global_id(enrolment.occurrence)
+    variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert "errors" not in executed
 
 
 def test_maximum_enrolment(

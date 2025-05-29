@@ -1,13 +1,16 @@
 import logging
 from copy import deepcopy
+from datetime import timedelta
 from typing import List, Optional
 
 import graphene
 from auditlog_extra.graphene_decorators import auditlog_access
 from django.apps import apps
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
+from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
@@ -49,6 +52,7 @@ from kukkuu.exceptions import (
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
     TicketVerificationError,
+    TooLateToUnenrolError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
@@ -61,19 +65,33 @@ EventTranslation = apps.get_model("events", "EventTranslation")
 EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
-def validate_enrolment(child: Child, occurrence: Occurrence):
+def validate_enrolment(child: Child, occurrence: Occurrence) -> None:
     if reason := occurrence.get_enrolment_denied_reason(child):
         raise ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR[reason]
 
 
-def validate_enrolment_deletion(enrolment):
+def validate_enrolment_deletion(enrolment: Enrolment) -> None:
+    now = timezone.now()
+    occurrence_time = enrolment.occurrence.time
+
+    # Check if the enrolment is for an upcoming occurrence.
+    # User should never be able to unenrol, if the occurrence is in the past.
     if not enrolment.is_upcoming():
         raise PastEnrolmentError(
             "Cannot unenrol from an occurrence that is in the past."
         )
 
+    # Get the unenrol hours limit from settings, 0 means no time limit
+    # (only past occurrences are not allowed to unenrol).
+    hours_before = settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE
+    if hours_before > 0 and (occurrence_time - now) <= timedelta(hours=hours_before):
+        raise TooLateToUnenrolError(
+            "Cannot unenrol from an occurrence that starts within "
+            f"{hours_before} hours."
+        )
 
-def validate_occurrence_input(kwargs, occurrence: Occurrence = None):
+
+def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
     if time := kwargs.get("time"):
         if occurrence:
             # Don't consider the occurrence which is being updated
