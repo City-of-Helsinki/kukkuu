@@ -99,6 +99,10 @@ class PastEnrolmentError(KukkuuGraphQLError):
     """Cannot unenrol because the enrolment is in the past"""
 
 
+class TooLateToUnenrolError(KukkuuGraphQLError):
+    """Cannot unenrol because the occurrence starts too soon"""
+
+
 class SingleEventsDisallowedError(KukkuuGraphQLError):
     """Cannot create an event outside event groups"""
 
