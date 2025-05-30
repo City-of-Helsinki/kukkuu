@@ -288,6 +288,7 @@ INSTALLED_APPS = [
     "reports",
     "verification_tokens",
     "auditlog_extra",
+    "logger_extra",
     "kukkuu",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
@@ -499,13 +500,22 @@ SPECTACULAR_SETTINGS = {"TITLE": "Kukkuu report API", "VERSION": "1.0.0"}
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "context": {
+            "()": "logger_extra.filter.LoggerContextFilter",
+        }
+    },
     "formatters": {
-        "timestamped_named": {
-            "format": "%(asctime)s %(name)s %(levelname)s: %(message)s"
+        "json": {
+            "()": "logger_extra.formatter.JSONFormatter",
         }
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "timestamped_named"}
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+            "filters": ["context"],
+        }
     },
     "loggers": {
         "": {
