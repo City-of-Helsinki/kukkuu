@@ -57,6 +57,7 @@ django==4.2.21
     #   django-health-check
     #   django-helusers
     #   django-ilmoitin
+    #   django-logger-extra
     #   django-mailer
     #   django-parler
     #   django-storages
@@ -95,6 +96,8 @@ django-helusers==0.13.3
     #   -r requirements.in
     #   helsinki-profile-gdpr-api
 django-ilmoitin==0.7.1
+    # via -r requirements.in
+django-logger-extra @ git+https://github.com/City-of-Helsinki/django-logger-extra.git@main
     # via -r requirements.in
 django-mailer==2.3.2
     # via django-ilmoitin
