@@ -1,6 +1,8 @@
 import importlib
 import logging
 
+from csp.constants import UNSAFE_INLINE
+from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
@@ -106,6 +108,14 @@ class NotificationTemplateAdminWithImporter(NotificationTemplateAdmin):
     def _send_error_message(self, request, message):
         logger.error(message)
         self.message_user(request, message, messages.ERROR)
+
+    # Accept CSP UNSAFE_INLINE for the changeform view to allow
+    # the preview template to work correctly.
+    @csp_update({"script-src": [UNSAFE_INLINE]})
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        return super().changeform_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
 
 
 if hasattr(settings, "NOTIFICATIONS_IMPORTER"):
