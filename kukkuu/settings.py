@@ -483,6 +483,7 @@ if KUKKUU_HASHID_SALT is None:
         "Hashids in Kukkuu utils requires the setting!"
     )
 
+LOGGER_EXTRA_AUGMENT_DJANGO_AUDITLOG = True
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
