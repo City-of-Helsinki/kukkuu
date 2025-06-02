@@ -82,8 +82,16 @@ class NotificationTemplateAdminWithImporter(NotificationTemplateAdmin):
                 self.admin_site.admin_view(self.import_missing_notifications),
                 name="import-missing-notifications",
             ),
+            path(
+                "export-notification-templates/",
+                self.admin_site.admin_view(self.export_notifications_csv),
+                name="export-notification-templates",
+            ),
         ]
         return custom_urls + urls
+
+    def export_notifications_csv(self, request):
+        return HttpResponseRedirect(reverse("export-notification-templates-csv"))
 
     def import_missing_notifications(self, request):
         if self.importer:

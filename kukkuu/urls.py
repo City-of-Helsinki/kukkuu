@@ -53,6 +53,13 @@ urlpatterns = [
     *URL_PATTERNS_FOR_DJANGO_ADMIN_KEYCLOAK_LOGIN,
     path("admin/", admin.site.urls),
     re_path(r"^graphql/?$", graphql_view),
+    path(
+        "notification_importers/",
+        include(
+            ("notification_importers.urls", "notification_importers"),
+            namespace="notification_importers",
+        ),
+    ),
     path("reports/", include(router.urls)),
     path("reports/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
