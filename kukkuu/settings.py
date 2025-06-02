@@ -305,6 +305,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "auditlog_extra.middleware.AuditlogMiddleware",
+    "logger_extra.middleware.XRequestIdMiddleware",
 ]
 
 TEMPLATES = [
