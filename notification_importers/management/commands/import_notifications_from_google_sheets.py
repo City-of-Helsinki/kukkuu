@@ -1,22 +1,24 @@
 from django.core.management import BaseCommand
 
-from importers.notification_importer import (
-    NotificationImporter,
-    NotificationImporterException,
+from notification_importers.notification_importer import (
+    NotificationGoogleSheetImporter,
+    NotificationImporterError,
 )
 
 
 class Command(BaseCommand):
+    help = "Import notifications from Google Sheets."
+
     def handle(self, *args, **options):
         self.stdout.write("Importing notifications from Google Sheets...")
 
         try:
-            importer = NotificationImporter()
+            importer = NotificationGoogleSheetImporter()
             (
                 num_of_created,
                 num_of_updated,
             ) = importer.create_missing_and_update_existing_notifications()
-        except NotificationImporterException as e:
+        except NotificationImporterError as e:
             self.stdout.write(self.style.ERROR(e))
             return
 

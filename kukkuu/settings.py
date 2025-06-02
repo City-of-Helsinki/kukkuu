@@ -285,7 +285,7 @@ INSTALLED_APPS = [
     "languages",
     "subscriptions",
     "messaging",
-    "importers",
+    "notification_importers",
     "reports",
     "verification_tokens",
     "auditlog_extra",
@@ -469,11 +469,14 @@ KUKKUU_DEFAULT_EVENT_DURATION = env("KUKKUU_DEFAULT_EVENT_DURATION")
 KUKKUU_DEFAULT_ENROLMENT_LIMIT = 2
 KUKKUU_REMINDER_DAYS_IN_ADVANCE = env("KUKKUU_REMINDER_DAYS_IN_ADVANCE")
 KUKKUU_FEEDBACK_NOTIFICATION_DELAY = env("KUKKUU_FEEDBACK_NOTIFICATION_DELAY")
-KUKKUU_NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
 # How many hours before the occurrence start time
 # the user can unenrol from the occurrence.
 # If set to 0, unenrolment is allowed till the occurrence start.
 KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = env("KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE")
+NOTIFICATIONS_IMPORTER = (
+    "notification_importers.notification_importer.NotificationGoogleSheetImporter"
+)
+NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
 
 KUKKUU_HASHID_MIN_LENGTH = 5
 KUKKUU_HASHID_ALPHABET = "abcdefghijklmnopqrstuvwxyz"
