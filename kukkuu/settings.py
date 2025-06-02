@@ -339,11 +339,9 @@ CSP_STYLE_SRC = [
     "fonts.googleapis.com",
 ]
 
-# CSP_SCRIPT_SRC includes 'unsafe-eval' for inline scripts added by
-# `SpectacularRedocView`
+
 CSP_SCRIPT_SRC = [
     CSP.SELF,
-    CSP.UNSAFE_EVAL,
     "cdn.jsdelivr.net",
     "blob:",
 ]
