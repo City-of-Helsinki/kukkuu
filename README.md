@@ -171,7 +171,7 @@ Add admin user (optional)
 
 The emails notifications that Kukkuu sends can be imported from a Google Sheets spreadsheet. To do that, first configure setting `KUKKUU_NOTIFICATIONS_SHEET_ID`, and then either
 
-1. run `python manage.py import_notifications` to import and update all the notifications, or
+1. run `python manage.py import_notifications_from_google_sheets` to import and update all the notifications, or
 2. use actions in Django admin UI's notification list view to have finer control on which notifications to update and create
 
 The notification templates primary import source is https://docs.google.com/spreadsheets/d/1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M.
@@ -181,6 +181,10 @@ The environment variable should then be set to:
 ```
 KUKKUU_NOTIFICATIONS_SHEET_ID=1TkdQsO50DHOg5pi1JhzudOL1GKpiK-V2DCIoAipKj-M
 ```
+
+this is then set to `NOTIFICATIONS_SHEET_ID` in `settings.py`.
+
+See more detailed instructions and other importer options from [notification_importers/README.md](./notification_importers/README.md).
 
 #### Daily running, Debugging
 
@@ -201,6 +205,7 @@ For local development, if you prefer, you can alternatively use a shorter, manua
 Here's how you can generate a value for `SECRET_KEY` using Python (Based on Django v5.1.6's
 [get_random_secret_key](https://github.com/django/django/blob/5.1.6/django/core/management/utils.py#L79C5-L84) &
 [get_random_string](https://github.com/django/django/blob/5.1.6/django/utils/crypto.py#L51-L62)):
+
 ```python
 import secrets, string
 allowed_chars = string.ascii_lowercase + string.digits + "!@#$%^&*(-_=+)"
@@ -270,7 +275,6 @@ specification, and line length is limited to 72 characters.
 
 When [`pre-commit`](https://pre-commit.com/) is in use, [`commitlint`](https://github.com/conventional-changelog/commitlint)
 checks new commit messages for the correct format.
-
 
 ## Application programming interfaces
 
