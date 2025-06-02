@@ -1,11 +1,19 @@
-{% extends "admin/change_list.html" %}
-{% load i18n static %}
-
-{% block object-tools-items %}
-{{ block.super }}
+{% extends "admin/change_list.html" %} {% load i18n static %}
+{% block object-tools-items %} {{ block.super }}
 <li>
-    <a href="{% url 'admin:import-missing-notifications' %}" class="btn btn-high btn-success">
-        {% trans "Import missing notifications with the importer" %}
-    </a>
+  <a
+    href="{% url 'notification_importers:export-notification-templates-csv' %}"
+    class="btn btn-high btn-success"
+  >
+    {% trans "Export notification templates in CSV" %}
+  </a>
+</li>
+<li>
+  <a
+    href="{% url 'admin:import-missing-notifications' %}"
+    class="btn btn-high btn-success"
+  >
+    {% trans "Import missing notifications with the importer" %}
+  </a>
 </li>
 {% endblock %}
