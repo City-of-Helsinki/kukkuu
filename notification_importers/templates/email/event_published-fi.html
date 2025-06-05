@@ -1,18 +1,40 @@
-Hei Kulttuurin kummilapsi!
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kutsu kulttuurin kummilapselle!</title>
+  </head>
+  <body>
+    <h1>Hei Kulttuurin kummilapsi!</h1>
 
-{{ event.description }}
+    <p>{{ event.description }}</p>
 
-Ilmoittaudu osoitteessa
-{{ event_url }}
+    <p>
+      Ilmoittaudu osoitteessa:
+      <a href="{{ event_url }}">{{ event_url }}</a>
+    </p>
 
+    <h2>Kulttuurin kummilapset</h2>
+    <p>
+      Jokaisella vuonna 2020 tai sen jälkeen syntyvällä helsinkiläisellä
+      lapsella on oma kulttuurikummi. Kulttuurikummi kutsuu lapsen joka vuosi
+      vähintään kahteen tapahtumaan. Tapahtumat suunnitellaan lapsen
+      kehitysvaiheelle sopiviksi ja ne tukevat koko perheen hyvinvointia.
+      Kummius jatkuu siihen asti, kunnes lapsi aloittaa koulun. Tapahtumat ovat
+      perheille maksuttomia. Kulttuurin kummilapset -palvelua hallinnoi
+      Helsingin kulttuurin ja vapaa-ajan toimiala.
+    </p>
 
-Kulttuurin kummilapset
-Jokaisella vuonna 2020 tai sen jälkeen syntyvällä helsinkiläisellä lapsella on oma kulttuurikummi.
-Kulttuurikummi kutsuu lapsen joka vuosi vähintään kahteen tapahtumaan. Tapahtumat suunnitellaan lapsen kehitysvaiheelle sopiviksi ja ne tukevat koko perheen hyvinvointia. Kummius jatkuu siihen asti, kunnes lapsi aloittaa koulun.
-Tapahtumat ovat perheille maksuttomia.
-Kulttuurin kummilapset -palvelua hallinnoi Helsingin kulttuurin ja vapaa-ajan toimiala.
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
 
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
-
-En halua enää viestejä kummitapahtumien julkaisusta: {{unsubscribe_url}}.
+    <p>
+      En halua enää viestejä kummitapahtumien julkaisusta:
+      <a href="{{unsubscribe_url}}">{{unsubscribe_url}}</a>
+    </p>
+  </body>
+</html>

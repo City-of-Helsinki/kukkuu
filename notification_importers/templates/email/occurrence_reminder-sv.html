@@ -1,14 +1,39 @@
-Ni har anmält er till {{ event.name }} {{ localtime(occurrence.time).strftime('%d.%m.%Y på %H.%M') }}. Lokalen är {{ occurrence.venue.name }}, {{ occurrence.venue.address }}, välkomna!
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <title>Påminnelse: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      Du har anmält dig till {{ event.name }} {{
+      localtime(occurrence.time).strftime('%d.%m.%Y kl %H.%M') }}. Platsen är {{
+      occurrence.venue.name }}, {{ occurrence.venue.address }}. Vi ser fram emot
+      att träffa dig där!
+    </p>
 
-Biljett till evenemanget
-Bifogat till detta meddelande finns en QR-kod som är biljetten till evenemanget. Ta med dig QR-koden och visa upp den när du kommer till evenemanget.
+    <h2>Biljett till evenemanget</h2>
+    <p>
+      Bifogat till detta meddelande finns en QR-kod som är biljetten till
+      evenemanget. Ta med dig QR-koden och visa upp den när du kommer till
+      evenemanget.
+    </p>
 
- Avbokning av deltagande
-Om du inte kan delta i evenemanget, vänligen avboka ditt deltagande på evenemangssidan. Från och med augusti 2025 måste du avboka senast 48 timmar före evenemanget.
-{{ occurrence_url }}
+    <h2>Avbokning av deltagande</h2>
+    <p>
+      Om du inte kan delta i evenemanget, vänligen avboka ditt deltagande på
+      evenemangssidan. Från och med augusti 2025 måste du avboka senast 48
+      timmar före evenemanget.<br />
+      <a href="{{ occurrence_url }}">{{ occurrence_url }}</a>
+    </p>
 
-Vi ses snart!
+    <p>Vi ses snart!</p>
 
-
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>
