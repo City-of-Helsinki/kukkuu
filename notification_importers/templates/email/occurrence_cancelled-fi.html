@@ -1,4 +1,23 @@
-Olette ilmoittautuneet {{ localtime(occurrence.time).strftime('%d.%m.%Y klo %H.%M') }} järjestettävään tapahtumaan {{ event.name }}. Joudumme valitettavasti perumaan tapahtuman. Jos tapahtumissa on vielä tilaa, voitte ilmoittautua toiseen tapahtumaan sivustollamme. Pahoittelemme teille aiheutunutta vaivaa.
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tapahtuman peruutus: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      Olette ilmoittautuneet {{ localtime(occurrence.time).strftime('%d.%m.%Y
+      klo %H.%M') }} järjestettävään tapahtumaan {{ event.name }}. Joudumme
+      valitettavasti perumaan tapahtuman. Jos tapahtumissa on vielä tilaa,
+      voitte ilmoittautua toiseen tapahtumaan sivustollamme. Pahoittelemme
+      teille aiheutunutta vaivaa.
+    </p>
 
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>
