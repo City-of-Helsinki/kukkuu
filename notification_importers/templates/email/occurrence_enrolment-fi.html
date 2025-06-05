@@ -1,12 +1,37 @@
-Kiitos ilmoittautumisestasi {{ localtime(occurrence.time).strftime('%d.%m.%Y klo %H.%M') }} järjestettävään tapahtumaan {{ event.name }}. Tapahtuman paikka on {{ occurrence.venue.name }}, {{ occurrence.venue.address }}, tervetuloa! Löydät tapahtumasi tiedot kirjautumalla Kulttuurin kummilapset -palveluun.
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vahvistus ilmoittautumisestasi tapahtumaan {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      Kiitos ilmoittautumisestasi {{
+      localtime(occurrence.time).strftime('%d.%m.%Y klo %H.%M') }}
+      järjestettävään tapahtumaan {{ event.name }}. Tapahtuman paikka on {{
+      occurrence.venue.name }}, {{ occurrence.venue.address }}, tervetuloa!
+      Löydät tapahtumasi tiedot kirjautumalla Kulttuurin kummilapset -palveluun.
+    </p>
 
-Pääsylippu
-Tämän viestin liitteenä on QR-koodi, joka on tapahtuman pääsylippu. Ota QR-koodi mukaan ja näytä se, kun saavut tapahtumaan.
+    <h2>Pääsylippu</h2>
+    <p>
+      Tämän viestin liitteenä on QR-koodi, joka on tapahtuman pääsylippu. Ota
+      QR-koodi mukaan ja näytä se, kun saavut tapahtumaan.
+    </p>
 
-Osallistumisen peruminen
-Jos ette pääse osallistumaan tapahtumaan, peru osallistumisenne tapahtuman sivulla. Elokuusta 2025 alkaen sinun tulee perua viimeistään 48 tuntia ennen tapahtumaa.
-{{ occurrence_url }}
+    <h2>Osallistumisen peruminen</h2>
+    <p>
+      Jos ette pääse osallistumaan tapahtumaan, peru osallistumisenne tapahtuman
+      sivulla. Elokuusta 2025 alkaen sinun tulee perua viimeistään 48 tuntia
+      ennen tapahtumaa.<br />
+      <a href="{{ occurrence_url }}">{{ occurrence_url }}</a>
+    </p>
 
-
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>

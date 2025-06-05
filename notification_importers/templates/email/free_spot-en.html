@@ -1,10 +1,31 @@
-A place in {{ event.name }} {{ localtime(occurrence.time).strftime('%d.%m.%Y at %H.%M') }} has become available.
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Place available: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      A place in {{ event.name }} {{
+      localtime(occurrence.time).strftime('%d.%m.%Y at %H.%M') }} has become
+      available.
+    </p>
 
-Sign up at
-{{ occurrence_enrol_url }}
+    <p>
+      Sign up at:
+      <a href="{{ occurrence_enrol_url }}">{{ occurrence_enrol_url }}</a>
+    </p>
 
-Everyone subscribed for this notification will be informed as soon as a place becomes available. Free places will go for those who sign up first.
+    <p>
+      Everyone subscribed for this notification will be informed as soon as a
+      place becomes available. Free places will go for those who sign up first.
+    </p>
 
-
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>

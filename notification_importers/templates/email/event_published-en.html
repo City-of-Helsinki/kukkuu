@@ -1,17 +1,42 @@
-Greetings, Culture Kid!
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Invitation for Culture Kid!</title>
+  </head>
+  <body>
+    <h1>Greetings, Culture Kid!</h1>
 
-{{ event.description }}
+    <p>{{ event.description }}</p>
 
-Sign up in our service
-{{ event_url }}
+    <p>
+      Sign up in our service:
+      <a href="{{ event_url }}">{{ event_url }}</a>
+    </p>
 
+    <h2>Culture Kids</h2>
+    <p>
+      Culture Kids is a programme that pairs children living in Helsinki with a
+      sponsor from the world of arts and culture. All of the city's little ones
+      born in or after 2020 are invited to join. The Culture Kids sponsor
+      invites the children and a member of their family to at least two events
+      every year. The events support children's development and promote the
+      wellbeing of the entire family. The sponsorship continues until the child
+      starts primary school. All events are free-of-charge for the children
+      participating in the programme. The Culture Kids programme is arranged by
+      the City of Helsinki Culture and Leisure Division.
+    </p>
 
-Culture Kids
-Culture Kids is a programme that pairs children living in Helsinki with a sponsor from the world of arts and culture. All of the city’s little ones born in or after 2020 are invited to join. The Culture Kids sponsor invites the children and a member of their family to at least two events every year. The events support children’s development and promote the wellbeing of the entire family. The sponsorship continues until the child starts primary school.
-All events are free-of-charge for the children participating in the programme.
-The Culture Kids programme is arranged by the City of Helsinki Culture and Leisure Division.
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
 
-https://kummilapset.hel.fi
-kulttuurin.kummilapset@hel.fi
-
-I no longer want to receive email about the publication of events: {{unsubscribe_url}}.
+    <p>
+      I no longer want to receive email about the publication of events:
+      <a href="{{unsubscribe_url}}">{{unsubscribe_url}}</a>
+    </p>
+  </body>
+</html>
