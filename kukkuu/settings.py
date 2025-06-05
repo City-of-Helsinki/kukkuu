@@ -474,8 +474,12 @@ KUKKUU_FEEDBACK_NOTIFICATION_DELAY = env("KUKKUU_FEEDBACK_NOTIFICATION_DELAY")
 # If set to 0, unenrolment is allowed till the occurrence start.
 KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = env("KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE")
 NOTIFICATIONS_IMPORTER = (
-    "notification_importers.notification_importer.NotificationGoogleSheetImporter"
+    # To use project repository filesystem as a source, use the following:
+    "notification_importers.notification_importer.NotificationFileImporter"
+    # To use Google Spreadsheet as a source, use the following:
+    # "notification_importers.notification_importer.NotificationGoogleSheetImporter"
 )
+# NOTIFICATIONS_SHEET_ID only needed with NotificationGoogleSheetImporter
 NOTIFICATIONS_SHEET_ID = env("KUKKUU_NOTIFICATIONS_SHEET_ID")
 
 KUKKUU_HASHID_MIN_LENGTH = 5

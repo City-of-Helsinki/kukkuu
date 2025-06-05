@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <title>Avbokning av evenemanget: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      Du har anmält dig till {{ event.name }} {{
+      localtime(occurrence.time).strftime('%d.%m.%Y på %H.%M') }}. Vi är tyvärr
+      tvungna att ställa in evenemanget. Om det fortfarande finns lediga platser
+      vid evenemang kan du anmäla dig till ett annat evenemang på vår webbplats.
+      Vi ber om ursäkt för eventuella besvär detta kan orsaka.
+    </p>
+
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>

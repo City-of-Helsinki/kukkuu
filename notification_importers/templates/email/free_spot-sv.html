@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <title>Plats frigjorts: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      En plats till {{ event.name }} {{
+      localtime(occurrence.time).strftime('%d.%m.%Y kl %H.%M') }} har blivit
+      ledig.
+    </p>
+
+    <p>
+      Anmäl dig på:
+      <a href="{{ occurrence_enrol_url }}">Anmäl dig</a>
+    </p>
+
+    <p>
+      Vi skickar info om den lediga platsen till alla som har prenumererar på
+      anmälan. Lediga platser kommer att gå för dem som anmäler sig först.
+    </p>
+
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>

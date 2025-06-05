@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Event cancellation: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      You have signed up for the {{ event.name }} scheduled for {{
+      localtime(occurrence.time).strftime('%d.%m.%Y at %H.%M') }}. The event is
+      unfortunately cancelled. If there are still places available, you can
+      register for another event on our website. We apologise for the
+      inconvenience.
+    </p>
+
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>

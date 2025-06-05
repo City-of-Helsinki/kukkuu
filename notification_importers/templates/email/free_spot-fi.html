@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Paikka vapautunut: {{ event.name }}</title>
+  </head>
+  <body>
+    <p>
+      Tapahtumaan {{ event.name }} {{
+      localtime(occurrence.time).strftime('%d.%m.%Y klo %H.%M') }} on vapautunut
+      paikka.
+    </p>
+
+    <p>
+      Ilmoittaudu tästä:
+      <a href="{{ occurrence_enrol_url }}">Ilmoittaudu</a>
+    </p>
+
+    <p>
+      Lähetämme tiedon vapautuneesta paikasta kaikille, jotka ovat tilanneet
+      tämän ilmoituksen ja vapaat paikat menevät tapahtumaan ensimmäiseksi
+      ilmoittautuville.
+    </p>
+
+    <address>
+      <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
+      <a href="mailto:kulttuurin.kummilapset@hel.fi"
+        >kulttuurin.kummilapset@hel.fi</a
+      >
+    </address>
+  </body>
+</html>
