@@ -2,6 +2,20 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.13.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.4...kukkuu-v3.13.0) (2025-06-09)
+
+
+### Features
+
+* Reject unenrolments if less than 48h to the event occurrence ([f196eba](https://github.com/City-of-Helsinki/kukkuu/commit/f196eba56201557db8e13bf21fdc8c1ad90bcb11))
+* Remove is_obsolete field from user model ([9f8e77d](https://github.com/City-of-Helsinki/kukkuu/commit/9f8e77d26b4363527aa7ae07a44bfcebdb14efc6))
+* Send notification only to active and non-oboleted users ([3bb8df6](https://github.com/City-of-Helsinki/kukkuu/commit/3bb8df6bef0123612a3669345624e949918ceb6a))
+
+
+### Dependencies
+
+* Bump django from 4.2.21 to 4.2.22 ([f7f87c5](https://github.com/City-of-Helsinki/kukkuu/commit/f7f87c5ef8ec307bfdde226db11b3575431f9166))
+
 ## [3.12.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.3...kukkuu-v3.12.4) (2025-05-14)
 
 
