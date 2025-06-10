@@ -8,21 +8,21 @@ asttokens==3.0.0
     # via stack-data
 certifi==2025.1.31
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   requests
 cffi==1.17.1
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   cryptography
 charset-normalizer==3.4.1
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   requests
 coverage==7.6.12
     # via pytest-cov
 cryptography==44.0.2
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   -r requirements-dev.in
 decorator==5.2.1
     # via ipython
@@ -34,7 +34,7 @@ freezegun==1.5.1
     # via -r requirements-dev.in
 idna==3.10
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   requests
 iniconfig==2.0.0
     # via pytest
@@ -48,7 +48,7 @@ matplotlib-inline==0.1.7
     # via ipython
 packaging==24.2
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   pytest
 parso==0.8.4
     # via jedi
@@ -64,7 +64,7 @@ pure-eval==0.2.3
     # via stack-data
 pycparser==2.22
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   cffi
 pygments==2.19.1
     # via
@@ -81,15 +81,15 @@ pytest-django==4.10.0
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   freezegun
 pyyaml==6.0.2
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   responses
-requests==2.32.3
+requests==2.32.4
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   requests-mock
     #   responses
 requests-mock==1.12.1
@@ -100,7 +100,7 @@ ruff==0.11.9
     # via -r requirements-dev.in
 six==1.17.0
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   python-dateutil
     #   snapshottest
 snapshottest==0.6.0
@@ -115,11 +115,11 @@ traitlets==5.14.3
     #   matplotlib-inline
 typing-extensions==4.12.2
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   ipython
 urllib3==2.3.0
     # via
-    #   -c /app/requirements.txt
+    #   -c requirements.txt
     #   requests
     #   responses
 wasmer==1.1.0
