@@ -2,6 +2,20 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.14.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.13.0...kukkuu-v3.14.0) (2025-07-01)
+
+
+### Features
+
+* Improve uWSGI options ([c47d5e2](https://github.com/City-of-Helsinki/kukkuu/commit/c47d5e24c7ad68357c9700dc646bdde0b718a173))
+* Send reminder notifications earlier ([46c274b](https://github.com/City-of-Helsinki/kukkuu/commit/46c274b5d3482546609d30d60dbb0122ec5cdc1b))
+
+
+### Dependencies
+
+* Add uwsgitop ([8ac7809](https://github.com/City-of-Helsinki/kukkuu/commit/8ac78091c9fdba0707774e8b1090e310221cb54a))
+* Bump requests from 2.32.3 to 2.32.4 ([92f2210](https://github.com/City-of-Helsinki/kukkuu/commit/92f22107cd51c85eef095ad36087588306346bd1))
+
 ## [3.13.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.12.4...kukkuu-v3.13.0) (2025-06-09)
 
 
