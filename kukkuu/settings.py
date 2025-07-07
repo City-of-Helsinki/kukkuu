@@ -70,6 +70,7 @@ env = environ.Env(
     AZURE_ACCOUNT_NAME=(str, ""),
     AZURE_ACCOUNT_KEY=(str, ""),
     AZURE_CONTAINER=(str, ""),
+    AZURE_URL_EXPIRATION_SECS=(str, None),
     AZURE_BLOB_STORAGE_SAS_TOKEN=(str, ""),
     ENABLE_GRAPHIQL=(bool, False),
     KUKKUU_UI_BASE_URL=(str, "http://localhost:3000"),
@@ -223,6 +224,7 @@ STORAGES_DEFAULT_BACKEND = env("STORAGES_DEFAULT_BACKEND")
 if STORAGES_DEFAULT_BACKEND == "storages.backends.azure_storage.AzureStorage":
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
     AZURE_CONTAINER = env("AZURE_CONTAINER")
+    AZURE_URL_EXPIRATION_SECS = env("AZURE_URL_EXPIRATION_SECS")
     if env("AZURE_BLOB_STORAGE_SAS_TOKEN"):
         SAS_TOKEN = env("AZURE_BLOB_STORAGE_SAS_TOKEN")
         AZURE_ENDP = f"BlobEndpoint=https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net"
