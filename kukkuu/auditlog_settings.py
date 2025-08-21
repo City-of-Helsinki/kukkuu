@@ -27,6 +27,7 @@ AUDITLOG_EXCLUDE_TRACKING_MODELS = (
     "social_django.code",  # auth model
     "social_django.nonce",  # auth model
     "social_django.partial",  # auth model
+    "resilient_logger.resilientlogentry", # resilient log entries
 )
 
 # Configure models registration and other behaviours.
