@@ -107,7 +107,7 @@ django-parler==2.3
     # via
     #   -r requirements.in
     #   django-ilmoitin
-django-resilient-logger @ https://github.com/City-of-Helsinki/django-resilient-logger/archive/refs/tags/v0.2.0.zip
+django-resilient-logger @ https://github.com/City-of-Helsinki/django-resilient-logger/archive/refs/tags/v0.3.0.zip
     # via -r requirements.in
 django-storages==1.14.5
     # via -r requirements.in
