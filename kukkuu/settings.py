@@ -101,6 +101,10 @@ env = environ.Env(
     BROWSER_TEST_AD_GROUP_NAME=(str, "kukkuu_browser_test"),
     KUKKUU_DEFAULT_LOGGING_LEVEL=(str, "INFO"),
     APP_RELEASE=(str, ""),
+    AUDIT_LOG_ES_URL=(str, ""),
+    AUDIT_LOG_ES_INDEX=(str, ""),
+    AUDIT_LOG_ES_USERNAME=(str, ""),
+    AUDIT_LOG_ES_PASSWORD=(str, ""),
 )
 
 VERIFICATION_TOKEN_VALID_MINUTES = env("VERIFICATION_TOKEN_VALID_MINUTES")
@@ -290,6 +294,7 @@ INSTALLED_APPS = [
     "verification_tokens",
     "auditlog_extra",
     "logger_extra",
+    "resilient_logger",
     "kukkuu",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
@@ -500,6 +505,30 @@ REST_FRAMEWORK = {
     + (["rest_framework.renderers.BrowsableAPIRenderer"] if DEBUG else []),
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+RESILIENT_LOGGER = {
+    "origin": "kukkuu",
+    "environment": env("SENTRY_ENVIRONMENT"),
+    "sources": [
+        {
+            "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource",
+        }
+    ],
+    "targets": [
+        {
+            "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
+            "es_url": env("AUDIT_LOG_ES_URL"),
+            "es_username": env("AUDIT_LOG_ES_USERNAME"),
+            "es_password": env("AUDIT_LOG_ES_PASSWORD"),
+            "es_index": env("AUDIT_LOG_ES_INDEX"),
+            "required": True,
+        }
+    ],
+    "batch_limit": 5000,
+    "chunk_size": 500,
+    "submit_unsent_entries": True,
+    "clear_sent_entries": True,
 }
 
 SPECTACULAR_SETTINGS = {"TITLE": "Kukkuu report API", "VERSION": "1.0.0"}
