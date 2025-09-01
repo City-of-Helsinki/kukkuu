@@ -510,17 +510,21 @@ REST_FRAMEWORK = {
 RESILIENT_LOGGER = {
     "origin": "kukkuu",
     "environment": env("SENTRY_ENVIRONMENT"),
-    "sources": [{
-        "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource",
-    }],
-    "targets": [{
-        "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
-        "es_url": env("AUDIT_LOG_ES_URL"),
-        "es_username": env("AUDIT_LOG_ES_USERNAME"),
-        "es_password": env("AUDIT_LOG_ES_PASSWORD"),
-        "es_index": env("AUDIT_LOG_ES_INDEX"),
-        "required": True
-    }],
+    "sources": [
+        {
+            "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource",
+        }
+    ],
+    "targets": [
+        {
+            "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
+            "es_url": env("AUDIT_LOG_ES_URL"),
+            "es_username": env("AUDIT_LOG_ES_USERNAME"),
+            "es_password": env("AUDIT_LOG_ES_PASSWORD"),
+            "es_index": env("AUDIT_LOG_ES_INDEX"),
+            "required": True,
+        }
+    ],
     "batch_limit": 5000,
     "chunk_size": 500,
     "submit_unsent_entries": True,
