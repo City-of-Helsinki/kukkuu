@@ -512,12 +512,12 @@ RESILIENT_LOGGER = {
     "environment": env("SENTRY_ENVIRONMENT"),
     "sources": [
         {
-            "class": "resilient_logger.django_audit_log_source.DjangoAuditLogSource",
+            "class": "resilient_logger.sources.DjangoAuditLogSource",
         }
     ],
     "targets": [
         {
-            "class": "resilient_logger.elasticsearch_log_target.ElasticsearchLogTarget",
+            "class": "resilient_logger.targets.ElasticsearchLogTarget",
             "es_url": env("AUDIT_LOG_ES_URL"),
             "es_username": env("AUDIT_LOG_ES_USERNAME"),
             "es_password": env("AUDIT_LOG_ES_PASSWORD"),
