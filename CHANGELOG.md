@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.14.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.14.0...kukkuu-v3.14.1) (2025-09-10)
+
+
+### Dependencies
+
+* Bump django from 4.2.22 to 4.2.24 ([4dbb3a3](https://github.com/City-of-Helsinki/kukkuu/commit/4dbb3a33a3c7db66d92df0696a999133e4271893))
+
 ## [3.14.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.13.0...kukkuu-v3.14.0) (2025-08-05)
 
 
