@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_language_query
+  dict({
+    'data': dict({
+      'language': dict({
+        'alpha3Code': 'fin',
+        'name': 'suomi',
+        'translations': list([
+          dict({
+            'languageCode': 'EN',
+            'name': 'Finnish',
+          }),
+          dict({
+            'languageCode': 'FI',
+            'name': 'suomi',
+          }),
+          dict({
+            'languageCode': 'SV',
+            'name': 'Finska',
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_languages_query
+  dict({
+    'data': dict({
+      'languages': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'alpha3Code': 'eng',
+              'name': 'englanti',
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'English',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'englanti',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Engelska',
+                }),
+              ]),
+            }),
+          }),
+          dict({
+            'node': dict({
+              'alpha3Code': 'swe',
+              'name': 'ruotsi',
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'Swedish',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'ruotsi',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Svenska',
+                }),
+              ]),
+            }),
+          }),
+          dict({
+            'node': dict({
+              'alpha3Code': 'fin',
+              'name': 'suomi',
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'Finnish',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'suomi',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Finska',
+                }),
+              ]),
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---

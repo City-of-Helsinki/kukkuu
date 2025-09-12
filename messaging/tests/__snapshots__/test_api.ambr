@@ -1,0 +1,663 @@
+# serializer version: 1
+# name: test_add_message[None]
+  dict({
+    'data': dict({
+      'addMessage': dict({
+        'message': dict({
+          'event': None,
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'EMAIL',
+          'recipientCount': 0,
+          'recipientSelection': 'ALL',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Testiteksti',
+              'languageCode': 'FI',
+              'subject': 'Testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_message[event]
+  dict({
+    'data': dict({
+      'addMessage': dict({
+        'message': dict({
+          'event': dict({
+            'name': 'Poor lawyer treat free heart significant.',
+          }),
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'EMAIL',
+          'recipientCount': 0,
+          'recipientSelection': 'ALL',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Testiteksti',
+              'languageCode': 'FI',
+              'subject': 'Testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_message[occurrences]
+  dict({
+    'data': dict({
+      'addMessage': dict({
+        'message': dict({
+          'event': dict({
+            'name': 'Poor lawyer treat free heart significant.',
+          }),
+          'occurrences': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'time': '1970-12-29T14:07:50.629900+00:00',
+                }),
+              }),
+              dict({
+                'node': dict({
+                  'time': '1977-02-25T22:54:59.889967+00:00',
+                }),
+              }),
+              dict({
+                'node': dict({
+                  'time': '1997-09-11T00:12:17.610651+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'EMAIL',
+          'recipientCount': 0,
+          'recipientSelection': 'ALL',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Testiteksti',
+              'languageCode': 'FI',
+              'subject': 'Testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_cannot_do_message_query_unauthorized_wrong_project
+  dict({
+    'data': dict({
+      'message': None,
+    }),
+  })
+# ---
+# name: test_delete_message
+  dict({
+    'data': dict({
+      'deleteMessage': dict({
+        'clientMutationId': None,
+      }),
+    }),
+  })
+# ---
+# name: test_message_query
+  dict({
+    'data': dict({
+      'message': dict({
+        'bodyText': 'Ruumisteksti.',
+        'event': None,
+        'occurrences': dict({
+          'edges': list([
+          ]),
+        }),
+        'project': dict({
+          'year': 2020,
+        }),
+        'recipientCount': 0,
+        'recipientSelection': 'ALL',
+        'sentAt': None,
+        'subject': 'Otsikko',
+      }),
+    }),
+  })
+# ---
+# name: test_messages_query
+  dict({
+    'data': dict({
+      'messages': dict({
+        'count': 1,
+        'edges': list([
+          dict({
+            'node': dict({
+              'bodyText': 'Ruumisteksti.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Otsikko',
+            }),
+          }),
+        ]),
+        'pageInfo': dict({
+          'endCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+          'hasNextPage': False,
+          'hasPreviousPage': False,
+          'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_messages_query_occurrences_filter
+  dict({
+    'data': dict({
+      'messages': dict({
+        'count': 4,
+        'edges': list([
+          dict({
+            'node': dict({
+              'bodyText': 'Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'time': '1980-08-23T04:26:09.363315+00:00',
+                    }),
+                  }),
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Him question stay.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Child care any. Minute defense level church. Alone our very television beat at success.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'time': '1980-08-23T04:26:09.363315+00:00',
+                    }),
+                  }),
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Business hot PM.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Focus significant kind. Laugh smile behavior whom gas. Significant minute rest. Special far magazine.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'time': '2003-01-02T17:50:46.571751+00:00',
+                    }),
+                  }),
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Attention practice.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Conference carry factor front Mr amount conference thing. Positive cold start rest tonight including believe. Respond range bit college question. Stop treatment suggest. Sometimes growth check court.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'time': '2003-01-02T17:50:46.571751+00:00',
+                    }),
+                  }),
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Past life thus.',
+            }),
+          }),
+        ]),
+        'pageInfo': dict({
+          'endCursor': 'YXJyYXljb25uZWN0aW9uOjM=',
+          'hasNextPage': False,
+          'hasPreviousPage': False,
+          'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_messages_query_project_filter
+  dict({
+    'data': dict({
+      'messages': dict({
+        'count': 1,
+        'edges': list([
+          dict({
+            'node': dict({
+              'bodyText': 'Ruumisteksti.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Otsikko',
+            }),
+          }),
+        ]),
+        'pageInfo': dict({
+          'endCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+          'hasNextPage': False,
+          'hasPreviousPage': False,
+          'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_messages_query_protocol_filter[email]
+  dict({
+    'data': dict({
+      'messages': dict({
+        'count': 5,
+        'edges': list([
+          dict({
+            'node': dict({
+              'bodyText': 'Which president smile staff country actually generation. Age member whatever open effort clear. Difficult look can. Care figure mention wrong when lead involve. Event lay yes policy data control as receive.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Partner exist true.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Girl middle same space speak. Person the probably deep center develop character situation. Score think turn argue present.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Decade every town.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Voice radio happen color scene. Create state rock only. Several behavior media career decide season mission TV. Work head table city central deep response. Through resource professional debate produce college able.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Walk fish teach.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Sea something western research. Candidate century network bar hear quite wonder. Up always sport return. Light a point charge stand store. Generation able take food share.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Product issue along.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Site chance of performance. Hand cause receive kitchen middle. Step able last in able local garden. Nearly gun two born land military first.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'EMAIL',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Discussion remain.',
+            }),
+          }),
+        ]),
+        'pageInfo': dict({
+          'endCursor': 'YXJyYXljb25uZWN0aW9uOjQ=',
+          'hasNextPage': False,
+          'hasPreviousPage': False,
+          'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_messages_query_protocol_filter[sms]
+  dict({
+    'data': dict({
+      'messages': dict({
+        'count': 5,
+        'edges': list([
+          dict({
+            'node': dict({
+              'bodyText': 'Free heart significant machine try. President compare room hotel town south among. Fall long respond draw military dog. Increase thank certainly again thought summer. Beyond than trial western.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'SMS',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Him question stay.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Child care any. Minute defense level church. Alone our very television beat at success.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'SMS',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Business hot PM.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Enter everything history remember stay public high. Exist shoulder write century. Never skill down subject town. According hard enough watch condition like lay.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'SMS',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Detail.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'From daughter order stay sign discover eight. Toward scientist service wonder everything. Middle moment strong hand push book and interesting. Near increase process truth list pressure. Capital city sing himself yard stuff.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'SMS',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Their tell.',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'bodyText': 'Base may middle good father boy economy. Fly discussion huge get this success. Science sort already name. Senior number scene today friend maintain marriage.',
+              'event': None,
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'project': dict({
+                'year': 2020,
+              }),
+              'protocol': 'SMS',
+              'recipientCount': 0,
+              'recipientSelection': 'ALL',
+              'sentAt': None,
+              'subject': 'Even perhaps that.',
+            }),
+          }),
+        ]),
+        'pageInfo': dict({
+          'endCursor': 'YXJyYXljb25uZWN0aW9uOjQ=',
+          'hasNextPage': False,
+          'hasPreviousPage': False,
+          'startCursor': 'YXJyYXljb25uZWN0aW9uOjA=',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_send_message
+  dict({
+    'data': dict({
+      'sendMessage': dict({
+        'message': dict({
+          'protocol': 'EMAIL',
+          'recipientCount': 1,
+          'sentAt': '2020-12-12T00:00:00+00:00',
+          'subject': 'Otsikko',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_send_sms_message_sent_with_default_language
+  dict({
+    'data': dict({
+      'sendMessage': dict({
+        'message': dict({
+          'protocol': 'SMS',
+          'recipientCount': 1,
+          'sentAt': '2020-12-12T00:00:00+00:00',
+          'subject': 'Otsikko',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_message[None]
+  dict({
+    'data': dict({
+      'updateMessage': dict({
+        'message': dict({
+          'event': dict({
+            'name': 'Poor lawyer treat free heart significant.',
+          }),
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'SMS',
+          'recipientCount': 0,
+          'recipientSelection': 'ATTENDED',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Päivitetty testiteksti.',
+              'languageCode': 'FI',
+              'subject': 'Päivitetty testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_message[event]
+  dict({
+    'data': dict({
+      'updateMessage': dict({
+        'message': dict({
+          'event': dict({
+            'name': 'Up property work indeed take. Popular care receive camera.',
+          }),
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'SMS',
+          'recipientCount': 0,
+          'recipientSelection': 'ATTENDED',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Päivitetty testiteksti.',
+              'languageCode': 'FI',
+              'subject': 'Päivitetty testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_message[event_and_occurrences]
+  dict({
+    'data': dict({
+      'updateMessage': dict({
+        'message': dict({
+          'event': dict({
+            'name': 'Up property work indeed take. Popular care receive camera.',
+          }),
+          'occurrences': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'time': '2016-08-16T07:10:00+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'project': dict({
+            'year': 2020,
+          }),
+          'protocol': 'SMS',
+          'recipientCount': 0,
+          'recipientSelection': 'ATTENDED',
+          'sentAt': None,
+          'translations': list([
+            dict({
+              'bodyText': 'Päivitetty testiteksti.',
+              'languageCode': 'FI',
+              'subject': 'Päivitetty testiotsikko',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---

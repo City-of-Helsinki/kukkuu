@@ -1722,20 +1722,16 @@ def test_events_and_event_groups_query_project_filtering(
     EventFactory(name="Another project's Event", project=another_project)
 
     executed = project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
-    snapshot.assert_match(
-        executed, name="No filter, no permission to see another project"
-    )
+    snapshot.assert_match(executed)
 
     executed = two_project_user_api_client.execute(EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY)
-    snapshot.assert_match(executed, name="No filter, permission to see both projects")
+    snapshot.assert_match(executed)
 
     executed = two_project_user_api_client.execute(
         EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
         variables={"projectId": get_global_id(project)},
     )
-    snapshot.assert_match(
-        executed, name="First project in filter, permission to see both projects"
-    )
+    snapshot.assert_match(executed)
 
 
 @pytest.mark.parametrize("has_event_group", [True, False])

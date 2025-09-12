@@ -1,0 +1,240 @@
+# serializer version: 1
+# name: test_add_venue_project_user
+  dict({
+    'data': dict({
+      'addVenue': dict({
+        'venue': dict({
+          'project': dict({
+            'year': 2020,
+          }),
+          'translations': list([
+            dict({
+              'accessibilityInfo': 'Accessibility info',
+              'additionalInfo': 'Additional info',
+              'address': 'Address',
+              'arrivalInstructions': 'Arrival instruction',
+              'description': 'Venue description',
+              'languageCode': 'FI',
+              'name': 'Venue name',
+              'wcAndFacilities': 'WC & Facilities',
+              'wwwUrl': 'www.url.com',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_venue_project_user
+  dict({
+    'data': dict({
+      'updateVenue': dict({
+        'venue': dict({
+          'project': dict({
+            'year': 2020,
+          }),
+          'translations': list([
+            dict({
+              'accessibilityInfo': 'Accessibility info',
+              'additionalInfo': 'Additional info',
+              'address': 'Address',
+              'arrivalInstructions': 'Arrival instruction',
+              'description': 'Venue description',
+              'languageCode': 'FI',
+              'name': 'Venue name',
+              'wcAndFacilities': 'WC & Facilities',
+              'wwwUrl': 'www.url.com',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_venue_query_normal_user
+  dict({
+    'data': dict({
+      'venue': dict({
+        'accessibilityInfo': '''
+          Like lay still bar. From daughter order stay sign discover eight.
+          Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+        ''',
+        'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+        'address': '''
+          04883 Mary Corner
+          Port Mikeview, NY 31053
+        ''',
+        'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+        'description': '''
+          Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+          Page box child care any concern. Defense level church use.
+        ''',
+        'name': 'Poor lawyer treat free heart significant.',
+        'occurrences': dict({
+          'edges': list([
+          ]),
+        }),
+        'project': dict({
+          'year': 2020,
+        }),
+        'translations': list([
+          dict({
+            'accessibilityInfo': '''
+              Like lay still bar. From daughter order stay sign discover eight.
+              Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+            ''',
+            'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+            'address': '''
+              04883 Mary Corner
+              Port Mikeview, NY 31053
+            ''',
+            'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+            'description': '''
+              Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+              Page box child care any concern. Defense level church use.
+            ''',
+            'languageCode': 'FI',
+            'name': 'Poor lawyer treat free heart significant.',
+            'wcAndFacilities': '''
+              State social believe policy. Score think turn argue present.
+              Prevent pressure point. Voice radio happen color scene.
+              Assume training seek full several. Authority develop identify ready.
+            ''',
+            'wwwUrl': 'http://www.brooks.com/',
+          }),
+        ]),
+        'wcAndFacilities': '''
+          State social believe policy. Score think turn argue present.
+          Prevent pressure point. Voice radio happen color scene.
+          Assume training seek full several. Authority develop identify ready.
+        ''',
+        'wwwUrl': 'http://www.brooks.com/',
+      }),
+    }),
+  })
+# ---
+# name: test_venues_project_filter
+  dict({
+    'data': dict({
+      'venues': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'name': 'Should be returned',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_venues_query_normal_user
+  dict({
+    'data': dict({
+      'venues': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'accessibilityInfo': '''
+                Like lay still bar. From daughter order stay sign discover eight.
+                Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+              ''',
+              'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+              'address': '''
+                04883 Mary Corner
+                Port Mikeview, NY 31053
+              ''',
+              'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+              'description': '''
+                Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                Page box child care any concern. Defense level church use.
+              ''',
+              'name': 'Poor lawyer treat free heart significant.',
+              'occurrences': dict({
+                'edges': list([
+                ]),
+              }),
+              'translations': list([
+                dict({
+                  'accessibilityInfo': '''
+                    Like lay still bar. From daughter order stay sign discover eight.
+                    Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+                  ''',
+                  'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                  'address': '''
+                    04883 Mary Corner
+                    Port Mikeview, NY 31053
+                  ''',
+                  'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+                  'description': '''
+                    Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                    Page box child care any concern. Defense level church use.
+                  ''',
+                  'languageCode': 'FI',
+                  'name': 'Poor lawyer treat free heart significant.',
+                  'wwwUrl': 'http://www.brooks.com/',
+                }),
+              ]),
+              'wcAndFacilities': '''
+                State social believe policy. Score think turn argue present.
+                Prevent pressure point. Voice radio happen color scene.
+                Assume training seek full several. Authority develop identify ready.
+              ''',
+              'wwwUrl': 'http://www.brooks.com/',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_venues_query_ordering[en]
+  dict({
+    'data': dict({
+      'venues': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'name': '2 in Finnish',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'name': '1 in English',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'name': '4 in Finnish',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_venues_query_ordering[fi]
+  dict({
+    'data': dict({
+      'venues': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'name': '2 in Finnish',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'name': '3 in Finnish',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'name': '4 in Finnish',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---

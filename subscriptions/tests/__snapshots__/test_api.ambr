@@ -1,0 +1,141 @@
+# serializer version: 1
+# name: test_child_free_spot_notifications_query
+  dict({
+    'data': dict({
+      'child': dict({
+        'freeSpotNotificationSubscriptions': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'child': dict({
+                  'name': 'Subscriber',
+                }),
+                'createdAt': '2020-12-12T00:00:00+00:00',
+                'id': 'RnJlZVNwb3ROb3RpZmljYXRpb25TdWJzY3JpcHRpb25Ob2RlOjE=',
+                'occurrence': dict({
+                  'time': '1993-10-11T08:38:57.954874+00:00',
+                }),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_has_child_free_spot_notification_query
+  dict({
+    'data': dict({
+      'child': dict({
+        'availableEvents': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'occurrences': dict({
+                  'edges': list([
+                    dict({
+                      'node': dict({
+                        'childHasFreeSpotNotificationSubscription': True,
+                        'time': '2020-12-26T00:00:00+00:00',
+                      }),
+                    }),
+                    dict({
+                      'node': dict({
+                        'childHasFreeSpotNotificationSubscription': False,
+                        'time': '2020-12-27T00:00:00+00:00',
+                      }),
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_subscribe_to_free_spot_notification
+  dict({
+    'data': dict({
+      'subscribeToFreeSpotNotification': dict({
+        'child': dict({
+          'name': 'Subscriber',
+        }),
+        'occurrence': dict({
+          'time': '2020-12-26T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_unsubscribe_from_all_notifications
+  dict({
+    'data': dict({
+      'unsubscribeFromAllNotifications': dict({
+        'guardian': dict({
+          'user': dict({
+            'username': 'blake64',
+          }),
+        }),
+        'unsubscribed': True,
+      }),
+    }),
+  })
+# ---
+# name: test_unsubscribe_from_all_notifications_using_auth_verification_token
+  dict({
+    'data': dict({
+      'unsubscribeFromAllNotifications': dict({
+        'guardian': dict({
+          'user': dict({
+            'username': 'blake64',
+          }),
+        }),
+        'unsubscribed': True,
+      }),
+    }),
+  })
+# ---
+# name: test_unsubscribe_from_all_notifications_using_auth_verification_token_as_logged_in
+  dict({
+    'data': dict({
+      'unsubscribeFromAllNotifications': dict({
+        'guardian': dict({
+          'user': dict({
+            'username': 'blake64',
+          }),
+        }),
+        'unsubscribed': True,
+      }),
+    }),
+  })
+# ---
+# name: test_unsubscribe_from_all_notifications_when_logged_in_user_not_auth_token_user
+  dict({
+    'data': dict({
+      'unsubscribeFromAllNotifications': dict({
+        'guardian': dict({
+          'user': dict({
+            'username': 'jeffersonkimberly',
+          }),
+        }),
+        'unsubscribed': True,
+      }),
+    }),
+  })
+# ---
+# name: test_unsubscribe_from_free_spot_notification
+  dict({
+    'data': dict({
+      'unsubscribeFromFreeSpotNotification': dict({
+        'child': dict({
+          'name': 'Subscriber',
+        }),
+        'occurrence': dict({
+          'time': '1993-10-11T08:38:57.954874+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
