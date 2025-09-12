@@ -1,0 +1,2275 @@
+# serializer version: 1
+# name: test_add_event_group[model_perm]
+  dict({
+    'data': dict({
+      'addEventGroup': dict({
+        'eventGroup': dict({
+          'image': '',
+          'imageAltText': 'Image alt text',
+          'project': dict({
+            'year': 2020,
+          }),
+          'publishedAt': None,
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event group test',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_event_group[object_perm]
+  dict({
+    'data': dict({
+      'addEventGroup': dict({
+        'eventGroup': dict({
+          'image': '',
+          'imageAltText': 'Image alt text',
+          'project': dict({
+            'year': 2020,
+          }),
+          'publishedAt': None,
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event group test',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_event_project_user
+  dict({
+    'data': dict({
+      'addEvent': dict({
+        'event': dict({
+          'capacityPerOccurrence': 30,
+          'duration': 1000,
+          'eventGroup': dict({
+            'id': 'RXZlbnRHcm91cE5vZGU6MQ==',
+          }),
+          'id': 'RXZlbnROb2RlOjE=',
+          'image': '',
+          'imageAltText': 'Image alt text',
+          'participantsPerInvite': 'FAMILY',
+          'project': dict({
+            'year': 2020,
+          }),
+          'publishedAt': None,
+          'readyForEventGroupPublishing': False,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event test',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_occurrence_project_user
+  dict({
+    'data': dict({
+      'addOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 35,
+          'capacityOverride': None,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'FI',
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_occurrence_ticket_system_url
+  dict({
+    'data': dict({
+      'addOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 9,
+          'capacityOverride': None,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'FI',
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+            'url': 'https://example.com',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_add_ticketmaster_event
+  dict({
+    'data': dict({
+      'addEvent': dict({
+        'event': dict({
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_child_enrol_occurrence_from_different_project
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Derek Perry',
+          }),
+          'createdAt': '2020-12-12T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_delete_event_group[model_perm]
+  dict({
+    'data': dict({
+      'deleteEventGroup': dict({
+        '__typename': 'DeleteEventGroupMutationPayload',
+      }),
+    }),
+  })
+# ---
+# name: test_delete_event_group[object_perm]
+  dict({
+    'data': dict({
+      'deleteEventGroup': dict({
+        '__typename': 'DeleteEventGroupMutationPayload',
+      }),
+    }),
+  })
+# ---
+# name: test_enrol_limit_reached[False-0-False]
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Derek Perry',
+          }),
+          'createdAt': '2020-11-11T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-11-11T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrol_limit_reached[False-1-False]
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Derek Perry',
+          }),
+          'createdAt': '2020-11-11T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-11-11T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrol_limit_reached[True-0-False]
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Derek Perry',
+          }),
+          'createdAt': '2020-11-11T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-11-11T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrol_limit_reached[True-1-False]
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Derek Perry',
+          }),
+          'createdAt': '2020-11-11T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-11-11T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrol_occurrence
+  dict({
+    'data': dict({
+      'enrolOccurrence': dict({
+        'enrolment': dict({
+          'child': dict({
+            'name': 'Sandra Brown',
+          }),
+          'createdAt': '2020-12-12T00:00:00+00:00',
+          'occurrence': dict({
+            'time': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrolment_visibility
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'enrolmentCount': 4,
+        'enrolments': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'child': dict({
+                  'name': 'Sandra Brown',
+                }),
+              }),
+            }),
+          ]),
+        }),
+        'event': dict({
+          'capacityPerOccurrence': 25,
+          'duration': 1,
+          'image': 'http://testserver/media/series.jpg',
+          'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+          'translations': list([
+            dict({
+              'description': 'Law ago respond yard door indicate country. Direction traditional whether serious sister work. Beat pressure unit toward movie by.',
+              'languageCode': 'FI',
+              'name': 'Detail audience campaign college career fight data.',
+              'shortDescription': 'Last in able local garden modern they.',
+            }),
+          ]),
+        }),
+        'occurrenceLanguage': 'FI',
+        'remainingCapacity': 21,
+        'ticketSystem': dict({
+          'type': 'INTERNAL',
+        }),
+        'time': '2020-12-12T00:00:00+00:00',
+        'venue': dict({
+          'translations': list([
+            dict({
+              'accessibilityInfo': 'Moment strong hand push book and interesting sit. Near increase process truth list pressure. Capital city sing himself yard stuff.',
+              'additionalInfo': '''
+                Sense person the probably. Simply state social believe policy. Score think turn argue present.
+                Prevent pressure point. Voice radio happen color scene.
+              ''',
+              'address': '''
+                404 Figueroa Trace
+                Pollardview, GA 81371
+              ''',
+              'arrivalInstructions': '''
+                Water those notice medical science sort. Front affect senior. Mission network who think significant land especially.
+                Staff read rule point leg within. Staff country actually generation five training.
+              ''',
+              'description': '''
+                Page box child care any concern. Defense level church use.
+                Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+              ''',
+              'languageCode': 'FI',
+              'name': 'Dog hospital number.',
+              'wwwUrl': 'https://www.beck-sherman.com/',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_enrolment_visibility_project_user
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'enrolments': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'child': dict({
+                  'name': 'ME ME ME',
+                }),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_erroneous_ticket_verification
+  dict({
+    'data': dict({
+      'verifyTicket': None,
+    }),
+    'errors': list([
+      dict({
+        'extensions': dict({
+          'code': 'GENERAL_ERROR',
+        }),
+        'locations': list([
+          dict({
+            'column': 5,
+            'line': 3,
+          }),
+        ]),
+        'message': 'Could not decode the enrolment id',
+        'path': list([
+          'verifyTicket',
+        ]),
+      }),
+    ]),
+  })
+# ---
+# name: test_event_filter_by_project
+  dict({
+    'data': dict({
+      'events': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'name': 'Should be visible',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_events_filtering_by_available_for_child_id
+  dict({
+    'data': dict({
+      'eventGroup': dict({
+        'events': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'name': 'ME ME ME',
+              }),
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_events_filtering_by_available_for_child_id.1
+  dict({
+    'data': dict({
+      'eventGroup': dict({
+        'events': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'name': 'Election stay every something base.',
+              }),
+            }),
+            dict({
+              'node': dict({
+                'name': 'ME ME ME',
+              }),
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_query_normal_user_and_project_user[False]
+  dict({
+    'data': dict({
+      'eventGroup': None,
+    }),
+  })
+# ---
+# name: test_event_group_query_normal_user_and_project_user[False].1
+  dict({
+    'data': dict({
+      'eventGroup': dict({
+        'createdAt': '2020-12-12T00:00:00+00:00',
+        'description': '''
+          Page box child care any concern. Defense level church use.
+          Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+        ''',
+        'events': dict({
+          'edges': list([
+          ]),
+        }),
+        'image': 'thank.jpg',
+        'imageAltText': '',
+        'name': 'Lead behind everyone agency start majority.',
+        'project': dict({
+          'year': 2020,
+        }),
+        'publishedAt': None,
+        'shortDescription': 'Answer entire increase thank certainly again thought.',
+        'translations': list([
+          dict({
+            'description': '''
+              Page box child care any concern. Defense level church use.
+              Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+            ''',
+            'imageAltText': '',
+            'languageCode': 'FI',
+            'name': 'Lead behind everyone agency start majority.',
+            'shortDescription': 'Answer entire increase thank certainly again thought.',
+          }),
+        ]),
+        'updatedAt': '2020-12-12T00:00:00+00:00',
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_query_normal_user_and_project_user[True]
+  dict({
+    'data': dict({
+      'eventGroup': dict({
+        'createdAt': '2020-12-12T00:00:00+00:00',
+        'description': '''
+          Page box child care any concern. Defense level church use.
+          Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+        ''',
+        'events': dict({
+          'edges': list([
+          ]),
+        }),
+        'image': 'thank.jpg',
+        'imageAltText': '',
+        'name': 'Lead behind everyone agency start majority.',
+        'project': dict({
+          'year': 2020,
+        }),
+        'publishedAt': '2020-12-12T00:00:00+00:00',
+        'shortDescription': 'Answer entire increase thank certainly again thought.',
+        'translations': list([
+          dict({
+            'description': '''
+              Page box child care any concern. Defense level church use.
+              Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+            ''',
+            'imageAltText': '',
+            'languageCode': 'FI',
+            'name': 'Lead behind everyone agency start majority.',
+            'shortDescription': 'Answer entire increase thank certainly again thought.',
+          }),
+        ]),
+        'updatedAt': '2020-12-12T00:00:00+00:00',
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_query_normal_user_and_project_user[True].1
+  dict({
+    'data': dict({
+      'eventGroup': dict({
+        'createdAt': '2020-12-12T00:00:00+00:00',
+        'description': '''
+          Page box child care any concern. Defense level church use.
+          Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+        ''',
+        'events': dict({
+          'edges': list([
+          ]),
+        }),
+        'image': 'thank.jpg',
+        'imageAltText': '',
+        'name': 'Lead behind everyone agency start majority.',
+        'project': dict({
+          'year': 2020,
+        }),
+        'publishedAt': '2020-12-12T00:00:00+00:00',
+        'shortDescription': 'Answer entire increase thank certainly again thought.',
+        'translations': list([
+          dict({
+            'description': '''
+              Page box child care any concern. Defense level church use.
+              Never news behind. Beat at success decade either enter everything. Newspaper force newspaper business himself exist.
+            ''',
+            'imageAltText': '',
+            'languageCode': 'FI',
+            'name': 'Lead behind everyone agency start majority.',
+            'shortDescription': 'Answer entire increase thank certainly again thought.',
+          }),
+        ]),
+        'updatedAt': '2020-12-12T00:00:00+00:00',
+      }),
+    }),
+  })
+# ---
+# name: test_event_group_query_wrong_project
+  dict({
+    'data': dict({
+      'eventGroup': None,
+    }),
+  })
+# ---
+# name: test_event_query_normal_user
+  dict({
+    'data': dict({
+      'event': dict({
+        'capacityPerOccurrence': 35,
+        'createdAt': '2020-12-12T00:00:00+00:00',
+        'description': '''
+          Least then top sing. Serious listen police shake. Page box child care any concern.
+          Agree room laugh prevent make. Our very television beat at success decade.
+        ''',
+        'duration': 181,
+        'image': 'http://testserver/media/teacher.jpg',
+        'imageAltText': '',
+        'name': 'Poor lawyer treat free heart significant.',
+        'occurrences': dict({
+          'edges': list([
+            dict({
+              'node': dict({
+                'enrolmentCount': 0,
+                'remainingCapacity': 35,
+                'ticketSystem': dict({
+                  'type': 'INTERNAL',
+                }),
+                'time': '1970-12-29T14:07:50.629900+00:00',
+                'venue': dict({
+                  'translations': list([
+                    dict({
+                      'description': 'Later evening southern would according strong. Analysis season project executive entire.',
+                      'languageCode': 'FI',
+                      'name': 'Skill down subject town range north skin.',
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+          ]),
+        }),
+        'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+        'project': dict({
+          'year': 2020,
+        }),
+        'publishedAt': '2020-12-12T00:00:00+00:00',
+        'shortDescription': 'Together history perform.',
+        'ticketSystem': dict({
+          'type': 'INTERNAL',
+        }),
+        'translations': list([
+          dict({
+            'description': '''
+              Least then top sing. Serious listen police shake. Page box child care any concern.
+              Agree room laugh prevent make. Our very television beat at success decade.
+            ''',
+            'imageAltText': '',
+            'languageCode': 'FI',
+            'name': 'Poor lawyer treat free heart significant.',
+            'shortDescription': 'Together history perform.',
+          }),
+        ]),
+        'updatedAt': '2020-12-12T00:00:00+00:00',
+      }),
+    }),
+  })
+# ---
+# name: test_event_ticket_system_password_counts
+  dict({
+    'data': dict({
+      'event': dict({
+        'ticketSystem': dict({
+          'freePasswordCount': 3,
+          'usedPasswordCount': 2,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_event_ticket_system_password_own_child_password_exists
+  dict({
+    'data': dict({
+      'event': dict({
+        'ticketSystem': dict({
+          'childPassword': 'the correct password',
+          'type': 'TICKETMASTER',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_normal_user
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'Published internal Event',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'Ticket master event',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'Lippupiste event',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'Tixly event',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': 'Published EventGroup',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_project_filtering
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': "The project's Event",
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': "The project's EventGroup",
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_project_filtering.1
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': "The project's Event",
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': "Another project's Event",
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': "The project's EventGroup",
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': "Another project's EventGroup",
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_project_filtering.2
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': "The project's Event",
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': "The project's EventGroup",
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_project_user
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'I should be the first',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': 'I should be the in the middle',
+            }),
+          }),
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'I should be the last',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_upcoming_filter[False]
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventNode',
+              'name': 'In the future',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_and_event_groups_query_upcoming_filter[True]
+  dict({
+    'data': dict({
+      'eventsAndEventGroups': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              '__typename': 'EventGroupNode',
+              'name': 'In the future',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_query_normal_user
+  dict({
+    'data': dict({
+      'events': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'capacityPerOccurrence': 35,
+              'createdAt': '2020-12-12T00:00:00+00:00',
+              'description': '''
+                Least then top sing. Serious listen police shake. Page box child care any concern.
+                Agree room laugh prevent make. Our very television beat at success decade.
+              ''',
+              'duration': 181,
+              'image': 'http://testserver/media/teacher.jpg',
+              'imageAltText': '',
+              'name': 'Poor lawyer treat free heart significant.',
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'enrolmentCount': 0,
+                      'remainingCapacity': 35,
+                      'ticketSystem': dict({
+                        'type': 'INTERNAL',
+                      }),
+                      'time': '1970-12-29T14:07:50.629900+00:00',
+                      'venue': dict({
+                        'translations': list([
+                          dict({
+                            'description': 'Later evening southern would according strong. Analysis season project executive entire.',
+                            'languageCode': 'FI',
+                            'name': 'Skill down subject town range north skin.',
+                          }),
+                        ]),
+                      }),
+                    }),
+                  }),
+                ]),
+              }),
+              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'project': dict({
+                'year': 2020,
+              }),
+              'publishedAt': '2020-12-12T00:00:00+00:00',
+              'shortDescription': 'Together history perform.',
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'translations': list([
+                dict({
+                  'description': '''
+                    Least then top sing. Serious listen police shake. Page box child care any concern.
+                    Agree room laugh prevent make. Our very television beat at success decade.
+                  ''',
+                  'imageAltText': '',
+                  'languageCode': 'FI',
+                  'name': 'Poor lawyer treat free heart significant.',
+                  'shortDescription': 'Together history perform.',
+                }),
+              ]),
+              'updatedAt': '2020-12-12T00:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_events_query_project_user
+  dict({
+    'data': dict({
+      'events': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'capacityPerOccurrence': 35,
+              'createdAt': '2020-12-12T00:00:00+00:00',
+              'description': '''
+                Least then top sing. Serious listen police shake. Page box child care any concern.
+                Agree room laugh prevent make. Our very television beat at success decade.
+              ''',
+              'duration': 181,
+              'image': 'http://testserver/media/teacher.jpg',
+              'imageAltText': '',
+              'name': 'Poor lawyer treat free heart significant.',
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'enrolmentCount': 0,
+                      'remainingCapacity': 35,
+                      'ticketSystem': dict({
+                        'type': 'INTERNAL',
+                      }),
+                      'time': '2004-11-06T11:31:21.341823+00:00',
+                      'venue': dict({
+                        'translations': list([
+                          dict({
+                            'description': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                            'languageCode': 'FI',
+                            'name': 'Land especially can quite industry relationship very.',
+                          }),
+                        ]),
+                      }),
+                    }),
+                  }),
+                ]),
+              }),
+              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'project': dict({
+                'year': 2020,
+              }),
+              'publishedAt': '2020-12-12T00:00:00+00:00',
+              'shortDescription': 'Together history perform.',
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'translations': list([
+                dict({
+                  'description': '''
+                    Least then top sing. Serious listen police shake. Page box child care any concern.
+                    Agree room laugh prevent make. Our very television beat at success decade.
+                  ''',
+                  'imageAltText': '',
+                  'languageCode': 'FI',
+                  'name': 'Poor lawyer treat free heart significant.',
+                  'shortDescription': 'Together history perform.',
+                }),
+              ]),
+              'updatedAt': '2020-12-12T00:00:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'capacityPerOccurrence': 49,
+              'createdAt': '2020-12-12T00:00:00+00:00',
+              'description': '''
+                Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
+                If his their best. Election stay every something base.
+              ''',
+              'duration': 42,
+              'image': 'http://testserver/media/us.jpg',
+              'imageAltText': '',
+              'name': 'Skill down subject town range north skin.',
+              'occurrences': dict({
+                'edges': list([
+                  dict({
+                    'node': dict({
+                      'enrolmentCount': 0,
+                      'remainingCapacity': 49,
+                      'ticketSystem': dict({
+                        'type': 'INTERNAL',
+                      }),
+                      'time': '1975-04-24T15:42:40.246613+00:00',
+                      'venue': dict({
+                        'translations': list([
+                          dict({
+                            'description': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                            'languageCode': 'FI',
+                            'name': 'Land especially can quite industry relationship very.',
+                          }),
+                        ]),
+                      }),
+                    }),
+                  }),
+                ]),
+              }),
+              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'project': dict({
+                'year': 2020,
+              }),
+              'publishedAt': None,
+              'shortDescription': 'Later evening southern would according strong.',
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'translations': list([
+                dict({
+                  'description': '''
+                    Wonder everything pay parent theory go home. Book and interesting sit future dream party. Truth list pressure stage history.
+                    If his their best. Election stay every something base.
+                  ''',
+                  'imageAltText': '',
+                  'languageCode': 'FI',
+                  'name': 'Skill down subject town range north skin.',
+                  'shortDescription': 'Later evening southern would according strong.',
+                }),
+              ]),
+              'updatedAt': '2020-12-12T00:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_import_ticket_system_passwords
+  dict({
+    'data': dict({
+      'importTicketSystemPasswords': dict({
+        'errors': None,
+        'event': dict({
+          'name': 'Poor lawyer treat free heart significant.',
+        }),
+        'passwords': list([
+          '123',
+          'asd',
+          'xyz321',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_import_ticket_system_passwords_errors_with_integrity_errors
+  dict({
+    'data': dict({
+      'importTicketSystemPasswords': dict({
+        'errors': list([
+          dict({
+            'field': 'passwords',
+            'message': 'Could not import password',
+            'value': '123',
+          }),
+          dict({
+            'field': 'passwords',
+            'message': 'Could not import password',
+            'value': 'asd',
+          }),
+          dict({
+            'field': 'passwords',
+            'message': 'Could not import password',
+            'value': 'xyz321',
+          }),
+        ]),
+        'event': dict({
+          'name': 'Poor lawyer treat free heart significant.',
+        }),
+        'passwords': list([
+          'more',
+          'passwords',
+          'to',
+          'test',
+          'errors',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_available_capacity_and_enrolment_count
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'enrolmentCount': 3,
+        'enrolments': dict({
+          'edges': list([
+          ]),
+        }),
+        'event': dict({
+          'capacityPerOccurrence': 9,
+          'duration': 1,
+          'image': 'http://testserver/media/law.jpg',
+          'participantsPerInvite': 'FAMILY',
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+          'translations': list([
+            dict({
+              'description': 'Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.',
+              'languageCode': 'FI',
+              'name': 'Always sport return student light a point.',
+              'shortDescription': 'Who Mrs public east site chance.',
+            }),
+          ]),
+        }),
+        'occurrenceLanguage': 'FI',
+        'remainingCapacity': 6,
+        'ticketSystem': dict({
+          'type': 'INTERNAL',
+        }),
+        'time': '2020-12-12T00:00:00+00:00',
+        'venue': dict({
+          'translations': list([
+            dict({
+              'accessibilityInfo': '''
+                Like lay still bar. From daughter order stay sign discover eight.
+                Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+              ''',
+              'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+              'address': '''
+                04883 Mary Corner
+                Port Mikeview, NY 31053
+              ''',
+              'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+              'description': '''
+                Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                Page box child care any concern. Defense level church use.
+              ''',
+              'languageCode': 'FI',
+              'name': 'Poor lawyer treat free heart significant.',
+              'wwwUrl': 'http://www.brooks.com/',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[0-0]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 0,
+        'capacityOverride': 0,
+        'enrolmentCount': 0,
+        'remainingCapacity': 0,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[5-0]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 5,
+        'capacityOverride': 5,
+        'enrolmentCount': 0,
+        'remainingCapacity': 5,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[5-4]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 5,
+        'capacityOverride': 5,
+        'enrolmentCount': 4,
+        'remainingCapacity': 1,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[5-5]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 5,
+        'capacityOverride': 5,
+        'enrolmentCount': 5,
+        'remainingCapacity': 0,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[5-6]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 5,
+        'capacityOverride': 5,
+        'enrolmentCount': 6,
+        'remainingCapacity': 0,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[None-0]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 10,
+        'capacityOverride': None,
+        'enrolmentCount': 0,
+        'remainingCapacity': 10,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[None-10]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 10,
+        'capacityOverride': None,
+        'enrolmentCount': 10,
+        'remainingCapacity': 0,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[None-11]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 10,
+        'capacityOverride': None,
+        'enrolmentCount': 11,
+        'remainingCapacity': 0,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_capacity[None-9]
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'capacity': 10,
+        'capacityOverride': None,
+        'enrolmentCount': 9,
+        'remainingCapacity': 1,
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_query_normal_user
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'enrolmentCount': 0,
+        'enrolments': dict({
+          'edges': list([
+          ]),
+        }),
+        'event': dict({
+          'capacityPerOccurrence': 9,
+          'duration': 1,
+          'image': 'http://testserver/media/law.jpg',
+          'participantsPerInvite': 'FAMILY',
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+          'translations': list([
+            dict({
+              'description': 'Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.',
+              'languageCode': 'FI',
+              'name': 'Always sport return student light a point.',
+              'shortDescription': 'Who Mrs public east site chance.',
+            }),
+          ]),
+        }),
+        'occurrenceLanguage': 'FI',
+        'remainingCapacity': 9,
+        'ticketSystem': dict({
+          'type': 'INTERNAL',
+        }),
+        'time': '2020-12-12T00:00:00+00:00',
+        'venue': dict({
+          'translations': list([
+            dict({
+              'accessibilityInfo': '''
+                Like lay still bar. From daughter order stay sign discover eight.
+                Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+              ''',
+              'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+              'address': '''
+                04883 Mary Corner
+                Port Mikeview, NY 31053
+              ''',
+              'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+              'description': '''
+                Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                Page box child care any concern. Defense level church use.
+              ''',
+              'languageCode': 'FI',
+              'name': 'Poor lawyer treat free heart significant.',
+              'wwwUrl': 'http://www.brooks.com/',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrence_ticket_system
+  dict({
+    'data': dict({
+      'occurrence': dict({
+        'ticketSystem': dict({
+          'type': 'TICKETMASTER',
+          'url': 'https://example.com',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_date
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1970-01-02T00:00:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '1970-01-02T00:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_event
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1970-01-01T12:00:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '1970-01-01T12:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_language
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1988-06-02T17:48:36.943149+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '1998-01-14T18:56:11.484399+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_project
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1970-01-01T12:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_time
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1970-01-01T11:00:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '1970-01-02T11:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_upcoming
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1970-01-01T00:00:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '2020-12-12T00:00:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_upcoming_with_leeway[False]
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '2020-12-11T23:29:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '2020-12-11T23:31:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_upcoming_with_leeway[True]
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '2020-12-11T23:31:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_upcoming_with_ongoing[False]
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '2020-12-11T22:29:00+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '2020-12-11T22:31:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_upcoming_with_ongoing[True]
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '2020-12-11T22:31:00+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_filter_by_venue
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'time': '1971-09-03T06:33:22.223652+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '1981-10-20T20:41:52.047649+00:00',
+            }),
+          }),
+          dict({
+            'node': dict({
+              'time': '2017-01-24T18:32:46.127687+00:00',
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_query_normal_user
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'enrolmentCount': 0,
+              'event': dict({
+                'capacityPerOccurrence': 9,
+                'duration': 1,
+                'image': 'http://testserver/media/law.jpg',
+                'participantsPerInvite': 'FAMILY',
+                'publishedAt': '2020-12-12T00:00:00+00:00',
+                'translations': list([
+                  dict({
+                    'description': 'Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.',
+                    'languageCode': 'FI',
+                    'name': 'Always sport return student light a point.',
+                    'shortDescription': 'Who Mrs public east site chance.',
+                  }),
+                ]),
+              }),
+              'remainingCapacity': 9,
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'time': '2020-12-12T00:00:00+00:00',
+              'venue': dict({
+                'translations': list([
+                  dict({
+                    'accessibilityInfo': '''
+                      Like lay still bar. From daughter order stay sign discover eight.
+                      Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+                    ''',
+                    'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                    'address': '''
+                      04883 Mary Corner
+                      Port Mikeview, NY 31053
+                    ''',
+                    'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+                    'description': '''
+                      Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                      Page box child care any concern. Defense level church use.
+                    ''',
+                    'languageCode': 'FI',
+                    'name': 'Poor lawyer treat free heart significant.',
+                    'wwwUrl': 'http://www.brooks.com/',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_occurrences_query_project_user
+  dict({
+    'data': dict({
+      'occurrences': dict({
+        'edges': list([
+          dict({
+            'node': dict({
+              'enrolmentCount': 0,
+              'event': dict({
+                'capacityPerOccurrence': 9,
+                'duration': 1,
+                'image': 'http://testserver/media/law.jpg',
+                'participantsPerInvite': 'FAMILY',
+                'publishedAt': '2020-12-12T00:00:00+00:00',
+                'translations': list([
+                  dict({
+                    'description': 'Able last in able local. Quite nearly gun two born land. Yeah trouble method yard campaign former model.',
+                    'languageCode': 'FI',
+                    'name': 'Always sport return student light a point.',
+                    'shortDescription': 'Who Mrs public east site chance.',
+                  }),
+                ]),
+              }),
+              'remainingCapacity': 9,
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'time': '2020-12-12T00:00:00+00:00',
+              'venue': dict({
+                'translations': list([
+                  dict({
+                    'accessibilityInfo': '''
+                      Like lay still bar. From daughter order stay sign discover eight.
+                      Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+                    ''',
+                    'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                    'address': '''
+                      04883 Mary Corner
+                      Port Mikeview, NY 31053
+                    ''',
+                    'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+                    'description': '''
+                      Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                      Page box child care any concern. Defense level church use.
+                    ''',
+                    'languageCode': 'FI',
+                    'name': 'Poor lawyer treat free heart significant.',
+                    'wwwUrl': 'http://www.brooks.com/',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          dict({
+            'node': dict({
+              'enrolmentCount': 0,
+              'event': dict({
+                'capacityPerOccurrence': 47,
+                'duration': 245,
+                'image': 'http://testserver/media/answer.jpg',
+                'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+                'publishedAt': None,
+                'translations': list([
+                  dict({
+                    'description': '''
+                      Indeed discuss challenge school rule wish. Along hear follow sometimes.
+                      Far magazine on summer.
+                    ''',
+                    'languageCode': 'FI',
+                    'name': 'Notice rule huge realize at rather.',
+                    'shortDescription': 'Once strong artist save decide listen.',
+                  }),
+                ]),
+              }),
+              'remainingCapacity': 47,
+              'ticketSystem': dict({
+                'type': 'INTERNAL',
+              }),
+              'time': '2020-12-12T06:00:00+00:00',
+              'venue': dict({
+                'translations': list([
+                  dict({
+                    'accessibilityInfo': '''
+                      Like lay still bar. From daughter order stay sign discover eight.
+                      Scientist service wonder everything pay. Moment strong hand push book and interesting sit.
+                    ''',
+                    'additionalInfo': 'Training thought price. Effort clear and local challenge box. Care figure mention wrong when lead involve.',
+                    'address': '''
+                      04883 Mary Corner
+                      Port Mikeview, NY 31053
+                    ''',
+                    'arrivalInstructions': 'Benefit treat final central. Past ready join enjoy. Huge get this success commercial recently from.',
+                    'description': '''
+                      Together history perform. Respond draw military dog hospital number. Certainly again thought summer because serious listen.
+                      Page box child care any concern. Defense level church use.
+                    ''',
+                    'languageCode': 'FI',
+                    'name': 'Poor lawyer treat free heart significant.',
+                    'wwwUrl': 'http://www.brooks.com/',
+                  }),
+                ]),
+              }),
+            }),
+          }),
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_event[model_perm]
+  dict({
+    'data': dict({
+      'publishEvent': dict({
+        'event': dict({
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_event[object_perm]
+  dict({
+    'data': dict({
+      'publishEvent': dict({
+        'event': dict({
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_event_group[model_perm]
+  dict({
+    'data': dict({
+      'publishEventGroup': dict({
+        'eventGroup': dict({
+          'events': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-12T00:00:00+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_event_group[object_perm]
+  dict({
+    'data': dict({
+      'publishEventGroup': dict({
+        'eventGroup': dict({
+          'events': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-12T00:00:00+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_ticketmaster_event[model_perm-False]
+  dict({
+    'data': dict({
+      'publishEvent': dict({
+        'event': dict({
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_publish_ticketmaster_event[object_perm-False]
+  dict({
+    'data': dict({
+      'publishEvent': dict({
+        'event': dict({
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_republish_event_group[model_perm-True]
+  dict({
+    'data': dict({
+      'publishEventGroup': dict({
+        'eventGroup': dict({
+          'events': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-11T00:00:00+00:00',
+                }),
+              }),
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-12T00:00:00+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_republish_event_group[object_perm-True]
+  dict({
+    'data': dict({
+      'publishEventGroup': dict({
+        'eventGroup': dict({
+          'events': dict({
+            'edges': list([
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-11T00:00:00+00:00',
+                }),
+              }),
+              dict({
+                'node': dict({
+                  'publishedAt': '2020-12-12T00:00:00+00:00',
+                }),
+              }),
+            ]),
+          }),
+          'publishedAt': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_required_translation
+  dict({
+    'data': dict({
+      'addEvent': dict({
+        'event': dict({
+          'capacityPerOccurrence': 30,
+          'duration': 1000,
+          'eventGroup': None,
+          'id': 'RXZlbnROb2RlOjI=',
+          'image': '',
+          'imageAltText': 'Image alt text',
+          'participantsPerInvite': 'FAMILY',
+          'project': dict({
+            'year': 2020,
+          }),
+          'publishedAt': None,
+          'readyForEventGroupPublishing': False,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event test',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_set_enrolment_attendance[None]
+  dict({
+    'data': dict({
+      'setEnrolmentAttendance': dict({
+        'enrolment': dict({
+          'attended': None,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_set_enrolment_attendance[True]
+  dict({
+    'data': dict({
+      'setEnrolmentAttendance': dict({
+        'enrolment': dict({
+          'attended': True,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_unenrol_occurrence
+  dict({
+    'data': dict({
+      'unenrolOccurrence': dict({
+        'child': dict({
+          'name': 'David Perry',
+        }),
+        'occurrence': dict({
+          'time': '2020-12-12T00:00:00+00:00',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_event_group[model_perm]
+  dict({
+    'data': dict({
+      'updateEventGroup': dict({
+        'eventGroup': dict({
+          'image': 'teacher.jpg',
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event group test in suomi',
+              'shortDescription': 'Short desc',
+            }),
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'SV',
+              'name': 'Event group test in swedish',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_event_group[object_perm]
+  dict({
+    'data': dict({
+      'updateEventGroup': dict({
+        'eventGroup': dict({
+          'image': 'teacher.jpg',
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event group test in suomi',
+              'shortDescription': 'Short desc',
+            }),
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'SV',
+              'name': 'Event group test in swedish',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_event_project_user
+  dict({
+    'data': dict({
+      'updateEvent': dict({
+        'event': dict({
+          'capacityPerOccurrence': 30,
+          'duration': 1000,
+          'eventGroup': dict({
+            'id': 'RXZlbnRHcm91cE5vZGU6MQ==',
+          }),
+          'id': 'RXZlbnROb2RlOjE=',
+          'image': 'http://testserver/media/teacher.jpg',
+          'imageAltText': 'Image alt text',
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'participantsPerInvite': 'FAMILY',
+          'readyForEventGroupPublishing': True,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'translations': list([
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'FI',
+              'name': 'Event test in suomi',
+              'shortDescription': 'Short desc',
+            }),
+            dict({
+              'description': 'desc',
+              'imageAltText': 'Image alt text',
+              'languageCode': 'SV',
+              'name': 'Event test in swedish',
+              'shortDescription': 'Short desc',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_event_ready_for_event_group_publishing
+  dict({
+    'data': dict({
+      'updateEvent': dict({
+        'event': dict({
+          'capacityPerOccurrence': 35,
+          'duration': 181,
+          'eventGroup': dict({
+            'id': 'RXZlbnRHcm91cE5vZGU6MQ==',
+          }),
+          'id': 'RXZlbnROb2RlOjE=',
+          'image': 'http://testserver/media/teacher.jpg',
+          'imageAltText': '',
+          'occurrences': dict({
+            'edges': list([
+            ]),
+          }),
+          'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+          'readyForEventGroupPublishing': True,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'translations': list([
+            dict({
+              'description': '''
+                Least then top sing. Serious listen police shake. Page box child care any concern.
+                Agree room laugh prevent make. Our very television beat at success decade.
+              ''',
+              'imageAltText': '',
+              'languageCode': 'FI',
+              'name': 'Poor lawyer treat free heart significant.',
+              'shortDescription': 'Together history perform.',
+            }),
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_occurrence_different_year[True]
+  dict({
+    'data': dict({
+      'updateOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 5,
+          'capacityOverride': 5,
+          'enrolmentCount': 0,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'SV',
+          'remainingCapacity': 5,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'time': '2021-12-12T00:00:00+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_occurrence_project_user
+  dict({
+    'data': dict({
+      'updateOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 5,
+          'capacityOverride': 5,
+          'enrolmentCount': 0,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'SV',
+          'remainingCapacity': 5,
+          'ticketSystem': dict({
+            'type': 'INTERNAL',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_occurrence_ticket_system_url[False-False]
+  dict({
+    'data': dict({
+      'updateOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 5,
+          'capacityOverride': 5,
+          'enrolmentCount': 0,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'SV',
+          'remainingCapacity': 5,
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+            'url': 'https://updated.example.com',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_occurrence_ticket_system_url[False-True]
+  dict({
+    'data': dict({
+      'updateOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 5,
+          'capacityOverride': 5,
+          'enrolmentCount': 0,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'SV',
+          'remainingCapacity': 5,
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+            'url': '',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_occurrence_ticket_system_url[True-False]
+  dict({
+    'data': dict({
+      'updateOccurrence': dict({
+        'occurrence': dict({
+          'capacity': 5,
+          'capacityOverride': 5,
+          'enrolmentCount': 0,
+          'event': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+          'occurrenceLanguage': 'SV',
+          'remainingCapacity': 5,
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+            'url': 'https://updated.example.com',
+          }),
+          'time': '1986-12-12T16:40:48+00:00',
+          'venue': dict({
+            'createdAt': '2020-12-12T00:00:00+00:00',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_ticketmaster_event
+  dict({
+    'data': dict({
+      'updateEvent': dict({
+        'event': dict({
+          'ticketSystem': dict({
+            'type': 'TICKETMASTER',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_valid_ticket_attended[False-False]
+  dict({
+    'data': dict({
+      'updateTicketAttended': dict({
+        'ticket': dict({
+          'attended': False,
+          'eventName': 'Record card my. Sure sister return.',
+          'occurrenceArrivalStatus': dict({
+            'attendedEnrolmentCount': 0,
+            'enrolmentCount': 1,
+          }),
+          'occurrenceTime': '2020-12-12T00:00:00+00:00',
+          'validity': True,
+          'venueName': 'Remember stay public high concern glass person.',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_valid_ticket_attended[False-True]
+  dict({
+    'data': dict({
+      'updateTicketAttended': dict({
+        'ticket': dict({
+          'attended': True,
+          'eventName': 'Record card my. Sure sister return.',
+          'occurrenceArrivalStatus': dict({
+            'attendedEnrolmentCount': 1,
+            'enrolmentCount': 1,
+          }),
+          'occurrenceTime': '2020-12-12T00:00:00+00:00',
+          'validity': True,
+          'venueName': 'Remember stay public high concern glass person.',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_valid_ticket_attended[True-False]
+  dict({
+    'data': dict({
+      'updateTicketAttended': dict({
+        'ticket': dict({
+          'attended': False,
+          'eventName': 'Record card my. Sure sister return.',
+          'occurrenceArrivalStatus': dict({
+            'attendedEnrolmentCount': 0,
+            'enrolmentCount': 1,
+          }),
+          'occurrenceTime': '2020-12-12T00:00:00+00:00',
+          'validity': True,
+          'venueName': 'Remember stay public high concern glass person.',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_update_valid_ticket_attended[True-True]
+  dict({
+    'data': dict({
+      'updateTicketAttended': dict({
+        'ticket': dict({
+          'attended': True,
+          'eventName': 'Record card my. Sure sister return.',
+          'occurrenceArrivalStatus': dict({
+            'attendedEnrolmentCount': 1,
+            'enrolmentCount': 1,
+          }),
+          'occurrenceTime': '2020-12-12T00:00:00+00:00',
+          'validity': True,
+          'venueName': 'Remember stay public high concern glass person.',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_verify_invalid_ticket
+  dict({
+    'data': dict({
+      'verifyTicket': dict({
+        'attended': None,
+        'eventName': 'Record card my. Sure sister return.',
+        'occurrenceArrivalStatus': dict({
+          'attendedEnrolmentCount': 0,
+          'enrolmentCount': 1,
+        }),
+        'occurrenceTime': '2020-12-11T00:00:00+00:00',
+        'validity': False,
+        'venueName': 'Remember stay public high concern glass person.',
+      }),
+    }),
+  })
+# ---
+# name: test_verify_valid_ticket
+  dict({
+    'data': dict({
+      'verifyTicket': dict({
+        'attended': None,
+        'eventName': 'Record card my. Sure sister return.',
+        'occurrenceArrivalStatus': dict({
+          'attendedEnrolmentCount': 0,
+          'enrolmentCount': 1,
+        }),
+        'occurrenceTime': '2020-12-12T00:00:00+00:00',
+        'validity': True,
+        'venueName': 'Remember stay public high concern glass person.',
+      }),
+    }),
+  })
+# ---
