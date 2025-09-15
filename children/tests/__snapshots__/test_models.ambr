@@ -1,0 +1,807 @@
+# serializer version: 1
+# name: test_child_serialize
+  dict({
+    'children': list([
+      dict({
+        'key': 'UUID',
+        'value': 'fa354000-3c0c-11eb-86c5-acde48001122',
+      }),
+      dict({
+        'key': 'USERNAME',
+        'value': 'jeffersonkimberly',
+      }),
+      dict({
+        'key': 'FIRST_NAME',
+        'value': 'Alexis',
+      }),
+      dict({
+        'key': 'LAST_NAME',
+        'value': 'Black',
+      }),
+      dict({
+        'key': 'EMAIL',
+        'value': 'michellewalker@example.net',
+      }),
+      dict({
+        'key': 'ADMINISTERED_PROJECTS',
+        'value': list([
+          dict({
+            'children': list([
+              dict({
+                'key': 'YEAR',
+                'value': 2020,
+              }),
+              dict({
+                'key': 'NAME_WITH_TRANSLATIONS',
+                'value': dict({
+                  'en': '',
+                  'fi': 'Testiprojekti',
+                  'sv': '',
+                }),
+              }),
+            ]),
+            'key': 'PROJECT',
+          }),
+        ]),
+      }),
+      dict({
+        'key': 'LAST_LOGIN',
+        'value': None,
+      }),
+      dict({
+        'key': 'DATE_JOINED',
+        'value': '2020-11-11T12:00:00+00:00',
+      }),
+      dict({
+        'children': list([
+          dict({
+            'key': 'ID',
+            'value': '8dff3da4-a329-4b81-971a-bc509df679b1',
+          }),
+          dict({
+            'key': 'USER',
+            'value': 'Black Alexis (michellewalker@example.net)',
+          }),
+          dict({
+            'key': 'FIRST_NAME',
+            'value': 'Michael',
+          }),
+          dict({
+            'key': 'LAST_NAME',
+            'value': 'Patton',
+          }),
+          dict({
+            'key': 'EMAIL',
+            'value': 'michellewalker@example.net',
+          }),
+          dict({
+            'key': 'PHONE_NUMBER',
+            'value': '235.857.7767x124',
+          }),
+          dict({
+            'key': 'HAS_ACCEPTED_COMMUNICATION',
+            'value': False,
+          }),
+          dict({
+            'children': list([
+              dict({
+                'children': list([
+                  dict({
+                    'key': 'NAME',
+                    'value': 'Katherine Gomez',
+                  }),
+                  dict({
+                    'key': 'BIRTHYEAR',
+                    'value': 2023,
+                  }),
+                  dict({
+                    'key': 'POSTAL_CODE',
+                    'value': '49763',
+                  }),
+                  dict({
+                    'children': list([
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'TIME',
+                                'value': '1983-07-25T02:56:22.559945+00:00',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Number lose least then top sing. Serious listen police shake.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'EVENT_GROUP',
+                                    'value': None,
+                                  }),
+                                  dict({
+                                    'children': list([
+                                      dict({
+                                        'key': 'YEAR',
+                                        'value': 2020,
+                                      }),
+                                      dict({
+                                        'key': 'NAME_WITH_TRANSLATIONS',
+                                        'value': dict({
+                                          'en': '',
+                                          'fi': 'Testiprojekti',
+                                          'sv': '',
+                                        }),
+                                      }),
+                                    ]),
+                                    'key': 'PROJECT',
+                                  }),
+                                  dict({
+                                    'key': 'TICKET_SYSTEM',
+                                    'value': 'internal',
+                                  }),
+                                ]),
+                                'key': 'EVENT',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Clearly middle moment strong hand.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'ADDRESS_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': '''
+                                        779 Kevin Isle Suite 550
+                                        Jonathanburgh, AK 06327
+                                      ''',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'VENUE',
+                              }),
+                            ]),
+                            'key': 'OCCURRENCE',
+                          }),
+                        ]),
+                        'key': 'ENROLMENT',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'TIME',
+                                'value': '1973-04-18T19:34:40.016085+00:00',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Democratic focus significant kind various laugh.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'EVENT_GROUP',
+                                    'value': None,
+                                  }),
+                                  dict({
+                                    'children': list([
+                                      dict({
+                                        'key': 'YEAR',
+                                        'value': 2020,
+                                      }),
+                                      dict({
+                                        'key': 'NAME_WITH_TRANSLATIONS',
+                                        'value': dict({
+                                          'en': '',
+                                          'fi': 'Testiprojekti',
+                                          'sv': '',
+                                        }),
+                                      }),
+                                    ]),
+                                    'key': 'PROJECT',
+                                  }),
+                                  dict({
+                                    'key': 'TICKET_SYSTEM',
+                                    'value': 'internal',
+                                  }),
+                                ]),
+                                'key': 'EVENT',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Medical check word style also. Question national throw three.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'ADDRESS_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': '''
+                                        Unit 7738 Box 4455
+                                        DPO AE 93387
+                                      ''',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'VENUE',
+                              }),
+                            ]),
+                            'key': 'OCCURRENCE',
+                          }),
+                        ]),
+                        'key': 'ENROLMENT',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'TIME',
+                                'value': '1983-12-06T01:54:55.080643+00:00',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Policy sport available.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'EVENT_GROUP',
+                                    'value': None,
+                                  }),
+                                  dict({
+                                    'children': list([
+                                      dict({
+                                        'key': 'YEAR',
+                                        'value': 2020,
+                                      }),
+                                      dict({
+                                        'key': 'NAME_WITH_TRANSLATIONS',
+                                        'value': dict({
+                                          'en': '',
+                                          'fi': 'Testiprojekti',
+                                          'sv': '',
+                                        }),
+                                      }),
+                                    ]),
+                                    'key': 'PROJECT',
+                                  }),
+                                  dict({
+                                    'key': 'TICKET_SYSTEM',
+                                    'value': 'internal',
+                                  }),
+                                ]),
+                                'key': 'EVENT',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Person material alone throughout investment check increase.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'ADDRESS_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': '''
+                                        18631 David Wells Apt. 018
+                                        South Mikeburgh, NH 37426
+                                      ''',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'VENUE',
+                              }),
+                            ]),
+                            'key': 'OCCURRENCE',
+                          }),
+                        ]),
+                        'key': 'ENROLMENT',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'TIME',
+                                'value': '1989-06-04T06:06:03.824456+00:00',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Month score father middle brother station physical very.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'EVENT_GROUP',
+                                    'value': None,
+                                  }),
+                                  dict({
+                                    'children': list([
+                                      dict({
+                                        'key': 'YEAR',
+                                        'value': 2020,
+                                      }),
+                                      dict({
+                                        'key': 'NAME_WITH_TRANSLATIONS',
+                                        'value': dict({
+                                          'en': '',
+                                          'fi': 'Testiprojekti',
+                                          'sv': '',
+                                        }),
+                                      }),
+                                    ]),
+                                    'key': 'PROJECT',
+                                  }),
+                                  dict({
+                                    'key': 'TICKET_SYSTEM',
+                                    'value': 'internal',
+                                  }),
+                                ]),
+                                'key': 'EVENT',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Moment apply president unit positive.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'ADDRESS_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': '''
+                                        7921 Fischer Ranch
+                                        Port Timothy, MI 90086
+                                      ''',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'VENUE',
+                              }),
+                            ]),
+                            'key': 'OCCURRENCE',
+                          }),
+                        ]),
+                        'key': 'ENROLMENT',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'TIME',
+                                'value': '1980-04-04T02:09:57.072751+00:00',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Suggest claim PM they. South blue reach ask.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'EVENT_GROUP',
+                                    'value': None,
+                                  }),
+                                  dict({
+                                    'children': list([
+                                      dict({
+                                        'key': 'YEAR',
+                                        'value': 2020,
+                                      }),
+                                      dict({
+                                        'key': 'NAME_WITH_TRANSLATIONS',
+                                        'value': dict({
+                                          'en': '',
+                                          'fi': 'Testiprojekti',
+                                          'sv': '',
+                                        }),
+                                      }),
+                                    ]),
+                                    'key': 'PROJECT',
+                                  }),
+                                  dict({
+                                    'key': 'TICKET_SYSTEM',
+                                    'value': 'internal',
+                                  }),
+                                ]),
+                                'key': 'EVENT',
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Process who catch bad. Seven process determine call.',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                  dict({
+                                    'key': 'ADDRESS_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': '''
+                                        1235 Eric Route Suite 932
+                                        New Manuelshire, PR 28866
+                                      ''',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'VENUE',
+                              }),
+                            ]),
+                            'key': 'OCCURRENCE',
+                          }),
+                        ]),
+                        'key': 'ENROLMENT',
+                      }),
+                    ]),
+                    'key': 'ENROLMENTS',
+                  }),
+                  dict({
+                    'children': list([
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'ASSIGNED_AT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'VALUE',
+                            'value': 'jR1NWxHl(x',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'NAME_WITH_TRANSLATIONS',
+                                'value': dict({
+                                  'en': '',
+                                  'fi': 'Half state four hear trouble among face three.',
+                                  'sv': '',
+                                }),
+                              }),
+                              dict({
+                                'key': 'EVENT_GROUP',
+                                'value': None,
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'YEAR',
+                                    'value': 2020,
+                                  }),
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Testiprojekti',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'PROJECT',
+                              }),
+                              dict({
+                                'key': 'TICKET_SYSTEM',
+                                'value': 'internal',
+                              }),
+                            ]),
+                            'key': 'EVENT',
+                          }),
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                        ]),
+                        'key': 'TICKETSYSTEMPASSWORD',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'ASSIGNED_AT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'VALUE',
+                            'value': ')1q1TpGzpE',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'NAME_WITH_TRANSLATIONS',
+                                'value': dict({
+                                  'en': '',
+                                  'fi': 'Where official agree order just raise.',
+                                  'sv': '',
+                                }),
+                              }),
+                              dict({
+                                'key': 'EVENT_GROUP',
+                                'value': None,
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'YEAR',
+                                    'value': 2020,
+                                  }),
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Testiprojekti',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'PROJECT',
+                              }),
+                              dict({
+                                'key': 'TICKET_SYSTEM',
+                                'value': 'internal',
+                              }),
+                            ]),
+                            'key': 'EVENT',
+                          }),
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                        ]),
+                        'key': 'TICKETSYSTEMPASSWORD',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'ASSIGNED_AT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'VALUE',
+                            'value': '+2(bkVx7(8',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'NAME_WITH_TRANSLATIONS',
+                                'value': dict({
+                                  'en': '',
+                                  'fi': 'Many happy better agree concern often almost.',
+                                  'sv': '',
+                                }),
+                              }),
+                              dict({
+                                'key': 'EVENT_GROUP',
+                                'value': None,
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'YEAR',
+                                    'value': 2020,
+                                  }),
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Testiprojekti',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'PROJECT',
+                              }),
+                              dict({
+                                'key': 'TICKET_SYSTEM',
+                                'value': 'internal',
+                              }),
+                            ]),
+                            'key': 'EVENT',
+                          }),
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                        ]),
+                        'key': 'TICKETSYSTEMPASSWORD',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'ASSIGNED_AT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'VALUE',
+                            'value': '&KXlatF20E',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'NAME_WITH_TRANSLATIONS',
+                                'value': dict({
+                                  'en': '',
+                                  'fi': 'Program song couple central each color.',
+                                  'sv': '',
+                                }),
+                              }),
+                              dict({
+                                'key': 'EVENT_GROUP',
+                                'value': None,
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'YEAR',
+                                    'value': 2020,
+                                  }),
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Testiprojekti',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'PROJECT',
+                              }),
+                              dict({
+                                'key': 'TICKET_SYSTEM',
+                                'value': 'internal',
+                              }),
+                            ]),
+                            'key': 'EVENT',
+                          }),
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                        ]),
+                        'key': 'TICKETSYSTEMPASSWORD',
+                      }),
+                      dict({
+                        'children': list([
+                          dict({
+                            'key': 'ASSIGNED_AT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'VALUE',
+                            'value': '_O2oUJuK@V',
+                          }),
+                          dict({
+                            'children': list([
+                              dict({
+                                'key': 'NAME_WITH_TRANSLATIONS',
+                                'value': dict({
+                                  'en': '',
+                                  'fi': 'Bit other she chair cover whether.',
+                                  'sv': '',
+                                }),
+                              }),
+                              dict({
+                                'key': 'EVENT_GROUP',
+                                'value': None,
+                              }),
+                              dict({
+                                'children': list([
+                                  dict({
+                                    'key': 'YEAR',
+                                    'value': 2020,
+                                  }),
+                                  dict({
+                                    'key': 'NAME_WITH_TRANSLATIONS',
+                                    'value': dict({
+                                      'en': '',
+                                      'fi': 'Testiprojekti',
+                                      'sv': '',
+                                    }),
+                                  }),
+                                ]),
+                                'key': 'PROJECT',
+                              }),
+                              dict({
+                                'key': 'TICKET_SYSTEM',
+                                'value': 'internal',
+                              }),
+                            ]),
+                            'key': 'EVENT',
+                          }),
+                          dict({
+                            'key': 'CHILD',
+                            'value': 'Katherine Gomez (2023)',
+                          }),
+                        ]),
+                        'key': 'TICKETSYSTEMPASSWORD',
+                      }),
+                    ]),
+                    'key': 'TICKET_SYSTEM_PASSWORDS',
+                  }),
+                  dict({
+                    'children': list([
+                    ]),
+                    'key': 'FREE_SPOT_NOTIFICATION_SUBSCRIPTIONS',
+                  }),
+                  dict({
+                    'key': 'NOTES',
+                    'value': '',
+                  }),
+                ]),
+                'key': 'CHILD',
+              }),
+            ]),
+            'key': 'CHILDREN',
+          }),
+        ]),
+        'key': 'GUARDIAN',
+      }),
+    ]),
+    'key': 'USER',
+  })
+# ---

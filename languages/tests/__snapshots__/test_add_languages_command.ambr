@@ -1,0 +1,242 @@
+# serializer version: 1
+# name: test_add_default_languages
+  '''
+  Created special language "Other"
+  Created Arabic (ara)
+  Created Bengali (ben)
+  Created German (deu)
+  Created English (eng)
+  Created Estonian (est)
+  Created Persian (fas)
+  Created Finnish (fin)
+  Created French (fra)
+  Created Hindi (hin)
+  Created Italian (ita)
+  Created Kurdish (kur)
+  Created Nepali (macrolanguage) (nep)
+  Created Norwegian (nor)
+  Created Polish (pol)
+  Created Portuguese (por)
+  Created Romanian (ron)
+  Created Russian (rus)
+  Created Sami languages (smi)
+  Created Somali (som)
+  Created Spanish (spa)
+  Created Albanian (sqi)
+  Created Swedish (swe)
+  Created Tagalog (tgl)
+  Created Thai (tha)
+  Created Turkish (tur)
+  Created Ukrainian (ukr)
+  Created Urdu (urd)
+  Created Vietnamese (vie)
+  Created Chinese (zho)
+  All done!
+  
+  '''
+# ---
+# name: test_add_default_languages.1
+  dict({
+    'ara': dict({
+      'en': 'Arabic',
+      'fi': 'arabia',
+      'sv': 'Arabiska',
+    }),
+    'ben': dict({
+      'en': 'Bengali',
+      'fi': 'bengali',
+      'sv': 'Bengali',
+    }),
+    'deu': dict({
+      'en': 'German',
+      'fi': 'saksa',
+      'sv': 'Tyska',
+    }),
+    'eng': dict({
+      'en': 'English',
+      'fi': 'englanti',
+      'sv': 'Engelska',
+    }),
+    'est': dict({
+      'en': 'Estonian',
+      'fi': 'viro',
+      'sv': 'Estniska',
+    }),
+    'fas': dict({
+      'en': 'Persian',
+      'fi': 'persia',
+      'sv': 'Persiska',
+    }),
+    'fin': dict({
+      'en': 'Finnish',
+      'fi': 'suomi',
+      'sv': 'Finska',
+    }),
+    'fra': dict({
+      'en': 'French',
+      'fi': 'ranska',
+      'sv': 'Franska',
+    }),
+    'hin': dict({
+      'en': 'Hindi',
+      'fi': 'hindi',
+      'sv': 'Hindi',
+    }),
+    'ita': dict({
+      'en': 'Italian',
+      'fi': 'italia',
+      'sv': 'Italienska',
+    }),
+    'kur': dict({
+      'en': 'Kurdish',
+      'fi': 'kurdi',
+      'sv': 'Kurdiska',
+    }),
+    'nep': dict({
+      'en': 'Nepali (macrolanguage)',
+      'fi': 'Nepali (macrolanguage)',
+      'sv': 'Nepali',
+    }),
+    'nor': dict({
+      'en': 'Norwegian',
+      'fi': 'norja',
+      'sv': 'Norska',
+    }),
+    'pol': dict({
+      'en': 'Polish',
+      'fi': 'puola',
+      'sv': 'Polska',
+    }),
+    'por': dict({
+      'en': 'Portuguese',
+      'fi': 'portugali',
+      'sv': 'Portugisiska',
+    }),
+    'ron': dict({
+      'en': 'Romanian',
+      'fi': 'romania',
+      'sv': 'Rumänska',
+    }),
+    'rus': dict({
+      'en': 'Russian',
+      'fi': 'venäjä',
+      'sv': 'Ryska',
+    }),
+    'smi': dict({
+      'en': 'Sami languages',
+      'fi': 'Sami languages',
+      'sv': 'Sami languages',
+    }),
+    'som': dict({
+      'en': 'Somali',
+      'fi': 'somali',
+      'sv': 'Somali',
+    }),
+    'spa': dict({
+      'en': 'Spanish',
+      'fi': 'espanja',
+      'sv': 'Spanska',
+    }),
+    'sqi': dict({
+      'en': 'Albanian',
+      'fi': 'albania',
+      'sv': 'Albanska',
+    }),
+    'swe': dict({
+      'en': 'Swedish',
+      'fi': 'ruotsi',
+      'sv': 'Svenska',
+    }),
+    'tgl': dict({
+      'en': 'Tagalog',
+      'fi': 'tagalog',
+      'sv': 'Tagalog',
+    }),
+    'tha': dict({
+      'en': 'Thai',
+      'fi': 'thai',
+      'sv': 'Thailändska',
+    }),
+    'tur': dict({
+      'en': 'Turkish',
+      'fi': 'turkki',
+      'sv': 'Turkiska',
+    }),
+    'ukr': dict({
+      'en': 'Ukrainian',
+      'fi': 'ukraina',
+      'sv': 'Ukrainska',
+    }),
+    'urd': dict({
+      'en': 'Urdu',
+      'fi': 'urdu',
+      'sv': 'Urdu',
+    }),
+    'vie': dict({
+      'en': 'Vietnamese',
+      'fi': 'vietnam',
+      'sv': 'Vietnamesiska',
+    }),
+    'zho': dict({
+      'en': 'Chinese',
+      'fi': 'kiina',
+      'sv': 'Kinesiska',
+    }),
+    None: dict({
+      'en': 'Other language',
+      'fi': 'muu kieli',
+      'sv': 'Annat språk',
+    }),
+  })
+# ---
+# name: test_add_languages
+  '''
+  Created Manide (abd)
+  Created Ngelima (agh)
+  All done!
+  
+  '''
+# ---
+# name: test_add_languages.1
+  dict({
+    'abd': dict({
+      'en': 'Manide',
+      'fi': 'Manide',
+      'sv': 'Manide',
+    }),
+    'agh': dict({
+      'en': 'Ngelima',
+      'fi': 'Ngelima',
+      'sv': 'Ngelima',
+    }),
+  })
+# ---
+# name: test_add_languages_and_flush
+  '''
+  Flushed existing languages
+  Created Manide (abd)
+  Created Ngelima (agh)
+  All done!
+  
+  '''
+# ---
+# name: test_add_languages_and_flush.1
+  dict({
+    'abd': dict({
+      'en': 'Manide',
+      'fi': 'Manide',
+      'sv': 'Manide',
+    }),
+    'agh': dict({
+      'en': 'Ngelima',
+      'fi': 'Ngelima',
+      'sv': 'Ngelima',
+    }),
+  })
+# ---
+# name: test_no_arguments
+  '''
+  Nothing to do. Hint: try --help.
+  
+  '''
+# ---

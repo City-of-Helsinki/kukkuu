@@ -28,8 +28,6 @@ decorator==5.2.1
     # via ipython
 executing==2.2.0
     # via stack-data
-fastdiff==0.3.0
-    # via snapshottest
 freezegun==1.5.1
     # via -r requirements-dev.in
 idna==3.10
@@ -75,6 +73,7 @@ pytest==8.3.5
     #   -r requirements-dev.in
     #   pytest-cov
     #   pytest-django
+    #   syrupy
 pytest-cov==6.0.0
     # via -r requirements-dev.in
 pytest-django==4.10.0
@@ -102,13 +101,10 @@ six==1.17.0
     # via
     #   -c requirements.txt
     #   python-dateutil
-    #   snapshottest
-snapshottest==0.6.0
-    # via -r requirements-dev.in
 stack-data==0.6.3
     # via ipython
-termcolor==2.5.0
-    # via snapshottest
+syrupy==4.9.1
+    # via -r requirements-dev.in
 traitlets==5.14.3
     # via
     #   ipython
@@ -122,9 +118,5 @@ urllib3==2.3.0
     #   -c requirements.txt
     #   requests
     #   responses
-wasmer==1.1.0
-    # via fastdiff
-wasmer-compiler-cranelift==1.1.0
-    # via fastdiff
 wcwidth==0.2.13
     # via prompt-toolkit
