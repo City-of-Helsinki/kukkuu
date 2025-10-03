@@ -38,6 +38,7 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, []),
     USE_X_FORWARDED_HOST=(bool, False),
     DATABASE_URL=(str, ""),
+    DATABASE_PASSWORD=(str, ""),
     CACHE_URL=(str, "locmemcache://"),
     MAILER_EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
     MAILER_LOCK_PATH=(str, ""),
@@ -125,6 +126,9 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST")
 
 DATABASES = {"default": env.db()}
+
+if env("DATABASE_PASSWORD"):
+    DATABASES["default"]["PASSWORD"] = env("DATABASE_PASSWORD")
 
 CACHES = {"default": env.cache()}
 
