@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.15.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.14.2...kukkuu-v3.15.0) (2025-10-03)
+
+
+### Features
+
+* Use DATABASE_PASSWORD if present in env ([fe6daa0](https://github.com/City-of-Helsinki/kukkuu/commit/fe6daa0526a1dd75b94e6bd2c870b4c3af047cbf))
+
 ## [3.14.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.14.1...kukkuu-v3.14.2) (2025-09-23)
 
 
