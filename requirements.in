@@ -22,7 +22,7 @@ hashids
 helsinki-profile-gdpr-api
 markdown
 Pillow
-psycopg2
+psycopg[c]
 pycountry
 qrcode
 requests

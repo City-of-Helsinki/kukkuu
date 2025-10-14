@@ -133,9 +133,9 @@ def convert_to_localtime_tz(value):
     dt = datetime.combine(datetime.now().date(), value)
     if timezone.is_naive(value):
         # Auto add local timezone to naive time
-        return timezone.make_aware(dt).timetz()
+        return timezone.make_aware(dt).time()
     else:
-        return timezone.localtime(dt).timetz()
+        return timezone.localtime(dt).time()
 
 
 def get_event_ui_url(event, child, language):
