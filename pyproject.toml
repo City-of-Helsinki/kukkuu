@@ -1,10 +1,10 @@
 [project]
 name = "kukkuu"
 version = "3.15.1"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 # While `django-auditlog-extra` is installed directly from Github (instead of Pypi),
 # it needs to be excluded, because otherwise CI-environment acts differently with the
 # src -python path and it will fail while linting the code.
