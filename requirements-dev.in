@@ -7,5 +7,4 @@ pytest-cov
 pytest-django
 requests-mock
 responses
-ruff
 syrupy
