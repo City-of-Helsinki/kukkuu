@@ -93,7 +93,7 @@ The notification service environments:
 
 Compatibility defined by [Dockerfile](./Dockerfile) and [compose.yaml](./compose.yaml):
 
-- PostgreSQL 13
+- PostgreSQL 17
 - Python 3.12
 
 Optionally if you want to use pre-commit hooks:

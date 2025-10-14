@@ -13,6 +13,6 @@ jobs:
     secrets: inherit
     with:
       python-version: 3.12
-      postgres-major-version: 13
+      postgres-major-version: 17
       extra-commands: |
         echo 'KUKKUU_HASHID_SALT=almosttopsecret123' >> .env
