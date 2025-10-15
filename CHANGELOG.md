@@ -2,6 +2,18 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.15.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.1...kukkuu-v3.15.2) (2025-10-15)
+
+
+### Bug Fixes
+
+* Switch to psycopg-c ([d380aac](https://github.com/City-of-Helsinki/kukkuu/commit/d380aac9265015cc86e107700456342b221bf6ae))
+
+
+### Dependencies
+
+* Use pre-commit ruff ([dcb31ac](https://github.com/City-of-Helsinki/kukkuu/commit/dcb31ac06044422eef6c06a082500bf42b6f9a6d))
+
 ## [3.15.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.0...kukkuu-v3.15.1) (2025-10-13)
 
 
