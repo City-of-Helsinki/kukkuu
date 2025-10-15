@@ -45,6 +45,7 @@ branch = true
 omit = ["*migrations*", "*site-packages*", "*venv*"]
 
 [tool.pip-tools.compile]
+generate-hashes = true
 strip-extras = true
 
 [tool.pytest.ini_options]
