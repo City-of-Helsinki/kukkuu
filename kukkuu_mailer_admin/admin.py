@@ -17,6 +17,7 @@ def custom_titled_filter(title: str):
     return Wrapper
 
 
+@admin.display(description=_("Sent to mail server"))
 def sent_to_mail_server(message: MessageLog) -> str:
     """Override the result column in `list_display`.
     A `list_display` column can be overridden by redefining
@@ -32,9 +33,6 @@ def sent_to_mail_server(message: MessageLog) -> str:
         str: text for the value of the result field.
     """
     return next(text for (code, text) in RESULT_CODES if code == message.result)
-
-
-sent_to_mail_server.short_description = _("Sent to mail server")
 
 
 class KukkuuMessageLogAdmin(AuditlogAdminViewAccessLogMixin, MessageLogAdmin):

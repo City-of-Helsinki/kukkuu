@@ -4,13 +4,11 @@ from django.contrib import admin
 from .models import VerificationToken
 
 
+@admin.display(description="Name")
 def verification_token_user_full_name(obj: VerificationToken) -> str | None:
     if obj.user is not None:
         return obj.user.guardian.full_name
     return None
-
-
-verification_token_user_full_name.short_description = "Name"
 
 
 @admin.register(VerificationToken)

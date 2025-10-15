@@ -31,25 +31,21 @@ class LanguageAdmin(TranslatableAdmin):
             .order_by("has_code", "translations__name", "id")
         )
 
+    @admin.display(description=_("Finnish"))
     def get_name_fi(self, obj):
         with switch_language(obj, "fi"):
             return obj.name
 
-    get_name_fi.short_description = _("Finnish")
-
+    @admin.display(description=_("Swedish"))
     def get_name_sv(self, obj):
         with switch_language(obj, "sv"):
             return obj.name
 
-    get_name_sv.short_description = _("Swedish")
-
+    @admin.display(description=_("English"))
     def get_name_en(self, obj):
         with switch_language(obj, "en"):
             return obj.name
 
-    get_name_en.short_description = _("English")
-
+    @admin.display(description=_("Guardian count"))
     def get_guardian_count(self, obj):
         return obj.guardians__count
-
-    get_guardian_count.short_description = _("Guardian count")

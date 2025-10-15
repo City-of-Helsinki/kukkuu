@@ -17,7 +17,6 @@ class VenueAdmin(TranslatableAdmin):
         OccurrencesInline,
     ]
 
+    @admin.display(description=_("project"))
     def get_project_year(self, obj):
         return obj.project.year
-
-    get_project_year.short_description = _("project")

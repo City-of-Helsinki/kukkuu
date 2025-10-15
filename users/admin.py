@@ -192,7 +192,6 @@ class GroupAdmin(
     list_display = ("name", "get_user_count")
     inlines = (UserInline,)
 
+    @admin.display(description=_("User count"))
     def get_user_count(self, obj):
         return obj.user_set.count()
-
-    get_user_count.short_description = _("User count")

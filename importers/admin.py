@@ -28,12 +28,14 @@ class NotificationTemplateAdminWithImporter(NotificationTemplateAdmin):
             self._send_error_message(request, e)
         return super().changelist_view(request, *args, **kwargs)
 
+    @admin.display(
+        description=_("in sync with the spreadsheet"),
+        boolean=True,
+    )
     def get_sync_status(self, obj):
         return self.importer.is_notification_in_sync(obj) if self.importer else None
 
-    get_sync_status.short_description = _("in sync with the spreadsheet")
-    get_sync_status.boolean = True
-
+    @admin.action(description=_("Update selected notifications from the spreadsheet"))
     def update_selected(self, request, queryset):
         if not self.importer:
             return
@@ -53,10 +55,6 @@ class NotificationTemplateAdminWithImporter(NotificationTemplateAdmin):
         else:
             message = _("The selected notifications were in sync already.")
         self.message_user(request, message, messages.SUCCESS)
-
-    update_selected.short_description = _(
-        "Update selected notifications from the spreadsheet"
-    )
 
     def get_urls(self):
         urls = super().get_urls()

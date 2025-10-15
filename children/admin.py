@@ -94,15 +94,13 @@ class ChildAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
             .prefetch_related("guardians")
         )
 
+    @admin.display(description=_("guardian"))
     def get_guardian(self, obj):
         try:
             return obj.guardians.all()[0]
         except IndexError:
             return None
 
-    get_guardian.short_description = _("guardian")
-
+    @admin.display(description=_("project"))
     def get_project(self, obj):
         return obj.project.year
-
-    get_project.short_description = _("project")
