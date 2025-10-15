@@ -99,6 +99,7 @@ class EventAdmin(TranslatableAdmin):
         IsPublishedFilter,
     )
 
+    @admin.action(description=_("Publish selected events"))
     def publish(self, request, queryset):
         success_count = 0
         for obj in queryset:
@@ -109,8 +110,6 @@ class EventAdmin(TranslatableAdmin):
                 self.message_user(request, e.message, level=messages.ERROR)
         if success_count:
             self.message_user(request, _("%s successfully published.") % success_count)
-
-    publish.short_description = _("Publish selected events")
 
     def get_queryset(self, request):
         return (
@@ -192,14 +191,13 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     ordering = ("-time",)
     search_fields = ("event__translations__name",)
 
+    @admin.display(description=_("enrolments"))
     def get_enrolments(self, obj):
         return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
 
+    @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
         return obj.free_spot_notification_subscriptions.count()
-
-    get_enrolments.short_description = _("enrolments")
-    get_free_spot_notification_subscriptions.short_description = _("subscriptions")
 
     def get_queryset(self, request):
         return (
@@ -259,6 +257,7 @@ class EventGroupAdmin(TranslatableAdmin):
     list_filter = ("project", IsPublishedFilter)
     search_fields = ("translations__name", "translations__short_description")
 
+    @admin.display(description=_("name"))
     def name_with_fallback(self, obj):
         """By default the current active language is used,
         but if the browser is using some other locale than what is set as a default
@@ -277,8 +276,7 @@ class EventGroupAdmin(TranslatableAdmin):
             "name", any_language=True
         ) or obj.safe_translation_getter("name", language_code=settings.LANGUAGE_CODE)
 
-    name_with_fallback.short_description = _("name")
-
+    @admin.display(description=_("short description"))
     def short_description_with_fallback(self, obj):
         """By default the current active language is used,
         but if the browser is using some other locale than what is set as a default
@@ -298,12 +296,9 @@ class EventGroupAdmin(TranslatableAdmin):
             "short_description", any_language=True
         ) or obj.safe_translation_getter("name", language_code=settings.LANGUAGE_CODE)
 
-    short_description_with_fallback.short_description = _("short description")
-
+    @admin.display(description=_("event count"))
     def get_event_count(self, obj):
         return obj.events.count()
-
-    get_event_count.short_description = _("event count")
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -369,13 +364,12 @@ class TicketSystemChildPasswordAdmin(AuditlogAdminViewAccessLogMixin, admin.Mode
         "child__guardians__email",
     )
 
+    @admin.display(description=_("guardian"))
     def get_guardian(self, obj):
         try:
             return obj.child.guardians.all()[0]
         except (AttributeError, IndexError):
             return None
-
-    get_guardian.short_description = _("guardian")
 
     def get_queryset(self, request):
         return (
@@ -449,18 +443,15 @@ class EnrolmentAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     date_hierarchy = "created_at"
     order = "-created_at"
 
+    @admin.display(description=_("event"))
     def get_event(self, obj: Enrolment):
         return obj.occurrence.event
 
-    get_event.short_description = _("event")
-
+    @admin.display(description=_("project year"))
     def get_project_year(self, obj: Enrolment):
         return obj.occurrence.event.project.year
 
-    get_project_year.short_description = _("project year")
-
+    @admin.display(description=_("reference id validity"))
     def is_reference_id_valid(self, obj: Enrolment):
         _, is_valid = check_ticket_validity(obj.reference_id)
         return is_valid
-
-    is_reference_id_valid.short_description = _("reference id validity")

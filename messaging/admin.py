@@ -49,6 +49,7 @@ class MessageAdmin(AuditlogAdminViewAccessLogMixin, TranslatableAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(Count("occurrences"))
 
+    @admin.display(description=_("subject"))
     def get_subject_with_fallback(self, obj):
         """By default the current active language is used,
         but if the browser is using some other locale than what is set as a default
@@ -63,19 +64,15 @@ class MessageAdmin(AuditlogAdminViewAccessLogMixin, TranslatableAdmin):
             "subject", language_code=settings.LANGUAGE_CODE
         )
 
-    get_subject_with_fallback.short_description = _("subject")
-
+    @admin.display(description=_("occurrences count"))
     def get_occurrences_count(self, obj):
         return obj.occurrences__count
 
-    get_occurrences_count.short_description = _("occurrences count")
-
+    @admin.display(description=_("recipient count"))
     def get_recipient_count(self, obj):
         return str(obj.get_recipient_count()) + (
             str(_(" (if sent now)")) if not obj.sent_at else ""
         )
-
-    get_recipient_count.short_description = _("recipient count")
 
     def send(self, request, queryset):
         sent_count = 0
