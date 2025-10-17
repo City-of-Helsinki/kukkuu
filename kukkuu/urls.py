@@ -1,3 +1,4 @@
+from csp.constants import UNSAFE_INLINE
 from csp.decorators import csp_update
 from django.conf import settings
 from django.conf.urls.static import static
@@ -13,7 +14,6 @@ from rest_framework import routers
 from common.utils import get_api_version
 from custom_health_checks.views import HealthCheckJSONView
 from kukkuu import __version__
-from kukkuu.consts import CSP
 from kukkuu.views import SentryGraphQLView
 from reports.api import ChildViewSet, EventGroupViewSet, EventViewSet, VenueViewSet
 
@@ -32,8 +32,10 @@ IS_GRAPHIQL_ENABLED = settings.ENABLE_GRAPHIQL or settings.DEBUG
 
 # Add unsafe-inline to enable GraphiQL interface at /graphql/
 @csp_update(
-    SCRIPT_SRC=settings.CSP_SCRIPT_SRC
-    + ([CSP.UNSAFE_INLINE] if IS_GRAPHIQL_ENABLED else [])
+    {
+        "script-src": settings.CONTENT_SECURITY_POLICY["DIRECTIVES"]["script-src"]
+        + ([UNSAFE_INLINE] if IS_GRAPHIQL_ENABLED else [])
+    }
 )
 @csrf_exempt
 def graphql_view(request, *args, **kwargs):

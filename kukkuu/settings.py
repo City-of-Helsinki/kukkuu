@@ -6,6 +6,7 @@ from pathlib import Path
 
 import environ
 import sentry_sdk
+from csp.constants import SELF, UNSAFE_EVAL, UNSAFE_INLINE
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from helusers.defaults import SOCIAL_AUTH_PIPELINE  # noqa: F401
@@ -13,7 +14,6 @@ from jose import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.types import Event, Hint
 
-from kukkuu.consts import CSP
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
@@ -327,42 +327,36 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES")
 CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS")
 
-# Configure the default CSP rule for different source types
-CSP_DEFAULT_SRC = ["'self'"]
 
-# CSP_STYLE_SRC includes 'unsafe-inline' for inline styles added by `django-helusers`
-# and `SpectacularRedocView`.
-CSP_STYLE_SRC = [
-    CSP.SELF,
-    CSP.UNSAFE_INLINE,
-    "cdn.jsdelivr.net",
-    "fonts.googleapis.com",
-]
-
-# CSP_SCRIPT_SRC includes 'unsafe-eval' for inline scripts added by
-# `SpectacularRedocView`
-CSP_SCRIPT_SRC = [
-    CSP.SELF,
-    CSP.UNSAFE_EVAL,
-    "cdn.jsdelivr.net",
-    "blob:",
-]
-
-# CSP_FONT_SRC includes Google fonts fetched by `SpectacularRedocView`
-CSP_FONT_SRC = [
-    CSP.SELF,
-    "fonts.googleapis.com",
-    "fonts.gstatic.com",
-    "data:",  # /graphql/ endpoint uses "data:font/woff2"
-]
-
-# CSP_IMG_SRC includes sources for images fetched by `SpectacularRedocView`
-CSP_IMG_SRC = [
-    CSP.SELF,
-    "cdn.redoc.ly",
-    "blob:",
-    "data:",
-]
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": [SELF],
+        "style-src": [
+            SELF,
+            UNSAFE_INLINE,
+            "cdn.jsdelivr.net",
+            "fonts.googleapis.com",
+        ],
+        "script-src": [
+            SELF,
+            UNSAFE_EVAL,
+            "cdn.jsdelivr.net",
+            "blob:",
+        ],
+        "font-src": [
+            SELF,
+            "fonts.googleapis.com",
+            "fonts.gstatic.com",
+            "data:",  # /graphql/ endpoint uses "data:font/woff2"
+        ],
+        "img-src": [
+            SELF,
+            "cdn.redoc.ly",
+            "blob:",
+            "data:",
+        ],
+    }
+}
 
 AUTH_USER_MODEL = "users.User"
 
