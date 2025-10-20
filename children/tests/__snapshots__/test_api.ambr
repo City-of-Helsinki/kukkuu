@@ -481,12 +481,12 @@
                   'edges': list([
                     dict({
                       'node': dict({
-                        'remainingCapacity': 12,
+                        'remainingCapacity': 29,
                       }),
                     }),
                     dict({
                       'node': dict({
-                        'remainingCapacity': 13,
+                        'remainingCapacity': 30,
                       }),
                     }),
                   ]),
@@ -914,7 +914,7 @@
     'data': dict({
       'updateChild': dict({
         'child': dict({
-          'birthyear': 2021,
+          'birthyear': 2023,
           'name': 'Matti',
           'postalCode': '00840',
         }),
@@ -927,9 +927,9 @@
     'data': dict({
       'updateChild': dict({
         'child': dict({
-          'birthyear': 2021,
-          'name': 'Derek Perry',
-          'postalCode': '70117',
+          'birthyear': 2023,
+          'name': 'Katherine Gomez',
+          'postalCode': '49763',
         }),
       }),
     }),

@@ -12,7 +12,9 @@ from freezegun import freeze_time
 from graphene.test import Client
 from guardian.shortcuts import assign_perm
 
-from children.factories import ChildWithGuardianFactory
+from children.factories import (
+    ChildWithGuardianFactory,
+)
 from common.notification_service import SMSNotificationService
 from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
@@ -105,7 +107,8 @@ def user_api_client():
 
 @pytest.fixture
 def guardian_api_client():
-    return create_api_client_with_user(UserFactory(guardian=GuardianFactory()))
+    guardian = GuardianFactory()
+    return create_api_client_with_user(guardian.user)
 
 
 def _projects_user_api_client(
@@ -182,7 +185,8 @@ def child_with_random_guardian(project):
 @pytest.fixture
 def child_with_user_guardian(guardian_api_client, project):
     return ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user, project=project
+        relationship__guardian=guardian_api_client.user.guardian,
+        project=project,
     )
 
 

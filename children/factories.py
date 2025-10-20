@@ -1,6 +1,7 @@
 import factory
 
 from children.models import Child, Relationship
+from common.mixins import SaveAfterPostGenerationMixin
 from projects.models import Project
 from users.factories import GuardianFactory
 
@@ -39,10 +40,19 @@ class RelationshipFactory(factory.django.DjangoModelFactory):
         skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
 
-class ChildWithGuardianFactory(ChildFactory):
-    relationship = factory.RelatedFactory(RelationshipFactory, "child")
+class ChildWithGuardianFactory(SaveAfterPostGenerationMixin, ChildFactory):
     project = factory.LazyFunction(lambda: Project.objects.get(year=2020))
+
+    @factory.post_generation
+    def relationship(self, created, extracted, **kwargs):
+        """Create a relationship with a guardian after the child is created."""
+        if created:
+            RelationshipFactory(child=self, **kwargs)
 
 
 class ChildWithTwoGuardiansFactory(ChildWithGuardianFactory):
-    relationship2 = factory.RelatedFactory(RelationshipFactory, "child")
+    @factory.post_generation
+    def relationship2(self, created, extracted, **kwargs):
+        """Create a second relationship with a guardian after the child is created."""
+        if created:
+            RelationshipFactory(child=self, **kwargs)

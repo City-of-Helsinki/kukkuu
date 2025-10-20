@@ -357,7 +357,7 @@ def test_unenrol_occurrence_notification(
 ):
     settings.KUKKUU_ENROLMENT_UNENROL_HOURS_BEFORE = 0
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user,
+        relationship__guardian=guardian_api_client.user.guardian,
         project=project,
     )
     EnrolmentFactory(occurrence=occurrence, child=child)
