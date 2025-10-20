@@ -98,7 +98,7 @@ from kukkuu.views import SentryGraphQLView
 from projects.factories import ProjectFactory
 from projects.models import Project
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from users.factories import GuardianFactory, UserFactory
+from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
 
@@ -1530,7 +1530,7 @@ def test_child_enrol_occurrence_from_different_project(
 )
 def test_api_query_depth(settings, event, max_query_depth, expected_error_message):
     settings.KUKKUU_QUERY_MAX_DEPTH = max_query_depth
-    user = UserFactory(guardian=GuardianFactory())
+    user = GuardianFactory().user
     request = RequestFactory().post("/graphql")
     request.user = user
 
@@ -2001,7 +2001,7 @@ def test_event_group_events_filtering_by_available_for_child_id(
     snapshot, guardian_api_client, user_api_client, event_group, past, future
 ):
     child_with_guardian = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
     OccurrenceFactory(
         time=past, event__published_at=past, event__event_group=event_group
@@ -2061,7 +2061,7 @@ def test_event_ticket_system_password_own_child_password_exists(
 ):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
     existing_password = TicketSystemPasswordFactory(
         event=event, child=child, value="the correct password"
@@ -2081,7 +2081,7 @@ def test_event_ticket_system_password_own_child_password_exists(
 def test_event_ticket_system_password_own_child_no_password(guardian_api_client):
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
 
     variables = {"eventId": get_global_id(event), "childId": get_global_id(child)}
@@ -2353,7 +2353,7 @@ def test_assign_ticket_system_password_success(guardian_api_client):
     )
     child = ChildWithGuardianFactory(
         name="Test child",
-        relationship__guardian__user=guardian_api_client.user.guardian.user,
+        relationship__guardian=guardian_api_client.user.guardian,
     )
     someone_elses_password = TicketSystemPasswordFactory(  # noqa: F841
         event=event, value="FATAL LEAK", assigned_at=now()
@@ -2386,7 +2386,7 @@ def test_assign_ticket_system_password_already_assigned(guardian_api_client):
     """
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
     used_password = TicketSystemPasswordFactory(
         event=event, child=child, value="Used password"
@@ -2410,7 +2410,7 @@ def test_assign_ticket_system_password_no_free_passwords(
     """
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=now())
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
     TicketSystemPasswordFactory(
         event=event, value="Someone else's password", assigned_at=now()
@@ -2427,7 +2427,7 @@ def test_assign_ticket_system_password_internal_event(guardian_api_client):
     """
     event = EventFactory(ticket_system=Event.INTERNAL, published_at=now())
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
 
     executed = _assign_ticket_system_password(guardian_api_client, event, child)
@@ -2445,7 +2445,7 @@ def test_assign_ticket_system_password_not_published_event(guardian_api_client):
     """
     event = EventFactory(ticket_system=Event.TICKETMASTER, published_at=None)
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=guardian_api_client.user.guardian.user
+        relationship__guardian=guardian_api_client.user.guardian
     )
 
     executed = _assign_ticket_system_password(guardian_api_client, event, child)
@@ -2470,7 +2470,7 @@ def _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests
     child = ChildWithGuardianFactory(
         name="Test child",
         project=project,
-        relationship__guardian__user=client.user.guardian.user,
+        relationship__guardian=client.user.guardian,
     )
     TicketSystemPasswordFactory.create_batch(
         size=existing_enrolment_count,
@@ -2579,7 +2579,7 @@ def test_assign_ticket_system_password_internal_and_external_enrolment_limit(
     child = ChildWithGuardianFactory(
         name="Test child",
         project=project,
-        relationship__guardian__user=guardian_api_client.user.guardian.user,
+        relationship__guardian=guardian_api_client.user.guardian,
     )
     TicketSystemPasswordFactory(
         child=child,

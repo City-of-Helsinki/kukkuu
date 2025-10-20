@@ -70,7 +70,7 @@ query OccurrencesHasChildFreeSpotNotificationSubscription($childId: ID!) {
 def guardian_child(guardian_api_client):
     return ChildWithGuardianFactory(
         name="Subscriber",
-        relationship__guardian__user=guardian_api_client.user,
+        relationship__guardian=guardian_api_client.user.guardian,
     )
 
 

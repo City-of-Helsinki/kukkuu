@@ -13,7 +13,7 @@ django-ilmoitin
 django-parler
 django-storages[azure]
 djangorestframework
-Django~=4.2
+Django~=5.2
 drf-spectacular
 factory-boy
 graphene-django
