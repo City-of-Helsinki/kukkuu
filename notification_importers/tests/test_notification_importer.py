@@ -5,8 +5,10 @@ from django_ilmoitin.models import NotificationTemplate
 
 from common.tests.utils import create_notification_template_in_language
 from events.notifications import NotificationType
+from notification_importers.notification_importer import (
+    NotificationGoogleSheetImporter as NotificationImporter,
+)
 
-from ..notification_importer import NotificationImporter
 from .utils import serialize_notifications
 
 LANGUAGES = ("fi", "sv", "en")
@@ -18,7 +20,7 @@ occurrence_enrolment,occurrence_enrolment fi updated subject,occurrence_enrolmen
 
 @pytest.fixture(autouse=True)
 def setup(settings, mocked_responses):
-    settings.KUKKUU_NOTIFICATIONS_SHEET_ID = "mock-sheet-id"
+    settings.NOTIFICATIONS_SHEET_ID = "mock-sheet-id"
     settings.PARLER_SUPPORTED_LANGUAGE_CODES = LANGUAGES
     mocked_responses.add(
         responses.GET,
