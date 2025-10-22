@@ -2,6 +2,24 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.15.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.2...kukkuu-v3.15.3) (2025-10-22)
+
+
+### Bug Fixes
+
+* Make admin descriptions django 5.2 compatible ([4b9a0f7](https://github.com/City-of-Helsinki/kukkuu/commit/4b9a0f7b8b832dfc1d81efa8195ce3fe1e45fc6d))
+
+
+### Dependencies
+
+* Upgrade django-csp to version 4 ([5f994d6](https://github.com/City-of-Helsinki/kukkuu/commit/5f994d627b80035c5ccd6204bfb0c87b5189a490))
+* Upgrade to django 5.2 and all applicable deps ([95ecfa1](https://github.com/City-of-Helsinki/kukkuu/commit/95ecfa111885bd2b8d8d6b4c3ef1c04f5818c662))
+
+
+### Documentation
+
+* Adjust README about ruff ([5439eb5](https://github.com/City-of-Helsinki/kukkuu/commit/5439eb5be22f62de7a457ffac7108fbe5bf54aa7))
+
 ## [3.15.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.1...kukkuu-v3.15.2) (2025-10-15)
 
 
