@@ -328,6 +328,7 @@ django==5.2.7 \
     #   django-health-check
     #   django-helusers
     #   django-ilmoitin
+    #   django-logger-extra
     #   django-mailer
     #   django-parler
     #   django-storages
@@ -391,6 +392,9 @@ django-helusers==0.14.0 \
 django-ilmoitin==0.7.1 \
     --hash=sha256:02931abd50d857ac30195e8ece533b19a0c9e5d6912d86f04044030917f5fa54 \
     --hash=sha256:8c0ced97271a1233027da6267cab67490ade4ef78026d24e6365dbf5c3f413ef
+    # via -r requirements.in
+django-logger-extra @ https://github.com/City-of-Helsinki/django-logger-extra/archive/refs/tags/v0.1.0.zip \
+    --hash=sha256:90dc28c88cb26e9684873cf1951568abfa2cda454837fe342b2bf482847bf380
     # via -r requirements.in
 django-mailer==2.3.2 \
     --hash=sha256:6ea0cbec09f57eb91376780a5f20ab7a834b942435a575e92e8e021f7838d78f \
