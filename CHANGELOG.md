@@ -2,6 +2,15 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.16.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.3...kukkuu-v3.16.0) (2025-11-05)
+
+
+### Features
+
+* Add resilient_logger for audit log transport ([#522](https://github.com/City-of-Helsinki/kukkuu/issues/522)) ([8bafb61](https://github.com/City-of-Helsinki/kukkuu/commit/8bafb61dc5382e84e6902e9744c903396d088d27))
+* Enable json logging for uwsgi ([#521](https://github.com/City-of-Helsinki/kukkuu/issues/521)) ([9612a4b](https://github.com/City-of-Helsinki/kukkuu/commit/9612a4b99e7242ec3b3089f0def0f4fe70832a70))
+* Transition to structured (json) logging ([#508](https://github.com/City-of-Helsinki/kukkuu/issues/508)) ([2037da4](https://github.com/City-of-Helsinki/kukkuu/commit/2037da4b4134cc1d286bb8913e34a9517db78234))
+
 ## [3.15.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.2...kukkuu-v3.15.3) (2025-10-22)
 
 
