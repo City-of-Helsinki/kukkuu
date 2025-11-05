@@ -102,6 +102,7 @@ env = environ.Env(
     BROWSER_TEST_AD_GROUP_NAME=(str, "kukkuu_browser_test"),
     KUKKUU_DEFAULT_LOGGING_LEVEL=(str, "INFO"),
     APP_RELEASE=(str, ""),
+    AUDIT_LOG_ENV=(str, ""),
     AUDIT_LOG_ES_URL=(str, ""),
     AUDIT_LOG_ES_INDEX=(str, ""),
     AUDIT_LOG_ES_USERNAME=(str, ""),
@@ -503,7 +504,7 @@ REST_FRAMEWORK = {
 
 RESILIENT_LOGGER = {
     "origin": "kukkuu",
-    "environment": env("SENTRY_ENVIRONMENT"),
+    "environment": env("AUDIT_LOG_ENV"),
     "sources": [
         {
             "class": "resilient_logger.sources.DjangoAuditLogSource",
