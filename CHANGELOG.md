@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.16.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.0...kukkuu-v3.16.1) (2025-11-12)
+
+
+### Dependencies
+
+* Bump django from 5.2.7 to 5.2.8 ([1861caf](https://github.com/City-of-Helsinki/kukkuu/commit/1861caf3f8cbce544815b5ba6c8f798a313aa3be))
+
 ## [3.16.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.15.3...kukkuu-v3.16.0) (2025-11-05)
 
 
