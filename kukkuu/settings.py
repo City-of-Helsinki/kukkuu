@@ -6,13 +6,14 @@ from pathlib import Path
 
 import environ
 import sentry_sdk
+from corsheaders.defaults import default_headers
 from csp.constants import SELF, UNSAFE_EVAL, UNSAFE_INLINE
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from helusers.defaults import SOCIAL_AUTH_PIPELINE  # noqa: F401
 from jose import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.types import Event, Hint
+from sentry_sdk.types import Event, Hint, SamplingContext
 
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
@@ -52,7 +53,11 @@ env = environ.Env(
     NOTIFICATION_SERVICE_API_TOKEN=(str, ""),
     NOTIFICATION_SERVICE_API_URL=(str, "https://notification-service.hel.fi/v1/"),
     SENTRY_DSN=(str, ""),
-    SENTRY_ENVIRONMENT=(str, ""),
+    SENTRY_ENVIRONMENT=(str, "local"),
+    SENTRY_PROFILE_SESSION_SAMPLE_RATE=(float, None),
+    SENTRY_RELEASE=(str, None),
+    SENTRY_TRACES_SAMPLE_RATE=(float, None),
+    SENTRY_TRACES_IGNORE_PATHS=(list, ["/healthz", "/readiness"]),
     CORS_ALLOWED_ORIGINS=(list, []),
     CORS_ALLOWED_ORIGIN_REGEXES=(list, []),
     CORS_ALLOW_ALL_ORIGINS=(bool, False),
@@ -182,6 +187,23 @@ try:
 except Exception:
     REVISION = "n/a"
 
+SENTRY_TRACES_SAMPLE_RATE = env("SENTRY_TRACES_SAMPLE_RATE")
+SENTRY_TRACES_IGNORE_PATHS = env.list("SENTRY_TRACES_IGNORE_PATHS")
+
+
+def sentry_traces_sampler(sampling_context: SamplingContext) -> float:
+    # Respect parent sampling decision if one exists. Recommended by Sentry.
+    if (parent_sampled := sampling_context.get("parent_sampled")) is not None:
+        return float(parent_sampled)
+
+    # Exclude health check endpoints from tracing
+    path = sampling_context.get("wsgi_environ", {}).get("PATH_INFO", "")
+    if path.rstrip("/") in SENTRY_TRACES_IGNORE_PATHS:
+        return 0
+
+    # Use configured sample rate for all other requests
+    return SENTRY_TRACES_SAMPLE_RATE or 0
+
 
 def sentry_before_send(event: Event, hint: Hint):
     """
@@ -210,14 +232,18 @@ def sentry_before_send(event: Event, hint: Hint):
     return event
 
 
-sentry_sdk.init(
-    dsn=env("SENTRY_DSN"),
-    release=REVISION,
-    environment=env("SENTRY_ENVIRONMENT"),
-    integrations=[DjangoIntegration()],
-    before_send=sentry_before_send,
-)
-sentry_sdk.integrations.logging.ignore_logger("graphql.execution.utils")
+if env("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=env("SENTRY_DSN"),
+        environment=env("SENTRY_ENVIRONMENT"),
+        release=env("SENTRY_RELEASE"),
+        integrations=[DjangoIntegration()],
+        traces_sampler=sentry_traces_sampler,
+        before_send=sentry_before_send,
+        profile_session_sample_rate=env("SENTRY_PROFILE_SESSION_SAMPLE_RATE"),
+        profile_lifecycle="trace",
+    )
+    sentry_sdk.integrations.logging.ignore_logger("graphql.execution.utils")
 
 MEDIA_ROOT = env("MEDIA_ROOT")
 STATIC_ROOT = env("STATIC_ROOT")
@@ -334,6 +360,11 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOWED_ORIGIN_REGEXES = env("CORS_ALLOWED_ORIGIN_REGEXES")
 CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL_ORIGINS")
 
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "baggage",
+    "sentry-trace",
+)
 
 CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
