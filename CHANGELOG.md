@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.1...kukkuu-v3.17.0) (2025-11-14)
+
+
+### Features
+
+* **sentry:** Update sentry configuration ([016a04a](https://github.com/City-of-Helsinki/kukkuu/commit/016a04ad71a8281519c74a225dbed3912dae19c2))
+
 ## [3.16.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.0...kukkuu-v3.16.1) (2025-11-12)
 
 
