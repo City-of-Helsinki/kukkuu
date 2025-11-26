@@ -2,6 +2,15 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.1...kukkuu-v3.17.0) (2025-11-26)
+
+
+### Features
+
+* Allow Sentry uWSGI-plugin to be optional ([0d94fc6](https://github.com/City-of-Helsinki/kukkuu/commit/0d94fc618af3dbef0b2b8d560d3b677bee65c0be))
+* **sentry:** Update sentry configuration ([016a04a](https://github.com/City-of-Helsinki/kukkuu/commit/016a04ad71a8281519c74a225dbed3912dae19c2))
+* Use separate AUDIT_LOG_ENV variable ([8e2e283](https://github.com/City-of-Helsinki/kukkuu/commit/8e2e28386b004d75c441ff5406eaa8284d16076e))
+
 ## [3.16.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.0...kukkuu-v3.16.1) (2025-11-12)
 
 
