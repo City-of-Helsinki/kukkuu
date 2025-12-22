@@ -99,7 +99,9 @@ class Message(TimestampedModel, TranslatableModel):
         messaging_service.send_message(self, force=force)
 
     def get_recipient_guardians(self):
-        guardians = Guardian.objects.filter(children__project=self.project)
+        guardians = Guardian.objects.filter(
+            children__project=self.project, user__is_active=True
+        )
 
         if self.recipient_selection == Message.ALL:
             return guardians.distinct()
