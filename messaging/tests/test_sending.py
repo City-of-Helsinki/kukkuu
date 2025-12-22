@@ -315,3 +315,64 @@ def test_message_sending_to_invited_with_enrolment_limit(
         assert emails == []
     assert message.recipient_count == len(mail.outbox)
     assert message.sent_at
+
+
+def test_message_sending_excludes_inactive_users(message):
+    """Inactive users (is_active=False) should not receive manual messages."""
+    ChildWithGuardianFactory(
+        relationship__guardian__email="active-user@example.com",
+        relationship__guardian__user__is_active=True,
+    )
+    ChildWithGuardianFactory(
+        relationship__guardian__email="inactive-user@example.com",
+        relationship__guardian__user__is_active=False,
+    )
+
+    message.send()
+
+    emails = sorted(m.to for m in mail.outbox)
+
+    assert emails == [["active-user@example.com"]]
+    assert message.recipient_count == 1
+    assert message.sent_at
+
+
+def test_message_sending_to_only_active_users(message):
+    """When all users are active, all should receive the message."""
+    ChildWithGuardianFactory(
+        relationship__guardian__email="active-user-1@example.com",
+        relationship__guardian__user__is_active=True,
+    )
+    ChildWithGuardianFactory(
+        relationship__guardian__email="active-user-2@example.com",
+        relationship__guardian__user__is_active=True,
+    )
+
+    message.send()
+
+    emails = sorted(m.to for m in mail.outbox)
+
+    assert emails == [
+        ["active-user-1@example.com"],
+        ["active-user-2@example.com"],
+    ]
+    assert message.recipient_count == 2
+    assert message.sent_at
+
+
+def test_message_sending_to_no_one_when_all_inactive(message):
+    """When all users are inactive, no one should receive the message."""
+    ChildWithGuardianFactory(
+        relationship__guardian__email="inactive-user-1@example.com",
+        relationship__guardian__user__is_active=False,
+    )
+    ChildWithGuardianFactory(
+        relationship__guardian__email="inactive-user-2@example.com",
+        relationship__guardian__user__is_active=False,
+    )
+
+    message.send()
+
+    assert len(mail.outbox) == 0
+    assert message.recipient_count == 0
+    assert message.sent_at
