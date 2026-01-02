@@ -35,7 +35,7 @@ pr:
 pool: Default
 resources:
   repositories:
-    # Azure DevOps repository
+    #  Azure DevOps repository
     - repository: kukkuu-pipelines
       type: git
       # Azure DevOps project/repository
