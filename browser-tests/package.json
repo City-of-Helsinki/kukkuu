@@ -8,10 +8,10 @@
     "test": "TZ=Europe/Helsinki NODE_ICU_DATA=node_modules/full-icu react-scripts test --env=jsdom-fourteen",
     "eject": "react-scripts eject",
     "lint": "eslint --ext js,ts,tsx src",
-    "test:browser": "testcafe \"chrome --window-size='1920,1080'\" tests/ --live",
-    "test:browser:wsl2win": "testcafe 'path:`/mnt/c/Program Files/Google/Chrome/Application/chrome.exe`' tests/ --live --dev",
-    "test:browser:ci": "testcafe \"chrome:headless --disable-gpu --window-size='1920,1080'\" -s path=report,takeOnFails=true --video report --reporter spec,html:report/index.html tests/",
-    "test:browser:ci:chromium": "testcafe \"chromium:headless --disable-gpu --window-size='1920,1080'\" -s path=report,takeOnFails=true --video report --reporter spec,html:report/index.html tests/"
+    "test:browser": "testcafe \"chrome --disable-features=LocalNetworkAccessChecks --window-size='1920,1080'\" tests/ --live",
+    "test:browser:wsl2win": "testcafe 'path:`/mnt/c/Program Files/Google/Chrome/Application/chrome.exe` --disable-features=LocalNetworkAccessChecks' tests/ --live --dev",
+    "test:browser:ci": "testcafe \"chrome:headless  --disable-features=LocalNetworkAccessChecks --disable-gpu --window-size='1920,1080'\" -s path=report,takeOnFails=true --video report --reporter spec,html:report/index.html tests/",
+    "test:browser:ci:chromium": "testcafe \"chromium:headless --disable-features=LocalNetworkAccessChecks --disable-gpu --window-size='1920,1080'\" -s path=report,takeOnFails=true --video report --reporter spec,html:report/index.html tests/"
   },
   "browserslist": {
     "production": [
