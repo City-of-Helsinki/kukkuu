@@ -29,7 +29,7 @@ export const userAdd = {
   staffStatusCheckbox: Selector("#id_is_staff"),
   superUserStatus: screen.getByLabelText(/Pääkäyttäjä|Superuser status/i),
   superUserStatusCheckbox: Selector("#id_is_superuser"),
-  chooseAllPermissions: Selector("#id_user_permissions_add_all_link"),
+  chooseAllPermissions: Selector("#id_user_permissions_add_all"),
 };
 
 export const route = () => `${envUrl()}/admin/users/user/`;
