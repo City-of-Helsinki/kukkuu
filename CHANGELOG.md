@@ -2,6 +2,19 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.0...kukkuu-v3.17.1) (2026-01-12)
+
+
+### Bug Fixes
+
+* Send manual emails only to active users ([4ba2cf6](https://github.com/City-of-Helsinki/kukkuu/commit/4ba2cf618c22ea5b73efea5f7f259007edc45257))
+
+
+### Dependencies
+
+* Bump authlib from 1.6.5 to 1.6.6 ([31763a4](https://github.com/City-of-Helsinki/kukkuu/commit/31763a4e64ec0e47a768be151b14f74fc6b68566))
+* Bump django from 5.2.8 to 5.2.9 ([e843a13](https://github.com/City-of-Helsinki/kukkuu/commit/e843a130ba5faa8b7cce46bb8c706f2db6682f8d))
+
 ## [3.17.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.16.1...kukkuu-v3.17.0) (2025-11-26)
 
 
