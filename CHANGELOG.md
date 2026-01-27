@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.1...kukkuu-v3.17.2) (2026-01-27)
+
+
+### Dependencies
+
+* Bump azure-core from 1.36.0 to 1.38.0 ([8da4d48](https://github.com/City-of-Helsinki/kukkuu/commit/8da4d48ffafae588520fcb6ec80349f0a392c8a5))
+* Bump pyasn1 from 0.6.1 to 0.6.2 ([853460a](https://github.com/City-of-Helsinki/kukkuu/commit/853460a2520f824cbb44c22009d5063a821eefd1))
+
 ## [3.17.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.0...kukkuu-v3.17.1) (2026-01-12)
 
 
