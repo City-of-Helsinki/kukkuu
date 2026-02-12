@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.3...kukkuu-v3.17.4) (2026-02-12)
+
+
+### Dependencies
+
+* Bump pillow from 12.0.0 to 12.1.1 ([63c2414](https://github.com/City-of-Helsinki/kukkuu/commit/63c2414dc1a139d89566371deb47fa0d771694fc))
+
 ## [3.17.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.2...kukkuu-v3.17.3) (2026-02-04)
 
 
