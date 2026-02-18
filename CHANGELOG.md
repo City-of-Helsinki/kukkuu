@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.5](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.4...kukkuu-v3.17.5) (2026-02-18)
+
+
+### Dependencies
+
+* Bump sqlparse from 0.5.3 to 0.5.4 ([dcceb2b](https://github.com/City-of-Helsinki/kukkuu/commit/dcceb2b29cb050ba95b45f423203e6ad5c15ac25))
+
 ## [3.17.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.3...kukkuu-v3.17.4) (2026-02-12)
 
 
