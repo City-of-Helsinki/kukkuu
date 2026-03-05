@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.17.6](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.5...kukkuu-v3.17.6) (2026-03-05)
+
+
+### Dependencies
+
+* Bump authlib from 1.6.6 to 1.6.7 ([b7354b8](https://github.com/City-of-Helsinki/kukkuu/commit/b7354b833b10933810437d4cceb5b8baa0e90cf1))
+* Bump django from 5.2.11 to 5.2.12 ([0c6dfad](https://github.com/City-of-Helsinki/kukkuu/commit/0c6dfadef60d0e3b3766ecf925b4967b3c5a01e0))
+
 ## [3.17.5](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.4...kukkuu-v3.17.5) (2026-02-18)
 
 
