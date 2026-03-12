@@ -45,7 +45,7 @@ def graphql_view(request, *args, **kwargs):
 
 
 # URL patterns required for Django admin Keycloak login:
-# (See https://github.com/City-of-Helsinki/django-helusers/blob/v0.13.0/README.md)
+# (See https://github.com/City-of-Helsinki/django-helusers/blob/django-helusers-v1.0.0/README.md)
 URL_PATTERNS_FOR_DJANGO_ADMIN_KEYCLOAK_LOGIN = [
     path("pysocial/", include("social_django.urls", namespace="social")),
     path("helauth/", include("helusers.urls")),
