@@ -1079,3 +1079,9 @@ urllib3==2.5.0 \
     #   elastic-transport
     #   requests
     #   sentry-sdk
+uwsgi==2.0.31 \
+    --hash=sha256:e8f8b350ccc106ff93a65247b9136f529c14bf96b936ac5b264c6ff9d0c76257
+    # via -r requirements.in
+uwsgitop==0.12 \
+    --hash=sha256:4f9330951f0fb9633226de36cf0c28c04dcf323efab608834aa81f638b6019b2
+    # via -r requirements.in
