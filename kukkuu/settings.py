@@ -401,13 +401,13 @@ AUTH_USER_MODEL = "users.User"
 
 AUTHENTICATION_BACKENDS = [
     "helusers.tunnistamo_oidc.TunnistamoOIDCAuth",  # For django-admin Keycloak login
-    "django.contrib.auth.backends.ModelBackend",
+    "helusers.auth.HelusersModelBackend",
     "kukkuu.oidc.BrowserTestAwareJWTAuthentication",
     "guardian.backends.ObjectPermissionBackend",
 ]
 
 # Environment variables required for django-admin Keycloak login:
-# (See https://github.com/City-of-Helsinki/django-helusers/blob/v0.13.0/README.md)
+# (See https://github.com/City-of-Helsinki/django-helusers/blob/django-helusers-v1.0.0/README.md)
 LOGIN_REDIRECT_URL = env("LOGIN_REDIRECT_URL")
 LOGOUT_REDIRECT_URL = env("LOGOUT_REDIRECT_URL")
 SOCIAL_AUTH_TUNNISTAMO_KEY = env("SOCIAL_AUTH_TUNNISTAMO_KEY")
