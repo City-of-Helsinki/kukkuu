@@ -20,6 +20,7 @@ graphene-django
 graphene-file-upload
 hashids
 helsinki-profile-gdpr-api
+ipython
 markdown
 Pillow
 psycopg[c]
