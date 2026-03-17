@@ -2,6 +2,18 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.18.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.6...kukkuu-v3.18.0) (2026-03-17)
+
+
+### Features
+
+* Disable django admin password login ([72582e6](https://github.com/City-of-Helsinki/kukkuu/commit/72582e665bd33256e9ca87acc337059cb21b6b05))
+
+
+### Dependencies
+
+* Move ipython to main requirements for better production console ([3a370f9](https://github.com/City-of-Helsinki/kukkuu/commit/3a370f9a226998839f2bbec08602e31d82f0f0cc))
+
 ## [3.17.6](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.17.5...kukkuu-v3.17.6) (2026-03-05)
 
 
