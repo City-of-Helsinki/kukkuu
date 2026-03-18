@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.18.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.18.1...kukkuu-v3.18.2) (2026-03-18)
+
+
+### Dependencies
+
+* Bump pyasn1 from 0.6.2 to 0.6.3 ([2670449](https://github.com/City-of-Helsinki/kukkuu/commit/2670449a0fee7d187c8d2c5a1577f8d04c6629f7))
+* Bump pyjwt from 2.10.1 to 2.12.0 ([37461e8](https://github.com/City-of-Helsinki/kukkuu/commit/37461e89af45a5564b178c122b2fb5e3e2112b58))
+
 ## [3.18.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.18.0...kukkuu-v3.18.1) (2026-03-17)
 
 
