@@ -7,7 +7,7 @@ django-environ
 django-filter
 django-graphql-jwt
 django-guardian
-django-health-check
+django-helsinki-health-endpoints
 django-helusers
 django-ilmoitin
 django-parler

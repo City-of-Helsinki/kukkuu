@@ -303,10 +303,8 @@ INSTALLED_APPS = [
     "guardian",
     "rest_framework",
     "drf_spectacular",
-    "health_check",  # requirement
     "social_django",  # For django-admin Keycloak login
     # local apps
-    "custom_health_checks",
     "users",
     "children",
     "utils",
@@ -323,6 +321,7 @@ INSTALLED_APPS = [
     "logger_extra",
     "resilient_logger",
     "kukkuu",
+    "helsinki_health_endpoints",
     "django_cleanup.apps.CleanupConfig",  # This must be included last
 ]
 
@@ -618,3 +617,5 @@ if os.path.exists(local_settings_path):
     with open(local_settings_path) as fp:
         code = compile(fp.read(), local_settings_path, "exec")
     exec(code, globals(), locals())
+
+SENTRY_RELEASE = env("SENTRY_RELEASE")
