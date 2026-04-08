@@ -2,6 +2,22 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.19.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.18.2...kukkuu-v3.19.0) (2026-04-08)
+
+
+### Features
+
+* Use django-helsinki-health-endpoints for readiness and healthz ([f65e659](https://github.com/City-of-Helsinki/kukkuu/commit/f65e659a6c1f36cb0579afefa61cd493633c4879))
+
+
+### Dependencies
+
+* Bump ecdsa from 0.19.1 to 0.19.2 ([e56dcd0](https://github.com/City-of-Helsinki/kukkuu/commit/e56dcd0635afaa550f5e93f539c8568fe865cf34))
+* Bump lodash from 4.17.23 to 4.18.1 in /browser-tests ([d542d7b](https://github.com/City-of-Helsinki/kukkuu/commit/d542d7bd85b214bcd612b02914bb9fa4ad2562ae))
+* Bump requests from 2.32.5 to 2.33.0 ([8d9e4c3](https://github.com/City-of-Helsinki/kukkuu/commit/8d9e4c382e2608c3d91b68189a2d12457e47427a))
+* Bump testcafe and its vulnerable dependencies ([56f6741](https://github.com/City-of-Helsinki/kukkuu/commit/56f674171f3a1691e4bbc87bc182ec1f15be4a4f))
+* Bump urllib3, cryptography and pygments ([1713a77](https://github.com/City-of-Helsinki/kukkuu/commit/1713a77ab0bfb885f73a7a5d115588312d730941))
+
 ## [3.18.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.18.1...kukkuu-v3.18.2) (2026-03-18)
 
 
