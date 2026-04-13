@@ -98,6 +98,7 @@ env = environ.Env(
     GDPR_API_AUTHORIZATION_FIELD=(str, "authorization.permissions.scopes"),
     HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED=(bool, False),
     HELUSERS_PASSWORD_LOGIN_DISABLED=(bool, False),
+    HELUSERS_PASSWORD_LOGIN_ALLOWLIST=(list, []),
     TOKEN_AUTH_BROWSER_TEST_JWT_256BIT_SIGN_SECRET=(str, None),
     TOKEN_AUTH_BROWSER_TEST_JWT_ISSUER=(list, None),
     TOKEN_AUTH_BROWSER_TEST_ENABLED=(bool, False),
@@ -597,6 +598,7 @@ GDPR_API_DELETER = "gdpr.service.clear_data"
 
 HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED = env("HELUSERS_BACK_CHANNEL_LOGOUT_ENABLED")
 HELUSERS_PASSWORD_LOGIN_DISABLED = env("HELUSERS_PASSWORD_LOGIN_DISABLED")
+HELUSERS_PASSWORD_LOGIN_ALLOWLIST = env("HELUSERS_PASSWORD_LOGIN_ALLOWLIST")
 
 # django-helusers stores access token expiration time as datetime
 # and needs a custom serializer to make it serializable to/from JSON:
