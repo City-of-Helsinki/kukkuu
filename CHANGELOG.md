@@ -2,6 +2,20 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.20.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.19.0...kukkuu-v3.20.0) (2026-04-14)
+
+
+### Features
+
+* Add password login allowlist ([3775ebf](https://github.com/City-of-Helsinki/kukkuu/commit/3775ebfc9f69fb02d7f1c8b9a2665664a52c3767))
+
+
+### Dependencies
+
+* Bump django from 5.2.12 to 5.2.13 ([4cce168](https://github.com/City-of-Helsinki/kukkuu/commit/4cce1682671b879458dde9a7d4260610a921186a))
+* Bump pillow from 12.1.1 to 12.2.0 ([6f0daaf](https://github.com/City-of-Helsinki/kukkuu/commit/6f0daafafa38538875a41e9435a7d37c28785e55))
+* Bump pytest from 8.4.2 to 9.0.3 ([70fd315](https://github.com/City-of-Helsinki/kukkuu/commit/70fd315be06d7e58daa9d9eb81bb31402bb049b0))
+
 ## [3.19.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.18.2...kukkuu-v3.19.0) (2026-04-08)
 
 
