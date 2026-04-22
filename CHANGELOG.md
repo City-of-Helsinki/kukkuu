@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.20.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.20.0...kukkuu-v3.20.1) (2026-04-22)
+
+
+### Dependencies
+
+* Bump authlib from 1.6.9 to 1.6.11 ([0637b4c](https://github.com/City-of-Helsinki/kukkuu/commit/0637b4ca580f994f9705addd5ab304b17bcd1bf9))
+
 ## [3.20.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.19.0...kukkuu-v3.20.0) (2026-04-14)
 
 
