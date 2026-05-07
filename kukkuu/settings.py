@@ -74,7 +74,7 @@ env = environ.Env(
     ILMOITIN_QUEUE_NOTIFICATIONS=(bool, True),
     STORAGES_DEFAULT_BACKEND=(str, "django.core.files.storage.FileSystemStorage"),
     AZURE_ACCOUNT_NAME=(str, ""),
-    AZURE_ACCOUNT_KEY=(str, ""),
+    AZURE_BLOB_STORAGE_SAS_TOKEN=(str, ""),
     AZURE_CONTAINER=(str, ""),
     AZURE_URL_EXPIRATION_SECS=(str, None),
     ENABLE_GRAPHIQL=(bool, False),
@@ -252,15 +252,13 @@ STATIC_ROOT = env("STATIC_ROOT")
 MEDIA_URL = env("MEDIA_URL")
 STATIC_URL = env("STATIC_URL")
 
-# For staging env, we use Google Cloud Storage
 STORAGES_DEFAULT_BACKEND = env("STORAGES_DEFAULT_BACKEND")
 
-# For prod, it's Azure Storage
-if STORAGES_DEFAULT_BACKEND == "storages.backends.azure_storage.AzureStorage":
+if STORAGES_DEFAULT_BACKEND == "utils.storage.AzureStorageWithoutQuerystringAuth":
+    AZURE_SAS_TOKEN = env("AZURE_BLOB_STORAGE_SAS_TOKEN")
     AZURE_ACCOUNT_NAME = env("AZURE_ACCOUNT_NAME")
     AZURE_CONTAINER = env("AZURE_CONTAINER")
     AZURE_URL_EXPIRATION_SECS = env("AZURE_URL_EXPIRATION_SECS")
-    AZURE_ACCOUNT_KEY = env("AZURE_ACCOUNT_KEY")
 
 STORAGES = {
     "default": {
