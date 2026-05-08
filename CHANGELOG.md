@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.20.1...kukkuu-v3.21.0) (2026-05-08)
+
+
+### Features
+
+* Custom AzureStorage class ([e8806c4](https://github.com/City-of-Helsinki/kukkuu/commit/e8806c4b3b2385cdceea45e8739db4435c92b139))
+* Use azure SAS-token with custom azure storage class ([d1b719a](https://github.com/City-of-Helsinki/kukkuu/commit/d1b719aefc2b629d26f9e7bab61889c14e07f7b9))
+
 ## [3.20.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.20.0...kukkuu-v3.20.1) (2026-04-22)
 
 
