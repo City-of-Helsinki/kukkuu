@@ -19,7 +19,7 @@ export const messageAdd = {
   event: screen.getByLabelText("Event:"),
 };
 
-export const route = () => `${envUrl()}/admin/messaging/message/`;
+export const route = () => `${envUrl()}/admin/messaging/message/?all`;
 export const routeAdd = () => `${envUrl()}/admin/messaging/message/add/`;
 
 // fill add form for new message

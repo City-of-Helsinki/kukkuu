@@ -20,7 +20,7 @@ export const venueAdd = {
   description: screen.getByLabelText("Description:"),
 };
 
-export const route = () => `${envUrl()}/admin/venues/venue/`;
+export const route = () => `${envUrl()}/admin/venues/venue/?all`;
 export const routeAdd = () => `${envUrl()}/admin/venues/venue/add/`;
 
 export const addVenue = async (t: TestController) => {
