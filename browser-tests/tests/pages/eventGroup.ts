@@ -23,7 +23,7 @@ export const eventGroupAdd = {
   project: screen.getByLabelText("Project:"),
 };
 
-export const route = () => `${envUrl()}/admin/events/eventgroup`;
+export const route = () => `${envUrl()}/admin/events/eventgroup/?all`;
 export const routeAdd = () => `${envUrl()}/admin/events/eventgroup/add`;
 
 // publish event group from the list view

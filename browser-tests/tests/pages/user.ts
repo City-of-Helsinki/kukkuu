@@ -32,7 +32,7 @@ export const userAdd = {
   chooseAllPermissions: Selector("#id_user_permissions_add_all"),
 };
 
-export const route = () => `${envUrl()}/admin/users/user/`;
+export const route = () => `${envUrl()}/admin/users/user/?all`;
 export const routeAdd = () => `${envUrl()}/admin/users/user/add/`;
 
 export const addUser = async (t: TestController) => {

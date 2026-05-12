@@ -26,7 +26,7 @@ export const eventAdd = {
   eventGroup: screen.getByLabelText("Event group:"),
 };
 
-export const route = () => `${envUrl()}/admin/events/event`;
+export const route = () => `${envUrl()}/admin/events/event/?all`;
 export const routeAdd = () => `${envUrl()}/admin/events/event/add`;
 
 // fill add form for new event
