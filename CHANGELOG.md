@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.2...kukkuu-v3.21.3) (2026-05-25)
+
+
+### Bug Fixes
+
+* **audit_log:** Exclude last_api_use from audit logging ([07065f2](https://github.com/City-of-Helsinki/kukkuu/commit/07065f2dccd498a4562b0511c58fb9b21c3fcee4))
+
 ## [3.21.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.1...kukkuu-v3.21.2) (2026-05-19)
 
 
