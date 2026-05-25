@@ -54,6 +54,7 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
         "model": "users.user",
         "exclude_fields": [
             "last_login",  # don't write log of every request
+            "last_api_use",  # helusers internal, changes daily
         ],
         "serialize_data": True,
     },
