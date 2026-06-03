@@ -2,6 +2,15 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.3...kukkuu-v3.21.4) (2026-06-03)
+
+
+### Dependencies
+
+* Bump cryptography from 46.0.6 to 46.0.7 ([6c533ad](https://github.com/City-of-Helsinki/kukkuu/commit/6c533ad6e440f93975c79bd79354d375a228d973))
+* Bump idna from 3.11 to 3.15 ([d2b7965](https://github.com/City-of-Helsinki/kukkuu/commit/d2b7965a11f357b7bb0bb8a8d17d28f1eec910b3))
+* Bump urllib3 from 2.6.3 to 2.7.0 ([0c55033](https://github.com/City-of-Helsinki/kukkuu/commit/0c5503351dd32137f18352e23caf2924494c3ef7))
+
 ## [3.21.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.2...kukkuu-v3.21.3) (2026-05-25)
 
 
