@@ -2,6 +2,15 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.5](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.4...kukkuu-v3.21.5) (2026-07-02)
+
+
+### Dependencies
+
+* Bump @babel/core from 7.26.0 to 7.29.7 in /browser-tests ([4918c9c](https://github.com/City-of-Helsinki/kukkuu/commit/4918c9c546c7740e336e44074e9cc30d2fb4337b))
+* Bump cryptography from 46.0.7 to 48.0.1 ([6f145d8](https://github.com/City-of-Helsinki/kukkuu/commit/6f145d898fab7bd57520238a6a13c7c10d388e3c))
+* Bump pyjwt from 2.12.0 to 2.13.0 ([b2c7206](https://github.com/City-of-Helsinki/kukkuu/commit/b2c7206c0a29eee7ce65451b7a7878eceea0848b))
+
 ## [3.21.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.3...kukkuu-v3.21.4) (2026-06-03)
 
 
