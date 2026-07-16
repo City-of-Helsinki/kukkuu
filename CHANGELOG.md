@@ -2,6 +2,36 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.3...kukkuu-v3.21.4) (2026-06-03)
+
+
+### Dependencies
+
+* Bump cryptography from 46.0.6 to 46.0.7 ([6c533ad](https://github.com/City-of-Helsinki/kukkuu/commit/6c533ad6e440f93975c79bd79354d375a228d973))
+* Bump idna from 3.11 to 3.15 ([d2b7965](https://github.com/City-of-Helsinki/kukkuu/commit/d2b7965a11f357b7bb0bb8a8d17d28f1eec910b3))
+* Bump urllib3 from 2.6.3 to 2.7.0 ([0c55033](https://github.com/City-of-Helsinki/kukkuu/commit/0c5503351dd32137f18352e23caf2924494c3ef7))
+
+## [3.21.3](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.2...kukkuu-v3.21.3) (2026-05-25)
+
+
+### Bug Fixes
+
+* **audit_log:** Exclude last_api_use from audit logging ([07065f2](https://github.com/City-of-Helsinki/kukkuu/commit/07065f2dccd498a4562b0511c58fb9b21c3fcee4))
+
+## [3.21.2](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.1...kukkuu-v3.21.2) (2026-05-19)
+
+
+### Dependencies
+
+* Bump authlib from 1.6.11 to 1.6.12 ([3344516](https://github.com/City-of-Helsinki/kukkuu/commit/3344516203c795ee6aad30e2e122169eb5ab92a3))
+
+## [3.21.1](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.0...kukkuu-v3.21.1) (2026-05-11)
+
+
+### Dependencies
+
+* Bump django from 5.2.13 to 5.2.14 ([d9c8ccb](https://github.com/City-of-Helsinki/kukkuu/commit/d9c8ccbf95a32ba8e5dac7ec6824ceeb7826a8d8))
+
 ## [3.21.0](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.20.1...kukkuu-v3.21.0) (2026-05-08)
 
 

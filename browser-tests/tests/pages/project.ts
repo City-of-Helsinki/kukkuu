@@ -17,7 +17,7 @@ export const projectAdd = {
   year: screen.getByLabelText("Year:"),
 };
 
-export const route = () => `${envUrl()}/admin/projects/project/`;
+export const route = () => `${envUrl()}/admin/projects/project/?all`;
 export const routeAdd = () => `${envUrl()}/admin/projects/project/add/`;
 
 export const addProject = async (t: TestController) => {
