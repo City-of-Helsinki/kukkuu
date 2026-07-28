@@ -23,12 +23,13 @@ export const eventGroupAdd = {
   project: screen.getByLabelText("Project:"),
 };
 
-export const route = () => `${envUrl()}/admin/events/eventgroup/?all`;
+export const route = (name: string) =>
+  `${envUrl()}/admin/events/eventgroup/?q=${encodeURIComponent(name)}`;
 export const routeAdd = () => `${envUrl()}/admin/events/eventgroup/add`;
 
 // publish event group from the list view
 export const publish = async (t: TestController) => {
-  await t.navigateTo(route());
+  await t.navigateTo(route(eventGroup.name));
 
   // checkbox on event group row
   const selectCheckbox = Selector(".field-name_with_fallback")

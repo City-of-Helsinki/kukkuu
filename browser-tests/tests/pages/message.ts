@@ -19,7 +19,8 @@ export const messageAdd = {
   event: screen.getByLabelText("Event:"),
 };
 
-export const route = () => `${envUrl()}/admin/messaging/message/?all`;
+export const route = (subject: string) =>
+  `${envUrl()}/admin/messaging/message/?q=${encodeURIComponent(subject)}`;
 export const routeAdd = () => `${envUrl()}/admin/messaging/message/add/`;
 
 // fill add form for new message
