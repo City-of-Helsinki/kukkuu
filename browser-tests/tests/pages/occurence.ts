@@ -20,7 +20,8 @@ export const occurenceAdd = {
   capacityOverride: screen.getByLabelText("Capacity override:"),
 };
 
-export const route = () => `${envUrl()}/admin/events/occurrence/?all`;
+export const route = (eventName: string) =>
+  `${envUrl()}/admin/events/occurrence/?q=${encodeURIComponent(eventName)}`;
 export const routeAdd = () => `${envUrl()}/admin/events/occurrence/add`;
 
 export const fillFormAdd = async (
