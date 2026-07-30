@@ -7,7 +7,7 @@
     - [Helsinki-Profile API](#helsinki-profile-api)
     - [Helsinki-Profile UI](#helsinki-profile-ui)
   - [OIDC API](#oidc-api)
-    - [Helsinki-profile API](#helsinki-profile-api)
+    - [Helsinki-profile API](#helsinki-profile-api-1)
   - [OIDC API scopes](#oidc-api-scopes)
     - [Helsinki-profile API Scope](#helsinki-profile-api-scope)
 
