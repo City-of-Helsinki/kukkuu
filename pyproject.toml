@@ -2,6 +2,63 @@
 name = "kukkuu"
 requires-python = ">=3.12, <3.13"
 version = "3.21.4"
+dependencies = [
+    "defusedxml>=0.8.0rc2", # Allow pre-release version, please remove when stable up-to-date
+    "django-auditlog",
+    "django-cleanup",
+    "django-cors-headers",
+    "django-csp",
+    "django-environ",
+    "django-filter",
+    "django-graphql-jwt",
+    "django-guardian",
+    "django-helsinki-health-endpoints",
+    "django-helusers @ https://github.com/City-of-Helsinki/django-helusers/archive/refs/tags/django-helusers-v1.2.0.zip",
+    "django-ilmoitin",
+    "django-parler",
+    "django-storages[azure]",
+    "djangorestframework",
+    "django~=5.2",
+    "drf-spectacular",
+    "factory-boy",
+    "graphene-django",
+    "graphene-file-upload",
+    "hashids",
+    "helsinki-profile-gdpr-api",
+    "markdown",
+    "pillow",
+    "psycopg[c]",
+    "pycountry",
+    "pyjwt[crypto]",
+    "qrcode",
+    "requests",
+    "sentry-sdk",
+    "social-auth-app-django<6",
+    "django-auditlog-extra @ https://github.com/City-of-Helsinki/django-auditlog-extra/archive/bff5fa3921d6821bebdd6be6c9fd20db39d32d54.zip",
+    "django-logger-extra",
+    "django-resilient-logger",
+]
+
+[dependency-groups]
+dev = [
+    "cryptography",
+    "freezegun",
+    "ipython",
+    "pytest",
+    "pytest-cov",
+    "pytest-django",
+    "requests-mock",
+    "responses",
+    "syrupy",
+]
+prod = [
+    "uwsgi",
+    "uwsgitop",
+]
+
+[tool.uv]
+package = false
+exclude-newer = "P3D"
 
 [tool.ruff]
 target-version = "py312"
@@ -43,10 +100,6 @@ docstring-code-format = true # Format code in docstrings
 # https://coverage.readthedocs.io/en/latest/config.html#run
 branch = true
 omit = ["*migrations*", "*site-packages*", "*venv*"]
-
-[tool.pip-tools.compile]
-generate-hashes = true
-strip-extras = true
 
 [tool.pytest.ini_options]
 # pytest-django options:
