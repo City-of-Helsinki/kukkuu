@@ -1,5 +1,5 @@
 import pytest
-from jose import ExpiredSignatureError
+from jwt import ExpiredSignatureError
 
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.settings import sentry_before_send

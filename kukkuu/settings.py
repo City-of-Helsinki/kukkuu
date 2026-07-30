@@ -11,7 +11,7 @@ from csp.constants import SELF, UNSAFE_EVAL, UNSAFE_INLINE
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from helusers.defaults import SOCIAL_AUTH_PIPELINE  # noqa: F401
-from jose import ExpiredSignatureError
+from jwt import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.types import Event, Hint, SamplingContext
 

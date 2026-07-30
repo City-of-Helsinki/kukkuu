@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import jwt as pyjwt
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from helusers.authz import UserAuthorization
@@ -8,8 +9,7 @@ from helusers.jwt import JWT, ValidationError
 from helusers.oidc import AuthenticationError, RequestJWTAuthentication
 from helusers.settings import api_token_auth_settings
 from helusers.user_utils import get_or_create_user
-from jose import ExpiredSignatureError
-from jose import jwt as jose_jwt
+from jwt import ExpiredSignatureError
 
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
@@ -81,16 +81,19 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
         except ValidationError as e:
             raise AuthenticationError(str(e)) from e
         try:
-            jose_jwt.decode(
-                token=jwt._encoded_jwt,
+            pyjwt.decode(
+                jwt=jwt._encoded_jwt,
                 key=self._api_token_auth_settings.JWT_SIGN_SECRET,
-                audience=jwt.claims.get("aud"),
-                issuer=jwt.claims.get("iss"),
-                subject=jwt.claims.get("sub"),
+                audience=self._api_token_auth_settings.AUDIENCE,
+                issuer=self._api_token_auth_settings.ISSUER,
                 algorithms=self.algorithms,
             )
         except ValidationError as e:
             raise AuthenticationError(str(e)) from e
+        except ExpiredSignatureError:
+            # Re-raise as-is so `authenticate` can handle it as
+            # `AuthenticationExpiredError` instead of a generic `AuthenticationError`.
+            raise
         except Exception as e:
             raise AuthenticationError(f"JWT verification failed: {e}")
 
