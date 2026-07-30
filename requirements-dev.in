@@ -1,9 +1,0 @@
--r requirements.txt
-cryptography
-freezegun
-pytest
-pytest-cov
-pytest-django
-requests-mock
-responses
-syrupy

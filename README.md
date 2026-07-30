@@ -95,6 +95,7 @@ Compatibility defined by [Dockerfile](./Dockerfile) and [compose.yaml](./compose
 
 - PostgreSQL 17
 - Python 3.12
+- [uv](https://docs.astral.sh/uv/) for Python dependency management
 
 Optionally if you want to use pre-commit hooks:
 
@@ -127,8 +128,14 @@ The project is now running at http://localhost:8081 and using public Keycloak te
 
 #### Installing Python requirements
 
-- Run `pip install -r requirements.txt` (base requirements)
-- Run `pip install -r requirements-dev.txt` (development requirements)
+This project uses [uv](https://docs.astral.sh/uv/) for Python dependency management. Dependencies and
+their pinned versions are declared in [`pyproject.toml`](./pyproject.toml) and [`uv.lock`](./uv.lock).
+
+- [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
+- Run `uv sync --locked` to install base and development requirements (the `dev` dependency group is
+  installed by default)
+- Run `uv sync --locked --group prod` to additionally install production-only requirements (`uwsgi`,
+  `uwsgitop`)
 
 #### Database
 
@@ -215,27 +222,27 @@ value for local development i.e. `kukkuu-django-admin-dev` client:
 If you're using Docker, spin up the container using `docker compose up`
 and go into it with `docker exec -it kukkuu-backend bash` first.
 
-1. Install `pip-tools`:
+1. Add new packages to `dependencies` under `[project]` (base requirements), `dev` under
+   `[dependency-groups]` (development requirements) or `prod` under `[dependency-groups]`
+   (production-only requirements, e.g. `uwsgi`) in [`pyproject.toml`](./pyproject.toml)
 
-   - `pip install pip-tools`
+2. Update `uv.lock` for the changed dependencies:
 
-2. Add new packages to `requirements.in` or `requirements-dev.in`
+   - `uv lock`
 
-3. Update `.txt` file for the changed requirements file:
+3. If you want to update dependencies to their newest versions, run:
 
-   - `pip-compile requirements.in`
-   - `pip-compile requirements-dev.in`
+   - `uv lock --upgrade`
 
-4. If you want to update dependencies to their newest versions, run:
+4. To install Python requirements run:
 
-   - `pip-compile --upgrade requirements.in`
-
-5. To install Python requirements run:
-
-   - `pip-sync requirements.txt`
+   - `uv sync --locked`
    - Or if you're using Docker and the previous command fails:
      - Spin down the container with `docker compose down`
      - Rebuild the container with `docker compose up --build` to take the package changes into account
+
+**NOTE:** `uv.lock` has `exclude-newer` set in `pyproject.toml` under `[tool.uv]` as a supply chain
+protection measure, meaning package versions newer than a few days are excluded from resolution.
 
 ### Code format
 [`pre-commit`](https://pre-commit.com/) can be used to install and
