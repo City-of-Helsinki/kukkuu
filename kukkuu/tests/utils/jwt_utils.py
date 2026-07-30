@@ -2,8 +2,8 @@ import time
 import uuid
 from typing import TYPE_CHECKING, Optional
 
+import jwt
 from django.conf import settings
-from jose import jwt
 
 if TYPE_CHECKING:
     from users.models import User as UserType
@@ -26,8 +26,16 @@ def generate_symmetric_test_jwt(
     user: "UserType",
     shared_secret_for_signature: Optional[str] = None,
     issuer="https://kukkuu-ui.test.hel.ninja",
+    audience: Optional[str] = None,
     prefix="bearer",
 ):
+    if audience is None:
+        configured_audience = settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["AUDIENCE"]
+        audience = (
+            configured_audience[0]
+            if isinstance(configured_audience, (list, tuple))
+            else configured_audience
+        )
     headers = {
         "alg": "HS256",
         "typ": "JWT",
@@ -39,7 +47,7 @@ def generate_symmetric_test_jwt(
         "exp": exp_epoch,
         "jti": str(uuid.uuid4()),
         "iss": issuer,
-        "aud": "kukkuu-api-test",
+        "aud": audience,
         "sub": str(user.uuid),
         "typ": "Bearer",
         "authorization": {"permissions": [{"scopes": ["access"]}]},
@@ -54,7 +62,7 @@ def generate_symmetric_test_jwt(
         "loa": "low",
     }
     token = jwt.encode(
-        claims=payload,
+        payload=payload,
         key=shared_secret_for_signature
         or settings.OIDC_BROWSER_TEST_API_TOKEN_AUTH["JWT_SIGN_SECRET"],
         headers=headers,

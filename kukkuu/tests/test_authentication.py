@@ -12,13 +12,15 @@ from freezegun import freeze_time
 from helusers.authz import UserAuthorization
 from helusers.jwt import JWT
 from helusers.oidc import AuthenticationError
-from jose import ExpiredSignatureError, JWTError
+from jwt import ExpiredSignatureError
+from jwt.exceptions import DecodeError
 
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from kukkuu.consts import (
     AUTHENTICATION_ERROR,
     AUTHENTICATION_EXPIRED_ERROR,
 )
+from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.oidc import BrowserTestAwareJWTAuthentication
 from kukkuu.tests.utils.jwt_utils import TEST_JWT_EXP_TIME_IN_SECONDS
 from users.factories import GuardianFactory
@@ -166,7 +168,7 @@ def test_get_auth_header_jwt_invalid_scheme(request_factory):
 def test_get_auth_header_jwt_invalid_bearer(request_factory):
     request = request_factory("bearer invalid.jwt.structure")
     auth = BrowserTestAwareJWTAuthentication()
-    with pytest.raises(JWTError):
+    with pytest.raises(DecodeError):
         auth._get_auth_header_jwt(request)
 
 
@@ -203,7 +205,7 @@ def test_browser_test_auth_disabled_should_always_call_helusers_authenticate(
 
 @pytest.mark.django_db()
 def test_browser_test_auth_with_expired_token(request_factory):
-    """Advance time after issuing a JWT so that the AuthenticationError
+    """Advance time after issuing a JWT so that the AuthenticationExpiredError
     is thrown for using an expired token
     """
     datetime_for_expired_token = timezone.now() + timedelta(
@@ -212,7 +214,7 @@ def test_browser_test_auth_with_expired_token(request_factory):
     # advance time so that the JWT expires
     with freeze_time(datetime_for_expired_token.isoformat()):
         request = request_factory()
-        with pytest.raises(AuthenticationError):
+        with pytest.raises(AuthenticationExpiredError):
             auth = BrowserTestAwareJWTAuthentication()
             auth.authenticate(request)
 
