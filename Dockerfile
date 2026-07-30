@@ -11,6 +11,16 @@ ARG UWSGI_COMMON_REF
 USER root
 WORKDIR /app
 
+# Install uv, see https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
+
+ENV UV_PROJECT_ENVIRONMENT=/opt/app-root \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
+    UV_PYTHON_DOWNLOADS=never
+ENV PATH="/opt/app-root/bin:$PATH"
+
 RUN mkdir /entrypoint
 
 # chmod=755 = rwxr-xr-x i.e. owner can read, write and execute, group and others can read and execute.
@@ -23,8 +33,7 @@ COPY --chown=root:root --chmod=755 . /app/
 
 RUN yum update -y && yum install -y \
     nc \
-    && pip install -U pip \
-    && pip install --no-cache-dir -r /app/requirements.txt \
+    && uv sync --locked --no-default-groups --group prod \
     && uwsgi --build-plugin https://github.com/City-of-Helsinki/uwsgi-sentry \
     && yum clean all
 
@@ -48,7 +57,7 @@ ENTRYPOINT ["/entrypoint/docker-entrypoint.sh"]
 FROM appbase AS development
 # ==============================
 
-RUN pip install --no-cache-dir -r /app/requirements-dev.txt
+RUN uv sync --locked --group prod
 
 ENV DEV_SERVER=1
 
