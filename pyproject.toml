@@ -15,7 +15,7 @@ dependencies = [
     "django-helsinki-health-endpoints",
     "django-helusers @ https://github.com/City-of-Helsinki/django-helusers/archive/refs/tags/django-helusers-v1.2.0.zip",
     "django-ilmoitin",
-    "django-parler",
+    "django-parler<2.4",
     "django-storages[azure]",
     "djangorestframework",
     "django~=5.2",
