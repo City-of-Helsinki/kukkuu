@@ -2,6 +2,34 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.5](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.4...kukkuu-v3.21.5) (2026-08-06)
+
+
+### Bug Fixes
+
+* Force local filesystem storage for tests ([2884d61](https://github.com/City-of-Helsinki/kukkuu/commit/2884d6178fd7a480032ce06cfbdfcd7ba6f21ff1))
+* Replace jose with pyjwt[crypto] in OIDC JWT handling process ([562425a](https://github.com/City-of-Helsinki/kukkuu/commit/562425ad19c84b9a159a8b8fd7adffd858217040))
+
+
+### Dependencies
+
+* Bump @babel/core from 7.26.0 to 7.29.7 in /browser-tests ([4918c9c](https://github.com/City-of-Helsinki/kukkuu/commit/4918c9c546c7740e336e44074e9cc30d2fb4337b))
+* Bump @babel/plugin-transform-modules-systemjs in /browser-tests ([#596](https://github.com/City-of-Helsinki/kukkuu/issues/596)) ([6d9fbce](https://github.com/City-of-Helsinki/kukkuu/commit/6d9fbcee3bbdf0dd8ac757e9b23a2570776ea280))
+* Bump cryptography from 46.0.7 to 48.0.1 ([6f145d8](https://github.com/City-of-Helsinki/kukkuu/commit/6f145d898fab7bd57520238a6a13c7c10d388e3c))
+* Bump cryptography from 49.0.0 to 50.0.0 ([5ef7e04](https://github.com/City-of-Helsinki/kukkuu/commit/5ef7e04c9e9e7234087be2ff33ad9756ba2c4bc7))
+* Bump django from 5.2.14 to 5.2.15 ([251ca94](https://github.com/City-of-Helsinki/kukkuu/commit/251ca94ca2378a3ad3fa2cce87786bc2150b26c9))
+* Bump pillow from 12.2.0 to 12.3.0 ([66a9caf](https://github.com/City-of-Helsinki/kukkuu/commit/66a9cafd58fabb17bb29175ceacffee85c7ad5fe))
+* Bump pyasn1 from 0.6.3 to 0.6.4 ([1e11ed1](https://github.com/City-of-Helsinki/kukkuu/commit/1e11ed144e2651e0be804a6cfde22bb511e29346))
+* Bump pyjwt from 2.12.0 to 2.13.0 ([b2c7206](https://github.com/City-of-Helsinki/kukkuu/commit/b2c7206c0a29eee7ce65451b7a7878eceea0848b))
+* Bump ws from 7.5.10 to 7.5.11 in /browser-tests ([f096199](https://github.com/City-of-Helsinki/kukkuu/commit/f0961993c725efe6976a9b5f843d5c8003803f3d))
+* Downgrade django-parler to v.2.3 ([f2f3e17](https://github.com/City-of-Helsinki/kukkuu/commit/f2f3e17efbf30009f21fdf70e11478a545bfc23e))
+* Update pre-commit tool versions ([7eb60f6](https://github.com/City-of-Helsinki/kukkuu/commit/7eb60f6e1cb074e826b98b3066c0afedfda6ca35))
+
+
+### Documentation
+
+* Update GDPR documentation via DocToc ([5c14a0a](https://github.com/City-of-Helsinki/kukkuu/commit/5c14a0a86313c7d7c55ccca5a2483fc6c2e72464))
+
 ## [3.21.4](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.3...kukkuu-v3.21.4) (2026-06-03)
 
 

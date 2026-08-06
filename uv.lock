@@ -854,7 +854,7 @@ wheels = [
 
 [[package]]
 name = "kukkuu"
-version = "3.21.4"
+version = "3.21.5"
 source = { virtual = "." }
 dependencies = [
     { name = "defusedxml" },

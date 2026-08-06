@@ -1,7 +1,7 @@
 [project]
 name = "kukkuu"
 requires-python = ">=3.12, <3.13"
-version = "3.21.4"
+version = "3.21.5"
 dependencies = [
     "defusedxml>=0.8.0rc2", # Allow pre-release version, please remove when stable up-to-date
     "django-auditlog",
