@@ -90,3 +90,4 @@ docker-compose.env.yaml
 pyrightconfig.json
 .vscode/
 browser-tests/report
+.github/skills
