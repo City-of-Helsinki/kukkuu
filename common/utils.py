@@ -145,7 +145,9 @@ def get_translations_dict(obj, field_name: str):
     """
 
     # initialize an empty string for every langauge
-    translations = {language_code: "" for language_code, _ in settings.LANGUAGES}
+    translations = dict.fromkeys(
+        (language_code for language_code, _ in settings.LANGUAGES), ""
+    )
     # update with the existing translations
     translations.update(
         {d.language_code: getattr(d, field_name) for d in obj.translations.all()}
