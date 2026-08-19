@@ -51,9 +51,13 @@ def test_enrolment_creation(occurrence, project):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("event_published", [False, True])
-def test_occurrence_clean_ticket_system_url(event_published):
+@pytest.mark.parametrize(
+    "ticket_system",
+    [Event.TICKETMASTER, Event.LIPPUPISTE, Event.TIXLY],
+)
+def test_occurrence_clean_ticket_system_url(event_published, ticket_system):
     occurrence = OccurrenceFactory.build(
-        event__ticket_system=Event.TICKETMASTER,
+        event__ticket_system=ticket_system,
         event__published_at=now() if event_published else None,
     )
 

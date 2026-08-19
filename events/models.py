@@ -342,7 +342,10 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
     @property
     def is_external_ticket_system_event(self):
-        return self.ticket_system in list(zip(*self.EXTERNAL_TICKET_SYSTEM_CHOICES))[0]
+        return any(
+            self.ticket_system == choice[0]
+            for choice in self.EXTERNAL_TICKET_SYSTEM_CHOICES
+        )
 
     def clean(self):
         if self.ticket_system == Event.INTERNAL:
