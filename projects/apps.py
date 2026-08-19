@@ -118,8 +118,8 @@ def _set_group_project_permissions(project, group):
             logger.info(
                 f"Assigned permission '{perm}' to project {project} for group {group}."
             )
-        except Exception as e:  # Catch specific permission-related exceptions
-            logger.error(f"Error assigning permission '{perm}': {e}")
+        except Exception:  # Catch specific permission-related exceptions
+            logger.exception(f"Error assigning permission '{perm}'")
 
 
 def is_browser_test_environment() -> bool:
