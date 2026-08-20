@@ -23,6 +23,7 @@ ENV PATH="/opt/app-root/bin:$PATH"
 
 RUN mkdir /entrypoint
 
+# This is needed before building and copying python-uwsgi-common files.
 # chmod=755 = rwxr-xr-x i.e. owner can read, write and execute, group and others can read and execute.
 #
 # Related to SonarCloud security hotspot docker:S6470 i.e.
@@ -35,10 +36,8 @@ RUN yum update -y && yum install -y \
     nc \
     && uv sync --locked --no-default-groups --group prod \
     && uwsgi --build-plugin https://github.com/City-of-Helsinki/uwsgi-sentry \
+    && git config --system --add safe.directory /app \
     && yum clean all
-
-# fatal: detected dubious ownership in repository at '/app'
-RUN git config --system --add safe.directory /app
 
 # Build and copy specific python-uwsgi-common files.
 ADD https://github.com/City-of-Helsinki/python-uwsgi-common/archive/${UWSGI_COMMON_REF}.tar.gz /usr/src/
