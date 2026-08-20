@@ -110,9 +110,7 @@ class ChildSerializer(serializers.ModelSerializer):
         )
     )
     def get_contact_language(self, obj: Child) -> str:
-        contact_languages = [
-            guardian.language for guardian in list(obj.guardians.all())
-        ]
+        contact_languages = [guardian.language for guardian in obj.guardians.all()]
         primary_contact_lang = get_primary_contact_language(contact_languages)
         return CONTACT_LANGUAGE_TO_LANGUAGE[primary_contact_lang]
 
