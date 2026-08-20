@@ -227,8 +227,8 @@ class Relationship(models.Model):
         verbose_name=_("type"),
         choices=TYPE_CHOICES,
         max_length=64,
-        null=True,
         blank=True,
+        default="",
     )
 
     objects = RelationshipQuerySet.as_manager()

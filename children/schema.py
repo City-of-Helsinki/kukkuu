@@ -324,6 +324,9 @@ class RelationshipNode(DjangoObjectType):
 
     type = graphene.Field(RelationshipTypeEnum)
 
+    def resolve_type(self, info):
+        return self.type or None
+
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
@@ -468,7 +471,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
 
             child = Child.objects.create(**child_data)
             Relationship.objects.create(
-                type=relationship_data.get("type"), child=child, guardian=guardian
+                type=relationship_data.get("type") or "", child=child, guardian=guardian
             )
             set_obj_languages_spoken_at_home(info, child, languages)
 
@@ -528,7 +531,9 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
 
         child = Child.objects.create(**kwargs)
         Relationship.objects.create(
-            type=relationship_data.get("type"), child=child, guardian=user.guardian
+            type=relationship_data.get("type") or "",
+            child=child,
+            guardian=user.guardian,
         )
         set_obj_languages_spoken_at_home(info, child, languages)
 
