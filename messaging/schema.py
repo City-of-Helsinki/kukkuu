@@ -376,8 +376,6 @@ class SendMessageMutation(graphene.relay.ClientIDMutation):
             raise MessageAlreadySentError(
                 "Cannot send because the message has already been sent."
             )
-        except PermissionDenied as e:
-            raise e
 
         logger.info(f"user {info.context.user.uuid} sent message {message}")
 
