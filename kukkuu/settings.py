@@ -229,7 +229,7 @@ def sentry_before_send(event: Event, hint: Hint):
 
     ignored_error_classes = (ExpiredSignatureError, AuthenticationExpiredError)
     if "exc_info" in hint:
-        exc_type, exc_value, traceback = hint["exc_info"]
+        _, exc_value, _ = hint["exc_info"]
         if isinstance(exc_value, ignored_error_classes):
             return None
     return event
