@@ -18,9 +18,7 @@ class Command(BaseCommand):
 
         with disable_auditlog():
             for project_data in PROJECTS_DATA:
-                project, created = Project.objects.get_or_create(
-                    year=project_data["year"]
-                )
+                project, _ = Project.objects.get_or_create(year=project_data["year"])
                 for lang_code, name in project_data["translations"].items():
                     project.set_current_language(lang_code)
                     project.name = name
