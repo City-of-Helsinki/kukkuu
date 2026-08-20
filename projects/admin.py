@@ -14,7 +14,7 @@ from projects.models import Project
 
 class PermissionFilterMixin:
     def get_obj_perms_field_choices(self):
-        choices = super().get_obj_perms_field_choices()
+        choices = super(PermissionFilterMixin, self).get_obj_perms_field_choices()
         return [c for c in choices if c[0] in Project.get_permission_codenames()]
 
 

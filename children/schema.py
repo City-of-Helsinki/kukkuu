@@ -1,4 +1,3 @@
-import binascii
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -648,10 +647,12 @@ class Query:
     child = relay.Node.Field(ChildNode)
     child_notes = graphene.Field(ChildNotesNode, id=graphene.ID(required=True))
 
-    def resolve_child_notes(self, info, id):
+    @staticmethod
+    def resolve_child_notes(_parent, info, **kwargs):
+        global_id = kwargs["id"]
         try:
-            id_type, child_id = from_global_id(id)
-        except (binascii.Error, UnicodeDecodeError, ValueError):
+            id_type, child_id = from_global_id(global_id)
+        except ValueError:
             raise ApiUsageError(
                 "Unable to decode child ID in childNotes query, "
                 + 'please use "ChildNode:<uuid>" encoded as base64.'
