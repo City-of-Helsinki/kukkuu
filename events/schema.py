@@ -905,8 +905,8 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
                     "ticket_system": ticket_system.get("type"),
                     "ticket_system_url": ticket_system.get(
                         "url",
-                        # TODO this is a temporal value to keep Kukkuu admin UI working
-                        # until it has the event URL implemented
+                        # Temporary value for Kukkuu admin UI compatibility until event
+                        # URLs are implemented.
                         "https://example.com",
                     ),
                     "ticket_system_end_time": ticket_system.get("end_time"),
