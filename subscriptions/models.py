@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class FreeSpotNotificationSubscriptionQuerySet(models.QuerySet):
     def user_subscriptions(
         self, user: "User", child: Optional[Child] = None
-    ) -> Union[models.QuerySet, list["FreeSpotNotificationSubscription"]]:
+    ) -> models.QuerySet | list["FreeSpotNotificationSubscription"]:
         """Get user's free spot notification subcriptions
 
         Args:

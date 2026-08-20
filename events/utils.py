@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterable
 from datetime import datetime
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
 from django.db.models import QuerySet
@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 def send_event_notifications_to_guardians(
     event: "Event",
     notification_type: str,
-    children: Union[QuerySet, List["Child"]],
-    attachments: Optional[List] = None,
+    children: QuerySet | list["Child"],
+    attachments: Optional[list] = None,
     **kwargs,
 ):
     if not isinstance(children, Iterable):
@@ -86,7 +86,7 @@ def send_event_notifications_to_guardians(
 def send_event_group_notifications_to_guardians(
     event_group: "EventGroup",
     notification_type: str,
-    children: Union[QuerySet, List["Child"]],
+    children: QuerySet | list["Child"],
     **kwargs,
 ):
     if not isinstance(children, Iterable):

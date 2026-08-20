@@ -33,13 +33,12 @@ def deepfix_enum_values(data):
     Fix enum values recursively in/out of dictionaries, lists, sets, and tuples.
     """
     if isinstance(data, dict):
-        return {deepfix_enum_values(k): deepfix_enum_values(v) for k, v in data.items()}
+        data = {deepfix_enum_values(k): deepfix_enum_values(v) for k, v in data.items()}
     elif isinstance(data, (list, set, tuple)):
-        return type(data)(deepfix_enum_values(v) for v in data)
+        data = type(data)(deepfix_enum_values(v) for v in data)
     elif is_enum_value(data):
-        return data.value
-    else:
-        return data
+        data = data.value
+    return data
 
 
 def map_enums_to_values_in_kwargs(method):
@@ -85,13 +84,13 @@ def get_node_id_from_global_id(global_id, expected_node_name):
     if not global_id:
         return None
     try:
-        name, id = from_global_id(global_id)
+        name, object_id = from_global_id(global_id)
     except (
         binascii.Error,
         UnicodeDecodeError,
     ):  # invalid global ID
         return None
-    return id if name == expected_node_name else None
+    return object_id if name == expected_node_name else None
 
 
 def check_can_user_administer(obj, user):

@@ -169,22 +169,24 @@ class Message(TimestampedModel, TranslatableModel):
                 )
             )
 
-            return guardians.filter(children__in=children_with_invitation).distinct()
+            recipient_guardians = guardians.filter(
+                children__in=children_with_invitation
+            ).distinct()
 
         elif self.recipient_selection == Message.ENROLLED:
-            return guardians.filter(
+            recipient_guardians = guardians.filter(
                 children__enrolments__in=enrolments.filter(occurrence__time__gte=now)
             ).distinct()
 
         elif self.recipient_selection == Message.ATTENDED:
-            return guardians.filter(
+            recipient_guardians = guardians.filter(
                 children__enrolments__in=enrolments.filter(
                     occurrence__time__lt=now, attended=True
                 )
             ).distinct()
 
         elif self.recipient_selection == Message.SUBSCRIBED_TO_FREE_SPOT_NOTIFICATION:
-            return guardians.filter(
+            recipient_guardians = guardians.filter(
                 children__free_spot_notification_subscriptions__in=subscriptions
             ).distinct()
 
@@ -193,6 +195,8 @@ class Message(TimestampedModel, TranslatableModel):
                 f"Cannot send message {self} because of invalid recipient selection "
                 f'value "{self.recipient_selection}".'
             )
+
+        return recipient_guardians
 
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)

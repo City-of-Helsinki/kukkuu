@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -146,7 +146,7 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
 
     def get_subscriptions(
         self, child: Optional["Child"] = None
-    ) -> Union[models.QuerySet, list["FreeSpotNotificationSubscription"]]:
+    ) -> models.QuerySet | list["FreeSpotNotificationSubscription"]:
         """
         Get all the user's subscriptions.
         If a child argument is given, only the subscriptions that are linked
