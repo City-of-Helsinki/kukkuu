@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* global __ENV */
 import { sleep } from 'k6';
 import http from 'k6/http';
 
@@ -12,16 +12,18 @@ export const options = {
   },
 };
 
-export default () => {
+const loadTest = () => {
   let url = 'https://kukkuu.api.test.hel.ninja/graphql';
-  if (`${__ENV.K6_LOADTEST_ENV_URL}` != 'undefined') {
+  if (`${__ENV.K6_LOADTEST_ENV_URL}` !== 'undefined') {
     url = `${__ENV.K6_LOADTEST_ENV_URL}`;
   }
   const data = 'query=query Organisations {organisations {edges {node {id } } } }';
-  const res = http.post(url, data, {
+  http.post(url, data, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
   //10 loads per minute
   sleep(6);
 };
+
+export default loadTest;
