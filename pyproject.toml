@@ -13,7 +13,7 @@ dependencies = [
     "django-graphql-jwt",
     "django-guardian",
     "django-helsinki-health-endpoints",
-    "django-helusers @ https://github.com/City-of-Helsinki/django-helusers/archive/refs/tags/django-helusers-v1.2.0.zip",
+    "django-helusers",
     "django-ilmoitin",
     "django-parler<2.4",
     "django-storages[azure]",
