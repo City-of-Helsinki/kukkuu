@@ -25,8 +25,10 @@ def get_user(user: "UserType") -> "UserType":
         UserType: the same User instance
 
     References:
-        https://github.com/City-of-Helsinki/helsinki-profile-gdpr-api/blob/808dcd30a745f6d18cdf36ccaf07b0cd25844ab0/README.md.
-        https://github.com/City-of-Helsinki/kerrokantasi/blob/256134d4049f0bd1598d59caaebbb813be2d7d9c/kerrokantasi/gdpr.py.
+        https://github.com/City-of-Helsinki/helsinki-profile-gdpr-api/blob/\
+808dcd30a745f6d18cdf36ccaf07b0cd25844ab0/README.md.
+        https://github.com/City-of-Helsinki/kerrokantasi/blob/\
+256134d4049f0bd1598d59caaebbb813be2d7d9c/kerrokantasi/gdpr.py.
     """
     logger.info(f"GDPR data request called for user '{user.uuid}'.")
     return user
@@ -37,7 +39,7 @@ def clear_data(user: "UserType", dry_run: bool) -> Optional[ErrorResponse]:
     related to the user. The User instance or
     any related model instances won't be deleted,
     but the user will be disabled and the user data and
-    the related data will be anonymised.
+    the related data will be anonymized.
     The GDPR API package will run this within a transaction.
 
     Args:
@@ -45,12 +47,14 @@ def clear_data(user: "UserType", dry_run: bool) -> Optional[ErrorResponse]:
         dry_run (bool): a boolean telling if this is a dry run of the function or not
 
     Returns:
-        Optional[ErrorResponse]: any errors that occured,
+        Optional[ErrorResponse]: any errors that occurred,
             e.g. the object might not exist or the data deletion might be denied.
 
     References:
-        https://github.com/City-of-Helsinki/helsinki-profile-gdpr-api/blob/808dcd30a745f6d18cdf36ccaf07b0cd25844ab0/README.md.
-        https://github.com/City-of-Helsinki/kerrokantasi/blob/256134d4049f0bd1598d59caaebbb813be2d7d9c/kerrokantasi/gdpr.py.
+        https://github.com/City-of-Helsinki/helsinki-profile-gdpr-api/blob/\
+808dcd30a745f6d18ccaf07b0cd25844ab0/README.md.
+        https://github.com/City-of-Helsinki/kerrokantasi/blob/\
+256134d4049f0bd1598d59caaebbb813be2d7d9c/kerrokantasi/gdpr.py.
     """
     from users.models import Guardian
 

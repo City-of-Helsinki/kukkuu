@@ -20,7 +20,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--default",
             action="store_true",
-            help=f'Add default languages provided in file "{DEFAULT_LANGUAGES_FILE}" and special language "Other".',  # noqa: E501
+            help=(
+                f'Add default languages provided in file "{DEFAULT_LANGUAGES_FILE}" '
+                'and special language "Other".'
+            ),
         )
         parser.add_argument(
             "--flush",
