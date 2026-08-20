@@ -66,7 +66,7 @@ class VenueNode(DjangoObjectType):
 
     @classmethod
     @login_required
-    # TODO: For now only logged in users can see venues
+    # Venue visibility currently requires authentication.
     def get_queryset(cls, queryset, info):
         lang = get_language()
         # always order venues by their name in Finnish, because that is all we need ATM
