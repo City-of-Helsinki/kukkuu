@@ -688,7 +688,7 @@ class TicketVerificationNode(ObjectType):
         )
     )
 
-    # TODO: Occurrence arrival status should not be public information.
+    # Occurrence arrival status should not be public information.
     # The information of this node should be moved in another node
     # e.g. in OccurrenceNode, where it would always be available and
     # not only by verifying a ticket. The information should need
@@ -717,7 +717,7 @@ class EventTranslationsInput(graphene.InputObjectType):
 
 class AddEventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(required=True)
-    # TODO make this required when Kukkuu admin is updated to support it
+    # Keep this optional until Kukkuu admin supports the field.
     url = graphene.String()
     end_time = graphene.String()
 
@@ -1465,7 +1465,8 @@ class Query:
         TicketVerificationNode, reference_id=graphene.String(required=True)
     )
 
-    def resolve_events_and_event_groups(self, info, **kwargs):
+    @staticmethod
+    def resolve_events_and_event_groups(_parent, info, **kwargs):
         event_qs = Event.objects.filter(event_group=None)
         event_group_qs = EventGroup.objects.all()
 
@@ -1487,7 +1488,8 @@ class Query:
             reverse=True,
         )
 
-    def resolve_verify_ticket(self, info, **kwargs):
+    @staticmethod
+    def resolve_verify_ticket(_parent, _info, **kwargs):
         enrolment_reference_id = kwargs.get("reference_id", None)
         enrolment, ticket_validity = check_ticket_validity(enrolment_reference_id)
         occurrence = enrolment.occurrence

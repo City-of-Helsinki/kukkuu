@@ -128,7 +128,9 @@ class PermissionFilterMixin:
             )
             kwargs["queryset"] = qs
 
-        return super().formfield_for_manytomany(db_field, request, **kwargs)
+        return super(PermissionFilterMixin, self).formfield_for_manytomany(
+            db_field, request, **kwargs
+        )
 
 
 @admin.register(get_user_model())
