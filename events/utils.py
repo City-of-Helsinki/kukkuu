@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from collections.abc import Iterable
 from datetime import datetime
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 def send_event_notifications_to_guardians(
     event: "Event",
     notification_type: str,
-    children: QuerySet | list["Child"],
+    children: Child | QuerySet | list[Child],
     attachments: Optional[list] = None,
     **kwargs,
 ):
@@ -86,7 +88,7 @@ def send_event_notifications_to_guardians(
 def send_event_group_notifications_to_guardians(
     event_group: "EventGroup",
     notification_type: str,
-    children: QuerySet | list["Child"],
+    children: Child | QuerySet | list[Child],
     **kwargs,
 ):
     if not isinstance(children, Iterable):
