@@ -397,7 +397,7 @@ wheels = [
 [[package]]
 name = "django-helusers"
 version = "1.2.0"
-source = { url = "https://github.com/City-of-Helsinki/django-helusers/archive/refs/tags/django-helusers-v1.2.0.zip" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
     { name = "cryptography" },
@@ -406,28 +406,10 @@ dependencies = [
     { name = "pyjwt" },
     { name = "requests" },
 ]
-sdist = { hash = "sha256:aa5e4e420b2e6cb374a5abf22252257808ca0ba08801f03df0c3f8be2137f0cf" }
-
-[package.metadata]
-requires-dist = [
-    { name = "cachetools", specifier = ">=3.0.0" },
-    { name = "coverage", marker = "extra == 'test'" },
-    { name = "cryptography" },
-    { name = "deprecation", specifier = ">=2" },
-    { name = "django", specifier = ">=5.2" },
-    { name = "django-allauth", marker = "extra == 'test'" },
-    { name = "django-helusers", extras = ["test"], marker = "extra == 'all'" },
-    { name = "djangorestframework", marker = "extra == 'test'" },
-    { name = "pyjwt", specifier = ">=2" },
-    { name = "pytest", marker = "extra == 'test'" },
-    { name = "pytest-cov", marker = "extra == 'test'" },
-    { name = "pytest-django", marker = "extra == 'test'" },
-    { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "requests" },
-    { name = "responses", marker = "extra == 'test'" },
-    { name = "social-auth-app-django", marker = "extra == 'test'" },
+sdist = { url = "https://files.pythonhosted.org/packages/ea/d9/faa02f70a690fb424d588c8c32f2dcfb6ec0dacee2a8b630265ed069bdf1/django_helusers-1.2.0.tar.gz", hash = "sha256:b66205147804ee85bb528043f41e4fb1370d8eea28340aa3f7fc547b5fe372b9", size = 38389, upload-time = "2026-08-03T08:10:12.216Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/db/c0/a6fa3e863652d5a686b60c1ca38de9bf639ddeecc0c2d838528a47c0338b/django_helusers-1.2.0-py3-none-any.whl", hash = "sha256:d0bfa7adf83145a96db09139e17824588b54d452c9dd45cedd3105bfdbea0fab", size = 44630, upload-time = "2026-08-03T08:10:10.794Z" },
 ]
-provides-extras = ["test", "all"]
 
 [[package]]
 name = "django-ilmoitin"
@@ -924,7 +906,7 @@ requires-dist = [
     { name = "django-graphql-jwt" },
     { name = "django-guardian" },
     { name = "django-helsinki-health-endpoints" },
-    { name = "django-helusers", url = "https://github.com/City-of-Helsinki/django-helusers/archive/refs/tags/django-helusers-v1.2.0.zip" },
+    { name = "django-helusers" },
     { name = "django-ilmoitin" },
     { name = "django-logger-extra" },
     { name = "django-parler", specifier = "<2.4" },
