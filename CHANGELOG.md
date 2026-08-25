@@ -2,6 +2,31 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.7](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.6...kukkuu-v3.21.7) (2026-08-25)
+
+
+### Bug Fixes
+
+* Enforce non-null relationship types ([785f3b5](https://github.com/City-of-Helsinki/kukkuu/commit/785f3b5e64fd9dd33fa916327c35b3268a05a725))
+* Use '[[' instead of '[' for conditional tests ([d24b5a8](https://github.com/City-of-Helsinki/kukkuu/commit/d24b5a8a89c8a5895b9da70a0aa5767001bc46f3))
+* Use logging.exception instead of logging.error ([93fd0d9](https://github.com/City-of-Helsinki/kukkuu/commit/93fd0d94575528e67424ba87bb0174e169c353c2))
+
+
+### Performance Improvements
+
+* **events:** Avoid materializing ticket systems ([484f24e](https://github.com/City-of-Helsinki/kukkuu/commit/484f24eecb7e89c9caf4015fb5a9429d0d5b86cd))
+
+
+### Dependencies
+
+* Update uv and packages ([3d778bc](https://github.com/City-of-Helsinki/kukkuu/commit/3d778bc5cd569b5e00a2c0659bf2773bd3c20caa))
+* Use django-helusers from pypi ([d26b4cb](https://github.com/City-of-Helsinki/kukkuu/commit/d26b4cb04f18105e9de4bf8e8c1479fdf19ca935))
+
+
+### Documentation
+
+* Clarify deferred UI behavior ([dbaac6a](https://github.com/City-of-Helsinki/kukkuu/commit/dbaac6a5aa0743a5f948d29f289e8de3722170c9))
+
 ## [3.21.6](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.5...kukkuu-v3.21.6) (2026-08-14)
 
 
