@@ -357,15 +357,14 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
                     ),
                     code=DATA_VALIDATION_ERROR,
                 )
-        elif self.is_external_ticket_system_event:
-            if not self.ticket_system_url:
-                raise ValidationError(
-                    _(
-                        "Ticket system URL is required when ticket system is "
-                        "any of the external ticket systems."
-                    ),
-                    code=TICKET_SYSTEM_URL_MISSING_ERROR,
-                )
+        elif self.is_external_ticket_system_event and not self.ticket_system_url:
+            raise ValidationError(
+                _(
+                    "Ticket system URL is required when ticket system is "
+                    "any of the external ticket systems."
+                ),
+                code=TICKET_SYSTEM_URL_MISSING_ERROR,
+            )
 
     def save(self, *args, **kwargs):
         try:
