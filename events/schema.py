@@ -33,6 +33,7 @@ from common.utils import (
 )
 from events.consts import ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR
 from events.exceptions import (
+    InvalidTicketSystemError,
     NoFreePasswordsError,
     PasswordAlreadyAssignedError,
 )
@@ -142,7 +143,9 @@ class EventTicketSystem(graphene.Interface):
         elif instance.ticket_system == Event.TIXLY:
             return TixlyEventTicketSystem
         else:
-            raise Exception(f'Invalid ticket system "{instance.ticket_system}".')
+            raise InvalidTicketSystemError(
+                f'Invalid ticket system "{instance.ticket_system}".'
+            )
 
 
 class ExternalEventTicketSystem(ObjectType):
@@ -424,7 +427,7 @@ class OccurrenceTicketSystem(graphene.Interface):
         elif ticket_system == Event.TIXLY:
             return TixlyOccurrenceTicketSystem
         else:
-            raise Exception(f'Invalid ticket system "{ticket_system}".')
+            raise InvalidTicketSystemError(f'Invalid ticket system "{ticket_system}".')
 
 
 class ExternalOccurrenceTicketSystem(ObjectType):
