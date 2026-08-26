@@ -4,3 +4,7 @@ class NoFreePasswordsError(Exception):
 
 class PasswordAlreadyAssignedError(Exception):
     pass
+
+
+class InvalidTicketSystemError(Exception):
+    pass
