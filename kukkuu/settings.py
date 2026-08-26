@@ -15,6 +15,7 @@ from jwt import ExpiredSignatureError
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.types import Event, Hint, SamplingContext
 
+from kukkuu import auditlog_settings
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
 
@@ -613,7 +614,11 @@ APP_RELEASE = env("APP_RELEASE")
 APP_BUILD_TIME = datetime.fromtimestamp(os.path.getmtime(__file__))
 
 # Load auditlog settings
-from kukkuu.auditlog_settings import *  # noqa: E402, F403
+AUDITLOG_INCLUDE_ALL_MODELS = auditlog_settings.AUDITLOG_INCLUDE_ALL_MODELS
+AUDITLOG_DISABLE_REMOTE_ADDR = auditlog_settings.AUDITLOG_DISABLE_REMOTE_ADDR
+AUDITLOG_DISABLE_ON_RAW_SAVE = auditlog_settings.AUDITLOG_DISABLE_ON_RAW_SAVE
+AUDITLOG_EXCLUDE_TRACKING_MODELS = auditlog_settings.AUDITLOG_EXCLUDE_TRACKING_MODELS
+AUDITLOG_INCLUDE_TRACKING_MODELS = auditlog_settings.AUDITLOG_INCLUDE_TRACKING_MODELS
 
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
