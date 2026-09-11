@@ -42,6 +42,8 @@
     - [Fix merge conflicts by running release-please -action manually](#fix-merge-conflicts-by-running-release-please--action-manually)
   - [Deployments](#deployments)
 - [Issues board](#issues-board)
+- [License](#license)
+  - [Third-party licenses](#third-party-licenses)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -504,3 +506,33 @@ The tag name is defined in the [azure-pipelines-release.yml](./azure-pipelines-r
 ## Issues board
 
 https://helsinkisolutionoffice.atlassian.net/projects/KK/issues/?filter=allissues
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
+
+### Third-party licenses
+
+All dependencies are under licenses compatible with MIT. A few are copyleft and are
+listed here so that automated license scans can be triaged quickly:
+
+- **[psycopg](https://pypi.org/project/psycopg/) (LGPL-3.0-only)** and
+  **[pycountry](https://pypi.org/project/pycountry/) (LGPL-2.1-only)** are used as
+  unmodified libraries, which the LGPL permits without affecting the license of this
+  project.
+- **[certifi](https://pypi.org/project/certifi/) (MPL-2.0)** is used unmodified. The
+  MPL's copyleft is per-file and imposes no obligations here.
+- **[text-unidecode](https://pypi.org/project/text-unidecode/)** (a transitive
+  dependency of `graphene-django`) is dual-licensed under GPL-2.0-or-later **or** the
+  Artistic License 1.0. This project uses it under the Artistic License 1.0, so its GPL
+  terms do not apply. Note that its PyPI metadata advertises both, which is why scanners
+  often flag it.
+- **[uWSGI](https://github.com/unbit/uwsgi) (GPL-2.0 with linking exception)** is only
+  installed into the production container image, where it runs the application as a
+  separate server process.
+
+The `browser-tests` package is a private, non-published test suite. Its dependency tree
+includes GPL-licensed ffmpeg binaries via
+[@ffmpeg-installer/ffmpeg](https://www.npmjs.com/package/@ffmpeg-installer/ffmpeg), used
+by TestCafe for video capture. These are development-only and are excluded from the
+container image, so they are never redistributed.
