@@ -2,6 +2,7 @@
   "name": "kukkuu-api-tests",
   "version": "0.0.1",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
