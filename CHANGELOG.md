@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.8](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.7...kukkuu-v3.21.8) (2026-09-14)
+
+
+### Dependencies
+
+* Bump browserslist from 4.24.3 to 4.28.8 in /browser-tests ([4471e4c](https://github.com/City-of-Helsinki/kukkuu/commit/4471e4c4676d136b6031b9caff9488d4553e7dc7))
+* Bump nanoid from 3.3.8 to 3.3.18 in /browser-tests ([63dbf69](https://github.com/City-of-Helsinki/kukkuu/commit/63dbf690fc5f860331f8df7a22598e0638d490ef))
+
 ## [3.21.7](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.6...kukkuu-v3.21.7) (2026-08-25)
 
 
