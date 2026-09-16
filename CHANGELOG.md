@@ -2,6 +2,13 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.9](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.8...kukkuu-v3.21.9) (2026-09-16)
+
+
+### Documentation
+
+* Document project and third-party licenses ([8891cd5](https://github.com/City-of-Helsinki/kukkuu/commit/8891cd564d33e532b52ac33f98049649a00fdb57))
+
 ## [3.21.8](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.7...kukkuu-v3.21.8) (2026-09-14)
 
 
