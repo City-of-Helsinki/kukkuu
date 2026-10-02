@@ -35,7 +35,7 @@ dependencies = [
     "qrcode",
     "requests",
     "sentry-sdk",
-    "social-auth-app-django<6",
+    "social-auth-app-django",
     "django-auditlog-extra @ https://github.com/City-of-Helsinki/django-auditlog-extra/archive/bff5fa3921d6821bebdd6be6c9fd20db39d32d54.zip",
     "django-logger-extra",
     "django-resilient-logger",
