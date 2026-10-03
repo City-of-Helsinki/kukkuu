@@ -2,6 +2,21 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.9](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.8...kukkuu-v3.21.9) (2026-10-03)
+
+
+### Dependencies
+
+* Bump moment from 2.30.1 to 2.31.0 in /browser-tests ([114c6af](https://github.com/City-of-Helsinki/kukkuu/commit/114c6af0988778ed982c1d888108080b31e482d3))
+* Bump oauthlib from 3.3.1 to 4.0.0 ([30abc03](https://github.com/City-of-Helsinki/kukkuu/commit/30abc03457e40db7bdc13891dc1f20805cf885df))
+* Bump pyjwt from 2.13.0 to 2.15.0 ([bf4dc9a](https://github.com/City-of-Helsinki/kukkuu/commit/bf4dc9a0bb953cca4b801464183695168d4d6b22))
+* Bump urllib3 from 2.7.0 to 2.8.0 ([3940f34](https://github.com/City-of-Helsinki/kukkuu/commit/3940f34bf22f54722e48377720469484a54ee580))
+
+
+### Documentation
+
+* Document project and third-party licenses ([8891cd5](https://github.com/City-of-Helsinki/kukkuu/commit/8891cd564d33e532b52ac33f98049649a00fdb57))
+
 ## [3.21.8](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.7...kukkuu-v3.21.8) (2026-09-14)
 
 
