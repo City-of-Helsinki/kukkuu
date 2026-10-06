@@ -37,6 +37,7 @@ repos:
     rev: v2.5.0
     hooks:
       - id: doctoc
+        exclude: '^(CHANGELOG\.md|AGENTS\.md)$'
   - repo: https://github.com/adamchainz/django-upgrade
     rev: "1.31.1"  # replace with latest tag on GitHub
     hooks:
