@@ -7,6 +7,7 @@ from kukkuu.exceptions import (
     KukkuuGraphQLError,
     OccurrenceIsFullError,
     PastOccurrenceError,
+    RegistrationNotOpenError,
     TicketSystemPasswordAlreadyAssignedError,
 )
 
@@ -69,6 +70,9 @@ ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR: dict[
     ),
     EnrolmentDeniedReason.PAST_OCCURRENCE: PastOccurrenceError(
         "Cannot join occurrence in the past"
+    ),
+    EnrolmentDeniedReason.REGISTRATION_NOT_OPEN: RegistrationNotOpenError(
+        "Event registration has not opened yet"
     ),
     EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED: IneligibleOccurrenceEnrolment(
         "Yearly enrolment limit has been reached"

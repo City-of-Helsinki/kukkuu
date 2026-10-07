@@ -14,4 +14,5 @@ class EnrolmentDeniedReason(Enum):
     EVENT_NOT_PUBLISHED = "event_not_published"
     OCCURRENCE_FULL = "occurrence_full"
     PAST_OCCURRENCE = "past_occurrence"
+    REGISTRATION_NOT_OPEN = "registration_not_open"
     YEARLY_ENROLMENT_LIMIT_REACHED = "yearly_enrolment_limit_reached"
