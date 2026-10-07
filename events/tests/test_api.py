@@ -59,6 +59,7 @@ from events.tests.queries import (
     EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+    EVENT_TICKET_SYSTEM_URL_QUERY,
     EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
     EVENTS_FILTER_QUERY,
     EVENTS_QUERY,
@@ -2263,6 +2264,45 @@ def test_occurrence_ticket_system(snapshot, guardian_api_client):
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+@pytest.mark.parametrize("is_project_admin", [True, False])
+def test_ticket_system_urls_before_registration_opens(
+    guardian_api_client,
+    project_user_api_client,
+    project,
+    future,
+    registration_open,
+    is_project_admin,
+):
+    """External ticket system URLs are hidden before the event's registration
+    opens, except from the project admins.
+    """
+    client = project_user_api_client if is_project_admin else guardian_api_client
+    occurrence = OccurrenceFactory(
+        ticket_system_url="https://example.com/occurrence",
+        event=TicketmasterEventFactory(
+            project=project,
+            ticket_system_url="https://example.com/event",
+            registration_opens_at=now() if registration_open else future,
+        ),
+    )
+    is_visible = registration_open or is_project_admin
+
+    event_executed = client.execute(
+        EVENT_TICKET_SYSTEM_URL_QUERY, variables={"id": get_global_id(occurrence.event)}
+    )
+    occurrence_executed = client.execute(
+        OCCURRENCE_TICKET_SYSTEM_QUERY, variables={"id": get_global_id(occurrence)}
+    )
+
+    assert event_executed["data"]["event"]["ticketSystem"]["url"] == (
+        "https://example.com/event" if is_visible else None
+    )
+    assert occurrence_executed["data"]["occurrence"]["ticketSystem"]["url"] == (
+        "https://example.com/occurrence" if is_visible else None
+    )
 
 
 def test_event_ticket_system_password_own_child_password_exists(
