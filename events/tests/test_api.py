@@ -157,7 +157,16 @@ UPDATE_EVENT_VARIABLES = {
 }
 
 
-PUBLISH_EVENT_VARIABLES = {"input": {"id": ""}}
+# Later than the frozen test time, see common.tests.conftest.setup_test_environment
+REGISTRATION_OPENS_AT = "2020-12-24T12:00:00+00:00"
+
+PUBLISH_EVENT_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
+
+PUBLISH_EVENT_GROUP_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
 
 ADD_OCCURRENCE_VARIABLES = {
     "input": {"eventId": "", "venueId": "", "time": "1986-12-12T16:40:48+00:00"}
@@ -831,6 +840,68 @@ def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     )
 
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
+
+
+def test_publish_event_registration_opens_at_past_is_rejected(
+    publisher_api_client, unpublished_event
+):
+    registration_opens_at = now() - timedelta(microseconds=1)
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    unpublished_event.refresh_from_db()
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert not unpublished_event.is_published()
+    assert unpublished_event.registration_opens_at is None
+
+
+def test_publish_event_registration_opens_at_now_is_accepted(
+    publisher_api_client, unpublished_event
+):
+    registration_opens_at = now()
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    unpublished_event.refresh_from_db()
+    assert "errors" not in executed
+    assert unpublished_event.is_published()
+    assert unpublished_event.registration_opens_at == registration_opens_at
+
+
+def test_publish_event_registration_opens_at_without_timezone_is_rejected(
+    publisher_api_client, unpublished_event
+):
+    registration_opens_at = (now() + timedelta(days=1)).replace(tzinfo=None)
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    unpublished_event.refresh_from_db()
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert not unpublished_event.is_published()
+    assert unpublished_event.registration_opens_at is None
+
+
+def test_publish_event_registration_opens_at_required(
+    publisher_api_client, unpublished_event
+):
+    variables = deepcopy(PUBLISH_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"].pop("registrationOpensAt")
+
+    executed = publisher_api_client.execute(PUBLISH_EVENT_MUTATION, variables=variables)
+
+    unpublished_event.refresh_from_db()
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not unpublished_event.is_published()
 
 
 @pytest.mark.parametrize("url_missing", (True, False))
@@ -2008,9 +2079,6 @@ def test_delete_event_group(snapshot, event_group_manager_api_client, event_grou
     assert EventGroup.objects.count() == 0
 
 
-PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
-
-
 def test_publish_event_group_no_publish_permission(project_user_api_client):
     event = EventFactory(event_group=EventGroupFactory())
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
@@ -2074,16 +2142,102 @@ def test_publish_event_group(snapshot, publisher_api_client):
     assert_match_error_code(executed, EVENT_GROUP_ALREADY_PUBLISHED_ERROR)
 
 
+@pytest.fixture
+def unpublished_event_group(project):
+    """An unpublished event group with one event ready for publishing"""
+    event_group = EventGroupFactory(project=project)
+    EventFactory(project=project, event_group=event_group)
+    return event_group
+
+
+def test_publish_event_group_registration_opens_at_past_is_rejected(
+    publisher_api_client, unpublished_event_group
+):
+    registration_opens_at = now() - timedelta(microseconds=1)
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event_group)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    unpublished_event_group.refresh_from_db()
+    event = unpublished_event_group.events.get()
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert not unpublished_event_group.is_published()
+    assert not event.is_published()
+    assert event.registration_opens_at is None
+
+
+def test_publish_event_group_registration_opens_at_now_is_accepted(
+    publisher_api_client, unpublished_event_group
+):
+    registration_opens_at = now()
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event_group)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    unpublished_event_group.refresh_from_db()
+    event = unpublished_event_group.events.get()
+    assert "errors" not in executed
+    assert unpublished_event_group.is_published()
+    assert event.is_published()
+    assert event.registration_opens_at == registration_opens_at
+
+
+def test_publish_event_group_registration_opens_at_without_timezone_is_rejected(
+    publisher_api_client, unpublished_event_group
+):
+    registration_opens_at = (now() + timedelta(days=1)).replace(tzinfo=None)
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event_group)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    unpublished_event_group.refresh_from_db()
+    event = unpublished_event_group.events.get()
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert not unpublished_event_group.is_published()
+    assert not event.is_published()
+    assert event.registration_opens_at is None
+
+
+def test_publish_event_group_registration_opens_at_required(
+    publisher_api_client, unpublished_event_group
+):
+    variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event_group)
+    variables["input"].pop("registrationOpensAt")
+
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    unpublished_event_group.refresh_from_db()
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not unpublished_event_group.is_published()
+    assert not unpublished_event_group.events.get().is_published()
+
+
 @pytest.mark.parametrize("event_ready", [True, False])
 def test_republish_event_group(snapshot, publisher_api_client, event_ready, past):
     """Event group can be republished if it contains unpublished events which
     are ready for publishing.
     """
     event_group = EventGroupFactory(published_at=past)
-    EventFactory(
+    published_event = EventFactory(
         event_group=event_group,
         ready_for_event_group_publishing=True,
         published_at=past,
+        registration_opens_at=past,
     )
     new_event = EventFactory(
         event_group=event_group,
@@ -2098,13 +2252,18 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
     )
 
     new_event.refresh_from_db()
+    published_event.refresh_from_db()
 
+    assert published_event.published_at == past
+    assert published_event.registration_opens_at == past
     if event_ready:
         snapshot.assert_match(executed)
         assert new_event.published_at
+        assert new_event.registration_opens_at.isoformat() == REGISTRATION_OPENS_AT
     else:
         assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
         assert not new_event.published_at
+        assert new_event.registration_opens_at is None
 
 
 def test_event_group_events_filtering_by_available_for_child_id(

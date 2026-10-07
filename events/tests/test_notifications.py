@@ -262,7 +262,7 @@ def test_event_group_publish_notification(
     )
     event = EventFactory(id=777, event_group=EventGroupFactory(id=777))
 
-    event.event_group.publish()
+    event.event_group.publish(registration_opens_at=now())
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
 
@@ -299,7 +299,7 @@ def test_event_group_republish_notification(
         ready_for_event_group_publishing=True,
     )
 
-    event_group.publish()
+    event_group.publish(registration_opens_at=now())
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
     assert len(mail.outbox) == 1
