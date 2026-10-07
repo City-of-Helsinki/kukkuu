@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from common.mixins import PreDjango6AssumeHttpsURLFieldAdminMixin
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
 
@@ -113,13 +114,15 @@ class OccurrenceIsUpcomingFilter(BaseBooleanListFilter):
             return queryset.upcoming()
 
 
-class OccurrencesInline(admin.StackedInline):
+class OccurrencesInline(PreDjango6AssumeHttpsURLFieldAdminMixin, admin.StackedInline):
     model = Occurrence
     extra = 0
 
 
 @admin.register(Event)
-class EventAdmin(PublishActionMixin, TranslatableAdmin):
+class EventAdminPreDjango6(
+    PublishActionMixin, PreDjango6AssumeHttpsURLFieldAdminMixin, TranslatableAdmin
+):
     list_display = (
         "id",
         "name",
@@ -219,7 +222,11 @@ class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
 
 
 @admin.register(Occurrence)
-class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+class OccurrenceAdminPreDjango6(
+    AuditlogAdminViewAccessLogMixin,
+    PreDjango6AssumeHttpsURLFieldAdminMixin,
+    admin.ModelAdmin,
+):
     enable_list_view_audit_logging = False  # Not needed in list view
     list_display = (
         "time",
