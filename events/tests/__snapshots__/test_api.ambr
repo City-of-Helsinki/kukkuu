@@ -68,6 +68,7 @@
           }),
           'publishedAt': None,
           'readyForEventGroupPublishing': False,
+          'registrationOpensAt': None,
           'ticketSystem': dict({
             'type': 'INTERNAL',
           }),
@@ -1835,6 +1836,7 @@
           }),
           'publishedAt': None,
           'readyForEventGroupPublishing': False,
+          'registrationOpensAt': None,
           'ticketSystem': dict({
             'type': 'INTERNAL',
           }),
