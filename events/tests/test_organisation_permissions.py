@@ -16,6 +16,15 @@ from organisations.factories import OrganisationFactory
 from organisations.models import Organisation
 
 
+def _publish_event_group_variables(event_group, registration_opens_at):
+    return {
+        "input": {
+            "id": to_global_id("EventGroupNode", event_group.id),
+            "registrationOpensAt": registration_opens_at.isoformat(),
+        }
+    }
+
+
 @pytest.mark.django_db
 def test_user_cannot_administer_event_from_other_organisation(
     project_user_api_client, project, event
@@ -204,7 +213,7 @@ def test_events_connection_can_user_administer_avoids_n_plus_one(
 
 @pytest.mark.django_db
 def test_user_cannot_publish_event_group_with_events_from_other_organisation(
-    publisher_api_client, project
+    publisher_api_client, project, future
 ):
     other_org = OrganisationFactory(name="Other Organisation")
     event_group = EventGroupFactory(project=project)
@@ -218,7 +227,9 @@ def test_user_cannot_publish_event_group_with_events_from_other_organisation(
     # User cannot publish the event group because it contains unpublished events from another org
     assert not event_group.can_user_publish(publisher_api_client.user)
 
-    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    variables = _publish_event_group_variables(
+        event_group=event_group, registration_opens_at=future
+    )
     executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
@@ -232,7 +243,7 @@ def test_user_cannot_publish_event_group_with_events_from_other_organisation(
 
 @pytest.mark.django_db
 def test_system_admin_can_publish_event_group_with_events_from_other_organisation(
-    publisher_api_client, project
+    publisher_api_client, project, future
 ):
     other_org = OrganisationFactory(name="Other Organisation")
     event_group = EventGroupFactory(project=project)
@@ -248,7 +259,9 @@ def test_system_admin_can_publish_event_group_with_events_from_other_organisatio
 
     assert event_group.can_user_publish(publisher_api_client.user)
 
-    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    variables = _publish_event_group_variables(
+        event_group=event_group, registration_opens_at=future
+    )
     executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
@@ -263,7 +276,7 @@ def test_system_admin_can_publish_event_group_with_events_from_other_organisatio
 
 @pytest.mark.django_db
 def test_user_can_publish_event_group_when_all_unpublished_events_belong_to_own_organisation(
-    publisher_api_client, project
+    publisher_api_client, project, future
 ):
     user_org = publisher_api_client.user.organisations.first()
     event_group = EventGroupFactory(project=project)
@@ -276,7 +289,9 @@ def test_user_can_publish_event_group_when_all_unpublished_events_belong_to_own_
 
     assert event_group.can_user_publish(publisher_api_client.user)
 
-    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    variables = _publish_event_group_variables(
+        event_group=event_group, registration_opens_at=future
+    )
     executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
@@ -291,7 +306,7 @@ def test_user_can_publish_event_group_when_all_unpublished_events_belong_to_own_
 
 @pytest.mark.django_db
 def test_user_can_republish_event_group_when_other_org_events_already_published(
-    publisher_api_client, project, past
+    publisher_api_client, project, past, future
 ):
     user_org = publisher_api_client.user.organisations.first()
     other_org = OrganisationFactory(name="Other Organisation")
@@ -317,7 +332,9 @@ def test_user_can_republish_event_group_when_other_org_events_already_published(
     # User can republish because all *unpublished* events belong to their organisation
     assert event_group.can_user_publish(publisher_api_client.user)
 
-    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    variables = _publish_event_group_variables(
+        event_group=event_group, registration_opens_at=future
+    )
     executed = publisher_api_client.execute(
         PUBLISH_EVENT_GROUP_MUTATION, variables=variables
     )
