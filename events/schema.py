@@ -111,6 +111,25 @@ def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
             )
 
 
+def get_visible_ticket_system_url(event: Event, url: str, user) -> Optional[str]:
+    """
+    Hide the external ticket system URL before the event's registration opens from
+    users who can't administer the event.
+
+    :return: None if the given event's registration is not open and the user can not
+        administer the event, otherwise the given url.
+    """
+    if event.is_registration_open() or event.can_user_administer(user):
+        return url
+    return None
+
+
+TICKET_SYSTEM_URL_DESCRIPTION = (
+    "Null before the event's registration opens, unless the user can administer "
+    "the event."
+)
+
+
 class EventParticipantsPerInvite(graphene.Enum):
     CHILD_AND_GUARDIAN = "child_and_guardian"
     CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
@@ -152,7 +171,7 @@ class ExternalEventTicketSystem(ObjectType):
     has_any_free_passwords = graphene.Boolean(required=True)
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
-    url = graphene.String(required=True)
+    url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
     end_time = graphene.DateTime()
 
     class Meta:
@@ -202,7 +221,9 @@ class ExternalEventTicketSystem(ObjectType):
 
     @staticmethod
     def resolve_url(event: Event, info, **kwargs):
-        return event.ticket_system_url
+        return EventAPIService.get_visible_ticket_system_url(
+            event, event.ticket_system_url, info.context.user
+        )
 
     @staticmethod
     def resolve_end_time(event: Event, info, **kwargs):
@@ -452,10 +473,12 @@ class OccurrenceTicketSystem(graphene.Interface):
 
 
 class ExternalOccurrenceTicketSystem(ObjectType):
-    url = graphene.String(required=True)
+    url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
 
-    def resolve_url(self, info, **kwargs):
-        return self.ticket_system_url
+    def resolve_url(self: Occurrence, info, **kwargs):
+        return EventAPIService.get_visible_ticket_system_url(
+            self.event, self.ticket_system_url, info.context.user
+        )
 
 
 class TicketmasterOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):

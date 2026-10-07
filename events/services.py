@@ -114,6 +114,19 @@ class EventAPIService:
                     "Failed to copy image from %s to %s", source.pk, target.pk
                 )
 
+    @staticmethod
+    def get_visible_ticket_system_url(event: Event, url: str, user) -> str | None:
+        """
+        Hide the external ticket system URL before the event's registration opens from
+        users who can't administer the event.
+
+        :return: None if the given event's registration is not open and the user can not
+            administer the event, otherwise the given url.
+        """
+        if event.is_registration_open() or event.can_user_administer(user):
+            return url
+        return None
+
     class Resolver:
         """
         Resolves Relay Global IDs into model instances with permission checks.
