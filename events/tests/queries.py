@@ -262,6 +262,16 @@ CAN_CHILD_ENROLL_EVENT_QUERY = """
 query Event($id: ID!, $childId: ID!) {
   event(id: $id) {
     name
+    registrationOpensAt
+    canChildEnroll(childId: $childId)
+  }
+}
+"""
+
+CAN_CHILD_ENROLL_EVENT_GROUP_QUERY = """
+query EventGroup($id: ID!, $childId: ID!) {
+  eventGroup(id: $id) {
+    name
     canChildEnroll(childId: $childId)
   }
 }
