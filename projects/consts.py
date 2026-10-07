@@ -7,6 +7,7 @@
     PROJECT_DATA_2023,
     PROJECT_DATA_2024,
     PROJECT_DATA_2025,
+    PROJECT_DATA_2026,
 ) = PROJECTS_DATA = [
     {
         "year": 2020,
@@ -101,6 +102,14 @@
                 "UMO Helsinki Jazz Orchestra och Nationalgalleriet dvs. Ateneum, "
                 "Kiasma och Konstmuseet Sinebrychoff"
             ),
+        },
+    },
+    {
+        "year": 2026,
+        "translations": {
+            "en": ("Finnish National Opera and Ballet"),
+            "fi": ("Suomen kansallisooppera ja -baletti"),
+            "sv": ("Finlands nationalopera och -balett"),
         },
     },
 ]
