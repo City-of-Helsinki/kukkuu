@@ -2056,6 +2056,30 @@ def test_test_upcoming_events_and_event_groups_yearly_enrolment_limit(
         assert node["node"]["canChildEnroll"] is False
 
 
+@pytest.mark.parametrize("registration_open", [True, False])
+def test_upcoming_events_and_event_groups_event_group_registration_opens_at(
+    guardian_api_client, child_with_user_guardian, future, registration_open
+):
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=now() if registration_open else future,
+        event__event_group=EventGroupFactory(name="Event group", published_at=now()),
+    )
+
+    executed = guardian_api_client.execute(
+        CHILD_UPCOMING_EVENTS_AND_EVENT_GROUPS_QUERY,
+        variables={"id": get_global_id(child_with_user_guardian)},
+    )
+
+    nodes = executed["data"]["child"]["upcomingEventsAndEventGroups"]["edges"]
+    group_nodes = [
+        edge["node"] for edge in nodes if edge["node"]["__typename"] == "EventGroupNode"
+    ]
+    assert len(group_nodes) == 1
+    assert group_nodes[0]["canChildEnroll"] is registration_open
+
+
 def test_active_internal_and_ticketmaster_enrolments(
     snapshot,
     guardian_api_client,

@@ -67,6 +67,10 @@ class EventNotPublishedError(KukkuuGraphQLError):
     """Event is not published"""
 
 
+class RegistrationNotOpenError(KukkuuGraphQLError):
+    """Event registration has not opened yet"""
+
+
 class ObjectDoesNotExistError(KukkuuGraphQLError):
     """Object does not exist"""
 
