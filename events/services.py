@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.utils import (
@@ -73,6 +74,25 @@ def validate_event_group_and_events_project_match(
     if has_mismatch:
         raise ValidationError(
             _("The event group and its events must belong to the same project."),
+            code=DATA_VALIDATION_ERROR,
+        )
+
+
+def validate_registration_opens_at(registration_opens_at) -> None:
+    """Validate the registration opening time given when publishing events."""
+    if registration_opens_at is None:
+        raise ValidationError(
+            _("Registration opening time must be given a value."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if timezone.is_naive(registration_opens_at):
+        raise ValidationError(
+            _("Registration opening time must include a timezone offset."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if registration_opens_at < timezone.now():
+        raise ValidationError(
+            _("Registration opening time must be now or in the future."),
             code=DATA_VALIDATION_ERROR,
         )
 
