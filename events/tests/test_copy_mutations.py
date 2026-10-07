@@ -216,7 +216,7 @@ def test_copy_image_file_logs_exception_when_image_copy_fails(caplog):
 
 @pytest.mark.django_db
 def test_copy_event_seeds_omitted_scalar_fields_and_translations(
-    publisher_api_client, project
+    publisher_api_client, project, future
 ):
     source_event = EventFactory(
         project=project,
@@ -236,7 +236,7 @@ def test_copy_event_seeds_omitted_scalar_fields_and_translations(
         description="Lång SV",
         image_alt_text="Bild SV",
     )
-    source_event.publish()
+    source_event.publish(registration_opens_at=future)
     assert source_event.published_at is not None
 
     variables = {
@@ -265,6 +265,7 @@ def test_copy_event_seeds_omitted_scalar_fields_and_translations(
 
     # Excluded fields
     assert copied_event.published_at is None
+    assert copied_event.registration_opens_at is None
     assert copied_event.occurrences.count() == 0
 
     # Requested project and event group preserved
@@ -353,7 +354,7 @@ def test_create_event_service_catches_validation_error_on_creation(
 
 @pytest.mark.django_db
 def test_copy_event_group_seeds_omitted_translations(
-    event_group_manager_api_client, project
+    event_group_manager_api_client, project, future
 ):
     source_group = EventGroupFactory(
         project=project,
@@ -369,7 +370,7 @@ def test_copy_event_group_seeds_omitted_translations(
         description="Beskrivning SV",
         image_alt_text="Bild SV",
     )
-    source_group.publish()
+    source_group.publish(registration_opens_at=future)
     assert source_group.published_at is not None
 
     variables = {

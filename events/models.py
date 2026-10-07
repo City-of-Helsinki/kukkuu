@@ -26,6 +26,7 @@ from events.utils import (
 )
 from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
+    EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
@@ -192,20 +193,35 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         )
         send_event_group_notifications_to_guardians(*args, **kwargs)
 
-    def publish(self, send_notifications=True):
+    def publish(self, *, registration_opens_at, send_notifications=True):
+        """
+        Publish the event group and its unpublished events.
+
+        The registration opening time is set only to the unpublished events,
+        the already published events are left unchanged. Republishing an already
+        published event group without unpublished events is not allowed.
+        """
+        from events.services import validate_registration_opens_at
+
         unpublished_events = self.events.unpublished()
+        if self.is_published() and not unpublished_events:
+            raise ValidationError(
+                "Event group is already published.",
+                code=EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
+            )
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
             raise ValidationError(
                 "All events are not ready for event group publishing.",
                 code=EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
             )
+        validate_registration_opens_at(registration_opens_at)
 
         with transaction.atomic():
             self.published_at = timezone.now()
             self.save()
 
             for event in unpublished_events:
-                event.publish(send_notifications=False)
+                event._mark_published(registration_opens_at)
             logger.debug(
                 "The atomic transaction to mark events of the group published "
                 "has now finished."
@@ -557,25 +573,36 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         )
         send_event_notifications_to_guardians(*args, **kwargs)
 
-    def publish(self, send_notifications=True):
-        with transaction.atomic():
-            for occurrence in self.occurrences.all():
-                occurrence.clean()
+    def publish(self, *, registration_opens_at, send_notifications=True):
+        from events.services import validate_registration_opens_at
 
-            self.published_at = timezone.now()
-            self.save()
-
-            for occurrence in self.occurrences.all():
-                occurrence.clean()
-            logger.debug(
-                "The atomic transaction to mark events published has now finished."
-            )
+        validate_registration_opens_at(registration_opens_at)
+        self._mark_published(registration_opens_at)
 
         if send_notifications:
             self._send_event_notifications_to_guardians_in_background(
                 self,
                 NotificationType.EVENT_PUBLISHED,
                 list(self.project.children.prefetch_related("guardians")),
+            )
+
+    def _mark_published(self, registration_opens_at):
+        """
+        Mark the event published without validating the registration opening time
+        or sending notifications.
+        """
+        with transaction.atomic():
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
+
+            self.published_at = timezone.now()
+            self.registration_opens_at = registration_opens_at
+            self.save()
+
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
+            logger.debug(
+                "The atomic transaction to mark events published has now finished."
             )
 
     def is_published(self):

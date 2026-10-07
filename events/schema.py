@@ -45,7 +45,6 @@ from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
     EventAlreadyPublishedError,
-    EventGroupAlreadyPublishedError,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceYearMismatchError,
@@ -1209,6 +1208,13 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
 class PublishEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True,
+            description=(
+                "The earliest time when children can be registered to the published "
+                "event. Must be now or in the future."
+            ),
+        )
 
     event = graphene.Field(EventNode)
 
@@ -1227,7 +1233,7 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             raise EventAlreadyPublishedError("Event is already published")
 
         try:
-            event.publish()
+            event.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:
@@ -1359,6 +1365,14 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
 class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True,
+            description=(
+                "The earliest time when children can be registered to the published "
+                "events. Must be now or in the future. Set only to the unpublished "
+                "events of the group, already published events are left unchanged."
+            ),
+        )
 
     event_group = graphene.Field(EventGroupNode)
 
@@ -1372,12 +1386,9 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         if not event_group.can_user_publish(user):
             raise PermissionDenied("No permission to publish the event group.")
 
-        if event_group.is_published() and not event_group.events.unpublished().exists():
-            # Republishing an event group is allowed if new unpublished events exist
-            raise EventGroupAlreadyPublishedError("Event group is already published")
-
         try:
-            event_group.publish()
+            # Republishing an event group is allowed if new unpublished events exist
+            event_group.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:
