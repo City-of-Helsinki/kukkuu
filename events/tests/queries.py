@@ -371,6 +371,19 @@ query Occurrence($id: ID!) {
 """
 
 
+EVENT_TICKET_SYSTEM_URL_QUERY = """
+query EventTicketSystemUrl($id: ID!) {
+  event(id: $id) {
+    ticketSystem {
+      ... on TicketmasterEventTicketSystem {
+        url
+      }
+    }
+  }
+}
+"""
+
+
 EVENT_TICKET_SYSTEM_PASSWORD_QUERY = """
 query TicketSystemChildPassword($eventId: ID!, $childId: ID!) {
   event(id: $eventId) {
