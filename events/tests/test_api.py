@@ -12,6 +12,7 @@ from django.utils.timezone import now
 from django.utils.translation import activate
 from freezegun import freeze_time
 from graphql_relay import to_global_id
+from guardian.shortcuts import assign_perm
 from parler.utils.context import switch_language
 
 from children.factories import ChildWithGuardianFactory
@@ -96,7 +97,7 @@ from kukkuu.consts import (
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
 from projects.factories import ProjectFactory
-from projects.models import Project
+from projects.models import Project, ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
@@ -2793,3 +2794,72 @@ def test_get_enrolment_reference_id_from_public_api(
     )
     assert executed["data"]["child"] is None
     assert_permission_denied(executed)
+
+
+def test_add_event_project_mismatch(
+    project_user_api_client, project, another_project, event_group
+):
+    """
+    Test that GraphQL mutation-level validation prevents adding an event
+    to an event group that belongs to a different project.
+    """
+
+    # We assign another_project to the event group to ensure it's different
+    assign_perm(
+        ProjectPermission.ADMIN.value, project_user_api_client.user, another_project
+    )
+    assign_perm(
+        ProjectPermission.MANAGE_EVENT_GROUPS.value,
+        project_user_api_client.user,
+        another_project,
+    )
+
+    event_group.project = another_project
+    event_group.save()
+
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+    variables["input"]["eventGroupId"] = to_global_id("EventGroupNode", event_group.id)
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "Event group does not belong to the project." in str(executed)
+
+
+def test_update_event_group_project_mismatch(
+    project_user_api_client, project, another_project, event_group, event
+):
+    """
+    Test that updating an EventGroup to a different project fails
+    if it has existing events in the old project, causing a mismatch.
+    """
+
+    # event_group and event belong to project
+    event_group.project = project
+    event_group.save()
+    event.project = project
+    event.event_group = event_group
+    event.save()
+
+    # Assign correct permissions so we get past the permission check
+    user = project_user_api_client.user
+    assign_perm(ProjectPermission.ADMIN.value, user, another_project)
+    assign_perm(ProjectPermission.MANAGE_EVENT_GROUPS.value, user, another_project)
+    assign_perm(ProjectPermission.MANAGE_EVENT_GROUPS.value, user, project)
+
+    variables = {
+        "input": {
+            "id": to_global_id("EventGroupNode", event_group.id),
+            "projectId": to_global_id("ProjectNode", another_project.id),
+        }
+    }
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_GROUP_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "The event group and its events must belong to the same project." in str(
+        executed
+    )
