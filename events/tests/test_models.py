@@ -102,11 +102,13 @@ def test_event_group_can_child_enroll_already_enrolled(
             Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
         ),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     enrolled_occurrence = OccurrenceFactory(
         time=future,
         event__published_at=now(),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     if has_enrolled:
         if use_ticket_system_passwords:
@@ -137,6 +139,7 @@ def test_event_group_can_child_enroll_unpublished(
         time=future,
         event__published_at=now(),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     assert event_group.can_child_enroll(child_with_random_guardian) is can_child_enroll
 
@@ -184,6 +187,7 @@ def test_event_group_can_child_enroll_project_limit_reached(
                 Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
             ),
             event__event_group=enrolled_event_group,
+            event__project=enrolled_event_group.project,
         )
 
         if use_ticket_system_passwords:
@@ -204,6 +208,7 @@ def test_event_group_can_child_enroll_project_limit_reached(
         time=future,
         event__published_at=now(),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     assert event_group.can_child_enroll(child_with_random_guardian) is can_child_enroll
 
@@ -224,6 +229,7 @@ def test_event_can_child_enroll_unpublished(
         time=future,
         event__published_at=now() if is_published else None,
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     assert (
         occurrence.event.can_child_enroll(child_with_random_guardian)
@@ -282,12 +288,12 @@ def test_event_can_child_enroll_project_limit_reached(
         )
         enrolled_occurrence = OccurrenceFactory(
             time=future,
-            event__project=project,
             event__published_at=now(),
             event__ticket_system=(
                 Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
             ),
             event__event_group=enrolled_event_group,
+            event__project=enrolled_event_group.project,
         )
 
         if use_ticket_system_passwords:
@@ -306,9 +312,9 @@ def test_event_can_child_enroll_project_limit_reached(
     )
     occurrence = OccurrenceFactory(
         time=future,
-        event__project=project,
         event__published_at=now(),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     assert (
         occurrence.event.can_child_enroll(child_with_random_guardian)
@@ -329,6 +335,7 @@ def test_event_can_child_enroll_already_enrolled(
             Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
         ),
         event__event_group=event_group,
+        event__project=event_group.project,
     )
     if use_ticket_system_passwords:
         TicketSystemPasswordFactory(
@@ -352,3 +359,57 @@ def test_external_event_factories(external_event_factory):
     assert Event.objects.count() == 0
     external_event_factory()
     assert Event.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_event_group_project_mismatch_raises_validation_error():
+    """
+    Test that an Event cannot be assigned to an EventGroup if they belong to different projects.
+    Validates that both `clean()` and `save()` raise a ValidationError to prevent mismatched projects
+    when creating or updating an Event.
+    """
+    project1 = ProjectFactory(year=3000)
+    project2 = ProjectFactory(year=3001)
+    event_group = EventGroupFactory(project=project1)
+
+    event = EventFactory.build(project=project2, event_group=event_group)
+
+    with pytest.raises(
+        ValidationError,
+        match="The event and the event group must belong to the same project.",
+    ):
+        event.save()
+
+    with pytest.raises(
+        ValidationError,
+        match="The event and the event group must belong to the same project.",
+    ):
+        event.clean()
+
+
+@pytest.mark.django_db
+def test_event_group_events_project_mismatch_raises_validation_error():
+    """
+    Test that an EventGroup's project cannot be changed if it contains Events that would
+    end up belonging to a different project than the new one assigned to the EventGroup.
+    Validates that `save()` raises a ValidationError.
+    """
+    project1 = ProjectFactory(year=3002)
+    project2 = ProjectFactory(year=3003)
+    event_group = EventGroupFactory(project=project1)
+    EventFactory(project=project1, event_group=event_group)
+
+    # Change project of event_group to mismatch its events
+    event_group.project = project2
+
+    with pytest.raises(
+        ValidationError,
+        match="The event group and its events must belong to the same project.",
+    ):
+        event_group.save()
+
+    with pytest.raises(
+        ValidationError,
+        match="The event group and its events must belong to the same project.",
+    ):
+        event_group.clean()

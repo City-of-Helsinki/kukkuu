@@ -1341,7 +1341,10 @@ class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
         if not user.can_manage_event_groups_in_project(project):
             raise PermissionDenied()
 
-        update_object_with_translations(event_group, kwargs)
+        try:
+            update_object_with_translations(event_group, kwargs)
+        except ValidationError as e:
+            raise DataValidationError(str(e))
 
         logger.info(
             f"user {user.uuid} updated event group {event_group} with data {kwargs}"
