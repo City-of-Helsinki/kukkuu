@@ -261,6 +261,7 @@ class EventNode(DjangoObjectType):
             "duration",
             "capacity_per_occurrence",
             "published_at",
+            "registration_opens_at",
             "project",
             "event_group",
             "ready_for_event_group_publishing",

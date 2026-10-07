@@ -22,6 +22,7 @@ mutation AddEvent($input: AddEventMutationInput!) {
       participantsPerInvite
       capacityPerOccurrence
       publishedAt
+      registrationOpensAt
       readyForEventGroupPublishing
       ticketSystem {
         type

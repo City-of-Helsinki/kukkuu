@@ -256,6 +256,34 @@ def test_event_query_can_child_enroll(
     assert executed["data"]["event"]["canChildEnroll"] is False
 
 
+def test_add_event_cannot_set_registration_opens_at(
+    project_user_api_client, project, future
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["registrationOpensAt"] = future.isoformat()
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
+
+
+def test_update_event_cannot_set_registration_opens_at(
+    project_user_api_client, unpublished_event, future
+):
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"]["registrationOpensAt"] = future.isoformat()
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
+
+
 def test_occurrences_query_unauthenticated(api_client):
     executed = api_client.execute(OCCURRENCES_QUERY)
 
