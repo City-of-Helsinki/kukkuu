@@ -161,6 +161,29 @@
               'year': 2025,
             }),
           }),
+          dict({
+            'node': dict({
+              'enrolmentLimit': 2,
+              'id': 'UHJvamVjdE5vZGU6Nw==',
+              'name': 'Suomen kansallisooppera ja -baletti',
+              'singleEventsAllowed': True,
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'Finnish National Opera and Ballet',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'Suomen kansallisooppera ja -baletti',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Finlands nationalopera och -balett',
+                }),
+              ]),
+              'year': 2026,
+            }),
+          }),
         ]),
       }),
     }),
