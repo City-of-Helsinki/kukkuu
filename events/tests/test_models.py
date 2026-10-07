@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 
 from children.factories import ChildFactory
+from kukkuu.consts import DATA_VALIDATION_ERROR, EVENT_GROUP_ALREADY_PUBLISHED_ERROR
 from projects.factories import ProjectFactory
 from projects.models import Project
 from venues.models import Venue
@@ -22,7 +23,13 @@ from ..factories import (
     TicketSystemPasswordFactory,
     TixlyEventFactory,
 )
-from ..models import Enrolment, Event, EventGroup, Occurrence
+from ..models import (
+    Enrolment,
+    Event,
+    EventGroup,
+    Occurrence,
+    validate_registration_opens_at,
+)
 
 User = get_user_model()
 
@@ -517,6 +524,144 @@ def test_event_is_registration_open(registration_opens_at_delta, expected):
     )
 
     assert event.is_registration_open() is expected
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "registration_opens_at_delta", [None, timedelta(microseconds=-1)]
+)
+def test_validate_registration_opens_at_invalid(registration_opens_at_delta):
+    with pytest.raises(ValidationError) as ei:
+        validate_registration_opens_at(
+            None
+            if registration_opens_at_delta is None
+            else now() + registration_opens_at_delta
+        )
+    assert ei.value.code == DATA_VALIDATION_ERROR
+
+
+@pytest.mark.parametrize("registration_opens_at_delta", [timedelta(0), timedelta(1)])
+def test_validate_registration_opens_at_valid(registration_opens_at_delta):
+    validate_registration_opens_at(now() + registration_opens_at_delta)
+
+
+@pytest.mark.django_db
+def test_validate_registration_opens_at_naive_datetime_is_invalid():
+    naive_future = (now() + timedelta(days=1)).replace(tzinfo=None)
+    with pytest.raises(ValidationError) as ei:
+        validate_registration_opens_at(naive_future)
+    assert ei.value.code == DATA_VALIDATION_ERROR
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("already_published", [False, True])
+def test_event_publish_sets_registration_opens_at(already_published, past, future):
+    event = EventFactory(
+        published_at=past if already_published else None,
+        registration_opens_at=past if already_published else None,
+    )
+
+    event.publish(registration_opens_at=future, send_notifications=False)
+
+    event.refresh_from_db()
+    assert event.published_at == now()
+    assert event.registration_opens_at == future
+
+
+@pytest.mark.django_db
+def test_event_publish_invalid_registration_opens_at(past):
+    event = EventFactory()
+
+    with pytest.raises(ValidationError):
+        event.publish(registration_opens_at=past, send_notifications=False)
+
+    event.refresh_from_db()
+    assert event.published_at is None
+    assert event.registration_opens_at is None
+
+
+@pytest.mark.django_db
+def test_event_group_initial_publish_sets_registration_opens_at_to_all_events(
+    past, future
+):
+    event_group = EventGroupFactory()
+    unpublished_event = EventFactory(event_group=event_group)
+    directly_published_event = EventFactory(
+        event_group=event_group, published_at=past, registration_opens_at=past
+    )
+    other_event = EventFactory(registration_opens_at=past)
+
+    event_group.publish(registration_opens_at=future, send_notifications=False)
+
+    for event in (unpublished_event, directly_published_event, other_event):
+        event.refresh_from_db()
+    assert event_group.published_at == now()
+    assert unpublished_event.published_at == now()
+    assert unpublished_event.registration_opens_at == future
+    assert directly_published_event.published_at == past
+    assert directly_published_event.registration_opens_at == future
+    assert other_event.registration_opens_at == past
+
+
+@pytest.mark.django_db
+def test_event_group_republish_sets_registration_opens_at_to_unpublished_events(
+    past, future
+):
+    event_group = EventGroupFactory(published_at=past)
+    published_event = EventFactory(
+        event_group=event_group, published_at=past, registration_opens_at=past
+    )
+    new_event = EventFactory(event_group=event_group)
+
+    event_group.publish(registration_opens_at=future, send_notifications=False)
+
+    published_event.refresh_from_db()
+    new_event.refresh_from_db()
+    assert published_event.published_at == past
+    assert published_event.registration_opens_at == past
+    assert new_event.published_at == now()
+    assert new_event.registration_opens_at == future
+
+
+@pytest.mark.django_db
+def test_event_group_republish_without_unpublished_events(past, future):
+    event_group = EventGroupFactory(published_at=past)
+    event = EventFactory(
+        event_group=event_group, published_at=past, registration_opens_at=past
+    )
+
+    with pytest.raises(ValidationError) as ei:
+        event_group.publish(registration_opens_at=future, send_notifications=False)
+
+    assert ei.value.code == EVENT_GROUP_ALREADY_PUBLISHED_ERROR
+    event_group.refresh_from_db()
+    event.refresh_from_db()
+    assert event_group.published_at == past
+    assert event.registration_opens_at == past
+
+
+@pytest.mark.django_db
+def test_event_group_publish_failure_rolls_back_registration_opens_at(past, future):
+    event_group = EventGroupFactory()
+    directly_published_event = EventFactory(
+        event_group=event_group, published_at=past, registration_opens_at=past
+    )
+    # Publishing fails, because an occurrence of an external ticket system event
+    # is missing the ticket system URL.
+    OccurrenceFactory(
+        event__event_group=event_group,
+        event__ticket_system=Event.TICKETMASTER,
+        ticket_system_url="",
+    )
+
+    with pytest.raises(ValidationError):
+        event_group.publish(registration_opens_at=future, send_notifications=False)
+
+    event_group.refresh_from_db()
+    directly_published_event.refresh_from_db()
+    assert event_group.published_at is None
+    assert directly_published_event.registration_opens_at == past
+    assert not Event.objects.filter(registration_opens_at=future).exists()
 
 
 @pytest.mark.django_db

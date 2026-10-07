@@ -154,7 +154,29 @@ UPDATE_EVENT_VARIABLES = {
 }
 
 
-PUBLISH_EVENT_VARIABLES = {"input": {"id": ""}}
+# Later than the frozen test time, see common.tests.conftest.setup_test_environment
+REGISTRATION_OPENS_AT = "2020-12-24T12:00:00+00:00"
+
+PUBLISH_EVENT_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
+
+PUBLISH_EVENT_GROUP_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
+
+parametrize_publish_mutations = pytest.mark.parametrize(
+    "mutation, base_variables, obj_fixture",
+    [
+        (PUBLISH_EVENT_MUTATION, PUBLISH_EVENT_VARIABLES, "unpublished_event"),
+        (
+            PUBLISH_EVENT_GROUP_MUTATION,
+            PUBLISH_EVENT_GROUP_VARIABLES,
+            "unpublished_event_group",
+        ),
+    ],
+    ids=["event", "event_group"],
+)
 
 ADD_OCCURRENCE_VARIABLES = {
     "input": {"eventId": "", "venueId": "", "time": "1986-12-12T16:40:48+00:00"}
@@ -827,6 +849,84 @@ def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     )
 
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
+
+
+@pytest.fixture
+def unpublished_event_group(project):
+    """An unpublished event group with one event ready for publishing"""
+    event_group = EventGroupFactory(project=project)
+    EventFactory(project=project, event_group=event_group)
+    return event_group
+
+
+@parametrize_publish_mutations
+@pytest.mark.parametrize(
+    "registration_opens_at_delta, is_valid",
+    [(timedelta(microseconds=-1), False), (timedelta(0), True)],
+    ids=["past", "now"],
+)
+def test_publish_registration_opens_at_validation(
+    request,
+    publisher_api_client,
+    mutation,
+    base_variables,
+    obj_fixture,
+    registration_opens_at_delta,
+    is_valid,
+):
+    obj = request.getfixturevalue(obj_fixture)
+    registration_opens_at = now() + registration_opens_at_delta
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    obj.refresh_from_db()
+    if is_valid:
+        assert "errors" not in executed
+        assert obj.is_published()
+    else:
+        assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+        assert not obj.is_published()
+    assert all(
+        event.registration_opens_at == (registration_opens_at if is_valid else None)
+        for event in Event.objects.all()
+    )
+
+
+@parametrize_publish_mutations
+def test_publish_registration_opens_at_without_timezone_is_rejected(
+    request, publisher_api_client, mutation, base_variables, obj_fixture
+):
+    obj = request.getfixturevalue(obj_fixture)
+    registration_opens_at = (now() + timedelta(days=1)).replace(tzinfo=None)
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    obj.refresh_from_db()
+    assert not obj.is_published()
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
+
+
+@parametrize_publish_mutations
+def test_publish_registration_opens_at_required(
+    request, publisher_api_client, mutation, base_variables, obj_fixture
+):
+    obj = request.getfixturevalue(obj_fixture)
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"].pop("registrationOpensAt")
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    obj.refresh_from_db()
+    assert not obj.is_published()
 
 
 @pytest.mark.parametrize("url_missing", (True, False))
@@ -2004,9 +2104,6 @@ def test_delete_event_group(snapshot, event_group_manager_api_client, event_grou
     assert EventGroup.objects.count() == 0
 
 
-PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
-
-
 def test_publish_event_group_no_publish_permission(project_user_api_client):
     event = EventFactory(event_group=EventGroupFactory())
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
@@ -2076,10 +2173,11 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
     are ready for publishing.
     """
     event_group = EventGroupFactory(published_at=past)
-    EventFactory(
+    published_event = EventFactory(
         event_group=event_group,
         ready_for_event_group_publishing=True,
         published_at=past,
+        registration_opens_at=past,
     )
     new_event = EventFactory(
         event_group=event_group,
@@ -2094,13 +2192,18 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
     )
 
     new_event.refresh_from_db()
+    published_event.refresh_from_db()
 
+    assert published_event.published_at == past
+    assert published_event.registration_opens_at == past
     if event_ready:
         snapshot.assert_match(executed)
         assert new_event.published_at
+        assert new_event.registration_opens_at.isoformat() == REGISTRATION_OPENS_AT
     else:
         assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
         assert not new_event.published_at
+        assert new_event.registration_opens_at is None
 
 
 def test_event_group_events_filtering_by_available_for_child_id(

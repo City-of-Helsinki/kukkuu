@@ -44,7 +44,6 @@ from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
     EventAlreadyPublishedError,
-    EventGroupAlreadyPublishedError,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceYearMismatchError,
@@ -1243,9 +1242,18 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
         return DeleteOccurrenceMutation()
 
 
+REGISTRATION_OPENS_AT_DESCRIPTION = (
+    "The earliest time when children can be registered to the published event(s). "
+    "Must be now or in the future."
+)
+
+
 class PublishEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True, description=REGISTRATION_OPENS_AT_DESCRIPTION
+        )
 
     event = graphene.Field(EventNode)
 
@@ -1264,7 +1272,7 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             raise EventAlreadyPublishedError("Event is already published")
 
         try:
-            event.publish()
+            event.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:
@@ -1376,6 +1384,14 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
 class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True,
+            description=(
+                f"{REGISTRATION_OPENS_AT_DESCRIPTION} Set to all the events of the "
+                "group on the initial publication, and only to the unpublished events "
+                "on republication."
+            ),
+        )
 
     event_group = graphene.Field(EventGroupNode)
 
@@ -1389,12 +1405,9 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         if not event_group.can_user_publish(user):
             raise PermissionDenied("No permission to publish the event group.")
 
-        if event_group.is_published() and not event_group.events.unpublished().exists():
-            # Republishing an event group is allowed if new unpublished events exist
-            raise EventGroupAlreadyPublishedError("Event group is already published")
-
         try:
-            event_group.publish()
+            # Republishing an event group is allowed if new unpublished events exist
+            event_group.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:

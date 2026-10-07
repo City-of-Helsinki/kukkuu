@@ -2,6 +2,7 @@ import { Selector } from "testcafe";
 import { screen } from "@testing-library/testcafe";
 import { envUrl } from "../utils/settings";
 import getDropdownOption from "../utils/getDropdownOption";
+import getHelsinkiDateTime from "../utils/getHelsinkiDateTime";
 
 export const eventGroup = {
   name: `Test event group ${new Date().toUTCString()}`,
@@ -10,7 +11,17 @@ export const eventGroup = {
 export const eventGroupList = {
   action: screen.getByLabelText(/Toiminto:|Action:/i),
   goButton: Selector("button").withText(/Suorita|Go/i),
-  actionPublish: "Publish",
+  actionPublish: "Publish selected event groups",
+};
+
+export const eventGroupPublish = {
+  registrationOpensAtDate: Selector(
+    'input.vDateField[name^="registration_opens_at"]',
+  ),
+  registrationOpensAtTime: Selector(
+    'input.vTimeField[name^="registration_opens_at"]',
+  ),
+  submitButton: Selector('input[name="apply"]'),
 };
 
 export const eventGroupAdd = {
@@ -44,8 +55,16 @@ export const publish = async (t: TestController) => {
     .click(eventGroupList.action)
     .click(getDropdownOption(eventGroupList.actionPublish));
 
-  // and publish it
   await t.click(eventGroupList.goButton);
+
+  // Now + 2h, so the server does not reject it as past:
+  const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const { date, time } = getHelsinkiDateTime(twoHoursFromNow);
+
+  await t
+    .typeText(eventGroupPublish.registrationOpensAtDate, date)
+    .typeText(eventGroupPublish.registrationOpensAtTime, time)
+    .click(eventGroupPublish.submitButton);
 };
 
 // fill add form for new event group
