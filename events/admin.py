@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from events.services import validate_event_group_and_events_project_match
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
 
@@ -236,6 +237,19 @@ class EventGroupForm(TranslatableModelForm):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
             self.fields["events"].initial = self.instance.events.all()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get("project")
+        events = cleaned_data.get("events")
+        if project and events:
+            try:
+                validate_event_group_and_events_project_match(
+                    self.instance, events=events, project=project
+                )
+            except ValidationError as e:
+                self.add_error("events", e)
+        return cleaned_data
 
 
 @admin.register(EventGroup)
