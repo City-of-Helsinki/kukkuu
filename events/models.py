@@ -334,6 +334,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     published_at = models.DateTimeField(
         blank=True, null=True, verbose_name=_("published at")
     )
+    registration_opens_at = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("registration opens at")
+    )
 
     project = models.ForeignKey(
         "projects.Project",
