@@ -51,6 +51,7 @@ from events.tests.mutations import (
     UPDATE_TICKETMASTER_EVENT_MUTATION,
 )
 from events.tests.queries import (
+    CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
     CAN_CHILD_ENROLL_EVENT_QUERY,
     EVENT_GROUP_EVENTS_FILTER_QUERY,
     EVENT_GROUP_QUERY,
@@ -88,6 +89,7 @@ from kukkuu.consts import (
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
+    REGISTRATION_NOT_OPEN_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
@@ -254,6 +256,60 @@ def test_event_query_can_child_enroll(
     )
 
     assert executed["data"]["event"]["canChildEnroll"] is False
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+def test_event_query_registration_opens_at(
+    guardian_api_client, child_with_user_guardian, future, registration_open
+):
+    """A published event is visible before its registration opens, but children
+    can enrol only after that.
+    """
+    registration_opens_at = now() if registration_open else future
+    occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=registration_opens_at,
+    )
+
+    executed = guardian_api_client.execute(
+        CAN_CHILD_ENROLL_EVENT_QUERY,
+        variables={
+            "id": get_global_id(occurrence.event),
+            "childId": get_global_id(child_with_user_guardian),
+        },
+    )
+
+    assert executed["data"]["event"]["registrationOpensAt"] == (
+        registration_opens_at.isoformat()
+    )
+    assert executed["data"]["event"]["canChildEnroll"] is registration_open
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+def test_event_group_query_can_child_enroll_registration_opens_at(
+    guardian_api_client, child_with_user_guardian, future, registration_open
+):
+    """An event group can be enrolled to only when registration is open for at
+    least one of its published events.
+    """
+    event_group = EventGroupFactory(published_at=now())
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=now() if registration_open else future,
+        event__event_group=event_group,
+    )
+
+    executed = guardian_api_client.execute(
+        CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
+        variables={
+            "id": get_global_id(event_group),
+            "childId": get_global_id(child_with_user_guardian),
+        },
+    )
+
+    assert executed["data"]["eventGroup"]["canChildEnroll"] is registration_open
 
 
 def test_add_event_cannot_set_registration_opens_at(
@@ -889,6 +945,28 @@ def test_enrol_event_not_published(guardian_api_client, child_with_user_guardian
     )
 
     assert_match_error_code(executed, EVENT_NOT_PUBLISHED_ERROR)
+
+
+def test_enrol_occurrence_registration_not_open(
+    guardian_api_client, child_with_user_guardian, future
+):
+    occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=future,
+        event__capacity_per_occurrence=10,
+    )
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = get_global_id(occurrence)
+    enrolment_variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert_match_error_code(executed, REGISTRATION_NOT_OPEN_ERROR)
+    assert not Enrolment.objects.exists()
 
 
 def test_already_enrolled_same_event(
@@ -2479,6 +2557,21 @@ def test_assign_ticket_system_password_not_published_event(guardian_api_client):
     executed = _assign_ticket_system_password(guardian_api_client, event, child)
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_assign_ticket_system_password_registration_not_open(
+    guardian_api_client, future
+):
+    event = TicketmasterEventFactory(registration_opens_at=future)
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian
+    )
+    TicketSystemPasswordFactory(event=event, child=None)
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert_match_error_code(executed, REGISTRATION_NOT_OPEN_ERROR)
+    assert not child.ticket_system_passwords.exists()
 
 
 def _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests(

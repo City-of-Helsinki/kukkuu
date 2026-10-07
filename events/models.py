@@ -135,6 +135,23 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         if child.ticket_system_passwords.filter(event__event_group=self).exists():
             return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT_GROUP
 
+        # A null registration_opens_at means no limitation, and unpublished events
+        # can't be enrolled to. The registration is not open if every published event
+        # has a registration opening time and their earliest one is in the future.
+        registration_stats = self.events.published().aggregate(
+            total=Count("pk"),
+            with_opening_time=Count(
+                "registration_opens_at"
+            ),  # Count of non-null values
+            earliest_opening_time=models.Min("registration_opens_at"),
+        )
+        if (
+            registration_stats["total"] > 0
+            and registration_stats["total"] == registration_stats["with_opening_time"]
+            and registration_stats["earliest_opening_time"] > timezone.now()
+        ):
+            return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
+
         return None
 
     def can_child_enroll(self, child: Child) -> bool:
@@ -404,6 +421,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_NOT_PUBLISHED
 
+        if not self.is_registration_open():
+            return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
+
         if child.project != self.project:
             return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_PROJECT
 
@@ -469,6 +489,12 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
     def is_published(self):
         return bool(self.published_at)
+
+    def is_registration_open(self) -> bool:
+        return (
+            self.registration_opens_at is None
+            or timezone.now() >= self.registration_opens_at
+        )
 
     def get_enrolment_count(self) -> int:
         return sum(
