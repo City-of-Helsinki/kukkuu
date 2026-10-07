@@ -192,6 +192,18 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         except TypeError:
             return None
 
+    def clean(self):
+        from events.services import validate_event_group_and_events_project_match
+
+        validate_event_group_and_events_project_match(self)
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        from events.services import validate_event_group_and_events_project_match
+
+        validate_event_group_and_events_project_match(self)
+        super().save(*args, **kwargs)
+
 
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
@@ -348,6 +360,10 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         )
 
     def clean(self):
+        from events.services import validate_event_and_event_group_project_match
+
+        validate_event_and_event_group_project_match(self)
+
         if self.ticket_system == Event.INTERNAL:
             if self.capacity_per_occurrence is None:
                 raise ValidationError(
@@ -367,6 +383,10 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             )
 
     def save(self, *args, **kwargs):
+        from events.services import validate_event_and_event_group_project_match
+
+        validate_event_and_event_group_project_match(self)
+
         try:
             old_capacity_per_occurrence = Event.objects.get(
                 pk=self.pk
