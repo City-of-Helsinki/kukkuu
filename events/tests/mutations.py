@@ -331,3 +331,49 @@ UPDATE_TICKET_ATTENDED_MUTATION = """
     }
   }
 """
+
+COPY_EVENT_GROUP_MUTATION = """
+mutation copyEventGroup($input: CopyEventGroupMutationInput!) {
+  copyEventGroup(input: $input) {
+    eventGroup {
+      id
+      name
+      translations {
+        languageCode
+        name
+        shortDescription
+        description
+      }
+      project {
+        id
+      }
+    }
+  }
+}
+"""
+
+COPY_EVENT_MUTATION = """
+mutation copyEvent($input: CopyEventMutationInput!) {
+  copyEvent(input: $input) {
+    event {
+      id
+      name
+      duration
+      participantsPerInvite
+      capacityPerOccurrence
+      eventGroup {
+        id
+      }
+      project {
+        id
+      }
+      translations {
+        languageCode
+        name
+        shortDescription
+        description
+      }
+    }
+  }
+}
+"""

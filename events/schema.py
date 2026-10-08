@@ -39,6 +39,7 @@ from events.exceptions import (
 )
 from events.filters import EventFilter, OccurrenceFilter
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from events.services import EventAPIService
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -49,7 +50,6 @@ from kukkuu.exceptions import (
     ObjectDoesNotExistError,
     OccurrenceYearMismatchError,
     PastEnrolmentError,
-    SingleEventsDisallowedError,
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
     TicketVerificationError,
@@ -866,19 +866,23 @@ class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
         )
 
 
+class EventInputMixin:
+    translations = graphene.List(EventTranslationsInput)
+    duration = graphene.Int()
+    participants_per_invite = EventParticipantsPerInvite(required=True)
+    capacity_per_occurrence = graphene.Int(
+        description="Required for internal ticket system events."
+    )
+    image = Upload()
+    project_id = graphene.GlobalID()
+    event_group_id = graphene.GlobalID(required=False)
+    ready_for_event_group_publishing = graphene.Boolean()
+    ticket_system = AddEventTicketSystemInput()
+
+
 class AddEventMutation(graphene.relay.ClientIDMutation):
-    class Input:
-        translations = graphene.List(EventTranslationsInput)
-        duration = graphene.Int()
-        participants_per_invite = EventParticipantsPerInvite(required=True)
-        capacity_per_occurrence = graphene.Int(
-            description="Required for internal ticket system events."
-        )
-        image = Upload()
-        project_id = graphene.GlobalID()
-        event_group_id = graphene.GlobalID(required=False)
-        ready_for_event_group_publishing = graphene.Boolean()
-        ticket_system = AddEventTicketSystemInput()
+    class Input(EventInputMixin):
+        pass
 
     event = graphene.Field(EventNode)
 
@@ -887,53 +891,26 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        original_kwargs = deepcopy(kwargs)
+        return AddEventMutation(event=EventAPIService.create_event(info, kwargs))
 
-        project = get_obj_if_user_can_administer(
-            info, kwargs.pop("project_id"), Project
+
+class CopyEventMutation(graphene.relay.ClientIDMutation):
+    class Input(EventInputMixin):
+        source_event_id = graphene.GlobalID(required=True)
+
+    event = graphene.Field(EventNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    @map_enums_to_values_in_kwargs
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        source = get_obj_if_user_can_administer(
+            info, kwargs.pop("source_event_id"), Event
         )
-        kwargs["project_id"] = project.pk
-        if "event_group_id" in kwargs and kwargs["event_group_id"]:
-            kwargs["event_group_id"] = get_obj_if_user_can_administer(
-                info, kwargs.get("event_group_id"), EventGroup
-            ).pk
-        elif not project.single_events_allowed:
-            raise SingleEventsDisallowedError(
-                f"Single events are disallowed in project {project}."
-            )
-
-        if ticket_system := kwargs.pop("ticket_system", None):
-            kwargs.update(
-                {
-                    "ticket_system": ticket_system.get("type"),
-                    "ticket_system_url": ticket_system.get(
-                        "url",
-                        # Temporary value for Kukkuu admin UI compatibility until event
-                        # URLs are implemented.
-                        "https://example.com",
-                    ),
-                    "ticket_system_end_time": ticket_system.get("end_time"),
-                }
-            )
-
-        event = Event.objects.create_translatable_object(**kwargs)
-
-        try:
-            event.clean()
-        except ValidationError as e:
-            raise DataValidationError(str(e))
-
-        logger.info(
-            f"user {info.context.user.uuid} added event {event} "
-            f"with data {original_kwargs}"
+        return CopyEventMutation(
+            event=EventAPIService.create_event(info, kwargs, source_event=source)
         )
-
-        # The event object must contain objects as its properties where needed, and
-        # this is probably the easiest way to achieve that. Without this for example
-        # event.ticketSystemEndTime would be a string instead of a datetime object.
-        event.refresh_from_db()
-
-        return AddEventMutation(event=event)
 
 
 class UpdateEventMutation(graphene.relay.ClientIDMutation):
@@ -1284,11 +1261,15 @@ class EventGroupTranslationsInput(graphene.InputObjectType):
     language_code = LanguageEnum(required=True)
 
 
+class EventGroupInputMixin:
+    translations = graphene.List(EventGroupTranslationsInput)
+    project_id = graphene.GlobalID()
+    image = Upload()
+
+
 class AddEventGroupMutation(graphene.relay.ClientIDMutation):
-    class Input:
-        translations = graphene.List(EventGroupTranslationsInput)
-        image = Upload()
-        project_id = graphene.GlobalID()
+    class Input(EventGroupInputMixin):
+        pass
 
     event_group = graphene.Field(EventGroupNode)
 
@@ -1297,22 +1278,35 @@ class AddEventGroupMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        user = info.context.user
-
-        project = get_obj_if_user_can_administer(
-            info, kwargs.pop("project_id"), Project
-        )
-        if not user.can_manage_event_groups_in_project(project):
-            raise PermissionDenied()
-
-        kwargs["project_id"] = project.pk
-        event_group = EventGroup.objects.create_translatable_object(**kwargs)
-
-        logger.info(
-            f"user {user.uuid} added event group {event_group} with data {kwargs}"
+        return AddEventGroupMutation(
+            event_group=EventAPIService.create_event_group(info, kwargs)
         )
 
-        return AddEventGroupMutation(event_group=event_group)
+
+class CopyEventGroupMutation(graphene.relay.ClientIDMutation):
+    class Input(EventGroupInputMixin):
+        source_event_group_id = graphene.GlobalID(required=True)
+
+    event_group = graphene.Field(EventGroupNode)
+
+    @classmethod
+    @project_user_required
+    @transaction.atomic
+    @map_enums_to_values_in_kwargs
+    def mutate_and_get_payload(cls, root, info, **kwargs):
+        source = get_obj_if_user_can_administer(
+            info, kwargs.pop("source_event_group_id"), EventGroup
+        )
+        if not info.context.user.can_manage_event_groups_in_project(source.project):
+            raise PermissionDenied(
+                "You do not have permission to copy event groups from this project."
+            )
+
+        return CopyEventGroupMutation(
+            event_group=EventAPIService.create_event_group(
+                info, kwargs, source_event_group=source
+            )
+        )
 
 
 class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
@@ -1341,7 +1335,10 @@ class UpdateEventGroupMutation(graphene.relay.ClientIDMutation):
         if not user.can_manage_event_groups_in_project(project):
             raise PermissionDenied()
 
-        update_object_with_translations(event_group, kwargs)
+        try:
+            update_object_with_translations(event_group, kwargs)
+        except ValidationError as e:
+            raise DataValidationError(str(e))
 
         logger.info(
             f"user {user.uuid} updated event group {event_group} with data {kwargs}"
@@ -1454,6 +1451,7 @@ class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
 
 class Query:
     events = DjangoFilterConnectionField(EventNode)
+    event_groups = DjangoFilterConnectionField(EventGroupNode)
     events_and_event_groups = graphene.ConnectionField(
         EventOrEventGroupConnection,
         project_id=graphene.ID(),
@@ -1511,6 +1509,7 @@ class Query:
 
 class Mutation:
     add_event = AddEventMutation.Field()
+    copy_event = CopyEventMutation.Field()
     update_event = UpdateEventMutation.Field()
     delete_event = DeleteEventMutation.Field()
     publish_event = PublishEventMutation.Field()
@@ -1523,6 +1522,7 @@ class Mutation:
     set_enrolment_attendance = SetEnrolmentAttendanceMutation.Field()
 
     add_event_group = AddEventGroupMutation.Field()
+    copy_event_group = CopyEventGroupMutation.Field()
     update_event_group = UpdateEventGroupMutation.Field()
     delete_event_group = DeleteEventGroupMutation.Field()
     publish_event_group = PublishEventGroupMutation.Field()

@@ -130,6 +130,16 @@
                   'manageEventGroups': True,
                   'publish': True,
                 }),
+                'name': 'Suomen kansallisooppera ja -baletti',
+              }),
+            }),
+            dict({
+              'node': dict({
+                'myPermissions': dict({
+                  'canSendToAllInProject': True,
+                  'manageEventGroups': True,
+                  'publish': True,
+                }),
                 'name': 'project where no object perms',
               }),
             }),
