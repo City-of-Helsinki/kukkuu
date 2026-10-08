@@ -26,6 +26,7 @@ from events.utils import (
 )
 from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
+    EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
     EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
     TICKET_SYSTEM_URL_MISSING_ERROR,
 )
@@ -34,6 +35,25 @@ from kukkuu.service import get_hashid_service
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
+
+
+def validate_registration_opens_at(registration_opens_at) -> None:
+    """Validate the registration opening time given when publishing events."""
+    if registration_opens_at is None:
+        raise ValidationError(
+            _("Registration opening time must be now or in the future."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if timezone.is_naive(registration_opens_at):
+        raise ValidationError(
+            _("Registration opening time must include a timezone offset."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if registration_opens_at < timezone.now():
+        raise ValidationError(
+            _("Registration opening time must be now or in the future."),
+            code=DATA_VALIDATION_ERROR,
+        )
 
 
 class EventGroupQueryset(TranslatableQuerySet):
@@ -135,6 +155,23 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         if child.ticket_system_passwords.filter(event__event_group=self).exists():
             return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT_GROUP
 
+        # A null registration_opens_at means no limitation, and unpublished events
+        # can't be enrolled to. The registration is not open if every published event
+        # has a registration opening time and their earliest one is in the future.
+        registration_stats = self.events.published().aggregate(
+            total=Count("pk"),
+            with_opening_time=Count(
+                "registration_opens_at"
+            ),  # Count of non-null values
+            earliest_opening_time=models.Min("registration_opens_at"),
+        )
+        if (
+            registration_stats["total"] > 0
+            and registration_stats["total"] == registration_stats["with_opening_time"]
+            and registration_stats["earliest_opening_time"] > timezone.now()
+        ):
+            return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
+
         return None
 
     def can_child_enroll(self, child: Child) -> bool:
@@ -151,20 +188,39 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         )
         send_event_group_notifications_to_guardians(*args, **kwargs)
 
-    def publish(self, send_notifications=True):
-        unpublished_events = self.events.unpublished()
+    def publish(self, registration_opens_at, send_notifications=True):
+        """
+        Publish the event group and its unpublished events.
+
+        On the initial publication the registration opening time is set to all
+        the events of the group. On republication it is set only to the
+        unpublished events, and republishing without them is not allowed.
+        """
+        is_initial_publication = not self.is_published()
+        unpublished_events = list(self.events.unpublished())
+        if not is_initial_publication and not unpublished_events:
+            raise ValidationError(
+                "Event group is already published.",
+                code=EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
+            )
         if any(not e.ready_for_event_group_publishing for e in unpublished_events):
             raise ValidationError(
                 "All events are not ready for event group publishing.",
                 code=EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR,
             )
+        validate_registration_opens_at(registration_opens_at)
 
         with transaction.atomic():
             self.published_at = timezone.now()
             self.save()
 
+            if is_initial_publication:
+                for event in self.events.published():
+                    event.registration_opens_at = registration_opens_at
+                    event.save(update_fields=["registration_opens_at", "updated_at"])
+
             for event in unpublished_events:
-                event.publish(send_notifications=False)
+                event.mark_published(registration_opens_at)
             logger.debug(
                 "The atomic transaction to mark events of the group published "
                 "has now finished."
@@ -288,6 +344,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     published_at = models.DateTimeField(
         blank=True, null=True, verbose_name=_("published at")
     )
+    registration_opens_at = models.DateTimeField(
+        blank=True, null=True, verbose_name=_("registration opens at")
+    )
 
     project = models.ForeignKey(
         "projects.Project",
@@ -401,6 +460,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_NOT_PUBLISHED
 
+        if not self.is_registration_open():
+            return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
+
         if child.project != self.project:
             return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_PROJECT
 
@@ -443,19 +505,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         )
         send_event_notifications_to_guardians(*args, **kwargs)
 
-    def publish(self, send_notifications=True):
-        with transaction.atomic():
-            for occurrence in self.occurrences.all():
-                occurrence.clean()
-
-            self.published_at = timezone.now()
-            self.save()
-
-            for occurrence in self.occurrences.all():
-                occurrence.clean()
-            logger.debug(
-                "The atomic transaction to mark events published has now finished."
-            )
+    def publish(self, registration_opens_at, send_notifications=True):
+        validate_registration_opens_at(registration_opens_at)
+        self.mark_published(registration_opens_at)
 
         if send_notifications:
             self._send_event_notifications_to_guardians_in_background(
@@ -464,8 +516,33 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
                 list(self.project.children.prefetch_related("guardians")),
             )
 
+    def mark_published(self, registration_opens_at):
+        """
+        Mark the event published without validating the registration opening time
+        or sending notifications. Use publish() unless those are handled elsewhere.
+        """
+        with transaction.atomic():
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
+
+            self.published_at = timezone.now()
+            self.registration_opens_at = registration_opens_at
+            self.save()
+
+            for occurrence in self.occurrences.all():
+                occurrence.clean()
+            logger.debug(
+                "The atomic transaction to mark events published has now finished."
+            )
+
     def is_published(self):
         return bool(self.published_at)
+
+    def is_registration_open(self) -> bool:
+        return (
+            self.registration_opens_at is None
+            or timezone.now() >= self.registration_opens_at
+        )
 
     def get_enrolment_count(self) -> int:
         return sum(

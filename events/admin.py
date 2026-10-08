@@ -1,18 +1,85 @@
 from auditlog_extra.mixins import AuditlogAdminViewAccessLogMixin
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.admin import helpers
+from django.contrib.admin.utils import model_format_dict
+from django.contrib.admin.widgets import AdminSplitDateTime, FilteredSelectMultiple
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
+from django.template.response import TemplateResponse
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
+from common.mixins import PreDjango6AssumeHttpsURLFieldAdminMixin
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
 
-from .models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from .models import (
+    Enrolment,
+    Event,
+    EventGroup,
+    Occurrence,
+    TicketSystemPassword,
+    validate_registration_opens_at,
+)
+
+
+class RegistrationOpensAtForm(forms.Form):
+    registration_opens_at = forms.SplitDateTimeField(
+        label=_("registration opens at"), widget=AdminSplitDateTime()
+    )
+
+    def clean_registration_opens_at(self):
+        registration_opens_at = self.cleaned_data["registration_opens_at"]
+        validate_registration_opens_at(registration_opens_at)
+        return registration_opens_at
+
+
+class PublishActionMixin:
+    """
+    Provide a "publish" admin action, which asks for the registration opening time
+    on an intermediate page and passes it to the selected objects' publish().
+    """
+
+    publish_help_text = ""
+
+    @admin.action(description=_("Publish selected %(verbose_name_plural)s"))
+    def publish(self, request, queryset):
+        form = RegistrationOpensAtForm(
+            request.POST if "apply" in request.POST else None
+        )
+        if not form.is_valid():
+            return TemplateResponse(
+                request,
+                "admin/events/publish_with_registration_opens_at.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "title": _("Publish selected %(verbose_name_plural)s")
+                    % model_format_dict(self.opts),
+                    "opts": self.opts,
+                    "queryset": queryset,
+                    "form": form,
+                    "help_text": self.publish_help_text,
+                    "media": self.media + form.media,
+                    "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+                },
+            )
+
+        success_count = 0
+        for obj in queryset:
+            try:
+                obj.publish(
+                    registration_opens_at=form.cleaned_data["registration_opens_at"]
+                )
+                success_count += 1
+            except ValidationError as e:
+                self.message_user(request, f"{obj}: {e.message}", level=messages.ERROR)
+        if success_count:
+            self.message_user(request, _("%s successfully published.") % success_count)
+        return None
 
 
 class BaseBooleanListFilter(admin.SimpleListFilter):
@@ -47,19 +114,22 @@ class OccurrenceIsUpcomingFilter(BaseBooleanListFilter):
             return queryset.upcoming()
 
 
-class OccurrencesInline(admin.StackedInline):
+class OccurrencesInline(PreDjango6AssumeHttpsURLFieldAdminMixin, admin.StackedInline):
     model = Occurrence
     extra = 0
 
 
 @admin.register(Event)
-class EventAdmin(TranslatableAdmin):
+class EventAdminPreDjango6(
+    PublishActionMixin, PreDjango6AssumeHttpsURLFieldAdminMixin, TranslatableAdmin
+):
     list_display = (
         "id",
         "name",
         "capacity_per_occurrence",
         "participants_per_invite",
         "published_at",
+        "registration_opens_at",
         "project",
         "created_at",
         "updated_at",
@@ -81,6 +151,7 @@ class EventAdmin(TranslatableAdmin):
         "image",
         "image_alt_text",
         "published_at",
+        "registration_opens_at",
         "event_group",
         "ready_for_event_group_publishing",
         "ticket_system",
@@ -92,24 +163,16 @@ class EventAdmin(TranslatableAdmin):
         OccurrencesInline,
     ]
     actions = ["publish"]
+    publish_help_text = _(
+        "The registration opening time is set to each selected event. Already "
+        "published events are published again, and guardians are notified again."
+    )
     readonly_fields = ("published_at",)
     list_filter = (
         "project",
         ("event_group", admin.RelatedOnlyFieldListFilter),
         IsPublishedFilter,
     )
-
-    @admin.action(description=_("Publish selected events"))
-    def publish(self, request, queryset):
-        success_count = 0
-        for obj in queryset:
-            try:
-                obj.publish()
-                success_count += 1
-            except ValidationError as e:
-                self.message_user(request, e.message, level=messages.ERROR)
-        if success_count:
-            self.message_user(request, _("%s successfully published.") % success_count)
 
     def get_queryset(self, request):
         return (
@@ -159,7 +222,11 @@ class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
 
 
 @admin.register(Occurrence)
-class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
+class OccurrenceAdminPreDjango6(
+    AuditlogAdminViewAccessLogMixin,
+    PreDjango6AssumeHttpsURLFieldAdminMixin,
+    admin.ModelAdmin,
+):
     enable_list_view_audit_logging = False  # Not needed in list view
     list_display = (
         "time",
@@ -239,7 +306,7 @@ class EventGroupForm(TranslatableModelForm):
 
 
 @admin.register(EventGroup)
-class EventGroupAdmin(TranslatableAdmin):
+class EventGroupAdmin(PublishActionMixin, TranslatableAdmin):
     list_display = (
         "id",
         "name_with_fallback",
@@ -254,6 +321,12 @@ class EventGroupAdmin(TranslatableAdmin):
     readonly_fields = ("published_at",)
     form = EventGroupForm
     actions = ("publish",)
+    publish_help_text = _(
+        "On the initial publication of an event group, the registration opening time "
+        "is set to all its events. On republication, it is set only to its "
+        "unpublished events, and already published events are left unchanged. "
+        "Republishing an event group without unpublished events is not allowed."
+    )
     list_filter = ("project", IsPublishedFilter)
     search_fields = ("translations__name", "translations__short_description")
 
@@ -304,17 +377,6 @@ class EventGroupAdmin(TranslatableAdmin):
     def save_model(self, request, obj, form, change):
         obj.save()
         obj.events.set(form.cleaned_data["events"])
-
-    def publish(self, request, queryset):
-        success_count = 0
-        for obj in queryset:
-            try:
-                obj.publish()
-                success_count += 1
-            except ValidationError as e:
-                self.message_user(request, e.message, level=messages.ERROR)
-        if success_count:
-            self.message_user(request, _("%s successfully published.") % success_count)
 
     def get_queryset(self, request):
         return (

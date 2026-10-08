@@ -51,6 +51,7 @@ from events.tests.mutations import (
     UPDATE_TICKETMASTER_EVENT_MUTATION,
 )
 from events.tests.queries import (
+    CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
     CAN_CHILD_ENROLL_EVENT_QUERY,
     EVENT_GROUP_EVENTS_FILTER_QUERY,
     EVENT_GROUP_QUERY,
@@ -58,6 +59,7 @@ from events.tests.queries import (
     EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_QUERY,
+    EVENT_TICKET_SYSTEM_URL_QUERY,
     EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
     EVENTS_FILTER_QUERY,
     EVENTS_QUERY,
@@ -88,6 +90,7 @@ from kukkuu.consts import (
     PAST_ENROLMENT_ERROR,
     PAST_OCCURRENCE_ERROR,
     PERMISSION_DENIED_ERROR,
+    REGISTRATION_NOT_OPEN_ERROR,
     SINGLE_EVENTS_DISALLOWED_ERROR,
     TICKET_SYSTEM_PASSWORD_ALREADY_ASSIGNED_ERROR,
     TICKET_SYSTEM_PASSWORD_NOTHING_TO_IMPORT_ERROR,
@@ -152,7 +155,29 @@ UPDATE_EVENT_VARIABLES = {
 }
 
 
-PUBLISH_EVENT_VARIABLES = {"input": {"id": ""}}
+# Later than the frozen test time, see common.tests.conftest.setup_test_environment
+REGISTRATION_OPENS_AT = "2020-12-24T12:00:00+00:00"
+
+PUBLISH_EVENT_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
+
+PUBLISH_EVENT_GROUP_VARIABLES = {
+    "input": {"id": "", "registrationOpensAt": REGISTRATION_OPENS_AT}
+}
+
+parametrize_publish_mutations = pytest.mark.parametrize(
+    "mutation, base_variables, obj_fixture",
+    [
+        (PUBLISH_EVENT_MUTATION, PUBLISH_EVENT_VARIABLES, "unpublished_event"),
+        (
+            PUBLISH_EVENT_GROUP_MUTATION,
+            PUBLISH_EVENT_GROUP_VARIABLES,
+            "unpublished_event_group",
+        ),
+    ],
+    ids=["event", "event_group"],
+)
 
 ADD_OCCURRENCE_VARIABLES = {
     "input": {"eventId": "", "venueId": "", "time": "1986-12-12T16:40:48+00:00"}
@@ -254,6 +279,88 @@ def test_event_query_can_child_enroll(
     )
 
     assert executed["data"]["event"]["canChildEnroll"] is False
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+def test_event_query_registration_opens_at(
+    guardian_api_client, child_with_user_guardian, future, registration_open
+):
+    """A published event is visible before its registration opens, but children
+    can enrol only after that.
+    """
+    registration_opens_at = now() if registration_open else future
+    occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=registration_opens_at,
+    )
+
+    executed = guardian_api_client.execute(
+        CAN_CHILD_ENROLL_EVENT_QUERY,
+        variables={
+            "id": get_global_id(occurrence.event),
+            "childId": get_global_id(child_with_user_guardian),
+        },
+    )
+
+    assert executed["data"]["event"]["registrationOpensAt"] == (
+        registration_opens_at.isoformat()
+    )
+    assert executed["data"]["event"]["canChildEnroll"] is registration_open
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+def test_event_group_query_can_child_enroll_registration_opens_at(
+    guardian_api_client, child_with_user_guardian, future, registration_open
+):
+    """An event group can be enrolled to only when registration is open for at
+    least one of its published events.
+    """
+    event_group = EventGroupFactory(published_at=now())
+    OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=now() if registration_open else future,
+        event__event_group=event_group,
+    )
+
+    executed = guardian_api_client.execute(
+        CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
+        variables={
+            "id": get_global_id(event_group),
+            "childId": get_global_id(child_with_user_guardian),
+        },
+    )
+
+    assert executed["data"]["eventGroup"]["canChildEnroll"] is registration_open
+
+
+def test_add_event_cannot_set_registration_opens_at(
+    project_user_api_client, project, future
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["registrationOpensAt"] = future.isoformat()
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
+
+
+def test_update_event_cannot_set_registration_opens_at(
+    project_user_api_client, unpublished_event, future
+):
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(unpublished_event)
+    variables["input"]["registrationOpensAt"] = future.isoformat()
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
 
 
 def test_occurrences_query_unauthenticated(api_client):
@@ -745,6 +852,84 @@ def test_publish_event(snapshot, publisher_api_client, unpublished_event):
     assert_match_error_code(executed, EVENT_ALREADY_PUBLISHED_ERROR)
 
 
+@pytest.fixture
+def unpublished_event_group(project):
+    """An unpublished event group with one event ready for publishing"""
+    event_group = EventGroupFactory(project=project)
+    EventFactory(project=project, event_group=event_group)
+    return event_group
+
+
+@parametrize_publish_mutations
+@pytest.mark.parametrize(
+    "registration_opens_at_delta, is_valid",
+    [(timedelta(microseconds=-1), False), (timedelta(0), True)],
+    ids=["past", "now"],
+)
+def test_publish_registration_opens_at_validation(
+    request,
+    publisher_api_client,
+    mutation,
+    base_variables,
+    obj_fixture,
+    registration_opens_at_delta,
+    is_valid,
+):
+    obj = request.getfixturevalue(obj_fixture)
+    registration_opens_at = now() + registration_opens_at_delta
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    obj.refresh_from_db()
+    if is_valid:
+        assert "errors" not in executed
+        assert obj.is_published()
+    else:
+        assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+        assert not obj.is_published()
+    assert all(
+        event.registration_opens_at == (registration_opens_at if is_valid else None)
+        for event in Event.objects.all()
+    )
+
+
+@parametrize_publish_mutations
+def test_publish_registration_opens_at_without_timezone_is_rejected(
+    request, publisher_api_client, mutation, base_variables, obj_fixture
+):
+    obj = request.getfixturevalue(obj_fixture)
+    registration_opens_at = (now() + timedelta(days=1)).replace(tzinfo=None)
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"]["registrationOpensAt"] = registration_opens_at.isoformat()
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    obj.refresh_from_db()
+    assert not obj.is_published()
+    assert not Event.objects.filter(registration_opens_at__isnull=False).exists()
+
+
+@parametrize_publish_mutations
+def test_publish_registration_opens_at_required(
+    request, publisher_api_client, mutation, base_variables, obj_fixture
+):
+    obj = request.getfixturevalue(obj_fixture)
+    variables = deepcopy(base_variables)
+    variables["input"]["id"] = get_global_id(obj)
+    variables["input"].pop("registrationOpensAt")
+
+    executed = publisher_api_client.execute(mutation, variables=variables)
+
+    assert "registrationOpensAt" in executed["errors"][0]["message"]
+    obj.refresh_from_db()
+    assert not obj.is_published()
+
+
 @pytest.mark.parametrize("url_missing", (True, False))
 def test_publish_ticketmaster_event(snapshot, publisher_api_client, url_missing):
     occurrence = OccurrenceFactory(
@@ -861,6 +1046,28 @@ def test_enrol_event_not_published(guardian_api_client, child_with_user_guardian
     )
 
     assert_match_error_code(executed, EVENT_NOT_PUBLISHED_ERROR)
+
+
+def test_enrol_occurrence_registration_not_open(
+    guardian_api_client, child_with_user_guardian, future
+):
+    occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__registration_opens_at=future,
+        event__capacity_per_occurrence=10,
+    )
+
+    enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
+    enrolment_variables["input"]["occurrenceId"] = get_global_id(occurrence)
+    enrolment_variables["input"]["childId"] = get_global_id(child_with_user_guardian)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION, variables=enrolment_variables
+    )
+
+    assert_match_error_code(executed, REGISTRATION_NOT_OPEN_ERROR)
+    assert not Enrolment.objects.exists()
 
 
 def test_already_enrolled_same_event(
@@ -1898,9 +2105,6 @@ def test_delete_event_group(snapshot, event_group_manager_api_client, event_grou
     assert EventGroup.objects.count() == 0
 
 
-PUBLISH_EVENT_GROUP_VARIABLES = {"input": {"id": ""}}
-
-
 def test_publish_event_group_no_publish_permission(project_user_api_client):
     event = EventFactory(event_group=EventGroupFactory())
     variables = deepcopy(PUBLISH_EVENT_GROUP_VARIABLES)
@@ -1970,10 +2174,11 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
     are ready for publishing.
     """
     event_group = EventGroupFactory(published_at=past)
-    EventFactory(
+    published_event = EventFactory(
         event_group=event_group,
         ready_for_event_group_publishing=True,
         published_at=past,
+        registration_opens_at=past,
     )
     new_event = EventFactory(
         event_group=event_group,
@@ -1988,13 +2193,18 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
     )
 
     new_event.refresh_from_db()
+    published_event.refresh_from_db()
 
+    assert published_event.published_at == past
+    assert published_event.registration_opens_at == past
     if event_ready:
         snapshot.assert_match(executed)
         assert new_event.published_at
+        assert new_event.registration_opens_at.isoformat() == REGISTRATION_OPENS_AT
     else:
         assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
         assert not new_event.published_at
+        assert new_event.registration_opens_at is None
 
 
 def test_event_group_events_filtering_by_available_for_child_id(
@@ -2054,6 +2264,45 @@ def test_occurrence_ticket_system(snapshot, guardian_api_client):
     )
 
     snapshot.assert_match(executed)
+
+
+@pytest.mark.parametrize("registration_open", [True, False])
+@pytest.mark.parametrize("is_project_admin", [True, False])
+def test_ticket_system_urls_before_registration_opens(
+    guardian_api_client,
+    project_user_api_client,
+    project,
+    future,
+    registration_open,
+    is_project_admin,
+):
+    """External ticket system URLs are hidden before the event's registration
+    opens, except from the project admins.
+    """
+    client = project_user_api_client if is_project_admin else guardian_api_client
+    occurrence = OccurrenceFactory(
+        ticket_system_url="https://example.com/occurrence",
+        event=TicketmasterEventFactory(
+            project=project,
+            ticket_system_url="https://example.com/event",
+            registration_opens_at=now() if registration_open else future,
+        ),
+    )
+    is_visible = registration_open or is_project_admin
+
+    event_executed = client.execute(
+        EVENT_TICKET_SYSTEM_URL_QUERY, variables={"id": get_global_id(occurrence.event)}
+    )
+    occurrence_executed = client.execute(
+        OCCURRENCE_TICKET_SYSTEM_QUERY, variables={"id": get_global_id(occurrence)}
+    )
+
+    assert event_executed["data"]["event"]["ticketSystem"]["url"] == (
+        "https://example.com/event" if is_visible else None
+    )
+    assert occurrence_executed["data"]["occurrence"]["ticketSystem"]["url"] == (
+        "https://example.com/occurrence" if is_visible else None
+    )
 
 
 def test_event_ticket_system_password_own_child_password_exists(
@@ -2451,6 +2700,21 @@ def test_assign_ticket_system_password_not_published_event(guardian_api_client):
     executed = _assign_ticket_system_password(guardian_api_client, event, child)
 
     assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_assign_ticket_system_password_registration_not_open(
+    guardian_api_client, future
+):
+    event = TicketmasterEventFactory(registration_opens_at=future)
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian
+    )
+    TicketSystemPasswordFactory(event=event, child=None)
+
+    executed = _assign_ticket_system_password(guardian_api_client, event, child)
+
+    assert_match_error_code(executed, REGISTRATION_NOT_OPEN_ERROR)
+    assert not child.ticket_system_passwords.exists()
 
 
 def _create_data_for_ticket_system_password_only_externals_enrolment_limit_tests(
