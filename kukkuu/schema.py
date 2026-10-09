@@ -4,6 +4,7 @@ import children.schema
 import events.schema
 import languages.schema
 import messaging.schema
+import organisations.schema
 import projects.schema
 import subscriptions.schema
 import users.schema
@@ -40,6 +41,7 @@ class Query(
     venues.schema.Query,
     languages.schema.Query,
     messaging.schema.Query,
+    organisations.schema.Query,
     graphene.ObjectType,
 ):
     pass

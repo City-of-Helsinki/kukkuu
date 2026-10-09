@@ -1,8 +1,10 @@
 from uuid import UUID
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from freezegun import freeze_time
+from guardian.shortcuts import assign_perm
 
 from children.factories import ChildFactory, ChildWithGuardianFactory
 from children.models import Child
@@ -10,6 +12,8 @@ from children.notifications import NotificationType as ChildrenNotificationType
 from events.consts import NotificationType as EventNotificationType
 from events.factories import EnrolmentFactory, TicketSystemPasswordFactory
 from gdpr.consts import CLEARED_VALUE
+from organisations.factories import OrganisationFactory
+from projects.models import ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from subscriptions.models import FreeSpotNotificationSubscription
 from subscriptions.notifications import (
@@ -337,3 +341,117 @@ def test_has_accepted_communication_for_notification_needs_acceptance(
     assert len(queryset_result) == 1
     assert guardian_with_all_communication in queryset_result
     assert guardian_with_filtered_communication not in queryset_result
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_unauthenticated(monkeypatch):
+    user = UserFactory()
+    monkeypatch.setattr(User, "is_authenticated", False)
+    assert not user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_regular_user():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    assert not user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_staff_user():
+    user = UserFactory(is_staff=True, is_superuser=False)
+    assert user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_superuser():
+    user = UserFactory(is_staff=False, is_superuser=True)
+    assert user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_default_organisation_member():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    default_org = OrganisationFactory(name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
+    user.organisations.add(default_org)
+    assert user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_is_system_administrator_other_organisation_member():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    other_org = OrganisationFactory(name="Some Other Organisation")
+    user.organisations.add(other_org)
+    assert not user.is_system_administrator
+
+
+@pytest.mark.django_db
+def test_user_queryset_system_administrators():
+    default_org = OrganisationFactory(name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
+    other_org = OrganisationFactory(name="Another Organisation")
+
+    staff_user = UserFactory(is_staff=True, is_superuser=False)
+    super_user = UserFactory(is_staff=False, is_superuser=True)
+    default_org_user = UserFactory(is_staff=False, is_superuser=False)
+    default_org_user.organisations.add(default_org)
+
+    # User with multiple matching criteria should not be duplicated
+    multi_role_admin = UserFactory(is_staff=True, is_superuser=True)
+    multi_role_admin.organisations.add(default_org)
+
+    # Non-admins
+    regular_user = UserFactory(is_staff=False, is_superuser=False)
+    other_org_user = UserFactory(is_staff=False, is_superuser=False)
+    other_org_user.organisations.add(other_org)
+
+    admins = User.objects.system_administrators()
+
+    assert staff_user in admins
+    assert super_user in admins
+    assert default_org_user in admins
+    assert multi_role_admin in admins
+    assert regular_user not in admins
+    assert other_org_user not in admins
+    assert admins.count() == 4
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_unauthenticated(monkeypatch):
+    user = UserFactory()
+    monkeypatch.setattr(User, "is_authenticated", False)
+    assert not user.is_event_organiser
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_regular_user():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    assert not user.is_event_organiser
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_system_administrator():
+    user = UserFactory(is_staff=True, is_superuser=False)
+    assert user.is_event_organiser
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_project_admin(project):
+    user = UserFactory(is_staff=False, is_superuser=False)
+    assert not user.is_event_organiser
+
+    # Grant project admin permission without organisation: still not an event organiser
+    assign_perm(ProjectPermission.ADMIN.value, user, project)
+    user.__dict__.pop("administered_projects", None)
+    assert not user.is_event_organiser
+
+    # Add organisation: now both project and organisation are present
+    org = OrganisationFactory(name="Organiser Organisation")
+    user.organisations.add(org)
+    assert user.is_event_organiser
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_organisation_member_without_project():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    org = OrganisationFactory(name="Some Event Organisation")
+    user.organisations.add(org)
+    assert not user.is_event_organiser

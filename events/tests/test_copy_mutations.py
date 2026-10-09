@@ -2,21 +2,39 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
 from events.factories import EventFactory, EventGroupFactory
+from events.models import Event, EventGroup
 from events.services import EventAPIService
 from events.tests.mutations import COPY_EVENT_GROUP_MUTATION, COPY_EVENT_MUTATION
 
 
 @pytest.mark.django_db
-def test_copy_event_group_mutation(event_group_manager_api_client, project, snapshot):
+def test_copy_event_group_mutation(event_group_manager_api_client, project):
     """
     Test that copying an EventGroup creates a new EventGroup with the provided
     overrides (like translations and project), while preserving the unmodified
     fields and related data (like images) from the source EventGroup.
     """
-    event_group = EventGroupFactory(project=project, name="Original Name")
+    event_group = EventGroupFactory(
+        project=project,
+        name="Original Name",
+        short_description="Original short description",
+        description="Original description",
+        image_alt_text="Original image alt text",
+        image=SimpleUploadedFile(
+            "original_image.jpg", b"image content", content_type="image/jpeg"
+        ),
+    )
+    event_group.create_translation(
+        "sv",
+        name="Original Namn SV",
+        short_description="Kort beskrivning SV",
+        description="Beskrivning SV",
+        image_alt_text="Bild alt text SV",
+    )
 
     variables = {
         "input": {
@@ -26,8 +44,6 @@ def test_copy_event_group_mutation(event_group_manager_api_client, project, snap
                 {
                     "languageCode": "FI",
                     "name": "Copied Name",
-                    "shortDescription": "Short desc",
-                    "description": "Desc",
                 }
             ],
         }
@@ -43,6 +59,59 @@ def test_copy_event_group_mutation(event_group_manager_api_client, project, snap
     data = executed["data"]["copyEventGroup"]["eventGroup"]
     assert data["name"] == "Copied Name"
     assert data["project"]["id"] == to_global_id("ProjectNode", project.id)
+
+    # Preserved unmodified fields and related data in GraphQL response
+    assert data["imageAltText"] == "Original image alt text"
+    assert "original_image" in data["image"]
+
+    translations = {tr["languageCode"]: tr for tr in data["translations"]}
+    assert translations["FI"]["name"] == "Copied Name"
+    assert translations["FI"]["shortDescription"] == "Original short description"
+    assert translations["FI"]["description"] == "Original description"
+    assert translations["FI"]["imageAltText"] == "Original image alt text"
+
+    assert translations["SV"]["name"] == "Original Namn SV"
+    assert translations["SV"]["shortDescription"] == "Kort beskrivning SV"
+    assert translations["SV"]["description"] == "Beskrivning SV"
+    assert translations["SV"]["imageAltText"] == "Bild alt text SV"
+
+    # Verify database object
+    copied_group = EventGroup.objects.exclude(id=event_group.id).get()
+    assert copied_group.project_id == project.id
+    assert copied_group.image
+    assert copied_group.image.read() == b"image content"
+    assert (
+        copied_group.safe_translation_getter("name", language_code="fi")
+        == "Copied Name"
+    )
+    assert (
+        copied_group.safe_translation_getter("short_description", language_code="fi")
+        == "Original short description"
+    )
+    assert (
+        copied_group.safe_translation_getter("description", language_code="fi")
+        == "Original description"
+    )
+    assert (
+        copied_group.safe_translation_getter("image_alt_text", language_code="fi")
+        == "Original image alt text"
+    )
+    assert (
+        copied_group.safe_translation_getter("name", language_code="sv")
+        == "Original Namn SV"
+    )
+    assert (
+        copied_group.safe_translation_getter("short_description", language_code="sv")
+        == "Kort beskrivning SV"
+    )
+    assert (
+        copied_group.safe_translation_getter("description", language_code="sv")
+        == "Beskrivning SV"
+    )
+    assert (
+        copied_group.safe_translation_getter("image_alt_text", language_code="sv")
+        == "Bild alt text SV"
+    )
 
 
 @pytest.mark.django_db
@@ -185,8 +254,6 @@ def test_copy_event_seeds_omitted_scalar_fields_and_translations(
     executed = publisher_api_client.execute(COPY_EVENT_MUTATION, variables=variables)
     assert "errors" not in executed
 
-    from events.models import Event
-
     copied_event = Event.objects.exclude(id=source_event.id).get()
 
     # Omitted scalar fields seeded from source
@@ -223,7 +290,6 @@ def test_copy_event_seeds_omitted_scalar_fields_and_translations(
 
 @pytest.mark.django_db
 def test_create_event_service_seeds_all_omitted_scalars(project, monkeypatch):
-    from unittest.mock import MagicMock
 
     source_event = EventFactory(
         project=project,
@@ -290,8 +356,6 @@ def test_copy_event_group_seeds_omitted_translations(
         COPY_EVENT_GROUP_MUTATION, variables=variables
     )
     assert "errors" not in executed
-
-    from events.models import EventGroup
 
     copied_group = EventGroup.objects.exclude(id=source_group.id).get()
 

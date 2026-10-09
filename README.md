@@ -3,7 +3,7 @@
 :baby: The Culture Kids (Kulttuurin kummilapset) API :violin:
 
 > **Architecture & agent context:** system overview in
-> [ARCHITECTURE.md](https://github.com/City-of-Helsinki/kukkuu/blob/HEAD/ARCHITECTURE.md);
+> [ARCHITECTURE.md](./ARCHITECTURE.md);
 > working instructions for developers and AI agents in [AGENTS.md](./AGENTS.md).
 
 
