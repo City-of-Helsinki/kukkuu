@@ -2864,3 +2864,35 @@ def test_update_event_group_project_mismatch(
     assert "The event group and its events must belong to the same project." in str(
         executed
     )
+
+
+def test_update_event_project_mismatch(
+    project_user_api_client, project, another_project, event_group, event
+):
+    """
+    Test that updating an Event with an event group from a different project fails
+    and returns a DATA_VALIDATION_ERROR.
+    """
+    event.project = project
+    event.save()
+
+    event_group.project = another_project
+    event_group.save()
+
+    user = project_user_api_client.user
+    assign_perm(ProjectPermission.ADMIN.value, user, another_project)
+    assign_perm(ProjectPermission.MANAGE_EVENT_GROUPS.value, user, another_project)
+    assign_perm(ProjectPermission.MANAGE_EVENT_GROUPS.value, user, project)
+
+    variables = {
+        "input": {
+            "id": to_global_id("EventNode", event.id),
+            "eventGroupId": to_global_id("EventGroupNode", event_group.id),
+        }
+    }
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
