@@ -208,9 +208,19 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
 # This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
 class EventQueryset(TranslatableQuerySet):
     def user_can_view(self, user):
-        return self.filter(
-            Q(project__in=user.administered_projects) | Q(published_at__isnull=False)
-        ).distinct()
+        # Published events are completely public (needed for public UI and
+        # event organisers)
+        published_q = Q(published_at__isnull=False)
+        if not user.is_authenticated:
+            return self.filter(published_q).distinct()
+
+        # Unpublished events are only visible to system admins or the event's
+        # organisation members
+        admin_q = Q(project__in=user.administered_projects)
+        if not user.is_system_administrator:
+            admin_q &= Q(organisation__in=user.organisations.all())
+
+        return self.filter(admin_q | published_q).distinct()
 
     def published(self):
         return self.filter(published_at__isnull=False)
@@ -328,11 +338,18 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     ticket_system_end_time = models.DateTimeField(
         verbose_name=_("ticket system end time"), blank=True, null=True
     )
+    organisation = models.ForeignKey(
+        "organisations.Organisation",
+        verbose_name=_("organisation"),
+        related_name="events",
+        on_delete=models.PROTECT,
+    )
 
     serialize_fields = (
         {"name": "name_with_translations"},
         {"name": "event_group"},
         {"name": "project"},
+        {"name": "organisation"},
         {"name": "ticket_system"},
     )
 
@@ -406,10 +423,28 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             self.occurrences.send_free_spot_notifications_if_needed()
 
     def can_user_administer(self, user):
-        return user.can_administer_project(self.project)
+        """
+        Check if the given user can administer (edit/delete) this event.
+        Requires project admin rights AND (system admin OR membership in the event's
+        organisation).
+        """
+        if not user.can_administer_project(self.project):
+            return False
+        if user.is_system_administrator:
+            return True
+        return user.organisations.filter(id=self.organisation_id).exists()
 
     def can_user_publish(self, user):
-        return user.can_publish_in_project(self.project)
+        """
+        Check if the given user can publish this event.
+        Requires project publish rights AND (system admin OR membership in the event's
+        organisation).
+        """
+        if not user.can_publish_in_project(self.project):
+            return False
+        if user.is_system_administrator:
+            return True
+        return user.organisations.filter(id=self.organisation_id).exists()
 
     def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
         """
@@ -509,10 +544,16 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
 
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(
-            Q(event__project__in=user.administered_projects)
-            | Q(event__published_at__isnull=False)
-        ).distinct()
+        # Occurrence visibility mirrors Event visibility
+        published_q = Q(event__published_at__isnull=False)
+        if not user.is_authenticated:
+            return self.filter(published_q).distinct()
+
+        admin_q = Q(event__project__in=user.administered_projects)
+        if not user.is_system_administrator:
+            admin_q &= Q(event__organisation__in=user.organisations.all())
+
+        return self.filter(admin_q | published_q).distinct()
 
     def delete(self, *args, **kwargs):
         for obj in self:
@@ -741,10 +782,17 @@ class Occurrence(TimestampedModel, SerializableMixin):
 
 class EnrolmentQueryset(models.QuerySet):
     def user_can_view(self, user):
-        return self.filter(
-            Q(child__guardians__user=user)
-            | Q(child__project__in=user.administered_projects)
-        ).distinct()
+        if not user.is_authenticated:
+            return self.none()
+
+        # Enrolments (and attendee lists) are strictly restricted.
+        # They are NEVER globally visible, regardless of the event's published status.
+        guardian_q = Q(child__guardians__user=user)
+        admin_q = Q(child__project__in=user.administered_projects)
+        if not user.is_system_administrator:
+            admin_q &= Q(occurrence__event__organisation__in=user.organisations.all())
+
+        return self.filter(guardian_q | admin_q).distinct()
 
     @transaction.atomic()
     def delete(self):

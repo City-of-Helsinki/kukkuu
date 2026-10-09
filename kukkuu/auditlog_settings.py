@@ -78,6 +78,8 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "messaging.message",
     "reports.permission",
     "verification_tokens.verificationtoken",
+    "organisations.organisation",
+    "users.user_organisations",
     # secondary
     "django_ilmoitin.notificationtemplatetranslation",
     "projects.projecttranslation",

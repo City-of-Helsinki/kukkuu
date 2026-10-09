@@ -30,14 +30,16 @@ logger = logging.getLogger(__name__)
 
 
 class UserQuerySet(models.QuerySet):
-    def possible_admins(self):
-        # This filtering isn't perfect because
-        #   1) it is possible there are a few normal users without a Guardian object
-        #   2) this prevents using the same user account for Kukkuu UI and Kukkuu admin
-        #      which was convenient in dev/testing, and might be a valid case in
-        #      production as well in the future
-        # but for now this should be easily good enough.
-        return self.filter(guardian=None)
+    def system_administrators(self):
+        """
+        Filter users who have system-wide administrator privileges
+        (staff, superusers, or members of the default system organisation).
+        """
+        return self.filter(
+            Q(is_staff=True)
+            | Q(is_superuser=True)
+            | Q(organisations__name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
+        ).distinct()
 
 
 # This is needed when using a custom User queryset
@@ -59,10 +61,56 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
             "name": "administered_projects",
             "accessor": lambda projects: [p.serialize() for p in projects],
         },
+        {
+            "name": "organisations",
+            "accessor": lambda orgs: [o.serialize() for o in orgs.all()],
+        },
         {"name": "last_login", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "date_joined", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "guardian"},
     )
+
+    organisations = models.ManyToManyField(
+        "organisations.Organisation",
+        verbose_name=_("organisations"),
+        related_name="users",
+        blank=True,
+    )
+
+    @property
+    def is_system_administrator(self) -> bool:
+        """
+        Designates whether the user has system-wide administrator privileges.
+
+        A user is considered a system administrator if they:
+        - Are a staff member (e.g. developer or product owner with Django Admin access),
+        - Are a superuser, or
+        - Belong to the default system organisation.
+        """
+        if not self.is_authenticated:
+            return False
+
+        return (
+            self.is_staff
+            or self.is_superuser
+            or self.organisations.filter(
+                name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
+            ).exists()
+        )
+
+    @property
+    def is_event_organiser(self) -> bool:
+        """
+        Designates whether the user can log into Kukkuu Admin UI
+        (either as a system administrator or as an event organizer with
+        project permissions and at least one assigned organisation).
+        """
+        if not self.is_authenticated:
+            return False
+
+        return self.is_system_administrator or (
+            bool(self.administered_projects) and self.organisations.exists()
+        )
 
     objects = UserManager()
 

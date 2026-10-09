@@ -6,10 +6,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext_lazy as _
 
-from common.utils import get_obj_if_user_can_administer
+from common.utils import get_obj_from_global_id, get_obj_if_user_can_administer
 from events.models import Event, EventGroup
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
+from organisations.models import Organisation
 from projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -45,10 +46,10 @@ def validate_event_group_and_events_project_match(
     """
     Validate that an event group belongs to the same project as all its events.
 
-    This prevents updating an EventGroup's project if it contains existing
-    events that would be left orphaned in a different project. Evaluates
-    explicitly provided events in-memory if given, prefetched events if
-    available, or falls back to a database query.
+    If ``events`` is given (e.g. the admin form's selected events), those are
+    checked in-memory. Otherwise the event group's events are checked with a
+    database query, bypassing any prefetch cache on the related manager so the
+    check can't be skewed by stale or filtered prefetches.
     """
     project_id = (
         project.pk if project is not None else getattr(event_group, "project_id", None)
@@ -57,14 +58,11 @@ def validate_event_group_and_events_project_match(
     if events is not None:
         has_mismatch = any(event.project_id != project_id for event in events)
     elif event_group and event_group.pk:
-        # Check if any associated events belong to a different project
-        # In-memory evaluation is possible if events were prefetched
-        if getattr(event_group, "_prefetched_objects_cache", {}).get("events"):
-            has_mismatch = any(
-                event.project_id != project_id for event in event_group.events.all()
-            )
-        else:
-            has_mismatch = event_group.events.exclude(project_id=project_id).exists()
+        has_mismatch = (
+            Event.objects.filter(event_group_id=event_group.pk)
+            .exclude(project_id=project_id)
+            .exists()
+        )
     else:
         has_mismatch = False
 
@@ -158,6 +156,28 @@ class EventAPIService:
         kwargs["project_id"] = project.pk
         if event_group:
             kwargs["event_group_id"] = event_group.pk
+
+        organisation_global_id = kwargs.pop("organisation_id", None)
+        user = info.context.user
+        if organisation_global_id:
+            organisation = get_obj_from_global_id(
+                info, organisation_global_id, Organisation
+            )
+            if not (
+                user.is_system_administrator
+                or user.organisations.filter(id=organisation.id).exists()
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to assign events to this organisation."
+                )
+            kwargs["organisation_id"] = organisation.pk
+        elif source_event is not None:
+            kwargs["organisation_id"] = source_event.organisation_id
+        else:
+            if user.organisations.count() == 1:
+                kwargs["organisation_id"] = user.organisations.first().pk
+            else:
+                raise PermissionDenied("Organisation must be provided.")
 
         if source_event is not None:
             for field in (

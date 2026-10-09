@@ -28,7 +28,7 @@ class GroupPermissionsForm(PermissionFilterMixin, AdminGroupObjectPermissionsFor
 
 class UserSelectForm(forms.Form):
     user = forms.ModelChoiceField(
-        queryset=get_user_model().objects.possible_admins(), required=True
+        queryset=get_user_model().objects.system_administrators(), required=True
     )
 
 
