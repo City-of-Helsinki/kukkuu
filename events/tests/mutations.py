@@ -338,11 +338,14 @@ mutation copyEventGroup($input: CopyEventGroupMutationInput!) {
     eventGroup {
       id
       name
+      image
+      imageAltText
       translations {
         languageCode
         name
         shortDescription
         description
+        imageAltText
       }
       project {
         id
