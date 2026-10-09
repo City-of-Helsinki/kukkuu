@@ -91,11 +91,12 @@ class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
 @auditlog_access
 class AdminNode(DjangoObjectType):
     projects = DjangoConnectionField(ProjectNode)
+    organisations = DjangoConnectionField("organisations.schema.OrganisationNode")
 
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("projects", "username", "email")
+        fields = ("projects", "organisations", "username", "email")
 
     @staticmethod
     def resolve_projects(parent, info, **kwargs):
