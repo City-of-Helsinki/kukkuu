@@ -122,6 +122,10 @@ VERIFICATION_TOKEN_LENGTH = env("VERIFICATION_TOKEN_LENGTH")
 SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES = env("SUBSCRIPTIONS_AUTH_TOKEN_VALID_MINUTES")
 SUBSCRIPTIONS_AUTH_TOKEN_LENGTH = env("SUBSCRIPTIONS_AUTH_TOKEN_LENGTH")
 
+KUKKUU_DEFAULT_ORGANISATION_NAME = env.str(
+    "KUKKUU_DEFAULT_ORGANISATION_NAME", default="Kukkuu system"
+)
+
 if os.path.exists(env_file):
     env.read_env(env_file)
 
@@ -322,6 +326,7 @@ INSTALLED_APPS = [
     "importers",
     "reports",
     "verification_tokens",
+    "organisations.apps.OrganisationsConfig",
     "auditlog_extra",
     "logger_extra",
     "resilient_logger",

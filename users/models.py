@@ -59,10 +59,31 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
             "name": "administered_projects",
             "accessor": lambda projects: [p.serialize() for p in projects],
         },
+        {
+            "name": "organisations",
+            "accessor": lambda orgs: [o.serialize() for o in orgs.all()],
+        },
         {"name": "last_login", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "date_joined", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "guardian"},
     )
+
+    organisations = models.ManyToManyField(
+        "organisations.Organisation",
+        verbose_name=_("organisations"),
+        related_name="users",
+        blank=True,
+    )
+
+    @property
+    def is_system_administrator(self) -> bool:
+        if not self.is_authenticated:
+            return False
+        from django.conf import settings
+
+        return self.organisations.filter(
+            name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
+        ).exists()
 
     objects = UserManager()
 

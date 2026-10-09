@@ -4,6 +4,7 @@ from datetime import timedelta
 import factory.random
 import pytest
 import responses
+from auditlog.models import LogEntry
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
@@ -20,6 +21,7 @@ from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
 from languages.models import Language
+from organisations.models import Organisation
 from projects.factories import ProjectFactory
 from projects.models import (
     Project,
@@ -28,6 +30,12 @@ from projects.models import (
 from users.factories import GuardianFactory, UserFactory
 from users.models import User
 from venues.factories import VenueFactory
+
+
+@pytest.fixture(autouse=True)
+def clean_auditlog(db):
+
+    LogEntry.objects.all().delete()
 
 
 @pytest.fixture(autouse=True)
@@ -121,6 +129,9 @@ def _projects_user_api_client(
     in the given projects and the given, if any, global permissions.
     """
     user = UserFactory()
+
+    org, _ = Organisation.objects.get_or_create(name="Default Test Organisation")
+    user.organisations.add(org)
     for project in projects:
         for permission in permissions:
             assign_perm(permission.value, user, project)
@@ -154,6 +165,9 @@ def project_user_no_view_families_perm_api_client(project):
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def publisher_api_client(request, project):
     user = UserFactory()
+
+    org, _ = Organisation.objects.get_or_create(name="Default Test Organisation")
+    user.organisations.add(org)
     assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:
@@ -167,6 +181,9 @@ def publisher_api_client(request, project):
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def event_group_manager_api_client(request, project):
     user = UserFactory()
+
+    org, _ = Organisation.objects.get_or_create(name="Default Test Organisation")
+    user.organisations.add(org)
     assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:

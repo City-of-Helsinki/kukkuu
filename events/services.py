@@ -6,10 +6,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext_lazy as _
 
-from common.utils import get_obj_if_user_can_administer
+from common.utils import get_obj_from_global_id, get_obj_if_user_can_administer
 from events.models import Event, EventGroup
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
+from organisations.models import Organisation
 from projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -158,6 +159,28 @@ class EventAPIService:
         kwargs["project_id"] = project.pk
         if event_group:
             kwargs["event_group_id"] = event_group.pk
+
+        organisation_global_id = kwargs.pop("organisation_id", None)
+        user = info.context.user
+        if organisation_global_id:
+            organisation = get_obj_from_global_id(
+                info, organisation_global_id, Organisation
+            )
+            if not (
+                user.is_system_administrator
+                or user.organisations.filter(id=organisation.id).exists()
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to assign events to this organisation."
+                )
+            kwargs["organisation_id"] = organisation.pk
+        elif source_event is not None:
+            kwargs["organisation_id"] = source_event.organisation_id
+        else:
+            if user.organisations.count() == 1:
+                kwargs["organisation_id"] = user.organisations.first().pk
+            else:
+                raise PermissionDenied("Organisation must be provided.")
 
         if source_event is not None:
             for field in (

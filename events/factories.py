@@ -25,6 +25,10 @@ class EventGroupFactory(factory.django.DjangoModelFactory):
 class EventFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("text", max_nb_chars=64)
     duration = factory.Faker("random_int", max=300)
+    organisation = factory.SubFactory(
+        "organisations.factories.OrganisationFactory", name="Default Test Organisation"
+    )
+
     short_description = factory.Faker("text", max_nb_chars=64)
     description = factory.Faker("text")
     image = factory.Faker("file_name", extension="jpg")

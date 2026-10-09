@@ -69,8 +69,10 @@ class EventAdmin(TranslatableAdmin):
         "ticket_system",
         "ticket_system_url",
         "ticket_system_end_time",
+        "organisation",
     )
     list_display_links = ("id", "name")
+    autocomplete_fields = ["organisation"]
     fields = (
         "project",
         "name",
@@ -87,6 +89,7 @@ class EventAdmin(TranslatableAdmin):
         "ticket_system",
         "ticket_system_url",
         "ticket_system_end_time",
+        "organisation",
     )
     search_fields = ("translations__name", "event_group__translations__name")
     inlines = [

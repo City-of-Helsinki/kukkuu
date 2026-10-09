@@ -561,6 +561,7 @@ def test_update_event_project_user(
     executed = project_user_api_client.execute(
         UPDATE_EVENT_MUTATION, variables=event_variables
     )
+    assert "errors" not in executed, executed["errors"]
     assert executed["data"]["updateEvent"]["event"]["id"] == event_node_id
     assert executed["data"]["updateEvent"]["event"]["eventGroup"]["id"] == (
         event_group_node_id

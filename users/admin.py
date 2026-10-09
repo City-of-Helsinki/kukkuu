@@ -155,8 +155,10 @@ class UserAdmin(
     )
     fieldsets = list(DjangoUserAdmin.fieldsets) + [
         ("UUID", {"fields": ("uuid",)}),
+        ("Organisations", {"fields": ("organisations",)}),
     ]
     readonly_fields = ("uuid",)
+    autocomplete_fields = ["organisations"]
     list_filter = (
         ("guardian", admin.EmptyFieldListFilter),
         "is_staff",

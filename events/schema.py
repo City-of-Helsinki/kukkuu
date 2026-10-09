@@ -24,6 +24,7 @@ from common.schema import ErrorType, LanguageEnum
 from common.utils import (
     check_can_user_administer,
     get_node_id_from_global_id,
+    get_obj_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
     map_enums_to_values_in_kwargs,
@@ -56,6 +57,7 @@ from kukkuu.exceptions import (
     TooLateToUnenrolError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
+from organisations.models import Organisation
 from projects.models import Project
 from venues.models import Venue
 
@@ -245,6 +247,8 @@ class EventNode(DjangoObjectType):
     image_alt_text = graphene.String()
     participants_per_invite = EventParticipantsPerInvite(required=True)
     ticket_system = graphene.Field(EventTicketSystem)
+    organisation = graphene.Field("organisations.schema.OrganisationNode")
+    can_user_administer = graphene.Boolean()
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
 
     class Meta:
@@ -271,7 +275,12 @@ class EventNode(DjangoObjectType):
             "description",
             "short_description",
             "ticket_system",
+            "organisation",
+            "can_user_administer",
         )
+
+    def resolve_can_user_administer(self, info):
+        return self.can_user_administer(info.context.user)
 
     @classmethod
     @login_required
@@ -590,10 +599,12 @@ class ExternalTicketSystemEnrolmentNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.filter(
-            Q(child__guardians__user=info.context.user)
-            | Q(child__project__in=info.context.user.administered_projects)
-        ).distinct()
+        user = info.context.user
+        guardian_q = Q(child__guardians__user=user)
+        admin_q = Q(child__project__in=user.administered_projects)
+        if not user.is_system_administrator:
+            admin_q &= Q(event__organisation__in=user.organisations.all())
+        return queryset.filter(guardian_q | admin_q).distinct()
 
     def resolve_created_at(self, info):
         return self.assigned_at
@@ -875,6 +886,7 @@ class EventInputMixin:
     )
     image = Upload()
     project_id = graphene.GlobalID()
+    organisation_id = graphene.GlobalID()
     event_group_id = graphene.GlobalID(required=False)
     ready_for_event_group_publishing = graphene.Boolean()
     ticket_system = AddEventTicketSystemInput()
@@ -922,6 +934,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         image = Upload()
         translations = graphene.List(EventTranslationsInput)
         project_id = graphene.GlobalID(required=False)
+        organisation_id = graphene.GlobalID(required=False)
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
         ticket_system = UpdateEventTicketSystemInput()
@@ -946,6 +959,21 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
             kwargs["event_group_id"] = get_obj_if_user_can_administer(
                 info, event_group_global_id, EventGroup
             ).pk
+
+        organisation_global_id = kwargs.pop("organisation_id", None)
+        if organisation_global_id:
+            organisation = get_obj_from_global_id(
+                info, organisation_global_id, Organisation
+            )
+            user = info.context.user
+            if not (
+                user.is_system_administrator
+                or user.organisations.filter(id=organisation.id).exists()
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to assign events to this organisation."
+                )
+            kwargs["organisation_id"] = organisation.pk
 
         event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
 
