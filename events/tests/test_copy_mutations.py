@@ -237,7 +237,9 @@ def test_create_event_service_seeds_all_omitted_scalars(project, monkeypatch):
     info = MagicMock()
     info.context.user.uuid = "test-user"
     monkeypatch.setattr(
-        EventAPIService, "resolve_event_target", lambda *args, **kwargs: (project, None)
+        EventAPIService.Resolver,
+        "event_target",
+        lambda *args, **kwargs: (project, None),
     )
 
     kwargs = {

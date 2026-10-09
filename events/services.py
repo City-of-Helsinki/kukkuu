@@ -6,7 +6,11 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils.translation import gettext_lazy as _
 
-from common.utils import get_obj_from_global_id, get_obj_if_user_can_administer
+from common.utils import (
+    get_obj_from_global_id,
+    get_obj_if_user_can_administer,
+    update_object_with_translations,
+)
 from events.models import Event, EventGroup
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
@@ -93,26 +97,170 @@ class EventAPIService:
                     "Failed to copy image from %s to %s", source.pk, target.pk
                 )
 
-    @staticmethod
-    def resolve_event_target(info, project_global_id, event_group_global_id):
+    class Resolver:
         """
-        Resolve the target Project and EventGroup for a new event.
-        Ensures the user has administration rights and validates project matching
-        and single-event permissions.
+        Resolves Relay Global IDs into model instances with permission checks.
         """
-        project = get_obj_if_user_can_administer(info, project_global_id, Project)
-        event_group = None
-        if event_group_global_id:
-            event_group = get_obj_if_user_can_administer(
+
+        @staticmethod
+        def project(info, project_global_id: str) -> Project:
+            """
+            Resolve a Project by its global ID and verify administration
+            permissions.
+            """
+            return get_obj_if_user_can_administer(info, project_global_id, Project)
+
+        @staticmethod
+        def event_group(info, event_group_global_id: str) -> EventGroup:
+            """
+            Resolve an EventGroup by its global ID and verify administration
+            permissions.
+            """
+            return get_obj_if_user_can_administer(
                 info, event_group_global_id, EventGroup
             )
-            if event_group.project_id != project.pk:
-                raise DataValidationError("Event group does not belong to the project.")
-        elif not project.single_events_allowed:
-            raise SingleEventsDisallowedError(
-                f"Single events are disallowed in project {project}."
+
+        @staticmethod
+        def organisation(info, organisation_global_id: str) -> Organisation:
+            """
+            Resolve an Organisation by global ID and verify user permission.
+            """
+            organisation = get_obj_from_global_id(
+                info, organisation_global_id, Organisation
             )
-        return project, event_group
+            user = info.context.user
+            if not (
+                user.is_system_administrator
+                or user.organisations.filter(id=organisation.id).exists()
+            ):
+                raise PermissionDenied(
+                    "You do not have permission to assign events to this organisation."
+                )
+            return organisation
+
+        @classmethod
+        def event_target(cls, info, project_global_id, event_group_global_id):
+            """
+            Resolve the target Project and EventGroup for a new event.
+            Ensures the user has administration rights and validates project matching
+            and single-event permissions.
+            """
+            project = cls.project(info, project_global_id)
+            event_group = None
+            if event_group_global_id:
+                event_group = cls.event_group(info, event_group_global_id)
+                if event_group.project_id != project.pk:
+                    raise DataValidationError(
+                        "Event group does not belong to the project."
+                    )
+            elif not project.single_events_allowed:
+                raise SingleEventsDisallowedError(
+                    f"Single events are disallowed in project {project}."
+                )
+            return project, event_group
+
+        @staticmethod
+        def event_organisation(
+            info, organisation_global_id=None, source_event=None
+        ) -> int:
+            """
+            Determine and validate the organisation PK for event creation.
+            Uses explicit organisation_id if provided, source_event's organisation
+            if cloning, or the user's sole organisation if only one exists.
+            """
+            if organisation_global_id:
+                return EventAPIService.Resolver.organisation(
+                    info, organisation_global_id
+                ).pk
+            if source_event is not None:
+                return source_event.organisation_id
+
+            user = info.context.user
+            if user.organisations.count() == 1:
+                return user.organisations.first().pk
+
+            raise PermissionDenied("Organisation must be provided.")
+
+    class Cleaner:
+        """
+        Normalizes and cleans GraphQL mutation input kwargs for Event models.
+        """
+
+        @classmethod
+        def target(cls, info, kwargs: dict) -> None:
+            project, event_group = EventAPIService.Resolver.event_target(
+                info, kwargs.pop("project_id"), kwargs.pop("event_group_id", None)
+            )
+            kwargs["project_id"] = project.pk
+            if event_group:
+                kwargs["event_group_id"] = event_group.pk
+
+        @classmethod
+        def project_id(cls, info, kwargs: dict) -> None:
+            if project_global_id := kwargs.pop("project_id", None):
+                kwargs["project_id"] = EventAPIService.Resolver.project(
+                    info, project_global_id
+                ).pk
+
+        @classmethod
+        def event_group_id(cls, info, kwargs: dict) -> None:
+            if event_group_global_id := kwargs.pop("event_group_id", None):
+                kwargs["event_group_id"] = EventAPIService.Resolver.event_group(
+                    info, event_group_global_id
+                ).pk
+
+        @classmethod
+        def organisation_id(cls, info, kwargs: dict) -> None:
+            if organisation_global_id := kwargs.pop("organisation_id", None):
+                kwargs["organisation_id"] = EventAPIService.Resolver.organisation(
+                    info, organisation_global_id
+                ).pk
+
+        @staticmethod
+        def create_ticket_system(kwargs: dict) -> None:
+            ticket_system = kwargs.pop("ticket_system", None)
+            if isinstance(ticket_system, dict):
+                kwargs.update(
+                    {
+                        "ticket_system": ticket_system.get("type"),
+                        "ticket_system_url": ticket_system.get(
+                            "url",
+                            _DEFAULT_TICKET_SYSTEM_URL,
+                        ),
+                        "ticket_system_end_time": ticket_system.get("end_time"),
+                    }
+                )
+            elif ticket_system is not None:
+                kwargs["ticket_system"] = ticket_system
+
+        @staticmethod
+        def update_ticket_system(kwargs: dict) -> None:
+            if ticket_system := kwargs.pop("ticket_system", None):
+                if "url" in ticket_system:
+                    kwargs["ticket_system_url"] = ticket_system.get("url", "")
+                if "end_time" in ticket_system:
+                    kwargs["ticket_system_end_time"] = ticket_system.get("end_time")
+
+    @classmethod
+    def _seed_source_event_data(cls, kwargs: dict, source_event: Event) -> None:
+        """
+        Seed omitted scalars, ticket system, and translations from source event.
+        """
+        for field in (
+            "duration",
+            "participants_per_invite",
+            "capacity_per_occurrence",
+            "ready_for_event_group_publishing",
+        ):
+            if field not in kwargs:
+                kwargs[field] = getattr(source_event, field)
+
+        if "ticket_system" not in kwargs:
+            kwargs["ticket_system"] = source_event.ticket_system
+            kwargs["ticket_system_url"] = source_event.ticket_system_url
+            kwargs["ticket_system_end_time"] = source_event.ticket_system_end_time
+
+        cls._seed_translations(kwargs, source_event)
 
     @classmethod
     def _seed_translations(cls, kwargs, source):
@@ -153,66 +301,13 @@ class EventAPIService:
         """
         original_kwargs = deepcopy(kwargs)
 
-        project, event_group = cls.resolve_event_target(
-            info, kwargs.pop("project_id"), kwargs.pop("event_group_id", None)
+        cls.Cleaner.target(info, kwargs)
+        kwargs["organisation_id"] = cls.Resolver.event_organisation(
+            info, kwargs.pop("organisation_id", None), source_event=source_event
         )
-        kwargs["project_id"] = project.pk
-        if event_group:
-            kwargs["event_group_id"] = event_group.pk
-
-        organisation_global_id = kwargs.pop("organisation_id", None)
-        user = info.context.user
-        if organisation_global_id:
-            organisation = get_obj_from_global_id(
-                info, organisation_global_id, Organisation
-            )
-            if not (
-                user.is_system_administrator
-                or user.organisations.filter(id=organisation.id).exists()
-            ):
-                raise PermissionDenied(
-                    "You do not have permission to assign events to this organisation."
-                )
-            kwargs["organisation_id"] = organisation.pk
-        elif source_event is not None:
-            kwargs["organisation_id"] = source_event.organisation_id
-        else:
-            if user.organisations.count() == 1:
-                kwargs["organisation_id"] = user.organisations.first().pk
-            else:
-                raise PermissionDenied("Organisation must be provided.")
-
         if source_event is not None:
-            for field in (
-                "duration",
-                "participants_per_invite",
-                "capacity_per_occurrence",
-                "ready_for_event_group_publishing",
-            ):
-                if field not in kwargs:
-                    kwargs[field] = getattr(source_event, field)
-
-            if "ticket_system" not in kwargs:
-                kwargs["ticket_system"] = source_event.ticket_system
-                kwargs["ticket_system_url"] = source_event.ticket_system_url
-                kwargs["ticket_system_end_time"] = source_event.ticket_system_end_time
-
-            cls._seed_translations(kwargs, source_event)
-
-        ticket_system = kwargs.pop("ticket_system", None)
-        if isinstance(ticket_system, dict):
-            kwargs.update(
-                {
-                    "ticket_system": ticket_system.get("type"),
-                    "ticket_system_url": ticket_system.get(
-                        "url",
-                        _DEFAULT_TICKET_SYSTEM_URL,
-                    ),
-                    "ticket_system_end_time": ticket_system.get("end_time"),
-                }
-            )
-        elif ticket_system is not None:
-            kwargs["ticket_system"] = ticket_system
+            cls._seed_source_event_data(kwargs, source_event)
+        cls.Cleaner.create_ticket_system(kwargs)
 
         has_explicit_image = bool(kwargs.get("image"))
         event = Event.objects.create_translatable_object(**kwargs)
@@ -234,6 +329,36 @@ class EventAPIService:
         return event
 
     @classmethod
+    def update_event(cls, info, kwargs):
+        """
+        Update an existing Event.
+        Validates administration rights, resolves target relations, updates
+        translations, and cleans the model instance.
+        """
+        original_kwargs = deepcopy(kwargs)
+
+        event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
+        cls.Cleaner.project_id(info, kwargs)
+        cls.Cleaner.event_group_id(info, kwargs)
+        cls.Cleaner.organisation_id(info, kwargs)
+        cls.Cleaner.update_ticket_system(kwargs)
+
+        update_object_with_translations(event, kwargs)
+
+        try:
+            event.clean()
+        except ValidationError as e:
+            raise DataValidationError(str(e))
+
+        logger.info(
+            f"user {info.context.user.uuid} updated event {event} "
+            f"with data {original_kwargs}"
+        )
+
+        event.refresh_from_db()
+        return event
+
+    @classmethod
     def create_event_group(cls, info, kwargs, *, source_event_group=None):
         """
         Create a new EventGroup, optionally copying an existing event group.
@@ -242,9 +367,7 @@ class EventAPIService:
         original_kwargs = deepcopy(kwargs)
         user = info.context.user
 
-        project = get_obj_if_user_can_administer(
-            info, kwargs.pop("project_id"), Project
-        )
+        project = cls.Resolver.project(info, kwargs.pop("project_id"))
         if not user.can_manage_event_groups_in_project(project):
             raise PermissionDenied()
 
