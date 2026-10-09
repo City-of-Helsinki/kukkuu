@@ -24,7 +24,6 @@ from common.schema import ErrorType, LanguageEnum
 from common.utils import (
     check_can_user_administer,
     get_node_id_from_global_id,
-    get_obj_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
     map_enums_to_values_in_kwargs,
@@ -57,7 +56,6 @@ from kukkuu.exceptions import (
     TooLateToUnenrolError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
-from organisations.models import Organisation
 from projects.models import Project
 from venues.models import Venue
 
@@ -946,61 +944,7 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        original_kwargs = deepcopy(kwargs)
-
-        project_global_id = kwargs.pop("project_id", None)
-        if project_global_id:
-            kwargs["project_id"] = get_obj_if_user_can_administer(
-                info, project_global_id, Project
-            ).pk
-
-        event_group_global_id = kwargs.pop("event_group_id", None)
-        if event_group_global_id:
-            kwargs["event_group_id"] = get_obj_if_user_can_administer(
-                info, event_group_global_id, EventGroup
-            ).pk
-
-        organisation_global_id = kwargs.pop("organisation_id", None)
-        if organisation_global_id:
-            organisation = get_obj_from_global_id(
-                info, organisation_global_id, Organisation
-            )
-            user = info.context.user
-            if not (
-                user.is_system_administrator
-                or user.organisations.filter(id=organisation.id).exists()
-            ):
-                raise PermissionDenied(
-                    "You do not have permission to assign events to this organisation."
-                )
-            kwargs["organisation_id"] = organisation.pk
-
-        event = get_obj_if_user_can_administer(info, kwargs.pop("id"), Event)
-
-        if ticket_system := kwargs.pop("ticket_system", None):
-            if "url" in ticket_system:
-                kwargs["ticket_system_url"] = ticket_system.get("url", "")
-            if "end_time" in ticket_system:
-                kwargs["ticket_system_end_time"] = ticket_system.get("end_time")
-
-        update_object_with_translations(event, kwargs)
-
-        try:
-            event.clean()
-        except ValidationError as e:
-            raise DataValidationError(str(e))
-
-        logger.info(
-            f"user {info.context.user.uuid} updated event {event} "
-            f"with data {original_kwargs}"
-        )
-
-        # The event object must contain objects as its properties where needed, and
-        # this is probably the easiest way to achieve that. Without this for example
-        # event.ticketSystemEndTime would be a string instead of a datetime object.
-        event.refresh_from_db()
-
-        return UpdateEventMutation(event=event)
+        return UpdateEventMutation(event=EventAPIService.update_event(info, kwargs))
 
 
 class DeleteEventMutation(graphene.relay.ClientIDMutation):
