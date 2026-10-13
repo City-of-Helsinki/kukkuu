@@ -33,11 +33,17 @@ def test_system_admin_can_administer_any_event(project_user_api_client, project,
     # User is not a system admin by default.
     assert not event.can_user_administer(project_user_api_client.user)
 
-    # Make user a system admin
+    # Member of system organisation is still NOT a system admin
     system_org, _ = Organisation.objects.get_or_create(
-        name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
+        is_system=True,
+        defaults={"name": settings.KUKKUU_DEFAULT_ORGANISATION_NAME},
     )
     project_user_api_client.user.organisations.add(system_org)
+    assert not event.can_user_administer(project_user_api_client.user)
+
+    # Make user a system admin via is_staff
+    project_user_api_client.user.is_staff = True
+    project_user_api_client.user.save()
 
     assert event.can_user_administer(project_user_api_client.user)
 
