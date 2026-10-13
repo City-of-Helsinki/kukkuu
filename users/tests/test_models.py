@@ -1,7 +1,6 @@
 from uuid import UUID
 
 import pytest
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from freezegun import freeze_time
 from guardian.shortcuts import assign_perm
@@ -369,37 +368,32 @@ def test_is_system_administrator_superuser():
 
 
 @pytest.mark.django_db
-def test_is_system_administrator_default_organisation_member():
+@pytest.mark.parametrize("is_system", [True, False], ids=["system_org", "regular_org"])
+def test_is_system_administrator_organisation_member(is_system):
+    """Membership in an organisation (system or regular) does not grant system
+    administrator rights."""
     user = UserFactory(is_staff=False, is_superuser=False)
-    default_org = OrganisationFactory(name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
-    user.organisations.add(default_org)
-    assert user.is_system_administrator
-
-
-@pytest.mark.django_db
-def test_is_system_administrator_other_organisation_member():
-    user = UserFactory(is_staff=False, is_superuser=False)
-    other_org = OrganisationFactory(name="Some Other Organisation")
-    user.organisations.add(other_org)
+    org = OrganisationFactory(is_system=is_system)
+    user.organisations.add(org)
     assert not user.is_system_administrator
 
 
 @pytest.mark.django_db
 def test_user_queryset_system_administrators():
-    default_org = OrganisationFactory(name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
-    other_org = OrganisationFactory(name="Another Organisation")
-
     staff_user = UserFactory(is_staff=True, is_superuser=False)
     super_user = UserFactory(is_staff=False, is_superuser=True)
-    default_org_user = UserFactory(is_staff=False, is_superuser=False)
-    default_org_user.organisations.add(default_org)
 
     # User with multiple matching criteria should not be duplicated
+    system_org = OrganisationFactory(is_system=True)
     multi_role_admin = UserFactory(is_staff=True, is_superuser=True)
-    multi_role_admin.organisations.add(default_org)
+    multi_role_admin.organisations.add(system_org)
 
-    # Non-admins
+    # Non-admins: regular user and users with organisations
     regular_user = UserFactory(is_staff=False, is_superuser=False)
+    system_org_user = UserFactory(is_staff=False, is_superuser=False)
+    system_org_user.organisations.add(system_org)
+
+    other_org = OrganisationFactory(name="Another Organisation")
     other_org_user = UserFactory(is_staff=False, is_superuser=False)
     other_org_user.organisations.add(other_org)
 
@@ -407,11 +401,11 @@ def test_user_queryset_system_administrators():
 
     assert staff_user in admins
     assert super_user in admins
-    assert default_org_user in admins
     assert multi_role_admin in admins
     assert regular_user not in admins
+    assert system_org_user not in admins
     assert other_org_user not in admins
-    assert admins.count() == 4
+    assert admins.count() == 3
 
 
 @pytest.mark.django_db
@@ -454,4 +448,12 @@ def test_is_event_organiser_organisation_member_without_project():
     user = UserFactory(is_staff=False, is_superuser=False)
     org = OrganisationFactory(name="Some Event Organisation")
     user.organisations.add(org)
+    assert not user.is_event_organiser
+
+
+@pytest.mark.django_db
+def test_is_event_organiser_system_organisation_member_without_project():
+    user = UserFactory(is_staff=False, is_superuser=False)
+    system_org = OrganisationFactory(is_system=True)
+    user.organisations.add(system_org)
     assert not user.is_event_organiser

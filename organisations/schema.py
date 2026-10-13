@@ -10,9 +10,12 @@ class OrganisationNode(DjangoObjectType):
     class Meta:
         model = Organisation
         interfaces = (relay.Node,)
-        # Ensure 'events' is NOT exposed on this node to prevent unauthorized event
-        # scraping
-        exclude = ("events",)
+        fields = (
+            "id",
+            "name",
+            "created_at",
+            "updated_at",
+        )
 
     @classmethod
     @login_required

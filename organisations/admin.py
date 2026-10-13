@@ -14,8 +14,14 @@ class OrganisationUserInline(admin.TabularInline):
 
 @admin.register(Organisation)
 class OrganisationAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at", "updated_at")
+    list_display = ("name", "is_system", "created_at", "updated_at")
     search_fields = ("name",)
-    list_filter = ("created_at",)
+    list_filter = ("is_system", "created_at")
+    readonly_fields = ("is_system",)
     date_hierarchy = "created_at"
     inlines = [OrganisationUserInline]
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.is_system:
+            return False
+        return super().has_delete_permission(request, obj)
