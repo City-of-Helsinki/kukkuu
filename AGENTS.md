@@ -16,7 +16,7 @@ For the full architectural picture, see [ARCHITECTURE.md](./ARCHITECTURE.md) and
 - **Run server:** `python manage.py runserver localhost:8081` (after running `python manage.py migrate`).
 - **Containers:** This repo ships a `compose.yaml`. Use any Compose-compatible container engine (e.g., Docker Compose or Podman Compose). The README uses `docker compose up` as an example.
 - **Test:** Run `pytest`. Note: Tests require a PostgreSQL user with `CREATEDB` privileges (see the Database section in the README).
-- **Lint & Format:** `pre-commit run -a ruff`, `pre-commit run -a ruff-format`.
+- **Lint & Format:** `pre-commit run -a ruff-check`, `pre-commit run -a ruff-format`.
 
 ## Architecture Map
 Key top-level Django apps and their purposes:
