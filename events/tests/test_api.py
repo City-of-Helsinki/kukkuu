@@ -2,9 +2,11 @@ import itertools
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Dict
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.utils import timezone
@@ -2896,3 +2898,25 @@ def test_update_event_project_mismatch(
     )
 
     assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+
+
+def test_add_event_model_validation_error_reraised_as_data_validation_error(
+    project_user_api_client, project, monkeypatch
+):
+    """
+    Test that a ValidationError raised during event creation (e.g. during model save)
+    is caught and re-raised as a DataValidationError in GraphQL.
+    """
+    monkeypatch.setattr(
+        Event.objects,
+        "create_translatable_object",
+        MagicMock(side_effect=ValidationError("Model save validation error")),
+    )
+
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = to_global_id("ProjectNode", project.id)
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "Model save validation error" in str(executed)

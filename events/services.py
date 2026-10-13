@@ -307,12 +307,10 @@ class EventAPIService:
         cls.Cleaner.create_ticket_system(kwargs)
 
         has_explicit_image = bool(kwargs.get("image"))
-        event = Event.objects.create_translatable_object(**kwargs)
-
-        if source_event is not None and not has_explicit_image:
-            cls._copy_image_file(source_event, event)
-
         try:
+            event = Event.objects.create_translatable_object(**kwargs)
+            if source_event is not None and not has_explicit_image:
+                cls._copy_image_file(source_event, event)
             event.clean()
         except ValidationError as e:
             raise DataValidationError(str(e))
