@@ -476,6 +476,14 @@ def test_my_admin_profile_roles_system_administrator(user_api_client):
     assert executed["data"]["myAdminProfile"]["isSystemAdministrator"] is True
 
 
+def test_my_admin_profile_roles_system_organisation_member(user_api_client):
+    system_org = OrganisationFactory(is_system=True)
+    user_api_client.user.organisations.add(system_org)
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_ROLES_QUERY)
+    assert executed["data"]["myAdminProfile"]["isEventOrganiser"] is False
+    assert executed["data"]["myAdminProfile"]["isSystemAdministrator"] is False
+
+
 @pytest.mark.parametrize(
     "has_also_model_perms", (False, True), ids=("no_model_perm", "has_also_model_perm")
 )
