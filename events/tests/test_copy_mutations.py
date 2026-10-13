@@ -2,6 +2,7 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
@@ -9,6 +10,7 @@ from events.factories import EventFactory, EventGroupFactory
 from events.models import Event, EventGroup
 from events.services import EventAPIService
 from events.tests.mutations import COPY_EVENT_GROUP_MUTATION, COPY_EVENT_MUTATION
+from kukkuu.exceptions import DataValidationError
 
 
 @pytest.mark.django_db
@@ -318,6 +320,35 @@ def test_create_event_service_seeds_all_omitted_scalars(project, monkeypatch):
     assert copied_event.capacity_per_occurrence == 30
     assert copied_event.ready_for_event_group_publishing is True
     assert copied_event.safe_translation_getter("name", language_code="fi") == "Lähde"
+
+
+@pytest.mark.django_db
+def test_create_event_service_catches_validation_error_on_creation(
+    project, monkeypatch
+):
+    info = MagicMock()
+    info.context.user.uuid = "test-user"
+    monkeypatch.setattr(
+        EventAPIService.Resolver,
+        "event_target",
+        lambda *args, **kwargs: (project, None),
+    )
+    monkeypatch.setattr(
+        EventAPIService.Resolver,
+        "event_organisation",
+        lambda *args, **kwargs: 1,
+    )
+    monkeypatch.setattr(
+        Event.objects,
+        "create_translatable_object",
+        MagicMock(side_effect=ValidationError("Simulated save validation failure")),
+    )
+
+    kwargs = {
+        "project_id": project.id,
+    }
+    with pytest.raises(DataValidationError, match="Simulated save validation failure"):
+        EventAPIService.create_event(info, kwargs)
 
 
 @pytest.mark.django_db
