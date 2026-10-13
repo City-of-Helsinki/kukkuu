@@ -13,6 +13,7 @@ from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
+from organisations.factories import OrganisationFactory
 from projects.factories import ProjectFactory
 from projects.models import ProjectPermission
 from users.factories import GuardianFactory
@@ -413,6 +414,66 @@ def test_my_admin_profile_normal_user(user_api_client):
     ProjectFactory(year=2031, name="some project")
     executed = user_api_client.execute(MY_ADMIN_PROFILE_QUERY)
     assert executed["data"]["myAdminProfile"]["projects"]["edges"] == []
+
+
+MY_ADMIN_PROFILE_ROLES_QUERY = """
+query MyAdminProfileRoles {
+  myAdminProfile {
+    isEventOrganiser
+    isSystemAdministrator
+    organisations {
+      edges {
+        node {
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def test_my_admin_profile_roles_normal_user(user_api_client):
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_ROLES_QUERY)
+    assert executed["data"]["myAdminProfile"] == {
+        "isEventOrganiser": False,
+        "isSystemAdministrator": False,
+        "organisations": {"edges": []},
+    }
+
+
+def test_my_admin_profile_roles_project_admin_without_organisation(user_api_client):
+    project = ProjectFactory(year=2031)
+    assign_perm(ProjectPermission.ADMIN.value, user_api_client.user, project)
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_ROLES_QUERY)
+    assert executed["data"]["myAdminProfile"] == {
+        "isEventOrganiser": False,
+        "isSystemAdministrator": False,
+        "organisations": {"edges": []},
+    }
+
+
+def test_my_admin_profile_roles_project_admin_with_organisation(user_api_client):
+    project = ProjectFactory(year=2031)
+    assign_perm(ProjectPermission.ADMIN.value, user_api_client.user, project)
+    org = OrganisationFactory()
+    user_api_client.user.organisations.add(org)
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_ROLES_QUERY)
+    assert executed["data"]["myAdminProfile"]["isEventOrganiser"] is True
+    assert executed["data"]["myAdminProfile"]["isSystemAdministrator"] is False
+    assert len(executed["data"]["myAdminProfile"]["organisations"]["edges"]) == 1
+    assert (
+        executed["data"]["myAdminProfile"]["organisations"]["edges"][0]["node"]["name"]
+        == org.name
+    )
+
+
+def test_my_admin_profile_roles_system_administrator(user_api_client):
+    user_api_client.user.is_staff = True
+    user_api_client.user.save()
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_ROLES_QUERY)
+    assert executed["data"]["myAdminProfile"]["isEventOrganiser"] is True
+    assert executed["data"]["myAdminProfile"]["isSystemAdministrator"] is True
 
 
 @pytest.mark.parametrize(
