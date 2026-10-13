@@ -92,15 +92,30 @@ class GuardianCommunicationSubscriptionsNode(DjangoObjectType):
 class AdminNode(DjangoObjectType):
     projects = DjangoConnectionField(ProjectNode)
     organisations = DjangoConnectionField("organisations.schema.OrganisationNode")
+    is_event_organiser = graphene.Boolean()
+    is_system_administrator = graphene.Boolean()
 
     class Meta:
         model = User
         interfaces = (relay.Node,)
-        fields = ("projects", "organisations", "username", "email")
+        fields = (
+            "projects",
+            "organisations",
+            "username",
+            "email",
+            "is_event_organiser",
+            "is_system_administrator",
+        )
 
     @staticmethod
     def resolve_projects(parent, info, **kwargs):
         return parent.administered_projects
+
+    def resolve_is_event_organiser(self, info):
+        return self.is_event_organiser
+
+    def resolve_is_system_administrator(self, info):
+        return self.is_system_administrator
 
 
 class UpdateMyProfileMutation(graphene.relay.ClientIDMutation):
