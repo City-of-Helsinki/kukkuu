@@ -33,13 +33,9 @@ class UserQuerySet(models.QuerySet):
     def system_administrators(self):
         """
         Filter users who have system-wide administrator privileges
-        (staff, superusers, or members of the default system organisation).
+        (staff or superusers).
         """
-        return self.filter(
-            Q(is_staff=True)
-            | Q(is_superuser=True)
-            | Q(organisations__name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME)
-        ).distinct()
+        return self.filter(Q(is_staff=True) | Q(is_superuser=True)).distinct()
 
 
 # This is needed when using a custom User queryset
@@ -83,20 +79,14 @@ class User(AbstractUser, GDPRModel, SerializableMixin):
         Designates whether the user has system-wide administrator privileges.
 
         A user is considered a system administrator if they:
-        - Are a staff member (e.g. developer or product owner with Django Admin access),
-        - Are a superuser, or
-        - Belong to the default system organisation.
+        - Are a staff member (e.g. developer or product owner with Django Admin
+        access), or
+        - Are a superuser.
         """
         if not self.is_authenticated:
             return False
 
-        return (
-            self.is_staff
-            or self.is_superuser
-            or self.organisations.filter(
-                name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
-            ).exists()
-        )
+        return self.is_staff or self.is_superuser
 
     @property
     def is_event_organiser(self) -> bool:

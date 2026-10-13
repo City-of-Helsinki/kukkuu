@@ -5,6 +5,7 @@ from graphql_relay import to_global_id
 from common.tests.utils import assert_permission_denied
 from organisations.factories import OrganisationFactory
 from organisations.models import Organisation
+from organisations.schema import OrganisationNode
 
 ORGANISATIONS_QUERY = """
 query Organisations {
@@ -53,13 +54,11 @@ def test_organisations_query_normal_user(user_api_client):
 @pytest.mark.django_db
 def test_organisations_query_system_admin(project_user_api_client):
     """
-    Test that a system administrator (member of the default organisation)
+    Test that a system administrator (superuser)
     can query all organisations in the system.
     """
-    system_org, _ = Organisation.objects.get_or_create(
-        name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
-    )
-    project_user_api_client.user.organisations.add(system_org)
+    project_user_api_client.user.is_superuser = True
+    project_user_api_client.user.save()
 
     OrganisationFactory(name="First Organisation")
     OrganisationFactory(name="Second Organisation")
@@ -71,6 +70,29 @@ def test_organisations_query_system_admin(project_user_api_client):
     ]
     assert "First Organisation" in org_names
     assert "Second Organisation" in org_names
+
+
+@pytest.mark.django_db
+def test_organisations_query_system_organisation_member(project_user_api_client):
+    """
+    Test that a member of the system organisation without staff/superuser rights
+    is not a system administrator and only sees organisations they belong to.
+    """
+    system_org, _ = Organisation.objects.get_or_create(
+        is_system=True,
+        defaults={"name": settings.KUKKUU_DEFAULT_ORGANISATION_NAME},
+    )
+    project_user_api_client.user.organisations.set([system_org])
+
+    OrganisationFactory(name="Other Organisation")
+
+    executed = project_user_api_client.execute(ORGANISATIONS_QUERY)
+    assert executed.get("errors") is None
+    org_names = [
+        edge["node"]["name"] for edge in executed["data"]["organisations"]["edges"]
+    ]
+    assert system_org.name in org_names
+    assert "Other Organisation" not in org_names
 
 
 @pytest.mark.django_db
@@ -97,10 +119,8 @@ def test_single_organisation_query(project_user_api_client):
     """
     Test querying a single organisation by its Relay ID as a system administrator.
     """
-    system_org, _ = Organisation.objects.get_or_create(
-        name=settings.KUKKUU_DEFAULT_ORGANISATION_NAME
-    )
-    project_user_api_client.user.organisations.add(system_org)
+    project_user_api_client.user.is_staff = True
+    project_user_api_client.user.save()
     org = OrganisationFactory(name="Single Org")
 
     variables = {"id": to_global_id("OrganisationNode", org.id)}
@@ -130,3 +150,44 @@ def test_organisations_query_staff_user(project_user_api_client):
     ]
     assert own_org.name in org_names
     assert external_org.name in org_names
+
+
+def test_organisation_node_does_not_expose_users():
+    """
+    Ensure 'users' connection is not exposed on OrganisationNode to prevent
+    unauthorized traversal and leakage of user data.
+    """
+    assert "users" not in OrganisationNode._meta.fields
+
+
+ORGANISATIONS_WITH_USERS_QUERY = """
+query OrganisationsWithUsers {
+  organisations {
+    edges {
+      node {
+        id
+        users {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.django_db
+def test_organisations_query_cannot_query_users(project_user_api_client):
+    """
+    Ensure GraphQL query validation rejects attempts to query 'users' on OrganisationNode.
+    """
+    executed = project_user_api_client.execute(ORGANISATIONS_WITH_USERS_QUERY)
+    assert executed.get("errors") is not None
+    assert any(
+        "Cannot query field 'users' on type 'OrganisationNode'" in err["message"]
+        for err in executed["errors"]
+    )
