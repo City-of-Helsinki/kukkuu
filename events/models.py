@@ -232,6 +232,8 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
                 self,
                 NotificationType.EVENT_GROUP_PUBLISHED,
                 list(self.project.children.prefetch_related("guardians")),
+                # Pass the used registration_opens_at value to email template context:
+                registration_opens_at=registration_opens_at,
             )
 
     def is_published(self):
