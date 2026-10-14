@@ -58,6 +58,7 @@ class EventAdmin(TranslatableAdmin):
     list_display = (
         "id",
         "name",
+        "organisation",
         "capacity_per_occurrence",
         "participants_per_invite",
         "published_at",
@@ -69,7 +70,6 @@ class EventAdmin(TranslatableAdmin):
         "ticket_system",
         "ticket_system_url",
         "ticket_system_end_time",
-        "organisation",
     )
     list_display_links = ("id", "name")
     autocomplete_fields = ["organisation"]
@@ -99,7 +99,7 @@ class EventAdmin(TranslatableAdmin):
     readonly_fields = ("published_at",)
     list_filter = (
         "project",
-        ("event_group", admin.RelatedOnlyFieldListFilter),
+        "organisation",
         IsPublishedFilter,
     )
 
