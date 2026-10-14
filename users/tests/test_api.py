@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pytest
+from django.contrib.auth.models import Group
 from django.utils import timezone
 from guardian.shortcuts import assign_perm
 
@@ -12,6 +13,7 @@ from children.tests.test_api import (
 from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code
 from common.utils import get_global_id
+from events.factories import EventFactory
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
 from organisations.factories import OrganisationFactory
 from projects.factories import ProjectFactory
@@ -642,3 +644,323 @@ def test_update_my_communication_subscriptions_returns_errors_without_required_a
     )
     assert_match_error_code(executed, "GENERAL_ERROR")
     snapshot.assert_match(executed)
+
+
+MY_ADMIN_PROFILE_FULL_QUERY = """
+query MyAdminProfileFull {
+  myAdminProfile {
+    isEventOrganiser
+    isSystemAdministrator
+    organisations {
+      edges {
+        node {
+          name
+        }
+      }
+    }
+    projects {
+      edges {
+        node {
+          id
+          name
+          year
+        }
+      }
+    }
+  }
+}
+"""
+
+EVENTS_WITH_ADMIN_QUERY = """
+query EventsWithAdmin($projectId: ID) {
+  events(projectId: $projectId) {
+    edges {
+      node {
+        name
+        canUserAdminister
+      }
+    }
+  }
+}
+"""
+
+ORGANISATIONS_ROOT_QUERY = """
+query OrganisationsRoot {
+  organisations {
+    edges {
+      node {
+        name
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.parametrize(
+    (
+        "is_staff",
+        "org_kind",
+        "has_group_perm",
+        "has_global_perm",
+        "expected_is_sysadmin",
+        "expected_is_organiser",
+        "expected_has_projects",
+        "expected_has_orgs",
+    ),
+    [
+        # Case 1: No staff, no organisation, some groups (project admin)
+        (False, "none", True, False, False, False, True, False),
+        # Case 2: Staff, some organisations, no groups
+        (True, "regular", False, False, True, True, False, True),
+        # Case 3: No staff, system organisation only, some groups (project admin)
+        (False, "system", True, False, False, True, True, True),
+        # Case 4: No staff, some organisations, some groups (project admin)
+        (False, "multiple", True, False, False, True, True, True),
+        # Case 5: Staff, any organisation, some groups (project admin)
+        (True, "regular", True, False, True, True, True, True),
+        # Case 6: Staff, global base admin permission, any/no organisations, any/no groups
+        (True, "none", False, True, True, True, True, False),
+    ],
+    ids=[
+        "case_1_no_staff_no_org_some_groups",
+        "case_2_staff_some_orgs_no_groups",
+        "case_3_no_staff_system_org_some_groups",
+        "case_4_no_staff_some_orgs_some_groups",
+        "case_5_staff_any_org_some_groups",
+        "case_6_staff_global_perm_no_orgs_no_groups",
+    ],
+)
+def test_my_admin_profile_use_cases(
+    user_api_client,
+    is_staff,
+    org_kind,
+    has_group_perm,
+    has_global_perm,
+    expected_is_sysadmin,
+    expected_is_organiser,
+    expected_has_projects,
+    expected_has_orgs,
+):
+    user = user_api_client.user
+    user.is_staff = is_staff
+
+    project = ProjectFactory(year=2031, name="Project 2031")
+    other_project = ProjectFactory(year=2032, name="Project 2032")
+
+    if has_group_perm:
+        group = Group.objects.create(name=f"Project 2031 Admins for {user.username}")
+        assign_perm(ProjectPermission.ADMIN.value, group, project)
+        user.groups.add(group)
+
+    if has_global_perm:
+        assign_perm(ProjectPermission.ADMIN.permission_name, user)
+
+    if org_kind == "regular":
+        org = OrganisationFactory(name="Regular Org")
+        user.organisations.add(org)
+    elif org_kind == "system":
+        system_org = OrganisationFactory(name="City of Helsinki", is_system=True)
+        user.organisations.add(system_org)
+    elif org_kind == "multiple":
+        org1 = OrganisationFactory(name="Org A")
+        org2 = OrganisationFactory(name="Org B")
+        user.organisations.add(org1, org2)
+
+    user.save()
+    user.__dict__.pop("administered_projects", None)
+
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_FULL_QUERY)
+    profile = executed["data"]["myAdminProfile"]
+
+    assert profile["isSystemAdministrator"] is expected_is_sysadmin
+    assert profile["isEventOrganiser"] is expected_is_organiser
+
+    returned_projects = [edge["node"]["name"] for edge in profile["projects"]["edges"]]
+    if expected_has_projects:
+        if has_global_perm:
+            assert project.name in returned_projects
+            assert other_project.name in returned_projects
+        else:
+            assert returned_projects == [project.name]
+    else:
+        assert returned_projects == []
+
+    returned_orgs = [edge["node"]["name"] for edge in profile["organisations"]["edges"]]
+    if expected_has_orgs:
+        assert len(returned_orgs) > 0
+    else:
+        assert returned_orgs == []
+
+
+def test_my_admin_profile_superuser_gets_all_projects(user_api_client):
+    user = user_api_client.user
+    user.is_superuser = True
+    user.save()
+    user.__dict__.pop("administered_projects", None)
+
+    project1 = ProjectFactory(year=2031, name="Superuser Project 1")
+    project2 = ProjectFactory(year=2032, name="Superuser Project 2")
+
+    executed = user_api_client.execute(MY_ADMIN_PROFILE_FULL_QUERY)
+    profile = executed["data"]["myAdminProfile"]
+
+    assert profile["isSystemAdministrator"] is True
+    assert profile["isEventOrganiser"] is True
+    names = [edge["node"]["name"] for edge in profile["projects"]["edges"]]
+    assert project1.name in names
+    assert project2.name in names
+
+
+@pytest.mark.parametrize(
+    (
+        "is_staff",
+        "org_kind",
+        "has_global_perm",
+        "can_see_unpub_third_party_in_admin_project",
+        "can_see_unpub_in_other_project",
+        "can_administer_third_party",
+    ),
+    [
+        # Case 3: non-staff, system org, group perm
+        (False, "system", False, False, False, False),
+        # Case 4: non-staff, regular org, group perm
+        (False, "regular", False, False, False, False),
+        # Case 5: staff, regular org, group perm
+        (True, "regular", False, True, False, True),
+        # Case 6: staff, no org, global perm
+        (True, "none", True, True, True, True),
+    ],
+    ids=[
+        "case_3_system_org_member",
+        "case_4_regular_org_member",
+        "case_5_staff_with_group_project",
+        "case_6_staff_with_global_project_perm",
+    ],
+)
+def test_use_case_event_visibility_and_administration(
+    user_api_client,
+    is_staff,
+    org_kind,
+    has_global_perm,
+    can_see_unpub_third_party_in_admin_project,
+    can_see_unpub_in_other_project,
+    can_administer_third_party,
+):
+    user = user_api_client.user
+    user.is_staff = is_staff
+
+    admin_project = ProjectFactory(year=2031, name="Administered Project")
+    other_project = ProjectFactory(year=2032, name="Other Project")
+
+    if has_global_perm:
+        assign_perm(ProjectPermission.ADMIN.permission_name, user)
+    else:
+        group = Group.objects.create(name=f"Admin Group for {user.username}")
+        assign_perm(ProjectPermission.ADMIN.value, group, admin_project)
+        user.groups.add(group)
+
+    if org_kind == "system":
+        own_org = OrganisationFactory(name="System Org", is_system=True)
+        user.organisations.add(own_org)
+    elif org_kind == "regular":
+        own_org = OrganisationFactory(name="Own Org")
+        user.organisations.add(own_org)
+    else:
+        own_org = None
+
+    third_party_org = OrganisationFactory(name="Third Party Org")
+    user.save()
+    user.__dict__.pop("administered_projects", None)
+
+    # Published event in administered project
+    EventFactory(
+        project=admin_project,
+        organisation=third_party_org,
+        published_at=timezone.now(),
+        name="Pub Event Admin Proj",
+    )
+    # Unpublished event belonging to third party in administered project
+    EventFactory(
+        project=admin_project,
+        organisation=third_party_org,
+        published_at=None,
+        name="Unpub Third Party Admin Proj",
+    )
+    # Unpublished event belonging to own org in administered project
+    if own_org:
+        EventFactory(
+            project=admin_project,
+            organisation=own_org,
+            published_at=None,
+            name="Unpub Own Admin Proj",
+        )
+    # Events in other project (which user does not administer via group)
+    EventFactory(
+        project=other_project,
+        organisation=third_party_org,
+        published_at=timezone.now(),
+        name="Pub Event Other Proj",
+    )
+    EventFactory(
+        project=other_project,
+        organisation=third_party_org,
+        published_at=None,
+        name="Unpub Other Proj",
+    )
+
+    # 1. Query events in administered project
+    executed_admin = user_api_client.execute(
+        EVENTS_WITH_ADMIN_QUERY,
+        variables={"projectId": get_global_id(admin_project)},
+    )
+    admin_events_map = {
+        edge["node"]["name"]: edge["node"]["canUserAdminister"]
+        for edge in executed_admin["data"]["events"]["edges"]
+    }
+
+    # Published event in administered project is ALWAYS visible
+    assert "Pub Event Admin Proj" in admin_events_map
+    assert admin_events_map["Pub Event Admin Proj"] is can_administer_third_party
+
+    # Unpublished event of own org is visible and can be administered
+    if own_org:
+        assert "Unpub Own Admin Proj" in admin_events_map
+        assert admin_events_map["Unpub Own Admin Proj"] is True
+
+    # Unpublished event of third party is only visible to staff (system admin)
+    assert (
+        "Unpub Third Party Admin Proj" in admin_events_map
+    ) is can_see_unpub_third_party_in_admin_project
+    if can_see_unpub_third_party_in_admin_project:
+        assert (
+            admin_events_map["Unpub Third Party Admin Proj"]
+            is can_administer_third_party
+        )
+
+    # 2. Query events in other project
+    executed_other = user_api_client.execute(
+        EVENTS_WITH_ADMIN_QUERY,
+        variables={"projectId": get_global_id(other_project)},
+    )
+    other_events = [
+        edge["node"]["name"] for edge in executed_other["data"]["events"]["edges"]
+    ]
+
+    # Published event in other project is ALWAYS visible
+    assert "Pub Event Other Proj" in other_events
+    # Unpublished event in other project is only visible if user has global project admin
+    assert ("Unpub Other Proj" in other_events) is can_see_unpub_in_other_project
+
+    # 3. Check root organisations query
+    executed_orgs = user_api_client.execute(ORGANISATIONS_ROOT_QUERY)
+    org_names = [
+        edge["node"]["name"] for edge in executed_orgs["data"]["organisations"]["edges"]
+    ]
+    if is_staff:
+        # System administrators see all organisations
+        assert third_party_org.name in org_names
+    else:
+        # Non-staff see only their own organisations
+        assert own_org.name in org_names
+        assert third_party_org.name not in org_names
