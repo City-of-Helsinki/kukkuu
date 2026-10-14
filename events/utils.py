@@ -114,6 +114,7 @@ def send_event_group_notifications_to_guardians(
                             "event_url": get_event_ui_url(
                                 event, child, guardian.language
                             ),
+                            "registration_opens_at": event.registration_opens_at,
                         }
                         for event in event_group.events.language(guardian.language)
                     ],
