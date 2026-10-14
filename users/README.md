@@ -65,4 +65,6 @@ If the user has not authenticated to the Kulttuurin kummilapset, the user could 
 
 ##### My admin profile
 
-The `MyAdminProfile` -query returns an `AdminNode` for the users who are logged in and has the admin privileges. From the `AdminNode` the user has access to all the projects and their events and enrolments data.
+The `MyAdminProfile`-query returns an `AdminNode` for authenticated users. From the `AdminNode`, the user receives the projects they administer (via direct or group object permissions, or all projects if granted global permissions or superuser status), their assigned organisations, and role flags (`isEventOrganiser`, `isSystemAdministrator`).
+
+For detailed documentation on how `myAdminProfile` relates to Admin UI authorization and the 6 privilege use cases, see [Admin UI Privileges & Permissions](../docs/admin-ui-privileges.md).
