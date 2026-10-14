@@ -142,3 +142,54 @@ def test_admin_cannot_view_enrolments_from_other_organisation(
     assert executed.get("errors") is None
     # Enrolments are isolated to the event's organisation
     assert executed["data"]["occurrence"]["enrolments"]["edges"] == []
+
+
+@pytest.mark.django_db
+def test_events_connection_can_user_administer_avoids_n_plus_one(
+    project_user_api_client, project, django_assert_num_queries
+):
+    query = """
+    query Events {
+      events {
+        edges {
+          node {
+            id
+            canUserAdminister
+          }
+        }
+      }
+    }
+    """
+    other_org = OrganisationFactory(name="Other Organisation")
+    user_org = project_user_api_client.user.organisations.first()
+
+    # Create 10 events for the user's organisation and 10 for another organisation
+    for _ in range(10):
+        EventFactory(
+            project=project,
+            organisation=user_org,
+            published_at="2020-01-01T00:00:00Z",
+        )
+        EventFactory(
+            project=project,
+            organisation=other_org,
+            published_at="2020-01-01T00:00:00Z",
+        )
+
+    # First run without assertion to warm up guardian permissions / session cache
+    executed = project_user_api_client.execute(query)
+    assert executed.get("errors") is None
+    assert len(executed["data"]["events"]["edges"]) == 20
+
+    # Ensure resolving canUserAdminister does not issue queries per event (constant 3 queries)
+    with django_assert_num_queries(3):
+        # 1: count events for relay connection
+        # 2: fetch events nodes (with select_related project)
+        # 3: prefetch translations
+        executed = project_user_api_client.execute(query)
+        assert executed.get("errors") is None
+        edges = executed["data"]["events"]["edges"]
+        assert len(edges) == 20
+        administer_flags = [edge["node"]["canUserAdminister"] for edge in edges]
+        assert administer_flags.count(True) == 10
+        assert administer_flags.count(False) == 10

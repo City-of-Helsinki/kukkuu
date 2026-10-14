@@ -278,7 +278,18 @@ class EventNode(DjangoObjectType):
         )
 
     def resolve_can_user_administer(self, info):
-        return self.can_user_administer(info.context.user)
+        user = info.context.user
+        if not hasattr(info.context, "_user_organisation_ids"):
+            # Memoise org IDs on first access per request to avoid N+1 queries
+            # when iterating many Event nodes (one DB call instead of one per).
+            info.context._user_organisation_ids = (
+                frozenset(user.organisations.values_list("id", flat=True))
+                if user and user.is_authenticated and not user.is_system_administrator
+                else None
+            )
+        return self.can_user_administer(
+            user, user_organisation_ids=info.context._user_organisation_ids
+        )
 
     @classmethod
     @login_required
@@ -286,6 +297,7 @@ class EventNode(DjangoObjectType):
         lang = get_language()
         return (
             queryset.user_can_view(info.context.user)
+            .select_related("project")
             .prefetch_related(
                 Prefetch(
                     "translations",
