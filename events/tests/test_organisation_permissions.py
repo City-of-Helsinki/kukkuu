@@ -3,7 +3,14 @@ from django.conf import settings
 from graphql_relay import to_global_id
 
 from children.factories import ChildWithGuardianFactory
-from events.factories import EnrolmentFactory, EventFactory, OccurrenceFactory
+from common.tests.utils import assert_permission_denied
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
+from events.tests.mutations import PUBLISH_EVENT_GROUP_MUTATION
 from events.tests.queries import EVENT_QUERY, EVENTS_QUERY, OCCURRENCE_QUERY
 from organisations.factories import OrganisationFactory
 from organisations.models import Organisation
@@ -193,3 +200,128 @@ def test_events_connection_can_user_administer_avoids_n_plus_one(
         administer_flags = [edge["node"]["canUserAdminister"] for edge in edges]
         assert administer_flags.count(True) == 10
         assert administer_flags.count(False) == 10
+
+
+@pytest.mark.django_db
+def test_user_cannot_publish_event_group_with_events_from_other_organisation(
+    publisher_api_client, project
+):
+    other_org = OrganisationFactory(name="Other Organisation")
+    event_group = EventGroupFactory(project=project)
+    other_event = EventFactory(
+        project=project,
+        event_group=event_group,
+        organisation=other_org,
+        ready_for_event_group_publishing=True,
+    )
+
+    # User cannot publish the event group because it contains unpublished events from another org
+    assert not event_group.can_user_publish(publisher_api_client.user)
+
+    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert_permission_denied(executed)
+
+    other_event.refresh_from_db()
+    assert other_event.published_at is None
+    event_group.refresh_from_db()
+    assert event_group.published_at is None
+
+
+@pytest.mark.django_db
+def test_system_admin_can_publish_event_group_with_events_from_other_organisation(
+    publisher_api_client, project
+):
+    other_org = OrganisationFactory(name="Other Organisation")
+    event_group = EventGroupFactory(project=project)
+    other_event = EventFactory(
+        project=project,
+        event_group=event_group,
+        organisation=other_org,
+        ready_for_event_group_publishing=True,
+    )
+
+    publisher_api_client.user.is_staff = True
+    publisher_api_client.user.save()
+
+    assert event_group.can_user_publish(publisher_api_client.user)
+
+    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert executed.get("errors") is None
+    assert (
+        executed["data"]["publishEventGroup"]["eventGroup"]["publishedAt"] is not None
+    )
+
+    other_event.refresh_from_db()
+    assert other_event.published_at is not None
+
+
+@pytest.mark.django_db
+def test_user_can_publish_event_group_when_all_unpublished_events_belong_to_own_organisation(
+    publisher_api_client, project
+):
+    user_org = publisher_api_client.user.organisations.first()
+    event_group = EventGroupFactory(project=project)
+    own_event = EventFactory(
+        project=project,
+        event_group=event_group,
+        organisation=user_org,
+        ready_for_event_group_publishing=True,
+    )
+
+    assert event_group.can_user_publish(publisher_api_client.user)
+
+    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert executed.get("errors") is None
+    assert (
+        executed["data"]["publishEventGroup"]["eventGroup"]["publishedAt"] is not None
+    )
+
+    own_event.refresh_from_db()
+    assert own_event.published_at is not None
+
+
+@pytest.mark.django_db
+def test_user_can_republish_event_group_when_other_org_events_already_published(
+    publisher_api_client, project, past
+):
+    user_org = publisher_api_client.user.organisations.first()
+    other_org = OrganisationFactory(name="Other Organisation")
+    event_group = EventGroupFactory(project=project, published_at=past)
+
+    # An event from another org is already published in the past
+    EventFactory(
+        project=project,
+        event_group=event_group,
+        organisation=other_org,
+        ready_for_event_group_publishing=True,
+        published_at=past,
+    )
+
+    # User adds their own new unpublished event to the group
+    new_own_event = EventFactory(
+        project=project,
+        event_group=event_group,
+        organisation=user_org,
+        ready_for_event_group_publishing=True,
+    )
+
+    # User can republish because all *unpublished* events belong to their organisation
+    assert event_group.can_user_publish(publisher_api_client.user)
+
+    variables = {"input": {"id": to_global_id("EventGroupNode", event_group.id)}}
+    executed = publisher_api_client.execute(
+        PUBLISH_EVENT_GROUP_MUTATION, variables=variables
+    )
+    assert executed.get("errors") is None
+
+    new_own_event.refresh_from_db()
+    assert new_own_event.published_at is not None
