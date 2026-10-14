@@ -422,28 +422,40 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         ):
             self.occurrences.send_free_spot_notifications_if_needed()
 
-    def can_user_administer(self, user):
+    def can_user_administer(
+        self, user, user_organisation_ids: Optional[set] = None
+    ) -> bool:
         """
         Check if the given user can administer (edit/delete) this event.
         Requires project admin rights AND (system admin OR membership in the event's
         organisation).
         """
+        if not user or not user.is_authenticated:
+            return False
         if not user.can_administer_project(self.project):
             return False
         if user.is_system_administrator:
             return True
+        if user_organisation_ids is not None:
+            return self.organisation_id in user_organisation_ids
         return user.organisations.filter(id=self.organisation_id).exists()
 
-    def can_user_publish(self, user):
+    def can_user_publish(
+        self, user, user_organisation_ids: Optional[set] = None
+    ) -> bool:
         """
         Check if the given user can publish this event.
         Requires project publish rights AND (system admin OR membership in the event's
         organisation).
         """
+        if not user or not user.is_authenticated:
+            return False
         if not user.can_publish_in_project(self.project):
             return False
         if user.is_system_administrator:
             return True
+        if user_organisation_ids is not None:
+            return self.organisation_id in user_organisation_ids
         return user.organisations.filter(id=self.organisation_id).exists()
 
     def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
@@ -763,10 +775,14 @@ class Occurrence(TimestampedModel, SerializableMixin):
         """Check if the child can enroll to this occurrence."""
         return self.get_enrolment_denied_reason(child) is None
 
-    def can_user_administer(self, user):
+    def can_user_administer(
+        self, user, user_organisation_ids: Optional[set] = None
+    ) -> bool:
         # There shouldn't ever be a situation where event.project != venue.project
         # so we can just check one of them
-        return self.event.can_user_administer(user)
+        return self.event.can_user_administer(
+            user, user_organisation_ids=user_organisation_ids
+        )
 
     def send_free_spot_notifications_if_needed(self):
         if (
