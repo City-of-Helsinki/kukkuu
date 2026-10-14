@@ -1,6 +1,8 @@
+import { Selector } from "testcafe";
 import { screen } from "@testing-library/testcafe";
-import { envUrl } from "../utils/settings";
 import getDropdownOption from "../utils/getDropdownOption";
+
+import { envUrl } from "../utils/settings";
 
 export const event = {
   name: `Test event ${new Date().toUTCString()}`,
@@ -24,6 +26,7 @@ export const eventAdd = {
   duration: screen.getByLabelText("Duration:"),
   readyForPublish: screen.getByLabelText("Ready for event group publishing"),
   eventGroup: screen.getByLabelText("Event group:"),
+  organisation: Selector(".field-organisation .select2-selection"),
 };
 
 export const route = (name: string) =>
@@ -34,10 +37,15 @@ export const routeAdd = () => `${envUrl()}/admin/events/event/add`;
 export const fillFormAdd = async (
   t: TestController,
   projectName: string | RegExp,
-  eventGroupName: string
+  eventGroupName: string,
 ) => {
   const eventGroupOption = eventAdd.eventGroup.find("option");
   const eventGroupRegexp = new RegExp(eventGroupName, "i");
+
+  // Select an organisation option from autocomplete dropdown
+  const organisationOption = Selector(".select2-results__option")
+    .filterVisible()
+    .nth(0);
 
   await t
     .click(eventAdd.project)
@@ -51,14 +59,16 @@ export const fillFormAdd = async (
     .typeText(eventAdd.duration, event.duration)
     .click(eventAdd.readyForPublish)
     .click(eventAdd.eventGroup)
-    .click(eventGroupOption.withText(eventGroupRegexp));
+    .click(eventGroupOption.withText(eventGroupRegexp))
+    .click(eventAdd.organisation)
+    .click(organisationOption);
 };
 
 // create new event
 export const createNew = async (
   t: TestController,
   projectName: string | RegExp,
-  eventGroupName: string
+  eventGroupName: string,
 ) => {
   await t.navigateTo(routeAdd());
 
