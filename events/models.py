@@ -92,8 +92,32 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
 
-    def can_user_publish(self, user):
-        return user.can_publish_in_project(self.project)
+    def can_user_publish(
+        self, user, user_organisation_ids: Optional[set] = None
+    ) -> bool:
+        """
+        Check if the given user can publish this event group.
+        Requires project publish rights AND (system admin OR membership in the
+        organisations of all unpublished events that will be published).
+        """
+        if not user or not user.is_authenticated:
+            return False
+        if not user.can_publish_in_project(self.project):
+            return False
+        if user.is_system_administrator:
+            return True
+
+        unpublished_events = self.events.unpublished()
+        if not unpublished_events.exists():
+            return True
+
+        if user_organisation_ids is not None:
+            return not unpublished_events.exclude(
+                organisation_id__in=user_organisation_ids
+            ).exists()
+        return not unpublished_events.exclude(
+            organisation__in=user.organisations.all()
+        ).exists()
 
     def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
         """
