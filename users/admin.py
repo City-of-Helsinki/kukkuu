@@ -154,12 +154,37 @@ class UserAdmin(
         "last_login",
     )
     # Add UUID and Organisations fieldsets between personal info and permissions
-    # fieldsets.
+    # fieldsets. Collapse user_permissions fieldset by default with a warning
+    # about global permissions.
     fieldsets = (
         *DjangoUserAdmin.fieldsets[:2],
         ("UUID", {"fields": ("uuid",)}),
         ("Organisations", {"fields": ("organisations",)}),
-        *DjangoUserAdmin.fieldsets[2:],
+        (
+            _("Groups"),
+            {
+                "fields": ("groups",),
+            },
+        ),
+        (
+            _("User's global permissions"),
+            {
+                "classes": ("collapse",),
+                "description": _(
+                    "Warning: Permissions assigned here are GLOBAL and grant "
+                    "access across all projects. In Kukkuu, global permissions "
+                    "should never be applied, except maybe in development usage. "
+                    "Permissions should be handled from project groups."
+                ),
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "user_permissions",
+                ),
+            },
+        ),
+        *DjangoUserAdmin.fieldsets[3:],
     )
     readonly_fields = ("uuid",)
     autocomplete_fields = ["organisations"]
