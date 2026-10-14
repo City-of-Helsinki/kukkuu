@@ -24,6 +24,9 @@ export const userAdd = {
   passwordConfirmation: screen.getByLabelText(
     /Salasanan vahvistaminen:|Password confirmation:/i
   ),
+  globalPermissionsSummary: Selector("summary").withText(
+    /User's global permissions/i
+  ),
   // user change
   staffStatus: screen.getByLabelText(/Ylläpitäjä|Staff status/i),
   staffStatusCheckbox: Selector("#id_is_staff"),
@@ -34,6 +37,17 @@ export const userAdd = {
 
 export const route = () => `${envUrl()}/admin/users/user/?all`;
 export const routeAdd = () => `${envUrl()}/admin/users/user/add/`;
+
+const expandGlobalPermissions = async (t: TestController) => {
+  if (await userAdd.globalPermissionsSummary.exists) {
+    const isDetailsOpen = await Selector(
+      "fieldset.collapse details"
+    ).hasAttribute("open");
+    if (!isDetailsOpen) {
+      await t.click(userAdd.globalPermissionsSummary);
+    }
+  }
+};
 
 export const addUser = async (t: TestController) => {
   await t.navigateTo(routeAdd());
@@ -46,6 +60,8 @@ export const addUser = async (t: TestController) => {
     .click(userAdd.saveButton);
 
   // user details page
+  await expandGlobalPermissions(t);
+
   await t
     .click(userAdd.staffStatus)
     .click(userAdd.superUserStatus)
@@ -57,6 +73,8 @@ export const tunnistamoUser = async (t: TestController) => {
   await t.navigateTo(route());
 
   await t.click(userList.selectByEmail);
+
+  await expandGlobalPermissions(t);
 
   // these needs to be checked
   if (!(await userAdd.staffStatusCheckbox.checked)) {
