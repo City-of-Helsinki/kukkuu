@@ -20,14 +20,14 @@ By default, an event organiser's access and capabilities are restricted to event
 
 ## Default System Organisation
 
-A configurable default "system organisation" (configurable via `KUKKUU_DEFAULT_ORGANISATION_NAME` in Django settings) is automatically created.
-- Users mapped to this system organisation act as "system administrators".
-- They bypass standard organisation restrictions and have global access to manage events from *any* organisation.
-- They can also view attendee and enrolment information for all events.
+A configurable default "system organisation" (configurable via `KUKKUU_DEFAULT_ORGANISATION_NAME` in Django settings) is automatically created (designated by `is_system=True`).
+- It designates the default municipal organisation representing the City of Helsinki.
+- Membership in the system organisation does **not** grant system administrator rights. System administrator privileges are granted exclusively via `is_staff` or `is_superuser` on the user account.
+- For a comprehensive breakdown of roles and permissions, see [Admin UI Privileges & Permissions](../docs/admin-ui-privileges.md).
 
 ## Models
 - `Organisation`: A very simple model representing an organisation (e.g. name). It is linked to multiple `User` instances (via `users.User.organisations`) and to multiple `Event` instances (via `events.Event.organisation`).
 
 ## Permissions
 
-Users with no assigned organisations are implicitly restricted and cannot administer any events. Normal event organisers can only administer their own organisation's events.
+Users with no assigned organisations are implicitly restricted and cannot log into the Admin UI or administer any events (unless they are system administrators). Normal event organisers can only administer their own organisation's events within their administered projects. See [Admin UI Privileges & Permissions](../docs/admin-ui-privileges.md) for full details.
