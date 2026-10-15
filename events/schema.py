@@ -280,8 +280,10 @@ class EventNode(DjangoObjectType):
     def resolve_can_user_administer(self, info):
         user = info.context.user
         if not hasattr(info.context, "_user_organisation_ids"):
-            # Memoise org IDs on first access per request to avoid N+1 queries
-            # when iterating many Event nodes (one DB call instead of one per).
+            # Memoise org IDs on info.context (the per-request HttpRequest) on
+            # first access to avoid N+1 queries when iterating many Event nodes
+            # (one DB call instead of one per node). Scoped per request to ensure
+            # no cross-request state leakage.
             info.context._user_organisation_ids = (
                 frozenset(user.organisations.values_list("id", flat=True))
                 if user and user.is_authenticated and not user.is_system_administrator
