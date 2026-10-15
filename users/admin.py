@@ -153,9 +153,13 @@ class UserAdmin(
         "date_joined",
         "last_login",
     )
-    # Add UUID and Organisations fieldsets between personal info and permissions
-    # fieldsets. Collapse user_permissions fieldset by default with a warning
-    # about global permissions.
+    # Note: DjangoUserAdmin.fieldsets[2] is the default ('Permissions', {...})
+    # fieldset. We deliberately override and replace fieldsets[2] by inserting
+    # UUID and Organisations, separating Groups into its own fieldset, and
+    # collapsing user_permissions into a dedicated "User's global permissions"
+    # fieldset with a warning. Fieldsets [:2] (credentials and personal info)
+    # and [3:] (important dates) are preserved. Unit tests in
+    # users/tests/test_admin.py guard against upstream Django fieldset order changes.
     fieldsets = (
         *DjangoUserAdmin.fieldsets[:2],
         ("UUID", {"fields": ("uuid",)}),

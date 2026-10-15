@@ -4,6 +4,7 @@ import factory
 
 from organisations.models import Organisation
 
+# Fixed, randomly generated UUID to ensure deterministic IDs for snapshot tests.
 DEFAULT_ORGANISATION_ID = UUID("54760fde-aa33-49d7-ba47-8bf9fc83d1e1")
 
 
