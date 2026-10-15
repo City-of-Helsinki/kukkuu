@@ -120,6 +120,14 @@ def guardian_api_client():
     return create_api_client_with_user(guardian.user)
 
 
+def get_or_create_default_organisation() -> Organisation:
+    org, _ = Organisation.objects.get_or_create(
+        name="Default Test Organisation",
+        defaults={"id": DEFAULT_ORGANISATION_ID},
+    )
+    return org
+
+
 def _projects_user_api_client(
     projects: list[Project],
     permissions: list[ProjectPermission],
@@ -130,12 +138,7 @@ def _projects_user_api_client(
     in the given projects and the given, if any, global permissions.
     """
     user = UserFactory()
-
-    org, _ = Organisation.objects.get_or_create(
-        name="Default Test Organisation",
-        defaults={"id": DEFAULT_ORGANISATION_ID},
-    )
-    user.organisations.add(org)
+    user.organisations.add(get_or_create_default_organisation())
     for project in projects:
         for permission in permissions:
             assign_perm(permission.value, user, project)
@@ -169,12 +172,7 @@ def project_user_no_view_families_perm_api_client(project):
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def publisher_api_client(request, project):
     user = UserFactory()
-
-    org, _ = Organisation.objects.get_or_create(
-        name="Default Test Organisation",
-        defaults={"id": DEFAULT_ORGANISATION_ID},
-    )
-    user.organisations.add(org)
+    user.organisations.add(get_or_create_default_organisation())
     assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:
@@ -188,12 +186,7 @@ def publisher_api_client(request, project):
 @pytest.fixture(params=(False, True), ids=("object_perm", "model_perm"))
 def event_group_manager_api_client(request, project):
     user = UserFactory()
-
-    org, _ = Organisation.objects.get_or_create(
-        name="Default Test Organisation",
-        defaults={"id": DEFAULT_ORGANISATION_ID},
-    )
-    user.organisations.add(org)
+    user.organisations.add(get_or_create_default_organisation())
     assign_perm(ProjectPermission.ADMIN.value, user, project)
 
     if request.param:
