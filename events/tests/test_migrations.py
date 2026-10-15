@@ -47,3 +47,15 @@ def test_populate_event_organisation_migration_forward_and_reverse():
     reverse_populate(apps, None)
 
     assert default_org.users.count() == 0
+
+
+@pytest.mark.django_db
+def test_populate_event_organisation_migration_missing_org_raises():
+    default_name = getattr(
+        settings, "KUKKUU_DEFAULT_ORGANISATION_NAME", "Hekla (system)"
+    )
+    Organisation.objects.filter(name=default_name).update(is_system=False)
+    Organisation.objects.filter(name=default_name).delete()
+
+    with pytest.raises(RuntimeError, match="Default organisation not found"):
+        populate_events_and_admins(apps, None)

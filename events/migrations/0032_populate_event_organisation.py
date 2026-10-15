@@ -46,20 +46,17 @@ def _assign_organisation_to_staff_users(apps, org):
         | models.Q(groups__permissions__codename__in=perm_codenames)
     )
 
-    try:
-        UserObjectPermission = apps.get_model("guardian", "UserObjectPermission")
-        GroupObjectPermission = apps.get_model("guardian", "GroupObjectPermission")
-        uop_user_ids = UserObjectPermission.objects.filter(
-            permission__codename__in=perm_codenames
-        ).values_list("user_id", flat=True)
-        gop_group_ids = GroupObjectPermission.objects.filter(
-            permission__codename__in=perm_codenames
-        ).values_list("group_id", flat=True)
-        filter_query |= models.Q(id__in=uop_user_ids) | models.Q(
-            groups__id__in=gop_group_ids
-        )
-    except LookupError:
-        pass
+    UserObjectPermission = apps.get_model("guardian", "UserObjectPermission")
+    GroupObjectPermission = apps.get_model("guardian", "GroupObjectPermission")
+    uop_user_ids = UserObjectPermission.objects.filter(
+        permission__codename__in=perm_codenames
+    ).values_list("user_id", flat=True)
+    gop_group_ids = GroupObjectPermission.objects.filter(
+        permission__codename__in=perm_codenames
+    ).values_list("group_id", flat=True)
+    filter_query |= models.Q(id__in=uop_user_ids) | models.Q(
+        groups__id__in=gop_group_ids
+    )
 
     administrative_users = User.objects.filter(filter_query).distinct()
     count = 0
@@ -78,10 +75,9 @@ def populate_events_and_admins(apps, schema_editor):
     """
     org = _get_default_organisation(apps)
     if not org:
-        logger.error(
+        raise RuntimeError(
             "Default organisation not found. Ensure organisations migration 0002 has run."
         )
-        return
 
     _assign_organisation_to_events(apps, org)
     _assign_organisation_to_staff_users(apps, org)
