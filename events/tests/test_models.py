@@ -392,31 +392,134 @@ def test_enrolment_denied_reason_registration_opens_at(
 
 
 @pytest.mark.django_db
+def test_event_save_accepts_empty_registration_opens_at_and_published_at():
+    # Should not raise an exception:
+    EventFactory.create(published_at=None, registration_opens_at=None)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("registration_opens_at_delta_days", [-100, 0, 100])
+def test_event_save_accepts_any_registration_opens_at_if_published_at_not_set(
+    registration_opens_at_delta_days,
+):
+    # Should not raise an exception:
+    EventFactory.create(
+        published_at=None,
+        registration_opens_at=now() + timedelta(days=registration_opens_at_delta_days),
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("published_at_delta_days", [-100, 0, 100])
+def test_event_save_accepts_any_published_at_if_registration_opens_at_not_set(
+    published_at_delta_days,
+):
+    # Should not raise an exception:
+    EventFactory.create(
+        published_at=now() + timedelta(days=published_at_delta_days),
+        registration_opens_at=None,
+    )
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
-    "events_registration_opens_at_deltas,expected_reason",
+    "published_at_delta_h, registration_opens_at_delta_h",
     [
-        # no published event has registration open yet
-        ([timedelta(days=1)], EnrolmentDeniedReason.REGISTRATION_NOT_OPEN),
-        (
-            [timedelta(days=1), timedelta(days=2)],
-            EnrolmentDeniedReason.REGISTRATION_NOT_OPEN,
-        ),
-        # null registration_opens_at means there is no limitation
-        ([None], None),
-        ([None, timedelta(days=1)], None),
-        # at least one event is open
-        ([timedelta(days=-1), timedelta(days=1)], None),
-        ([timedelta(days=-2), timedelta(days=-1)], None),
-        ([timedelta(microseconds=-1)], None),
+        (-1, -1),
+        (-1, 100),
+        (0, 0),
+        (0, 100),
+        (100, 100),
+        (100, 200),
     ],
 )
-def test_event_group_can_child_enroll_registration_opens_at(
+def test_event_save_accepts_registration_opens_at_not_before_published_at(
+    published_at_delta_h, registration_opens_at_delta_h
+):
+    # Should not raise an exception:
+    EventFactory.create(
+        published_at=now() + timedelta(seconds=published_at_delta_h),
+        registration_opens_at=now() + timedelta(seconds=registration_opens_at_delta_h),
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "published_at_delta_h, registration_opens_at_delta_h",
+    [
+        (-1, -2),
+        (0, -1),
+        (0, -100),
+        (100, 99),
+        (100, -200),
+    ],
+)
+def test_event_save_rejects_registration_opens_at_before_published_at(
+    published_at_delta_h, registration_opens_at_delta_h
+):
+    with pytest.raises(ValidationError) as e:
+        EventFactory.create(
+            published_at=now() + timedelta(hours=published_at_delta_h),
+            registration_opens_at=now()
+            + timedelta(hours=registration_opens_at_delta_h),
+        )
+    assert e.value.code == DATA_VALIDATION_ERROR
+    assert (
+        e.value.message
+        == "Registration opening time must not be before publication time"
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "events_registration_opens_at_deltas",
+    [
+        # no published event has registration open yet
+        [timedelta(microseconds=1)],
+        [timedelta(days=1), timedelta(days=2)],
+    ],
+)
+def test_event_group_can_child_enroll_registration_opens_at_failure(
     events_registration_opens_at_deltas,
-    expected_reason,
     child_with_random_guardian,
     future,
 ):
-    """Event group is enrollable only if at least one of its published events has
+    """Event group is not enrollable if none of its published events has
+    its registration open (null registration_opens_at means open)."""
+    event_group = EventGroupFactory(published_at=now())
+    for delta in events_registration_opens_at_deltas:
+        OccurrenceFactory(
+            time=future,
+            event__published_at=now(),
+            event__registration_opens_at=now() + delta,
+            event__event_group=event_group,
+        )
+
+    assert (
+        event_group.get_enrolment_denied_reason(child_with_random_guardian)
+        == EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
+    )
+    assert event_group.can_child_enroll(child_with_random_guardian) is False
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "events_registration_opens_at_deltas",
+    [
+        # null registration_opens_at means there is no limitation
+        [None],
+        [None, timedelta(days=1)],
+        # at least one event is open
+        [timedelta(microseconds=0)],
+        [timedelta(seconds=0), timedelta(days=1)],
+    ],
+)
+def test_event_group_can_child_enroll_registration_opens_at_success(
+    events_registration_opens_at_deltas,
+    child_with_random_guardian,
+    future,
+):
+    """Event group is enrollable if at least one of its published events has
     its registration open (null registration_opens_at means open)."""
     event_group = EventGroupFactory(published_at=now())
     for delta in events_registration_opens_at_deltas:
@@ -427,13 +530,8 @@ def test_event_group_can_child_enroll_registration_opens_at(
             event__event_group=event_group,
         )
 
-    assert (
-        event_group.get_enrolment_denied_reason(child_with_random_guardian)
-        == expected_reason
-    )
-    assert event_group.can_child_enroll(child_with_random_guardian) is (
-        expected_reason is None
-    )
+    assert event_group.get_enrolment_denied_reason(child_with_random_guardian) is None
+    assert event_group.can_child_enroll(child_with_random_guardian) is True
 
 
 @pytest.mark.django_db
@@ -444,7 +542,7 @@ def test_event_group_can_child_enroll_registration_opens_at(
         # unpublished event with no limit doesn't make the group open
         (None, timedelta(days=1), EnrolmentDeniedReason.REGISTRATION_NOT_OPEN),
         # unpublished event with a future opening time doesn't close the group
-        (timedelta(days=1), timedelta(days=-1), None),
+        (timedelta(days=1), timedelta(days=0), None),
     ],
 )
 def test_event_group_can_child_enroll_registration_opens_at_ignores_unpublished(
