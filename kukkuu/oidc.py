@@ -13,6 +13,7 @@ from jwt import ExpiredSignatureError
 
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.tests.utils.jwt_utils import is_valid_256_bit_key
+from organisations.models import Organisation
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +116,32 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
     def is_browser_testing_jwt_enabled(self) -> bool:
         return self._api_token_auth_settings.ENABLED
 
+    def _add_browser_test_user_to_system_organisation(self, user, claims) -> None:
+        """Add a browser test user to the system organisation.
+
+        Event organisers need an organisation to create events. The test user is
+        created lazily on its first login, so the organisation membership cannot
+        be set up when the browser test resources are created on migrate.
+        Only users having the browser test AD group in their JWT are affected.
+
+        Raises:
+            ImproperlyConfigured: if the system organisation does not exist.
+        """
+
+        browser_test_ad_group = settings.BROWSER_TEST_AD_GROUP_NAME.lower()
+        ad_groups = {str(group).lower() for group in claims.get("ad_groups") or []}
+        if browser_test_ad_group not in ad_groups:
+            return
+
+        try:
+            system_organisation = Organisation.objects.get(is_system=True)
+        except Organisation.DoesNotExist as e:
+            raise ImproperlyConfigured(
+                "The system organisation is required to authenticate a "
+                "browser test user, but it does not exist."
+            ) from e
+        user.organisations.add(system_organisation)
+
     def authenticate_test_user(self, jwt: JWT) -> UserAuthorization:
         """Authenticates a user with a JWT issued for browser testing.
 
@@ -127,6 +154,7 @@ class BrowserTestAwareJWTAuthentication(RequestJWTAuthentication):
             "The symmetrically signed JWT was valid.", extra={"jwt_claims": jwt.claims}
         )
         user = get_or_create_user(jwt.claims, oidc=True)
+        self._add_browser_test_user_to_system_organisation(user, jwt.claims)
         logger.debug(
             "User authenticated: %s",
             user,
