@@ -462,9 +462,16 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             )
 
     def save(self, *args, **kwargs):
-        from events.services import validate_event_and_event_group_project_match
+        from events.services import (
+            validate_event_and_event_group_project_match,
+            validate_registration_opens_at_is_not_before_published_at,
+        )
 
         validate_event_and_event_group_project_match(self)
+        validate_registration_opens_at_is_not_before_published_at(
+            registration_opens_at=self.registration_opens_at,
+            published_at=self.published_at,
+        )
 
         try:
             old_capacity_per_occurrence = Event.objects.get(
