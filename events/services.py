@@ -97,6 +97,21 @@ def validate_registration_opens_at(registration_opens_at) -> None:
         )
 
 
+def validate_registration_opens_at_is_not_before_published_at(
+    *, registration_opens_at, published_at
+) -> None:
+    """Validate that registration opening time is not before publication time"""
+    if (
+        registration_opens_at is not None
+        and published_at is not None
+        and registration_opens_at < published_at
+    ):
+        raise ValidationError(
+            _("Registration opening time must not be before publication time"),
+            code=DATA_VALIDATION_ERROR,
+        )
+
+
 class EventAPIService:
     """
     Service class for Event and EventGroup GraphQL API business logic.
