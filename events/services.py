@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from common.utils import (
@@ -77,6 +78,40 @@ def validate_event_group_and_events_project_match(
         )
 
 
+def validate_registration_opens_at(registration_opens_at) -> None:
+    """Validate the registration opening time given when publishing events."""
+    if registration_opens_at is None:
+        raise ValidationError(
+            _("Registration opening time must be given a value."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if timezone.is_naive(registration_opens_at):
+        raise ValidationError(
+            _("Registration opening time must include a timezone offset."),
+            code=DATA_VALIDATION_ERROR,
+        )
+    if registration_opens_at < timezone.now():
+        raise ValidationError(
+            _("Registration opening time must be now or in the future."),
+            code=DATA_VALIDATION_ERROR,
+        )
+
+
+def validate_registration_opens_at_is_not_before_published_at(
+    *, registration_opens_at, published_at
+) -> None:
+    """Validate that registration opening time is not before publication time"""
+    if (
+        registration_opens_at is not None
+        and published_at is not None
+        and registration_opens_at < published_at
+    ):
+        raise ValidationError(
+            _("Registration opening time must not be before publication time"),
+            code=DATA_VALIDATION_ERROR,
+        )
+
+
 class EventAPIService:
     """
     Service class for Event and EventGroup GraphQL API business logic.
@@ -93,6 +128,19 @@ class EventAPIService:
                 logger.exception(
                     "Failed to copy image from %s to %s", source.pk, target.pk
                 )
+
+    @staticmethod
+    def get_visible_ticket_system_url(event: Event, url: str, user) -> str | None:
+        """
+        Hide the external ticket system URL before the event's registration opens from
+        users who can't administer the event.
+
+        :return: None if the given event's registration is not open and the user can not
+            administer the event, otherwise the given url.
+        """
+        if event.is_registration_open() or event.can_user_administer(user):
+            return url
+        return None
 
     class Resolver:
         """

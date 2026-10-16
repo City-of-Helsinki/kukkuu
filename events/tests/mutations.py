@@ -22,6 +22,7 @@ mutation AddEvent($input: AddEventMutationInput!) {
       participantsPerInvite
       capacityPerOccurrence
       publishedAt
+      registrationOpensAt
       readyForEventGroupPublishing
       ticketSystem {
         type
@@ -96,6 +97,7 @@ mutation PublishEvent($input: PublishEventMutationInput!) {
   publishEvent(input: $input) {
     event {
       publishedAt
+      registrationOpensAt
     }
   }
 }
@@ -272,6 +274,7 @@ mutation PublishEventGroup($input: PublishEventGroupMutationInput!) {
         edges {
           node {
             publishedAt
+            registrationOpensAt
           }
         }
       }

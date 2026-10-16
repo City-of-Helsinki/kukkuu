@@ -68,6 +68,7 @@
           }),
           'publishedAt': None,
           'readyForEventGroupPublishing': False,
+          'registrationOpensAt': None,
           'ticketSystem': dict({
             'type': 'INTERNAL',
           }),
@@ -1690,6 +1691,7 @@
       'publishEvent': dict({
         'event': dict({
           'publishedAt': '2020-12-12T00:00:00+00:00',
+          'registrationOpensAt': '2020-12-24T12:00:00+00:00',
         }),
       }),
     }),
@@ -1701,6 +1703,7 @@
       'publishEvent': dict({
         'event': dict({
           'publishedAt': '2020-12-12T00:00:00+00:00',
+          'registrationOpensAt': '2020-12-24T12:00:00+00:00',
         }),
       }),
     }),
@@ -1716,6 +1719,7 @@
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-12T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-24T12:00:00+00:00',
                 }),
               }),
             ]),
@@ -1736,6 +1740,7 @@
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-12T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-24T12:00:00+00:00',
                 }),
               }),
             ]),
@@ -1752,6 +1757,7 @@
       'publishEvent': dict({
         'event': dict({
           'publishedAt': '2020-12-12T00:00:00+00:00',
+          'registrationOpensAt': '2020-12-24T12:00:00+00:00',
         }),
       }),
     }),
@@ -1763,6 +1769,7 @@
       'publishEvent': dict({
         'event': dict({
           'publishedAt': '2020-12-12T00:00:00+00:00',
+          'registrationOpensAt': '2020-12-24T12:00:00+00:00',
         }),
       }),
     }),
@@ -1778,11 +1785,13 @@
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-11T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-11T00:00:00+00:00',
                 }),
               }),
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-12T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-24T12:00:00+00:00',
                 }),
               }),
             ]),
@@ -1803,11 +1812,13 @@
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-11T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-11T00:00:00+00:00',
                 }),
               }),
               dict({
                 'node': dict({
                   'publishedAt': '2020-12-12T00:00:00+00:00',
+                  'registrationOpensAt': '2020-12-24T12:00:00+00:00',
                 }),
               }),
             ]),
@@ -1835,6 +1846,7 @@
           }),
           'publishedAt': None,
           'readyForEventGroupPublishing': False,
+          'registrationOpensAt': None,
           'ticketSystem': dict({
             'type': 'INTERNAL',
           }),

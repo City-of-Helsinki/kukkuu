@@ -7,6 +7,7 @@ import pytest
 from django.core import mail
 from django.core.management import call_command
 from django.db import Error
+from django.utils import timezone
 from django.utils.timezone import now
 from freezegun import freeze_time
 from graphql_relay import to_global_id
@@ -57,6 +58,7 @@ def notification_template_event_published_fi():
         subject="Event published FI",
         body_text="""
         Event FI: {{ event.name }}
+        Registration opens: {{ localtime(event.registration_opens_at) }}
         Guardian FI: {{ guardian }}
         Event URL: {{ event_url }}
         Unsubscribe: {{unsubscribe_url}}
@@ -74,9 +76,10 @@ def notification_template_event_group_published_fi():
         Event group FI: {{ event_group.name }}
         Guardian FI: {{ guardian }}
         Url: {{ event_group_url }}
+        Group registration opens: {{ localtime(registration_opens_at) }}
         Events:
         {% for event in events %}
-            {{ event.obj.name}} {{ event.obj.published_at }} {{ event.event_url }}
+            {{ event.obj.name}} {{ event.obj.published_at }} Registration opens: {{ localtime(event.registration_opens_at) }} {{ event.event_url }}
         {% endfor %}
         Unsubscribe: {{unsubscribe_url}}
 """,
@@ -204,6 +207,14 @@ def test_event_publish_notification(
     _wait_until_thread_terminates("event-notification-sender")
 
     assert len(mail.outbox) == 5  # 3 children of which one has 3 guardians
+    unpublished_event.refresh_from_db()
+    registration_opens_at = unpublished_event.registration_opens_at
+    assert registration_opens_at is not None
+    expected_opening_time = str(timezone.localtime(registration_opens_at))
+    assert all(
+        f"Registration opens: {expected_opening_time}" in message.body
+        for message in mail.outbox
+    )
 
 
 @pytest.mark.django_db(transaction=True)  # transaction=True for threading
@@ -261,12 +272,16 @@ def test_event_group_publish_notification(
         project=another_project, relationship__guardian__has_accepted_communication=True
     )
     event = EventFactory(id=777, event_group=EventGroupFactory(id=777))
+    registration_opens_at = now() + timedelta(days=1)
+    expected_opening_time = str(timezone.localtime(registration_opens_at))
 
-    event.event_group.publish()
+    event.event_group.publish(registration_opens_at=registration_opens_at)
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
 
     assert len(mail.outbox) == 1
+    assert f"Group registration opens: {expected_opening_time}" in mail.outbox[0].body
+    assert f"Registration opens: {expected_opening_time}" in mail.outbox[0].body
     assert_mails_match_snapshot(snapshot)
 
 
@@ -287,22 +302,36 @@ def test_event_group_republish_notification(
         project=another_project, relationship__guardian__has_accepted_communication=True
     )
     event_group = EventGroupFactory(id=777, published_at=past)
+    existing_event_registration_opens_at = past + timedelta(minutes=15)
+    assert past < existing_event_registration_opens_at < now()
     EventFactory(
         id=777,
         event_group=event_group,
         ready_for_event_group_publishing=True,
         published_at=past,
+        registration_opens_at=existing_event_registration_opens_at,
     )
     EventFactory(
         id=778,
         event_group=event_group,
         ready_for_event_group_publishing=True,
     )
+    registration_opens_at = now() + timedelta(days=1)
+    expected_opening_time = str(timezone.localtime(registration_opens_at))
+    expected_existing_event_opening_time = str(
+        timezone.localtime(existing_event_registration_opens_at)
+    )
 
-    event_group.publish()
+    event_group.publish(registration_opens_at=registration_opens_at)
 
     _wait_until_thread_terminates("eventgroup-notification-sender")
     assert len(mail.outbox) == 1
+    assert f"Group registration opens: {expected_opening_time}" in mail.outbox[0].body
+    assert (
+        f"Registration opens: {expected_existing_event_opening_time}"
+        in mail.outbox[0].body
+    )
+    assert f"Registration opens: {expected_opening_time}" in mail.outbox[0].body
     assert_mails_match_snapshot(snapshot)
 
 

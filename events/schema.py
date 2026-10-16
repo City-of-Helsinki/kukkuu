@@ -45,7 +45,6 @@ from kukkuu.exceptions import (
     ApiUsageError,
     DataValidationError,
     EventAlreadyPublishedError,
-    EventGroupAlreadyPublishedError,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
     OccurrenceYearMismatchError,
@@ -112,6 +111,25 @@ def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
             )
 
 
+def get_visible_ticket_system_url(event: Event, url: str, user) -> Optional[str]:
+    """
+    Hide the external ticket system URL before the event's registration opens from
+    users who can't administer the event.
+
+    :return: None if the given event's registration is not open and the user can not
+        administer the event, otherwise the given url.
+    """
+    if event.is_registration_open() or event.can_user_administer(user):
+        return url
+    return None
+
+
+TICKET_SYSTEM_URL_DESCRIPTION = (
+    "Null before the event's registration opens, unless the user can administer "
+    "the event."
+)
+
+
 class EventParticipantsPerInvite(graphene.Enum):
     CHILD_AND_GUARDIAN = "child_and_guardian"
     CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
@@ -153,7 +171,7 @@ class ExternalEventTicketSystem(ObjectType):
     has_any_free_passwords = graphene.Boolean(required=True)
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
-    url = graphene.String(required=True)
+    url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
     end_time = graphene.DateTime()
 
     class Meta:
@@ -203,7 +221,9 @@ class ExternalEventTicketSystem(ObjectType):
 
     @staticmethod
     def resolve_url(event: Event, info, **kwargs):
-        return event.ticket_system_url
+        return EventAPIService.get_visible_ticket_system_url(
+            event, event.ticket_system_url, info.context.user
+        )
 
     @staticmethod
     def resolve_end_time(event: Event, info, **kwargs):
@@ -263,6 +283,7 @@ class EventNode(DjangoObjectType):
             "duration",
             "capacity_per_occurrence",
             "published_at",
+            "registration_opens_at",
             "project",
             "event_group",
             "ready_for_event_group_publishing",
@@ -452,10 +473,12 @@ class OccurrenceTicketSystem(graphene.Interface):
 
 
 class ExternalOccurrenceTicketSystem(ObjectType):
-    url = graphene.String(required=True)
+    url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
 
-    def resolve_url(self, info, **kwargs):
-        return self.ticket_system_url
+    def resolve_url(self: Occurrence, info, **kwargs):
+        return EventAPIService.get_visible_ticket_system_url(
+            self.event, self.ticket_system_url, info.context.user
+        )
 
 
 class TicketmasterOccurrenceTicketSystem(ExternalOccurrenceTicketSystem):
@@ -1208,6 +1231,13 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
 class PublishEventMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True,
+            description=(
+                "The earliest time when children can be registered to the published "
+                "event. Must be now or in the future."
+            ),
+        )
 
     event = graphene.Field(EventNode)
 
@@ -1226,7 +1256,7 @@ class PublishEventMutation(graphene.relay.ClientIDMutation):
             raise EventAlreadyPublishedError("Event is already published")
 
         try:
-            event.publish()
+            event.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:
@@ -1358,6 +1388,14 @@ class DeleteEventGroupMutation(graphene.relay.ClientIDMutation):
 class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
     class Input:
         id = graphene.GlobalID()
+        registration_opens_at = graphene.DateTime(
+            required=True,
+            description=(
+                "The earliest time when children can be registered to the published "
+                "events. Must be now or in the future. Set only to the unpublished "
+                "events of the group, already published events are left unchanged."
+            ),
+        )
 
     event_group = graphene.Field(EventGroupNode)
 
@@ -1371,12 +1409,9 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
         if not event_group.can_user_publish(user):
             raise PermissionDenied("No permission to publish the event group.")
 
-        if event_group.is_published() and not event_group.events.unpublished().exists():
-            # Republishing an event group is allowed if new unpublished events exist
-            raise EventGroupAlreadyPublishedError("Event group is already published")
-
         try:
-            event_group.publish()
+            # Republishing an event group is allowed if new unpublished events exist
+            event_group.publish(registration_opens_at=kwargs["registration_opens_at"])
         except ValidationError as e:
             kukkuu_error = get_kukkuu_error_by_code(e.code)
             if kukkuu_error:
