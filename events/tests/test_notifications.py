@@ -302,7 +302,8 @@ def test_event_group_republish_notification(
         project=another_project, relationship__guardian__has_accepted_communication=True
     )
     event_group = EventGroupFactory(id=777, published_at=past)
-    existing_event_registration_opens_at = past - timedelta(days=1)
+    existing_event_registration_opens_at = past + timedelta(minutes=15)
+    assert past < existing_event_registration_opens_at < now()
     EventFactory(
         id=777,
         event_group=event_group,
