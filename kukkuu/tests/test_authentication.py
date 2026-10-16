@@ -23,7 +23,9 @@ from kukkuu.consts import (
 from kukkuu.exceptions import AuthenticationExpiredError
 from kukkuu.oidc import BrowserTestAwareJWTAuthentication
 from kukkuu.tests.utils.jwt_utils import TEST_JWT_EXP_TIME_IN_SECONDS
-from users.factories import GuardianFactory
+from organisations.factories import OrganisationFactory
+from organisations.models import Organisation
+from users.factories import GuardianFactory, UserFactory
 
 KUKKUU_IS_BROWSER_TESTING_ENABLED = (
     "kukkuu.oidc.BrowserTestAwareJWTAuthentication.is_browser_testing_jwt_enabled"
@@ -149,6 +151,98 @@ def test_authenticate_test_user(mock_validate_jwt, mock_get_or_create_user):
     assert isinstance(result, UserAuthorization)
     assert result.user == "test_user"
     mock_validate_jwt.assert_called_once_with(jwt)
+
+
+def _authenticate_test_user_with_ad_groups(user, ad_groups):
+    """Authenticate a test JWT for the given user, having the given AD groups.
+
+    The JWT validation is skipped and the user is returned as is
+    from the user lookup. If `ad_groups` is None, the claim is left out.
+    """
+    claims = {"iss": "test_issuer", "sub": str(user.uuid)}
+    if ad_groups is not None:
+        claims["ad_groups"] = ad_groups
+    jwt = Mock(spec=JWT, claims=claims)
+    with patch("kukkuu.oidc.get_or_create_user", return_value=user):
+        with patch(
+            "kukkuu.oidc.BrowserTestAwareJWTAuthentication"
+            "._validate_symmetrically_signed_jwt"
+        ):
+            return BrowserTestAwareJWTAuthentication().authenticate_test_user(jwt)
+
+
+@pytest.mark.django_db()
+def test_authenticate_test_user_adds_browser_test_user_to_system_organisation(
+    settings,
+):
+    """Test that a user in the browser test AD group joins the system organisation."""
+    user = UserFactory()
+    _authenticate_test_user_with_ad_groups(user, [settings.BROWSER_TEST_AD_GROUP_NAME])
+    assert list(user.organisations.all()) == [Organisation.objects.get(is_system=True)]
+
+
+@pytest.mark.django_db()
+def test_authenticate_test_user_keeps_existing_organisations(settings):
+    """Test that joining the system organisation keeps the other memberships."""
+    other_organisation = OrganisationFactory()
+    user = UserFactory()
+    user.organisations.add(other_organisation)
+
+    _authenticate_test_user_with_ad_groups(user, [settings.BROWSER_TEST_AD_GROUP_NAME])
+
+    assert set(user.organisations.all()) == {
+        other_organisation,
+        Organisation.objects.get(is_system=True),
+    }
+
+
+@pytest.mark.django_db()
+def test_authenticate_test_user_organisation_assignment_is_idempotent(settings):
+    """Test that authenticating repeatedly adds no duplicate memberships."""
+    user = UserFactory()
+
+    for _ in range(2):
+        _authenticate_test_user_with_ad_groups(
+            user, [settings.BROWSER_TEST_AD_GROUP_NAME]
+        )
+
+    assert user.organisations.count() == 1
+
+
+@pytest.mark.django_db()
+def test_authenticate_test_user_browser_test_ad_group_is_case_insensitive(settings):
+    """Test that the browser test AD group is matched case-insensitively."""
+    ad_group = settings.BROWSER_TEST_AD_GROUP_NAME
+    differently_cased_ad_group = ad_group.swapcase()
+    assert differently_cased_ad_group != ad_group
+
+    user = UserFactory()
+    _authenticate_test_user_with_ad_groups(user, [differently_cased_ad_group])
+
+    assert list(user.organisations.all()) == [Organisation.objects.get(is_system=True)]
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize("ad_groups", [None, [], ["some_other_ad_group"]])
+def test_authenticate_test_user_without_browser_test_ad_group_gets_no_organisation(
+    ad_groups,
+):
+    """Test that test users outside the browser test AD group get no organisation."""
+    user = UserFactory()
+    _authenticate_test_user_with_ad_groups(user, ad_groups)
+    assert not user.organisations.exists()
+
+
+@pytest.mark.django_db()
+def test_authenticate_test_user_without_system_organisation_should_raise(settings):
+    """Test that a missing system organisation fails loudly as a broken setup."""
+    Organisation.objects.filter(is_system=True).update(is_system=False)
+    user = UserFactory()
+
+    with pytest.raises(ImproperlyConfigured):
+        _authenticate_test_user_with_ad_groups(
+            user, [settings.BROWSER_TEST_AD_GROUP_NAME]
+        )
 
 
 def test_get_auth_header_jwt_valid(request_factory):
