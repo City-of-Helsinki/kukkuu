@@ -264,6 +264,7 @@ query Event($id: ID!, $childId: ID!) {
     name
     registrationOpensAt
     canChildEnroll(childId: $childId)
+    enrolmentDeniedReason(childId: $childId)
   }
 }
 """
@@ -273,6 +274,7 @@ query EventGroup($id: ID!, $childId: ID!) {
   eventGroup(id: $id) {
     name
     canChildEnroll(childId: $childId)
+    enrolmentDeniedReason(childId: $childId)
   }
 }
 """

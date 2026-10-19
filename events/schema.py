@@ -32,6 +32,7 @@ from common.utils import (
     update_object_with_translations,
 )
 from events.consts import ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR
+from events.enums import EnrolmentDeniedReason
 from events.exceptions import (
     InvalidTicketSystemError,
     NoFreePasswordsError,
@@ -141,6 +142,12 @@ class TicketSystem(graphene.Enum):
     TICKETMASTER = Event.TICKETMASTER
     LIPPUPISTE = Event.LIPPUPISTE
     TIXLY = Event.TIXLY
+
+
+EnrolmentDeniedReasonEnum = graphene.Enum.from_enum(EnrolmentDeniedReason)
+ENROLMENT_DENIED_REASON_DESCRIPTION = (
+    "Null if the child can enroll, otherwise a reason why not."
+)
 
 
 class EventTicketSystem(graphene.Interface):
@@ -268,6 +275,10 @@ class EventNode(DjangoObjectType):
     organisation = graphene.Field("organisations.schema.OrganisationNode")
     can_user_administer = graphene.Boolean()
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
+    enrolment_denied_reason = EnrolmentDeniedReasonEnum(
+        child_id=graphene.ID(required=True),
+        description=ENROLMENT_DENIED_REASON_DESCRIPTION,
+    )
 
     class Meta:
         model = Event
@@ -361,6 +372,14 @@ class EventNode(DjangoObjectType):
             raise ObjectDoesNotExistError(e)
         return self.can_child_enroll(child)
 
+    def resolve_enrolment_denied_reason(self: Event, info, **kwargs):
+        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+        try:
+            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+        return self.get_enrolment_denied_reason(child)
+
 
 class EventConnection(Connection):
     class Meta:
@@ -381,6 +400,10 @@ class EventGroupNode(DjangoObjectType):
     short_description = graphene.String()
     image_alt_text = graphene.String()
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
+    enrolment_denied_reason = EnrolmentDeniedReasonEnum(
+        child_id=graphene.ID(required=True),
+        description=ENROLMENT_DENIED_REASON_DESCRIPTION,
+    )
 
     class Meta:
         model = EventGroup
@@ -432,6 +455,14 @@ class EventGroupNode(DjangoObjectType):
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
         return self.can_child_enroll(child)
+
+    def resolve_enrolment_denied_reason(self: EventGroup, info, **kwargs):
+        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
+        try:
+            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
+        except Child.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+        return self.get_enrolment_denied_reason(child)
 
 
 class EventOrEventGroupUnion(graphene.Union):
