@@ -269,6 +269,9 @@ def test_event_query_can_child_enroll(
     )
 
     assert executed["data"]["event"]["canChildEnroll"] is False
+    assert executed["data"]["event"]["enrolmentDeniedReason"] == (
+        "ALREADY_JOINED_EVENT_GROUP"
+    )
 
 
 @pytest.mark.parametrize("registration_open", [True, False])
@@ -297,6 +300,9 @@ def test_event_query_registration_opens_at(
         registration_opens_at.isoformat()
     )
     assert executed["data"]["event"]["canChildEnroll"] is registration_open
+    assert executed["data"]["event"]["enrolmentDeniedReason"] == (
+        None if registration_open else "REGISTRATION_NOT_OPEN"
+    )
 
 
 @pytest.mark.parametrize("registration_open", [True, False])
@@ -323,6 +329,9 @@ def test_event_group_query_can_child_enroll_registration_opens_at(
     )
 
     assert executed["data"]["eventGroup"]["canChildEnroll"] is registration_open
+    assert executed["data"]["eventGroup"]["enrolmentDeniedReason"] == (
+        None if registration_open else "REGISTRATION_NOT_OPEN"
+    )
 
 
 def test_add_event_cannot_set_registration_opens_at(

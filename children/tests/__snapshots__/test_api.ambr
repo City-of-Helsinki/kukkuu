@@ -851,6 +851,7 @@
               'node': dict({
                 '__typename': 'EventGroupNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be the 1/8',
               }),
             }),
@@ -858,6 +859,7 @@
               'node': dict({
                 '__typename': 'EventNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be 2/8',
               }),
             }),
@@ -865,6 +867,7 @@
               'node': dict({
                 '__typename': 'EventNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be 3/8',
               }),
             }),
@@ -872,6 +875,7 @@
               'node': dict({
                 '__typename': 'EventNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be 4/8',
               }),
             }),
@@ -879,6 +883,7 @@
               'node': dict({
                 '__typename': 'EventNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be 5/8',
               }),
             }),
@@ -886,6 +891,7 @@
               'node': dict({
                 '__typename': 'EventGroupNode',
                 'canChildEnroll': True,
+                'enrolmentDeniedReason': None,
                 'name': 'This should be 6/8',
               }),
             }),
@@ -893,6 +899,7 @@
               'node': dict({
                 '__typename': 'EventNode',
                 'canChildEnroll': False,
+                'enrolmentDeniedReason': 'ALREADY_JOINED_EVENT',
                 'name': 'This should be 7/8',
               }),
             }),
@@ -900,6 +907,7 @@
               'node': dict({
                 '__typename': 'EventGroupNode',
                 'canChildEnroll': False,
+                'enrolmentDeniedReason': 'ALREADY_JOINED_EVENT_GROUP',
                 'name': 'This should be 8/8',
               }),
             }),

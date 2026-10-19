@@ -192,11 +192,13 @@ query Child($id: ID!) {
           ... on EventNode {
             name
             canChildEnroll(childId: $id)
+            enrolmentDeniedReason(childId: $id)
             __typename
           }
           ... on EventGroupNode {
             name
             canChildEnroll(childId: $id)
+            enrolmentDeniedReason(childId: $id)
             __typename
           }
         }
