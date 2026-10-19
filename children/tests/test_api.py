@@ -2054,6 +2054,9 @@ def test_test_upcoming_events_and_event_groups_yearly_enrolment_limit(
 
     for node in nodes:
         assert node["node"]["canChildEnroll"] is False
+        assert node["node"]["enrolmentDeniedReason"] == (
+            "YEARLY_ENROLMENT_LIMIT_REACHED"
+        )
 
 
 @pytest.mark.parametrize("registration_open", [True, False])
@@ -2078,6 +2081,9 @@ def test_upcoming_events_and_event_groups_event_group_registration_opens_at(
     ]
     assert len(group_nodes) == 1
     assert group_nodes[0]["canChildEnroll"] is registration_open
+    assert group_nodes[0]["enrolmentDeniedReason"] == (
+        None if registration_open else "REGISTRATION_NOT_OPEN"
+    )
 
 
 def test_active_internal_and_ticketmaster_enrolments(
