@@ -2,6 +2,19 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.10](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.9...kukkuu-v3.21.10) (2026-10-23)
+
+
+### Bug Fixes
+
+* Bump uv version to 0.13.5 ([1352f75](https://github.com/City-of-Helsinki/kukkuu/commit/1352f756190c624348c1d0e7e0eed00fa1884cf1))
+
+
+### Dependencies
+
+* Bump certifi to 2026.10.19 ([43b0c52](https://github.com/City-of-Helsinki/kukkuu/commit/43b0c5242d2ecd670ed4fe88b14d71b9a5279846))
+* Bump pillow from 12.3.0 to 13.0.0 ([ef40dcf](https://github.com/City-of-Helsinki/kukkuu/commit/ef40dcf5291b9e3166f70df757ac0c9f2a36db6a))
+
 ## [3.21.9](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.8...kukkuu-v3.21.9) (2026-10-07)
 
 
