@@ -2,6 +2,14 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.11](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.10...kukkuu-v3.21.11) (2026-10-26)
+
+
+### Dependencies
+
+* Bump djangorestframework from 3.18.0 to 3.18.2 ([4d0f3ee](https://github.com/City-of-Helsinki/kukkuu/commit/4d0f3eea1bef5f884f0cf05096fd3c172a247232))
+* Bump graphql-core from 3.2.11 to 3.2.12 ([d57fdfb](https://github.com/City-of-Helsinki/kukkuu/commit/d57fdfbdc3467156fa302c5e417b863007e79766))
+
 ## [3.21.10](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.9...kukkuu-v3.21.10) (2026-10-23)
 
 
