@@ -4,6 +4,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 from django.utils.timezone import now
 
 from children.factories import ChildFactory
@@ -14,6 +15,8 @@ from kukkuu.consts import (
 )
 from projects.factories import ProjectFactory
 from projects.models import Project
+from tags.factories import ThemePathFactory
+from tags.models import ThemePath
 from venues.models import Venue
 
 from ..enums import EnrolmentDeniedReason
@@ -31,6 +34,7 @@ from ..models import (
     Enrolment,
     Event,
     EventGroup,
+    EventThemePath,
     Occurrence,
 )
 from ..services import validate_registration_opens_at
@@ -43,6 +47,62 @@ def test_event_creation():
     EventFactory(project=Project.objects.get_or_create(year=2020)[0])
 
     assert Event.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_event_has_default_theme_path_from_factory():
+    event = EventFactory()
+
+    assert list(event.theme_paths.values_list("slug", flat=True)) == ["rhythm"]
+
+
+@pytest.mark.django_db
+def test_event_theme_paths_many_to_many():
+    first, second = ThemePathFactory.create_batch(2)
+    event = EventFactory(theme_paths=[first, second])
+    other_event = EventFactory(theme_paths=[first])
+
+    assert set(event.theme_paths.all()) == {first, second}
+    assert set(first.events.all()) == {event, other_event}
+    assert list(second.events.all()) == [event]
+
+
+@pytest.mark.django_db
+def test_event_without_theme_paths():
+    event = EventFactory(theme_paths=[])
+
+    assert event.theme_paths.count() == 0
+
+
+@pytest.mark.django_db
+def test_deleting_used_theme_path_is_protected():
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+
+    with pytest.raises(ProtectedError):
+        theme_path.delete()
+
+    assert list(event.theme_paths.all()) == [theme_path]
+
+
+@pytest.mark.django_db
+def test_deleting_unused_theme_path_is_allowed():
+    unused = ThemePathFactory()
+
+    unused.delete()
+
+    assert not ThemePath.objects.filter(pk=unused.pk).exists()
+
+
+@pytest.mark.django_db
+def test_deleting_event_keeps_its_theme_paths():
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+
+    event.delete()
+
+    assert ThemePath.objects.filter(pk=theme_path.pk).exists()
+    assert not EventThemePath.objects.exists()
 
 
 @pytest.mark.django_db

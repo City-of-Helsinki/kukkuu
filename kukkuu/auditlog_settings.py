@@ -68,7 +68,11 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     },
     "children.relationship",
     "projects.project",
-    "events.event",
+    {
+        "model": "events.event",
+        "m2m_fields": ["theme_paths"],
+    },
+    "events.eventthemepath",
     "events.occurrence",
     "events.enrolment",
     "events.eventgroup",
