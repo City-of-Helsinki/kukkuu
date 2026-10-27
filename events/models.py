@@ -406,6 +406,13 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         related_name="events",
         on_delete=models.PROTECT,
     )
+    theme_paths = models.ManyToManyField(
+        "tags.ThemePath",
+        through="EventThemePath",
+        verbose_name=_("theme paths"),
+        related_name="events",
+        blank=True,
+    )
 
     serialize_fields = (
         {"name": "name_with_translations"},
@@ -641,6 +648,23 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             )
         except TypeError:
             return None
+
+
+class EventThemePath(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    theme_path = models.ForeignKey("tags.ThemePath", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = _("event theme path")
+        verbose_name_plural = _("event theme paths")
+        constraints = [
+            UniqueConstraint(
+                fields=["event", "theme_path"], name="unique_event_theme_path"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.event} – {self.theme_path}"
 
 
 class OccurrenceQueryset(models.QuerySet):
