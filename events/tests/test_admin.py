@@ -14,6 +14,8 @@ from events.factories import EventFactory, EventGroupFactory
 from events.models import Event, EventGroup
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
+from tags.factories import ThemePathFactory
+from tags.models import ThemePath
 
 PUBLISH_TEMPLATE = "admin/events/publish_with_registration_opens_at.html"
 
@@ -211,6 +213,66 @@ def test_event_admin_change_form_can_edit_registration_opens_at(admin_client, pa
     event.refresh_from_db()
     assert event.registration_opens_at == past
     assert event.published_at == past
+
+
+@pytest.mark.django_db
+def test_event_admin_change_form_can_edit_theme_paths(admin_client):
+    first, second = ThemePathFactory.create_batch(2)
+    event = EventFactory(theme_paths=[first])
+    url = reverse("admin:events_event_change", args=[event.pk])
+    data = {
+        "project": event.project.pk,
+        "organisation": event.organisation.pk,
+        "name": event.name,
+        "short_description": event.short_description,
+        "description": event.description,
+        "capacity_per_occurrence": 10,
+        "participants_per_invite": event.participants_per_invite,
+        "ready_for_event_group_publishing": "on",
+        "ticket_system": Event.INTERNAL,
+        "occurrences-TOTAL_FORMS": "0",
+        "occurrences-INITIAL_FORMS": "0",
+    }
+
+    response = admin_client.post(url, {**data, "theme_paths": [second.pk]})
+    assert response.status_code == 302
+    assert list(event.theme_paths.all()) == [second]
+
+    response = admin_client.post(url, data)
+    assert response.status_code == 302
+    assert event.theme_paths.count() == 0
+
+
+@pytest.mark.django_db
+def test_event_admin_change_form_shows_theme_paths_with_current_ones_checked(
+    admin_client,
+):
+    selected = ThemePathFactory()
+    other = ThemePathFactory()
+    event = EventFactory(theme_paths=[selected])
+
+    response = admin_client.get(reverse("admin:events_event_change", args=[event.pk]))
+
+    form_field = response.context["adminform"].form.fields["theme_paths"]
+    assert list(form_field.queryset) == list(ThemePath.objects.all())
+    assert response.context["adminform"].form.initial["theme_paths"] == [selected]
+    assert other in form_field.queryset
+
+
+@pytest.mark.django_db
+def test_event_admin_can_be_filtered_by_theme_path(admin_client):
+    a, b, c = ThemePathFactory.create_batch(3)
+    event_with_a_b = EventFactory(theme_paths=[a, b])
+    event_with_c = EventFactory(theme_paths=[c])
+    url = reverse("admin:events_event_changelist")
+
+    def filtered_events(theme_path):
+        response = admin_client.get(url, {"theme_paths__slug__exact": theme_path.pk})
+        return list(response.context["cl"].result_list)
+
+    assert filtered_events(a) == [event_with_a_b]
+    assert filtered_events(b) == [event_with_a_b]
+    assert filtered_events(c) == [event_with_c]
 
 
 @pytest.mark.django_db
