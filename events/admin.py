@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.template.response import TemplateResponse
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -19,6 +20,7 @@ from events.services import (
 )
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
+from tags.models import ThemePath
 
 from .models import (
     Enrolment,
@@ -120,8 +122,19 @@ class OccurrencesInline(admin.StackedInline):
     extra = 0
 
 
+class EventAdminForm(TranslatableModelForm):
+    # Because admin doesn't build form fields for M2M fields with a through model:
+    theme_paths = ModelMultipleChoiceField(
+        label=capfirst(Event._meta.get_field("theme_paths").verbose_name),
+        queryset=ThemePath.objects.prefetch_related("translations"),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+
 @admin.register(Event)
 class EventAdmin(PublishActionMixin, TranslatableAdmin):
+    form = EventAdminForm
     list_display = (
         "id",
         "name",
@@ -173,6 +186,7 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
     list_filter = (
         "project",
         "organisation",
+        "theme_paths",
         IsPublishedFilter,
     )
 
@@ -187,6 +201,12 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
                 "event_group__project",
             )
         )
+
+    def get_fields(self, request, obj=None):
+        # System check admin.E013 rejects "theme_paths" in the static `fields`
+        # attribute, because the field has a through model, see:
+        # https://docs.djangoproject.com/en/5.2/ref/checks/#admin
+        return *super().get_fields(request, obj), "theme_paths"
 
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
