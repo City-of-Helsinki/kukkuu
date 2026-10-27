@@ -9,9 +9,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.timezone import now
-from django.utils.translation import activate
 from freezegun import freeze_time
 from graphql_relay import to_global_id
 from guardian.shortcuts import assign_perm
@@ -66,6 +65,7 @@ from events.tests.queries import (
     EVENTS_AND_EVENT_GROUPS_SIMPLE_QUERY,
     EVENTS_FILTER_QUERY,
     EVENTS_QUERY,
+    EVENTS_THEME_PATHS_QUERY,
     GET_ENROLMENT_REFERENCE_ID_QUERY,
     OCCURRENCE_QUERY,
     OCCURRENCE_TICKET_SYSTEM_QUERY,
@@ -104,6 +104,7 @@ from kukkuu.views import SentryGraphQLView
 from projects.factories import ProjectFactory
 from projects.models import Project, ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+from tags.factories import ThemePathFactory
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
@@ -111,6 +112,22 @@ from venues.factories import VenueFactory
 @pytest.fixture(autouse=True)
 def autouse_db(db):
     pass
+
+
+@pytest.fixture(autouse=True)
+def rhythm_theme_path(autouse_db):
+    # Rows seeded by the migration are flushed by transaction=True tests, so
+    # set the translations to get the same data regardless of test order.
+    return ThemePathFactory(
+        slug="rhythm",
+        name="Rytmi",
+        description="",
+        translations={
+            "fi": {"name": "Rytmi"},
+            "sv": {"name": "Rytm"},
+            "en": {"name": "Rhythm"},
+        },
+    )
 
 
 ADD_EVENT_VARIABLES = {
@@ -948,6 +965,129 @@ def test_event_filter_by_project(
     snapshot.assert_match(executed)
 
 
+def test_event_theme_paths(project_user_api_client, project):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi", sort_order=1)
+    story = ThemePathFactory(slug="story", name="Tarina", sort_order=2)
+    EventFactory(name="Both", project=project, theme_paths=[story, rhythm])
+
+    executed = project_user_api_client.execute(EVENTS_THEME_PATHS_QUERY)
+
+    assert executed == {
+        "data": {
+            "events": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Both",
+                            "themePaths": [
+                                {"slug": "rhythm", "name": "Rytmi"},
+                                {"slug": "story", "name": "Tarina"},
+                            ],
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+
+def test_event_filter_by_theme_path(project_user_api_client, project):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    story = ThemePathFactory(slug="story", name="Tarina")
+    EventFactory(name="Rhythm", project=project, theme_paths=[rhythm])
+    EventFactory(name="Story", project=project, theme_paths=[story])
+    EventFactory(name="Both", project=project, theme_paths=[rhythm, story])
+
+    executed = project_user_api_client.execute(
+        EVENTS_THEME_PATHS_QUERY, variables={"themePath": "rhythm"}
+    )
+
+    assert executed == {
+        "data": {
+            "events": {
+                "edges": [
+                    {
+                        "node": {
+                            "name": "Rhythm",
+                            "themePaths": [{"slug": "rhythm", "name": "Rytmi"}],
+                        }
+                    },
+                    {
+                        "node": {
+                            "name": "Both",
+                            "themePaths": [
+                                {"slug": "rhythm", "name": "Rytmi"},
+                                {"slug": "story", "name": "Tarina"},
+                            ],
+                        }
+                    },
+                ]
+            }
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "language,expected_name", [("fi", "Rytmi"), ("sv", "Rytm"), ("en", "Rhythm")]
+)
+def test_event_theme_paths_are_in_active_language(
+    project_user_api_client, project, rhythm_theme_path, language, expected_name
+):
+    EventFactory(project=project, theme_paths=[rhythm_theme_path])
+    translation.activate(language)
+
+    executed = project_user_api_client.execute(EVENTS_THEME_PATHS_QUERY)
+
+    [edge] = executed["data"]["events"]["edges"]
+    assert edge["node"]["themePaths"] == [{"slug": "rhythm", "name": expected_name}]
+
+
+def test_event_theme_paths_fall_back_to_finnish_without_translation(
+    project_user_api_client, project
+):
+    dance = ThemePathFactory(slug="dance", name="Tanssi")
+    EventFactory(project=project, theme_paths=[dance])
+    translation.activate("en")
+
+    executed = project_user_api_client.execute(EVENTS_THEME_PATHS_QUERY)
+
+    [edge] = executed["data"]["events"]["edges"]
+    assert edge["node"]["themePaths"] == [{"slug": "dance", "name": "Tanssi"}]
+
+
+@pytest.mark.parametrize(
+    "accept_language,expected_name",
+    [
+        (None, "Rytmi"),
+        ("sv", "Rytm"),
+        ("en", "Rhythm"),
+        ("de,en;q=0.5", "Rhythm"),
+        ("de", "Rytmi"),
+    ],
+)
+def test_event_theme_paths_follow_accept_language_header(
+    client,
+    project_user_api_client,
+    project,
+    rhythm_theme_path,
+    accept_language,
+    expected_name,
+):
+    EventFactory(project=project, theme_paths=[rhythm_theme_path])
+    client.force_login(project_user_api_client.user)
+    headers = {"Accept-Language": accept_language} if accept_language else {}
+
+    response = client.post(
+        "/graphql",
+        {"query": EVENTS_THEME_PATHS_QUERY},
+        content_type="application/json",
+        headers=headers,
+    )
+
+    [edge] = response.json()["data"]["events"]["edges"]
+    assert edge["node"]["themePaths"] == [{"slug": "rhythm", "name": expected_name}]
+
+
 def test_event_filter_by_upcoming_events(
     guardian_api_client,
     child_with_user_guardian,
@@ -1349,14 +1489,14 @@ def test_normal_translation_fields(snapshot, user_api_client, event):
         with switch_language(event, code):
             event.name = new_translation
             event.save()
-        activate(code)
+        translation.activate(code)
         executed = user_api_client.execute(EVENT_QUERY, variables=variables)
-        translation = [
+        translated_name = [
             trans
             for trans in executed["data"]["event"]["translations"]
             if trans["languageCode"] == code.upper()
         ][0]["name"]
-        assert executed["data"]["event"]["name"] == translation
+        assert executed["data"]["event"]["name"] == translated_name
 
 
 def test_occurrences_filter_by_date(user_api_client, snapshot, event, venue):
