@@ -8,6 +8,7 @@ from common.mixins import SaveAfterPostGenerationMixin
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from organisations.factories import DEFAULT_ORGANISATION_ID
 from projects.models import Project
+from tags.factories import ThemePathFactory
 from venues.factories import VenueFactory
 
 
@@ -46,6 +47,14 @@ class EventFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Event
         skip_postgeneration_save = True  # Not needed after factory v4.0.0
+
+    @factory.post_generation
+    def theme_paths(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted is None:
+            extracted = [ThemePathFactory(slug="rhythm", name="Rytmi", description="")]
+        self.theme_paths.set(extracted)
 
 
 class RandomExternalTicketSystemEventFactory(EventFactory):
