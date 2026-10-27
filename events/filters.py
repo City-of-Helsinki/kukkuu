@@ -80,6 +80,9 @@ class EventFilter(django_filters.FilterSet):
         method="filter_by_available_for_child"
     )
     upcoming = django_filters.BooleanFilter(method="filter_by_upcoming")
+    theme_path = django_filters.CharFilter(
+        field_name="theme_paths__slug", help_text="Slug of the theme path."
+    )
 
     class Meta:
         model = Event

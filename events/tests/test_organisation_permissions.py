@@ -197,11 +197,13 @@ def test_events_connection_can_user_administer_avoids_n_plus_one(
     assert executed.get("errors") is None
     assert len(executed["data"]["events"]["edges"]) == 20
 
-    # Ensure resolving canUserAdminister does not issue queries per event (constant 3 queries)
-    with django_assert_num_queries(3):
+    # Ensure resolving canUserAdminister does not issue queries per event (constant 5 queries)
+    with django_assert_num_queries(5):
         # 1: count events for relay connection
         # 2: fetch events nodes (with select_related project)
         # 3: prefetch translations
+        # 4: prefetch theme paths
+        # 5: prefetch theme path translations
         executed = project_user_api_client.execute(query)
         assert executed.get("errors") is None
         edges = executed["data"]["events"]["edges"]
