@@ -373,6 +373,9 @@ mutation copyEvent($input: CopyEventMutationInput!) {
       project {
         id
       }
+      themePaths {
+        slug
+      }
       translations {
         languageCode
         name

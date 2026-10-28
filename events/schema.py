@@ -971,7 +971,11 @@ class EventInputMixin:
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
     class Input(EventInputMixin):
-        pass
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            required=True,
+            description="At least one theme path is required.",
+        )
 
     event = graphene.Field(EventNode)
 
@@ -986,6 +990,12 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
 class CopyEventMutation(graphene.relay.ClientIDMutation):
     class Input(EventInputMixin):
         source_event_id = graphene.GlobalID(required=True)
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to copy the source event's theme paths. "
+            "If given, at least one theme path is required. "
+            "The resulting theme paths must not be empty.",
+        )
 
     event = graphene.Field(EventNode)
 
@@ -1015,6 +1025,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
         ticket_system = UpdateEventTicketSystemInput()
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to keep the current theme paths. "
+            "If given, at least one theme path is required.",
+        )
 
     event = graphene.Field(EventNode)
 
