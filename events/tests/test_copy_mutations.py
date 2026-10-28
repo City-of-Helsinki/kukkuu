@@ -6,11 +6,14 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from graphql_relay import to_global_id
 
+from common.tests.utils import assert_match_error_code
 from events.factories import EventFactory, EventGroupFactory
 from events.models import Event, EventGroup
 from events.services import EventAPIService
 from events.tests.mutations import COPY_EVENT_GROUP_MUTATION, COPY_EVENT_MUTATION
+from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError
+from tags.factories import ThemePathFactory
 
 
 @pytest.mark.django_db
@@ -201,6 +204,84 @@ def test_copy_event_mutation(publisher_api_client, project, snapshot):
 
 
 @pytest.mark.django_db
+def test_copy_event_inherits_theme_paths_when_omitted(publisher_api_client, project):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    story = ThemePathFactory(slug="story", name="Tarina")
+    source_event = EventFactory(project=project, theme_paths=[rhythm, story])
+    variables = {
+        "input": {
+            "sourceEventId": to_global_id("EventNode", source_event.id),
+            "projectId": to_global_id("ProjectNode", project.id),
+            "participantsPerInvite": "FAMILY",
+        }
+    }
+
+    executed = publisher_api_client.execute(COPY_EVENT_MUTATION, variables=variables)
+
+    assert "errors" not in executed, executed["errors"]
+    assert executed["data"]["copyEvent"]["event"]["themePaths"] == [
+        {"slug": "rhythm"},
+        {"slug": "story"},
+    ]
+
+
+@pytest.mark.django_db
+def test_copy_event_with_submitted_theme_paths_replaces_source_theme_paths(
+    publisher_api_client, project
+):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    story = ThemePathFactory(slug="story", name="Tarina")
+    source_event = EventFactory(project=project, theme_paths=[rhythm])
+    variables = {
+        "input": {
+            "sourceEventId": to_global_id("EventNode", source_event.id),
+            "projectId": to_global_id("ProjectNode", project.id),
+            "participantsPerInvite": "FAMILY",
+            "themePathIds": [to_global_id("ThemePathNode", story.pk)],
+        }
+    }
+
+    executed = publisher_api_client.execute(COPY_EVENT_MUTATION, variables=variables)
+
+    assert "errors" not in executed, executed["errors"]
+    assert executed["data"]["copyEvent"]["event"]["themePaths"] == [{"slug": "story"}]
+    assert list(source_event.theme_paths.values_list("slug", flat=True)) == ["rhythm"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("source_has_theme_paths", "theme_path_input"),
+    [
+        (False, {}),
+        (False, {"themePathIds": None}),
+        (False, {"themePathIds": []}),
+        (True, {"themePathIds": []}),
+    ],
+)
+def test_copy_event_rejects_empty_resulting_theme_paths(
+    publisher_api_client, project, source_has_theme_paths, theme_path_input
+):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    source_event = EventFactory(
+        project=project, theme_paths=[rhythm] if source_has_theme_paths else []
+    )
+    variables = {
+        "input": {
+            "sourceEventId": to_global_id("EventNode", source_event.id),
+            "projectId": to_global_id("ProjectNode", project.id),
+            "participantsPerInvite": "FAMILY",
+            **theme_path_input,
+        }
+    }
+
+    executed = publisher_api_client.execute(COPY_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "At least one theme path is required." in str(executed["errors"])
+    assert Event.objects.count() == 1
+
+
+@pytest.mark.django_db
 def test_copy_image_file_logs_exception_when_image_copy_fails(caplog):
     source = EventFactory.build(pk=101)
     target = EventFactory.build(pk=202)
@@ -338,6 +419,11 @@ def test_create_event_service_catches_validation_error_on_creation(
         EventAPIService.Resolver,
         "event_organisation",
         lambda *args, **kwargs: 1,
+    )
+    monkeypatch.setattr(
+        EventAPIService.Resolver,
+        "theme_paths",
+        lambda *args, **kwargs: [ThemePathFactory.build()],
     )
     monkeypatch.setattr(
         Event.objects,

@@ -130,6 +130,8 @@ def rhythm_theme_path(autouse_db):
     )
 
 
+RHYTHM_THEME_PATH_ID = to_global_id("ThemePathNode", "rhythm")
+
 ADD_EVENT_VARIABLES = {
     "input": {
         "translations": [
@@ -145,6 +147,7 @@ ADD_EVENT_VARIABLES = {
         "participantsPerInvite": "FAMILY",
         "capacityPerOccurrence": 30,
         "projectId": "",
+        "themePathIds": [RHYTHM_THEME_PATH_ID],
     }
 }
 
@@ -484,6 +487,62 @@ def test_add_internal_ticket_system_event_capacity_required(
     assert "Capacity" in str(executed)
 
 
+def test_add_event_theme_paths(project_user_api_client, project):
+    story = ThemePathFactory(slug="story", name="Tarina")
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["themePathIds"] = [
+        RHYTHM_THEME_PATH_ID,
+        get_global_id(story),
+    ]
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert "errors" not in executed, executed["errors"]
+    assert set(Event.objects.get().theme_paths.values_list("slug", flat=True)) == {
+        "rhythm",
+        "story",
+    }
+
+
+@pytest.mark.parametrize("theme_path_input", [{}, {"themePathIds": None}])
+def test_add_event_requires_theme_path_ids(
+    project_user_api_client, project, theme_path_input
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    del variables["input"]["themePathIds"]
+    variables["input"].update(theme_path_input)
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert "themePathIds" in str(executed["errors"])
+    assert not Event.objects.exists()
+
+
+@pytest.mark.parametrize(
+    ("theme_path_ids", "error_code"),
+    [
+        ([], DATA_VALIDATION_ERROR),
+        (
+            [to_global_id("ThemePathNode", "no_such_theme_path")],
+            OBJECT_DOES_NOT_EXIST_ERROR,
+        ),
+    ],
+)
+def test_add_event_rejects_invalid_theme_paths(
+    project_user_api_client, project, theme_path_ids, error_code
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["themePathIds"] = theme_path_ids
+
+    executed = project_user_api_client.execute(ADD_EVENT_MUTATION, variables=variables)
+
+    assert_match_error_code(executed, error_code)
+    assert not Event.objects.exists()
+
+
 def test_add_ticketmaster_event(snapshot, project_user_api_client, project):
     variables = deepcopy(ADD_EVENT_VARIABLES)
     variables["input"]["projectId"] = get_global_id(project)
@@ -710,6 +769,57 @@ def test_update_event_ready_for_event_group_publishing(
     # the event group id should be still set
     event.refresh_from_db()
     assert event.event_group.id == event_group.id
+
+
+def test_update_event_replaces_theme_paths(project_user_api_client, project):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    story = ThemePathFactory(slug="story", name="Tarina")
+    event = EventFactory(project=project, theme_paths=[rhythm])
+    variables = {
+        "input": {"id": get_global_id(event), "themePathIds": [get_global_id(story)]}
+    }
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert "errors" not in executed, executed["errors"]
+    assert list(event.theme_paths.values_list("slug", flat=True)) == ["story"]
+
+
+@pytest.mark.parametrize("source_slugs", [[], ["rhythm", "story"]])
+def test_update_event_without_theme_paths_keeps_them(
+    project_user_api_client, project, source_slugs
+):
+    event = EventFactory(
+        project=project,
+        ready_for_event_group_publishing=False,
+        theme_paths=[ThemePathFactory(slug=slug) for slug in source_slugs],
+    )
+    variables = {
+        "input": {"id": get_global_id(event), "readyForEventGroupPublishing": True}
+    }
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert "errors" not in executed, executed["errors"]
+    assert set(event.theme_paths.values_list("slug", flat=True)) == set(source_slugs)
+
+
+def test_update_event_rejects_empty_theme_paths(project_user_api_client, project):
+    rhythm = ThemePathFactory(slug="rhythm", name="Rytmi")
+    event = EventFactory(project=project, theme_paths=[rhythm])
+    variables = {"input": {"id": get_global_id(event), "themePathIds": []}}
+
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "At least one theme path is required." in str(executed["errors"])
+    assert list(event.theme_paths.values_list("slug", flat=True)) == ["rhythm"]
 
 
 def test_update_ticketmaster_event(snapshot, project_user_api_client):
