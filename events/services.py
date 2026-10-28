@@ -17,6 +17,7 @@ from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
 from organisations.models import Organisation
 from projects.models import Project
+from tags.models import ThemePath
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,26 @@ class EventAPIService:
                     "You do not have permission to assign events to this organisation."
                 )
             return organisation
+
+        @staticmethod
+        def theme_paths(
+            info, theme_path_global_ids: list[str] | None, source_event=None
+        ) -> list[ThemePath]:
+            """
+            Resolve theme paths by global IDs. An omitted (None) list falls back
+            to the theme paths of source event, if it is given. The result must
+            not be empty.
+            """
+            if theme_path_global_ids is None and source_event is not None:
+                theme_paths = list(source_event.theme_paths.all())
+            else:
+                theme_paths = [
+                    get_obj_from_global_id(info, global_id, ThemePath)
+                    for global_id in theme_path_global_ids or []
+                ]
+            if not theme_paths:
+                raise DataValidationError("At least one theme path is required.")
+            return theme_paths
 
         @classmethod
         def event_target(cls, info, project_global_id, event_group_global_id):
@@ -350,6 +371,9 @@ class EventAPIService:
         kwargs["organisation_id"] = cls.Resolver.event_organisation(
             info, kwargs.pop("organisation_id", None), source_event=source_event
         )
+        theme_paths = cls.Resolver.theme_paths(
+            info, kwargs.pop("theme_path_ids", None), source_event=source_event
+        )
         if source_event is not None:
             cls._seed_source_event_data(kwargs, source_event)
         cls.Cleaner.create_ticket_system(kwargs)
@@ -357,6 +381,7 @@ class EventAPIService:
         has_explicit_image = bool(kwargs.get("image"))
         try:
             event = Event.objects.create_translatable_object(**kwargs)
+            event.theme_paths.set(theme_paths)
             if source_event is not None and not has_explicit_image:
                 cls._copy_image_file(source_event, event)
             event.clean()
@@ -385,9 +410,17 @@ class EventAPIService:
         cls.Cleaner.event_group_id(info, kwargs)
         cls.Cleaner.organisation_id(info, kwargs)
         cls.Cleaner.update_ticket_system(kwargs)
+        theme_path_ids = kwargs.pop("theme_path_ids", None)
+        theme_paths = (
+            None
+            if theme_path_ids is None
+            else cls.Resolver.theme_paths(info, theme_path_ids)
+        )
 
         try:
             update_object_with_translations(event, kwargs)
+            if theme_paths is not None:
+                event.theme_paths.set(theme_paths)
             event.clean()
         except ValidationError as e:
             raise DataValidationError(str(e))
