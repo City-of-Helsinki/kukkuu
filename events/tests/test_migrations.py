@@ -3,8 +3,11 @@ import importlib
 import pytest
 from django.apps import apps
 from django.conf import settings
+from django.db import migrations
 from guardian.shortcuts import assign_perm
 
+from events.factories import EventFactory
+from events.models import Event
 from organisations.models import Organisation
 from projects.enums import ProjectPermission
 from projects.factories import ProjectFactory
@@ -15,6 +18,14 @@ migration_module = importlib.import_module(
 )
 populate_events_and_admins = migration_module.populate_events_and_admins
 reverse_populate = migration_module.reverse_populate
+
+migration_0035_module = importlib.import_module(
+    "events.migrations.0035_add_enrolment_extra_participants"
+)
+replace_child_and_1_or_2_guardians_with_family = (
+    migration_0035_module.replace_child_and_1_or_2_guardians_with_family
+)
+Migration0035 = migration_0035_module.Migration
 
 
 @pytest.mark.django_db
@@ -59,3 +70,31 @@ def test_populate_event_organisation_migration_missing_org_raises():
 
     with pytest.raises(RuntimeError, match="Default organisation not found"):
         populate_events_and_admins(apps, None)
+
+
+@pytest.mark.django_db
+def test_migrate_child_and_1_or_2_guardians_to_family():
+    event = EventFactory(participants_per_invite="child_and_1_or_2_guardians")
+    assert (
+        Event.objects.filter(
+            participants_per_invite="child_and_1_or_2_guardians"
+        ).count()
+        == 1
+    )
+
+    replace_child_and_1_or_2_guardians_with_family(apps, None)
+
+    event.refresh_from_db()
+    assert event.participants_per_invite == "family"
+    assert (
+        Event.objects.filter(
+            participants_per_invite="child_and_1_or_2_guardians"
+        ).count()
+        == 0
+    )
+
+    migration_instance = Migration0035(
+        "0035_add_enrolment_extra_participants", "events"
+    )
+    run_python_op = migration_instance.operations[0]
+    assert run_python_op.reverse_code is migrations.RunPython.noop

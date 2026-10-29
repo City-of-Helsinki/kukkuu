@@ -183,8 +183,13 @@ class OccurrenceSerializer(serializers.ModelSerializer):
     )
 
     capacity = serializers.SerializerMethodField(
-        help_text="The total capacity of how many children can there participate "
-        "in this occurrence of an event."
+        help_text="The total physical seat capacity of this occurrence of an event."
+    )
+
+    reserved_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total count of reserved physical seats in this occurrence of an event."
+        )
     )
 
     venue = VenueSerializer(
@@ -206,6 +211,7 @@ class OccurrenceSerializer(serializers.ModelSerializer):
             "enrolment_count",
             "attended_count",
             "capacity",
+            "reserved_seats",
         ]
 
     def get_enrolment_count(self, obj: Occurrence) -> int:
@@ -216,6 +222,9 @@ class OccurrenceSerializer(serializers.ModelSerializer):
 
     def get_capacity(self, obj: Occurrence) -> Optional[int]:
         return obj.get_capacity()
+
+    def get_reserved_seats(self, obj: Occurrence) -> int:
+        return obj.get_reserved_seats()
 
 
 class EventGroupSerializer(

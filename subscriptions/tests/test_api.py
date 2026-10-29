@@ -186,7 +186,7 @@ def test_cannot_subscribe_to_free_spot_notification_when_occurrence_not_full(
     occurrence = OccurrenceFactory(
         event__published_at=now(),
         time=now() + timedelta(days=14),
-        capacity_override=1,
+        capacity_override=2,
     )
 
     executed = guardian_api_client.execute(

@@ -25,6 +25,7 @@ For the full list of services and environment URLs, see the [Service architectur
 - **Year Projects:** A core organizational unit. A child belongs to a year project based on their birth year. Events are also linked to specific year projects.
 - **Ticketing:** Events can use internal ticketing (managed within Kukkuu) or external ticketing systems (like Ticketmaster, Lippu.fi, or Tixly) which may involve coupon codes.
 - **Project-Scoped Admin Access:** Administrative privileges and roles can be scoped to specific year projects, allowing event organizers to manage only the events relevant to them.
+- **Seat Capacity & Enrolments:** Occurrences track real physical seat capacity. Each new enrolment reserves at least 2 seats (1 child + 1 guardian), with family events supporting extra children and adults. Legacy enrolments count as 1 seat. See [enrolment decisions documentation](docs/enrolment-decisions.md).
 
 ## Repository Landscape
 

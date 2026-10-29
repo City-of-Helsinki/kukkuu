@@ -303,6 +303,7 @@ For events managed internally, Kukkuu provides the following features:
 - **Enrolment Management:**
   - Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
   - Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
+  - Capacity tracks real physical seat headcounts ($2 + \text{extra children} + \text{extra guardians}$ per enrolment, with legacy enrolments counted as 1 seat). See [enrolment decisions documentation](docs/enrolment-decisions.md).
 - **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API. Admins have access only to events within their assigned projects.
 - **QR Code Ticket Verification:**
 

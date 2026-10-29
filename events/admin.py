@@ -258,7 +258,7 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
 
     @admin.display(description=_("enrolments"))
     def get_enrolments(self, obj):
-        return f"{obj.get_enrolment_count()} / {obj.get_capacity()}"
+        return f"{obj.get_reserved_seats()} / {obj.get_capacity()}"
 
     @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
@@ -268,10 +268,10 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         return (
             super()
             .get_queryset(request)
+            .with_reserved_seats()
             .prefetch_related(
                 "event__translations",
                 "venue__translations",
-                "enrolments",
                 "free_spot_notification_subscriptions",
             )
         )
@@ -482,6 +482,8 @@ class EnrolmentAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
                     "child",
                     "occurrence",
                     "attended",
+                    "extra_children_count",
+                    "extra_guardians_count",
                     "created_at",
                     "reminder_sent_at",
                     "feedback_notification_sent_at",

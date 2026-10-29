@@ -3249,3 +3249,251 @@ def test_add_event_model_validation_error_reraised_as_data_validation_error(
 
     assert_match_error_code(executed, DATA_VALIDATION_ERROR)
     assert "Model save validation error" in str(executed)
+
+
+ENROL_OCCURRENCE_WITH_SEATS_MUTATION = """
+mutation EnrolOccurrenceWithSeats($input: EnrolOccurrenceMutationInput!) {
+  enrolOccurrence(input: $input) {
+    enrolment {
+      extraChildrenCount
+      extraGuardiansCount
+      totalSeats
+      occurrence {
+        id
+        seatCount
+        remainingCapacity
+      }
+    }
+  }
+}
+"""
+
+
+def test_enrol_occurrence_standard_event_default_seats(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.CHILD_AND_GUARDIAN,
+        capacity_per_occurrence=10,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+            }
+        },
+    )
+
+    assert "errors" not in executed
+    enrolment_data = executed["data"]["enrolOccurrence"]["enrolment"]
+    assert enrolment_data["extraChildrenCount"] == 0
+    assert enrolment_data["extraGuardiansCount"] == 0
+    assert enrolment_data["totalSeats"] == 2
+    assert enrolment_data["occurrence"]["seatCount"] == 2
+    assert enrolment_data["occurrence"]["remainingCapacity"] == 8
+
+
+def test_enrol_occurrence_family_event_with_extra_participants(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.FAMILY,
+        capacity_per_occurrence=10,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraChildrenCount": 2,
+                "extraGuardiansCount": 1,
+            }
+        },
+    )
+
+    assert "errors" not in executed
+    enrolment_data = executed["data"]["enrolOccurrence"]["enrolment"]
+    assert enrolment_data["extraChildrenCount"] == 2
+    assert enrolment_data["extraGuardiansCount"] == 1
+    assert enrolment_data["totalSeats"] == 5
+    assert enrolment_data["occurrence"]["seatCount"] == 5
+    assert enrolment_data["occurrence"]["remainingCapacity"] == 5
+
+
+def test_enrol_occurrence_extra_participants_not_allowed_for_standard_event(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.CHILD_AND_GUARDIAN,
+        capacity_per_occurrence=10,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraChildrenCount": 1,
+            }
+        },
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "Extra children count exceeds limit (0)" in str(executed)
+
+
+def test_enrol_occurrence_extra_participants_exceeds_max_limits(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.FAMILY,
+        capacity_per_occurrence=20,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    # Exceeding extra children max (3)
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraChildrenCount": 4,
+            }
+        },
+    )
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+
+    # Exceeding extra guardians max (1)
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraGuardiansCount": 2,
+            }
+        },
+    )
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+
+
+def test_enrol_occurrence_exceeds_remaining_capacity(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.FAMILY,
+        capacity_per_occurrence=4,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    # First child enrols standard (2 seats), remaining = 2
+    EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=0,
+        extra_guardians_count=0,
+    )
+
+    # Second child tries to enrol with 1 extra child (requested 3 seats > 2 remaining)
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraChildrenCount": 1,
+                "extraGuardiansCount": 0,
+            }
+        },
+    )
+    assert_match_error_code(executed, OCCURRENCE_IS_FULL_ERROR)
+
+
+def test_unenrol_occurrence_restores_capacity(
+    guardian_api_client, child_with_user_guardian
+):
+    event = EventFactory(
+        published_at=now(),
+        participants_per_invite=Event.FAMILY,
+        capacity_per_occurrence=10,
+        project=child_with_user_guardian.project,
+    )
+    occurrence = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=14),
+    )
+
+    # Enrol with 5 seats
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_WITH_SEATS_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+                "extraChildrenCount": 2,
+                "extraGuardiansCount": 1,
+            }
+        },
+    )
+    assert "errors" not in executed
+    assert (
+        executed["data"]["enrolOccurrence"]["enrolment"]["occurrence"]["seatCount"] == 5
+    )
+    assert (
+        executed["data"]["enrolOccurrence"]["enrolment"]["occurrence"][
+            "remainingCapacity"
+        ]
+        == 5
+    )
+
+    # Unenrol
+    unenrol_executed = guardian_api_client.execute(
+        UNENROL_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+            }
+        },
+    )
+    assert "errors" not in unenrol_executed
+
+    # Verify occurrence seats restored
+    occurrence.refresh_from_db()
+    annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
+    assert annotated.reserved_seats == 0
+    assert annotated.get_remaining_capacity() == 10

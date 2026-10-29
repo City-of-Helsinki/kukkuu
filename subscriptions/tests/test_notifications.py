@@ -11,7 +11,7 @@ from subscriptions.tests.utils import assert_child_has_subscriptions
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("final_occurrence_capacity", (4, None))
+@pytest.mark.parametrize("final_occurrence_capacity", (5, None))
 def test_free_spot_notification_occurrence_capacity_changes(
     snapshot,
     notification_template_free_spot,
@@ -24,7 +24,7 @@ def test_free_spot_notification_occurrence_capacity_changes(
         time=now() + timedelta(days=14),
         event__id=777,
         event__published_at=now(),
-        event__capacity_per_occurrence=4,
+        event__capacity_per_occurrence=5,
         capacity_override=3,
     )
     EnrolmentFactory.create_batch(3, occurrence=occurrence)
@@ -78,7 +78,7 @@ def test_free_spot_notification_event_capacity_changes(
 
     assert len(mail.outbox) == 0
 
-    event.capacity_per_occurrence = 4
+    event.capacity_per_occurrence = 5
     event.save()
 
     assert len(mail.outbox) == 1
@@ -99,7 +99,7 @@ def test_free_spot_notification_someone_unenrols(
         event__id=777,
         event__published_at=now(),
         event__capacity_per_occurrence=2,
-        capacity_override=3,
+        capacity_override=4,
     )
     enrolments = EnrolmentFactory.create_batch(4, occurrence=occurrence)
     FreeSpotNotificationSubscriptionFactory(occurrence=occurrence, child=child)

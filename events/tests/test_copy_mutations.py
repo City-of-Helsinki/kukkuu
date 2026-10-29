@@ -174,7 +174,7 @@ def test_copy_event_mutation(publisher_api_client, project, snapshot):
             "projectId": to_global_id("ProjectNode", project.id),
             "eventGroupId": to_global_id("EventGroupNode", event_group.id),
             "duration": 90,
-            "participantsPerInvite": "CHILD_AND_1_OR_2_GUARDIANS",
+            "participantsPerInvite": "CHILD_AND_GUARDIAN",
             "capacityPerOccurrence": 20,
             "translations": [
                 {
@@ -194,7 +194,7 @@ def test_copy_event_mutation(publisher_api_client, project, snapshot):
     data = executed["data"]["copyEvent"]["event"]
     assert data["name"] == "Copied Event"
     assert data["duration"] == 90
-    assert data["participantsPerInvite"] == "CHILD_AND_1_OR_2_GUARDIANS"
+    assert data["participantsPerInvite"] == "CHILD_AND_GUARDIAN"
     assert data["capacityPerOccurrence"] == 20
     assert data["eventGroup"]["id"] == to_global_id("EventGroupNode", event_group.id)
     assert data["project"]["id"] == to_global_id("ProjectNode", project.id)

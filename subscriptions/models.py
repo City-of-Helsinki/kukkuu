@@ -105,7 +105,7 @@ class FreeSpotNotificationSubscription(SerializableMixin, models.Model):
         return f"{self.child} {self.occurrence} subscription"
 
     def clean(self):
-        if not self.pk and self.occurrence.get_remaining_capacity():
+        if not self.pk and self.occurrence.has_free_seats():
             raise ValidationError(
                 "Cannot create a free spot subscription for an occurrence that still "
                 "has free spots.",

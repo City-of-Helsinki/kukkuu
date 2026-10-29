@@ -31,7 +31,10 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
-from events.consts import ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR
+from events.consts import (
+    ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR,
+    MIN_SEATS_PER_ENROLMENT,
+)
 from events.enums import EnrolmentDeniedReason
 from events.exceptions import (
     InvalidTicketSystemError,
@@ -66,8 +69,33 @@ EventTranslation = apps.get_model("events", "EventTranslation")
 EventGroupTranslation = apps.get_model("events", "EventGroupTranslation")
 
 
-def validate_enrolment(child: Child, occurrence: Occurrence) -> None:
-    if reason := occurrence.get_enrolment_denied_reason(child):
+def validate_extra_participants(
+    event: Event, extra_children_count: int, extra_guardians_count: int
+) -> None:
+    if extra_children_count < 0 or extra_guardians_count < 0:
+        raise DataValidationError("Extra participant counts cannot be negative.")
+
+    max_children, max_guardians = Event.MAX_EXTRA_PARTICIPANTS.get(
+        event.participants_per_invite, (0, 0)
+    )
+    if extra_children_count > max_children:
+        raise DataValidationError(
+            f"Extra children count exceeds limit ({max_children}) for "
+            f"{event.participants_per_invite}."
+        )
+    if extra_guardians_count > max_guardians:
+        raise DataValidationError(
+            f"Extra guardians count exceeds limit ({max_guardians}) for "
+            f"{event.participants_per_invite}."
+        )
+
+
+def validate_enrolment(
+    child: Child, occurrence: Occurrence, requested_seats: int = MIN_SEATS_PER_ENROLMENT
+) -> None:
+    if reason := occurrence.get_enrolment_denied_reason(
+        child, requested_seats=requested_seats
+    ):
         raise ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR[reason]
 
 
@@ -133,7 +161,6 @@ TICKET_SYSTEM_URL_DESCRIPTION = (
 
 class EventParticipantsPerInvite(graphene.Enum):
     CHILD_AND_GUARDIAN = "child_and_guardian"
-    CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
     FAMILY = "family"
 
 
@@ -537,6 +564,7 @@ class OccurrenceNode(DjangoObjectType):
     occurrence_language = LanguageEnum(required=True)
     enrolment_count = graphene.Int(required=True)
     attended_enrolment_count = graphene.Int(required=True)
+    seat_count = graphene.Int(required=True)
     free_spot_notification_subscription_count = graphene.Int(required=True)
     capacity = graphene.Int()
     child_has_free_spot_notification_subscription = graphene.Boolean(
@@ -560,6 +588,7 @@ class OccurrenceNode(DjangoObjectType):
             .with_end_time()
             .with_enrolment_count()
             .with_attended_enrolment_count()
+            .with_reserved_seats()
             .with_free_spot_notification_subscription_count()
             .order_by("time")
             .select_related("event", "event__project", "venue", "venue__project")
@@ -593,6 +622,9 @@ class OccurrenceNode(DjangoObjectType):
 
     def resolve_capacity(self, info, **kwargs):
         return self.get_capacity()
+
+    def resolve_seat_count(self, info, **kwargs):
+        return self.get_reserved_seats()
 
     def resolve_child_has_free_spot_notification_subscription(self, info, **kwargs):
         child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
@@ -631,6 +663,7 @@ class OccurrenceNode(DjangoObjectType):
             "capacity_override",
             "remaining_capacity",
             "enrolment_count",
+            "seat_count",
             "free_spot_notification_subscriptions",
             "child_has_free_spot_notification_subscription",
             "ticket_system",
@@ -640,11 +673,20 @@ class OccurrenceNode(DjangoObjectType):
 @auditlog_access
 class EnrolmentNode(DjangoObjectType):
     reference_id = graphene.String(description="An unique encoded reference id")
+    total_seats = graphene.Int(required=True)
 
     class Meta:
         model = Enrolment
         interfaces = (relay.Node,)
-        fields = ("occurrence", "child", "attended", "created_at", "updated_at")
+        fields = (
+            "occurrence",
+            "child",
+            "attended",
+            "extra_children_count",
+            "extra_guardians_count",
+            "created_at",
+            "updated_at",
+        )
 
     @classmethod
     @login_required
@@ -653,6 +695,9 @@ class EnrolmentNode(DjangoObjectType):
 
     def resolve_reference_id(self, info, **kwargs):
         return self.reference_id
+
+    def resolve_total_seats(self, info, **kwargs):
+        return self.total_seats
 
 
 @auditlog_access
@@ -1036,6 +1081,12 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     class Input:
         occurrence_id = graphene.GlobalID(description="Occurrence id of event")
         child_id = graphene.GlobalID(description="Guardian's child id")
+        extra_children_count = graphene.Int(
+            default_value=0, description="Count of extra children in enrolment"
+        )
+        extra_guardians_count = graphene.Int(
+            default_value=0, description="Count of extra guardians in enrolment"
+        )
 
     enrolment = graphene.Field(EnrolmentNode)
 
@@ -1046,17 +1097,35 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence_id = from_global_id(kwargs["occurrence_id"])[1]
         child_id = from_global_id(kwargs["child_id"])[1]
+        extra_children_count = kwargs.get("extra_children_count", 0) or 0
+        extra_guardians_count = kwargs.get("extra_guardians_count", 0) or 0
         user = info.context.user
         try:
-            occurrence = Occurrence.objects.get(pk=occurrence_id)
+            occurrence = (
+                Occurrence.objects.select_for_update(of=("self",))
+                .select_related("event", "event__project")
+                .get(pk=occurrence_id)
+            )
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
         try:
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
-        validate_enrolment(child, occurrence)
-        enrolment = Enrolment.objects.create(child=child, occurrence=occurrence)
+
+        validate_extra_participants(
+            occurrence.event, extra_children_count, extra_guardians_count
+        )
+        requested_seats = (
+            MIN_SEATS_PER_ENROLMENT + extra_children_count + extra_guardians_count
+        )
+        validate_enrolment(child, occurrence, requested_seats=requested_seats)
+        enrolment = Enrolment.objects.create(
+            child=child,
+            occurrence=occurrence,
+            extra_children_count=extra_children_count,
+            extra_guardians_count=extra_guardians_count,
+        )
 
         logger.info(
             f"user {user.uuid} enrolled child {child.pk} to occurrence {occurrence}"
