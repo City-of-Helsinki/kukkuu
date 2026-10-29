@@ -13,7 +13,7 @@
     ''',
   ])
 # ---
-# name: test_free_spot_notification_occurrence_capacity_changes[4]
+# name: test_free_spot_notification_occurrence_capacity_changes[5]
   list([
     '''
       kukkuu@example.com|['ywashington@example.com']|Free spot FI|

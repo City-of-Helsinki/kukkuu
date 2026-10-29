@@ -114,7 +114,7 @@
     'data': dict({
       'addOccurrence': dict({
         'occurrence': dict({
-          'capacity': 9,
+          'capacity': 48,
           'capacityOverride': None,
           'event': dict({
             'createdAt': '2020-12-12T00:00:00+00:00',
@@ -255,7 +255,7 @@
       'enrolOccurrence': dict({
         'enrolment': dict({
           'child': dict({
-            'name': 'Sandra Hudson',
+            'name': 'Laura Dennis',
           }),
           'createdAt': '2020-12-12T00:00:00+00:00',
           'occurrence': dict({
@@ -276,17 +276,17 @@
             dict({
               'node': dict({
                 'child': dict({
-                  'name': 'Sandra Hudson',
+                  'name': 'Laura Dennis',
                 }),
               }),
             }),
           ]),
         }),
         'event': dict({
-          'capacityPerOccurrence': 9,
+          'capacityPerOccurrence': 48,
           'duration': 1,
           'image': 'http://testserver/media/law.jpg',
-          'participantsPerInvite': 'FAMILY',
+          'participantsPerInvite': 'CHILD_AND_GUARDIAN',
           'publishedAt': '2020-12-12T00:00:00+00:00',
           'translations': list([
             dict({
@@ -298,7 +298,7 @@
           ]),
         }),
         'occurrenceLanguage': 'FI',
-        'remainingCapacity': 5,
+        'remainingCapacity': 44,
         'ticketSystem': dict({
           'type': 'INTERNAL',
         }),
@@ -597,7 +597,7 @@
             }),
           ]),
         }),
-        'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+        'participantsPerInvite': 'FAMILY',
         'project': dict({
           'year': 2020,
         }),
@@ -865,7 +865,7 @@
                   }),
                 ]),
               }),
-              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'participantsPerInvite': 'FAMILY',
               'project': dict({
                 'year': 2020,
               }),
@@ -934,7 +934,7 @@
                   }),
                 ]),
               }),
-              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'participantsPerInvite': 'FAMILY',
               'project': dict({
                 'year': 2020,
               }),
@@ -993,7 +993,7 @@
                   }),
                 ]),
               }),
-              'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+              'participantsPerInvite': 'FAMILY',
               'project': dict({
                 'year': 2020,
               }),
@@ -1084,10 +1084,10 @@
           ]),
         }),
         'event': dict({
-          'capacityPerOccurrence': 9,
+          'capacityPerOccurrence': 48,
           'duration': 1,
           'image': 'http://testserver/media/law.jpg',
-          'participantsPerInvite': 'FAMILY',
+          'participantsPerInvite': 'CHILD_AND_GUARDIAN',
           'publishedAt': '2020-12-12T00:00:00+00:00',
           'translations': list([
             dict({
@@ -1099,7 +1099,7 @@
           ]),
         }),
         'occurrenceLanguage': 'FI',
-        'remainingCapacity': 6,
+        'remainingCapacity': 45,
         'ticketSystem': dict({
           'type': 'INTERNAL',
         }),
@@ -1249,10 +1249,10 @@
           ]),
         }),
         'event': dict({
-          'capacityPerOccurrence': 9,
+          'capacityPerOccurrence': 48,
           'duration': 1,
           'image': 'http://testserver/media/law.jpg',
-          'participantsPerInvite': 'FAMILY',
+          'participantsPerInvite': 'CHILD_AND_GUARDIAN',
           'publishedAt': '2020-12-12T00:00:00+00:00',
           'translations': list([
             dict({
@@ -1264,7 +1264,7 @@
           ]),
         }),
         'occurrenceLanguage': 'FI',
-        'remainingCapacity': 9,
+        'remainingCapacity': 48,
         'ticketSystem': dict({
           'type': 'INTERNAL',
         }),
@@ -1527,10 +1527,10 @@
             'node': dict({
               'enrolmentCount': 0,
               'event': dict({
-                'capacityPerOccurrence': 9,
+                'capacityPerOccurrence': 48,
                 'duration': 1,
                 'image': 'http://testserver/media/law.jpg',
-                'participantsPerInvite': 'FAMILY',
+                'participantsPerInvite': 'CHILD_AND_GUARDIAN',
                 'publishedAt': '2020-12-12T00:00:00+00:00',
                 'translations': list([
                   dict({
@@ -1541,7 +1541,7 @@
                   }),
                 ]),
               }),
-              'remainingCapacity': 9,
+              'remainingCapacity': 48,
               'ticketSystem': dict({
                 'type': 'INTERNAL',
               }),
@@ -1585,10 +1585,10 @@
             'node': dict({
               'enrolmentCount': 0,
               'event': dict({
-                'capacityPerOccurrence': 9,
+                'capacityPerOccurrence': 48,
                 'duration': 1,
                 'image': 'http://testserver/media/law.jpg',
-                'participantsPerInvite': 'FAMILY',
+                'participantsPerInvite': 'CHILD_AND_GUARDIAN',
                 'publishedAt': '2020-12-12T00:00:00+00:00',
                 'translations': list([
                   dict({
@@ -1599,7 +1599,7 @@
                   }),
                 ]),
               }),
-              'remainingCapacity': 9,
+              'remainingCapacity': 48,
               'ticketSystem': dict({
                 'type': 'INTERNAL',
               }),
@@ -1636,7 +1636,7 @@
                 'capacityPerOccurrence': 47,
                 'duration': 245,
                 'image': 'http://testserver/media/answer.jpg',
-                'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+                'participantsPerInvite': 'FAMILY',
                 'publishedAt': None,
                 'translations': list([
                   dict({
@@ -2014,7 +2014,7 @@
             'edges': list([
             ]),
           }),
-          'participantsPerInvite': 'CHILD_AND_1_OR_2_GUARDIANS',
+          'participantsPerInvite': 'FAMILY',
           'readyForEventGroupPublishing': True,
           'ticketSystem': dict({
             'type': 'INTERNAL',
