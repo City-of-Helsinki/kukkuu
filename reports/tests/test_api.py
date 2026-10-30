@@ -223,8 +223,18 @@ def test_events_endpoint(
         == 2
     )
     assert (
+        json_data[0]["reserved_seats"]
+        == json_data[0]["occurrences"][0]["reserved_seats"]
+        == 2
+    )
+    assert (
         json_data[1]["enrolment_count"]
         == json_data[1]["occurrences"][0]["enrolment_count"]
+        == 2
+    )
+    assert (
+        json_data[1]["reserved_seats"]
+        == json_data[1]["occurrences"][0]["reserved_seats"]
         == 2
     )
     snapshot.assert_match(json_data)
@@ -273,8 +283,10 @@ def test_event_groups_endpoint(
 
     assert len(json_data) == 5
     assert json_data[0]["enrolment_count"] == 1
+    assert json_data[0]["reserved_seats"] == 1
     for i in range(1, 5):
         assert json_data[i]["enrolment_count"] == 0
+        assert json_data[i]["reserved_seats"] == 0
 
     snapshot.assert_match(json_data)
 
@@ -306,6 +318,7 @@ def test_event_groups_retrieve_endpoint(
     json_data = response.json()
 
     assert json_data["enrolment_count"] == 2
+    assert json_data["reserved_seats"] == 2
     assert json_data["attended_count"] == 1
     assert json_data["capacity"] == 20
     assert json_data["project"]["id"] == project.id
