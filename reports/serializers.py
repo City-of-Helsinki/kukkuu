@@ -183,8 +183,13 @@ class OccurrenceSerializer(serializers.ModelSerializer):
     )
 
     capacity = serializers.SerializerMethodField(
-        help_text="The total capacity of how many children can there participate "
-        "in this occurrence of an event."
+        help_text="The total physical seat capacity of this occurrence of an event."
+    )
+
+    reserved_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total count of reserved physical seats in this occurrence of an event."
+        )
     )
 
     venue = VenueSerializer(
@@ -206,6 +211,7 @@ class OccurrenceSerializer(serializers.ModelSerializer):
             "enrolment_count",
             "attended_count",
             "capacity",
+            "reserved_seats",
         ]
 
     def get_enrolment_count(self, obj: Occurrence) -> int:
@@ -216,6 +222,9 @@ class OccurrenceSerializer(serializers.ModelSerializer):
 
     def get_capacity(self, obj: Occurrence) -> Optional[int]:
         return obj.get_capacity()
+
+    def get_reserved_seats(self, obj: Occurrence) -> int:
+        return obj.get_reserved_seats()
 
 
 class EventGroupSerializer(
@@ -248,6 +257,12 @@ class EventGroupSerializer(
         help_text="The total capacity of how many children can there participate "
         "in this event group's event occurrences."
     )
+    reserved_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total count of reserved physical seats in this event group's "
+            "event occurrences."
+        )
+    )
 
     class Meta:
         model = EventGroup
@@ -260,6 +275,7 @@ class EventGroupSerializer(
             "enrolment_count",
             "attended_count",
             "capacity",
+            "reserved_seats",
         ]
 
     def get_events_count(self, obj: EventGroup) -> int:
@@ -273,6 +289,9 @@ class EventGroupSerializer(
 
     def get_capacity(self, obj: EventGroup) -> Optional[int]:
         return obj.get_capacity()
+
+    def get_reserved_seats(self, obj: EventGroup) -> int:
+        return obj.get_reserved_seats()
 
     # NOTE: Fetching the translations from django-parler table
     # can cause lots of sub queries.
@@ -324,6 +343,11 @@ class EventSerializer(serializers.ModelSerializer):
         help_text="The total capacity of how many children can there participate "
         "in this event's occurrences."
     )
+    reserved_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total count of reserved physical seats in this event's occurrences."
+        )
+    )
 
     class Meta:
         model = Event
@@ -338,6 +362,7 @@ class EventSerializer(serializers.ModelSerializer):
             "enrolment_count",
             "attended_count",
             "capacity",
+            "reserved_seats",
         ]
 
     def get_occurrences_count(self, obj: Event) -> int:
@@ -351,6 +376,9 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_capacity(self, obj: Event) -> Optional[int]:
         return obj.get_capacity()
+
+    def get_reserved_seats(self, obj: Event) -> int:
+        return obj.get_reserved_seats()
 
     # NOTE: Fetching the translations from django-parler table
     # can cause lots of sub queries.

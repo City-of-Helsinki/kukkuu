@@ -36,9 +36,10 @@ Key top-level Django apps and their purposes:
 ## Domain Logic
 - **Projects & Privileges**: A project groups children and events. In the Admin UI, the project selector in the top right corner lists projects based on user privileges. If a user lacks privileges, the project is not listed. Privileges can be partial (e.g., an organizer can create events but not publish them).
 - **Events & Event Groups**: Event organizers create events and event groups. One event group contains multiple events. Both an event group and an event always belong to a single project.
-- **Enrollment Limits**:
+- **Enrollment Limits & Seat Capacity**:
   - A project configures how many times a child can enrol per year (usually twice).
   - A child can participate in only **one** event within a single event group. For example, if only one event group is published for a spring season, a child can only participate once during that spring.
+  - An occurrence tracks physical seats. Each new enrolment reserves a minimum of 2 seats (1 child + 1 guardian), and family events can reserve up to 6 seats. Legacy enrolments count as 1 seat. An occurrence with remaining capacity < 2 is considered full. For architectural details and operational rules, see [docs/enrolment-decisions.md](docs/enrolment-decisions.md).
 - **Visibility Rules (Events vs Enrolments)**:
   - Published events and occurrences remain globally visible so the public UI and other event organizers can view them.
   - Unpublished events and occurrences are strictly isolated. Only system administrators and users who are members of the event's designated organisation can view or administer them.

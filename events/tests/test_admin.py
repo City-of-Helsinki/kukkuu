@@ -9,9 +9,14 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from events.admin import EventGroupAdmin, EventGroupForm
-from events.factories import EventFactory, EventGroupFactory
-from events.models import Event, EventGroup
+from events.admin import EventGroupAdmin, EventGroupForm, OccurrenceAdmin
+from events.factories import (
+    EnrolmentFactory,
+    EventFactory,
+    EventGroupFactory,
+    OccurrenceFactory,
+)
+from events.models import Event, EventGroup, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
 
@@ -343,3 +348,23 @@ def test_event_group_admin_publish_action_rejects_republish_without_unpublished_
     mock_event_group_notifications.assert_not_called()
     response = admin_client.get(response.url)
     assert "Event group is already published." in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_get_queryset_annotates_reserved_seats(rf):
+    occurrence = OccurrenceFactory(capacity_override=10)
+    EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=1,
+        extra_guardians_count=0,
+    )
+
+    site = AdminSite()
+    admin_instance = OccurrenceAdmin(Occurrence, site)
+    request = rf.get("/admin/events/occurrence/")
+    qs = admin_instance.get_queryset(request)
+    obj = qs.get(pk=occurrence.pk)
+
+    assert hasattr(obj, "reserved_seats")
+    assert obj.reserved_seats == 3
+    assert admin_instance.get_enrolments(obj) == "3 / 10"

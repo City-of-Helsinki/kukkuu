@@ -67,6 +67,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 1,
       'url': 'http://testserver/reports/event-group/1/',
     }),
     dict({
@@ -84,6 +85,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/2/',
     }),
     dict({
@@ -101,6 +103,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/3/',
     }),
     dict({
@@ -118,6 +121,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/4/',
     }),
     dict({
@@ -135,6 +139,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/5/',
     }),
   ])
@@ -155,6 +160,7 @@
       'id': 1,
       'year': 2020,
     }),
+    'reserved_seats': 2,
     'url': 'http://testserver/reports/event-group/1/',
   })
 # ---
@@ -180,6 +186,7 @@
           'capacity': 20,
           'enrolment_count': 2,
           'id': 1,
+          'reserved_seats': 2,
           'time': '2021-04-05T02:00:00+03:00',
           'venue': dict({
             'id': 1,
@@ -191,6 +198,7 @@
           'capacity': 20,
           'enrolment_count': 0,
           'id': 2,
+          'reserved_seats': 0,
           'time': '2021-04-05T02:00:00+03:00',
           'venue': dict({
             'id': 2,
@@ -203,6 +211,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 2,
       'ticket_system': 'internal',
     }),
     dict({
@@ -222,6 +231,7 @@
           'capacity': 40,
           'enrolment_count': 2,
           'id': 3,
+          'reserved_seats': 2,
           'time': '2021-04-05T02:00:00+03:00',
           'venue': dict({
             'id': 3,
@@ -233,6 +243,7 @@
           'capacity': 40,
           'enrolment_count': 0,
           'id': 4,
+          'reserved_seats': 0,
           'time': '2021-04-05T02:00:00+03:00',
           'venue': dict({
             'id': 4,
@@ -245,6 +256,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 2,
       'ticket_system': 'internal',
     }),
   ])

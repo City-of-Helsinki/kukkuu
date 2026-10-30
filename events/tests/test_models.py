@@ -4,6 +4,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.utils.timezone import now
 
 from children.factories import ChildFactory
@@ -89,6 +90,18 @@ def test_enrolment_reference_id():
     for enrolment in enrolments:
         assert len(enrolment.reference_id) == settings.KUKKUU_HASHID_MIN_LENGTH
         assert Enrolment.decode_reference_id(enrolment.reference_id) == enrolment.id
+
+
+@pytest.mark.django_db
+def test_enrolment_serialize():
+    enrolment = EnrolmentFactory(extra_children_count=2, extra_guardians_count=1)
+    serialized = enrolment.serialize()
+    assert serialized["key"] == "ENROLMENT"
+    data = {
+        item["key"]: item["value"] for item in serialized["children"] if "value" in item
+    }
+    assert data["EXTRA_CHILDREN_COUNT"] == 2
+    assert data["EXTRA_GUARDIANS_COUNT"] == 1
 
 
 @pytest.mark.django_db
@@ -903,3 +916,166 @@ def test_event_group_events_project_mismatch_raises_validation_error():
         match="The event group and its events must belong to the same project.",
     ):
         event_group.clean()
+
+
+@pytest.mark.django_db
+def test_occurrence_reserved_seats_legacy():
+    occurrence = OccurrenceFactory()
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=None,
+        extra_guardians_count=None,
+    )
+    assert enrolment.total_seats == 1
+    assert occurrence.get_reserved_seats() == 1
+    annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
+    assert annotated.reserved_seats == 1
+
+
+@pytest.mark.django_db
+def test_occurrence_reserved_seats_new():
+    occurrence = OccurrenceFactory()
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=0,
+        extra_guardians_count=0,
+    )
+    assert enrolment.total_seats == 2
+    assert occurrence.get_reserved_seats() == 2
+    annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
+    assert annotated.reserved_seats == 2
+
+
+@pytest.mark.django_db
+def test_occurrence_reserved_seats_family():
+    occurrence = OccurrenceFactory()
+    enrolment = EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=2,
+        extra_guardians_count=1,
+    )
+    assert enrolment.total_seats == 5
+    assert occurrence.get_reserved_seats() == 5
+    annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
+    assert annotated.reserved_seats == 5
+
+
+@pytest.mark.django_db
+def test_occurrence_with_reserved_seats_query_matches_method():
+    from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
+
+    occ_empty = OccurrenceFactory()
+    occ_mixed = OccurrenceFactory()
+
+    # Legacy enrolment (1 seat)
+    EnrolmentFactory(
+        occurrence=occ_mixed,
+        extra_children_count=None,
+        extra_guardians_count=None,
+    )
+    # Family enrolment (2 + 1 + 0 = 3 seats)
+    EnrolmentFactory(
+        occurrence=occ_mixed,
+        extra_children_count=1,
+        extra_guardians_count=0,
+    )
+    # Add subscriptions to ensure correlated subquery does not multiply or break
+    FreeSpotNotificationSubscriptionFactory(occurrence=occ_mixed)
+    FreeSpotNotificationSubscriptionFactory(occurrence=occ_mixed)
+
+    qs = Occurrence.objects.with_reserved_seats()
+    res_empty = qs.get(pk=occ_empty.pk)
+    res_mixed = qs.get(pk=occ_mixed.pk)
+
+    assert res_empty.reserved_seats == occ_empty.get_reserved_seats() == 0
+    assert res_mixed.reserved_seats == occ_mixed.get_reserved_seats() == 4
+
+
+@pytest.mark.django_db
+def test_event_and_event_group_reserved_seats():
+    event_group = EventGroupFactory()
+    event_1 = EventFactory(event_group=event_group)
+    event_2 = EventFactory(event_group=event_group)
+
+    occ_1 = OccurrenceFactory(event=event_1)
+    occ_2 = OccurrenceFactory(event=event_2)
+
+    # Legacy enrolment (1 seat)
+    EnrolmentFactory(
+        occurrence=occ_1, extra_children_count=None, extra_guardians_count=None
+    )
+    # Family enrolment (2 + 1 + 1 = 4 seats)
+    EnrolmentFactory(occurrence=occ_2, extra_children_count=1, extra_guardians_count=1)
+
+    assert occ_1.get_reserved_seats() == 1
+    assert occ_2.get_reserved_seats() == 4
+    assert event_1.get_reserved_seats() == 1
+    assert event_2.get_reserved_seats() == 4
+    assert event_group.get_reserved_seats() == 5
+
+
+@pytest.mark.django_db
+def test_enrolment_negative_extra_participants_check_constraint():
+    occurrence = OccurrenceFactory()
+    child = ChildFactory()
+
+    with pytest.raises(IntegrityError):
+        Enrolment.objects.create(
+            occurrence=occurrence,
+            child=child,
+            extra_children_count=-1,
+            extra_guardians_count=0,
+        )
+
+    with pytest.raises(IntegrityError):
+        Enrolment.objects.create(
+            occurrence=occurrence,
+            child=child,
+            extra_children_count=0,
+            extra_guardians_count=-1,
+        )
+
+
+@pytest.mark.django_db
+def test_occurrence_has_free_seats_threshold():
+    occurrence = OccurrenceFactory(capacity_override=3)
+    EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=0,
+        extra_guardians_count=0,
+    )  # 2 seats reserved -> remaining = 1
+    assert occurrence.get_remaining_capacity() == 1
+    assert occurrence.has_free_seats() is False
+
+    occurrence.capacity_override = 4
+    occurrence.save()
+    assert occurrence.get_remaining_capacity() == 2
+    assert occurrence.has_free_seats() is True
+
+
+@pytest.mark.django_db
+def test_enrolment_denied_reason_capacity_threshold(child_with_random_guardian, future):
+    occurrence = OccurrenceFactory(
+        time=future,
+        event__published_at=now(),
+        event__project=child_with_random_guardian.project,
+        capacity_override=3,
+    )
+    EnrolmentFactory(
+        occurrence=occurrence,
+        extra_children_count=0,
+        extra_guardians_count=0,
+    )  # 2 seats reserved -> remaining = 1
+
+    # Default requested_seats is 2 -> denied because remaining 1 < 2
+    assert (
+        occurrence.get_enrolment_denied_reason(child_with_random_guardian)
+        == EnrolmentDeniedReason.OCCURRENCE_FULL
+    )
+    # Explicit requested_seats = 3 -> denied
+    assert (
+        occurrence.get_enrolment_denied_reason(
+            child_with_random_guardian, requested_seats=3
+        )
+        == EnrolmentDeniedReason.OCCURRENCE_FULL
+    )

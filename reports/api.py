@@ -80,6 +80,7 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
                 "occurrences",
                 queryset=Occurrence.objects.with_enrolment_count()
                 .with_attended_enrolment_count()
+                .with_reserved_seats()
                 .with_free_spot_notification_subscription_count()
                 .select_related("venue"),
             )
@@ -99,6 +100,7 @@ class EventGroupViewSet(viewsets.ReadOnlyModelViewSet):
                 "events__occurrences",
                 queryset=Occurrence.objects.with_enrolment_count()
                 .with_attended_enrolment_count()
+                .with_reserved_seats()
                 .with_free_spot_notification_subscription_count()
                 .select_related("venue"),
             )

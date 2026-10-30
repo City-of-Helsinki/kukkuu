@@ -2,10 +2,23 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
+from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Count, ExpressionWrapper, F, Q, UniqueConstraint
+from django.db.models import (
+    Case,
+    Count,
+    ExpressionWrapper,
+    F,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    UniqueConstraint,
+    Value,
+    When,
+)
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -17,7 +30,7 @@ from children.models import Child
 from common.decorators import execute_in_background
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
 from common.utils import get_translations_dict
-from events.consts import NotificationType
+from events.consts import MIN_SEATS_PER_ENROLMENT, NotificationType
 from events.enums import EnrolmentDeniedReason
 from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
 from events.utils import (
@@ -251,6 +264,9 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         except TypeError:
             return None
 
+    def get_reserved_seats(self) -> int:
+        return sum(event.get_reserved_seats() for event in self.events.all())
+
     def clean(self):
         from events.services import validate_event_group_and_events_project_match
 
@@ -325,13 +341,17 @@ class EventQueryset(TranslatableQuerySet):
 
 class Event(TimestampedModel, TranslatableModel, SerializableMixin):
     CHILD_AND_GUARDIAN = "child_and_guardian"
-    CHILD_AND_1_OR_2_GUARDIANS = "child_and_1_or_2_guardians"
     FAMILY = "family"
     PARTICIPANTS_PER_INVITE_CHOICES = (
         (CHILD_AND_GUARDIAN, _("Child and guardian")),
-        (CHILD_AND_1_OR_2_GUARDIANS, _("Child and 1-2 guardians")),
         (FAMILY, _("Family")),
     )
+
+    # participants_per_invite -> (max extra children, max extra guardians)
+    MAX_EXTRA_PARTICIPANTS = {
+        CHILD_AND_GUARDIAN: (0, 0),
+        FAMILY: (3, 1),
+    }
 
     INTERNAL = "internal"
     TICKETMASTER = "ticketmaster"
@@ -364,7 +384,13 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         verbose_name=_("duration"), blank=True, null=True, help_text=_("In minutes")
     )
     capacity_per_occurrence = models.PositiveSmallIntegerField(
-        verbose_name=_("capacity per occurrence"), null=True, blank=True
+        verbose_name=_("capacity per occurrence"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Total physical seat capacity. Each enrolment takes at least 2 seats "
+            "(1 child + 1 guardian)."
+        ),
     )
     published_at = models.DateTimeField(
         blank=True, null=True, verbose_name=_("published at")
@@ -642,6 +668,11 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         except TypeError:
             return None
 
+    def get_reserved_seats(self) -> int:
+        return sum(
+            occurrence.get_reserved_seats() for occurrence in self.occurrences.all()
+        )
+
 
 class OccurrenceQueryset(models.QuerySet):
     def user_can_view(self, user):
@@ -707,6 +738,21 @@ class OccurrenceQueryset(models.QuerySet):
             )
         )
 
+    def with_reserved_seats(self):
+        Enrolment = apps.get_model("events", "Enrolment")
+        seats = (
+            Enrolment.objects.filter(occurrence=OuterRef("pk"))
+            .order_by()
+            .values("occurrence")
+            .annotate(total=Sum(EnrolmentQueryset.seats_expression()))
+            .values("total")
+        )
+        return self.annotate(
+            reserved_seats=Coalesce(
+                Subquery(seats, output_field=models.IntegerField()), Value(0)
+            )
+        )
+
     def with_free_spot_notification_subscription_count(self):
         return self.annotate(
             free_spot_notification_subscription_count=Count(
@@ -748,8 +794,9 @@ class Occurrence(TimestampedModel, SerializableMixin):
         null=True,
         blank=True,
         help_text=_(
-            "When set will be used as the capacity of this occurrence instead of "
-            "the value coming from the event."
+            "Override total physical seat capacity. "
+            "Each enrolment takes at least 2 seats "
+            "(1 child + 1 guardian)."
         ),
     )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
@@ -833,11 +880,24 @@ class Occurrence(TimestampedModel, SerializableMixin):
         else:
             return self.event.capacity_per_occurrence
 
+    def get_reserved_seats(self) -> int:
+        try:
+            return self.reserved_seats
+        except AttributeError:
+            return self.enrolments.aggregate(
+                total=Coalesce(Sum(EnrolmentQueryset.seats_expression()), Value(0))
+            )["total"]
+
     def get_remaining_capacity(self) -> int:
         capacity = self.get_capacity() or 0
-        return max(capacity - self.get_enrolment_count(), 0)
+        return max(capacity - self.get_reserved_seats(), 0)
 
-    def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
+    def has_free_seats(self, requested_seats: int = MIN_SEATS_PER_ENROLMENT) -> bool:
+        return self.get_remaining_capacity() >= requested_seats
+
+    def get_enrolment_denied_reason(
+        self, child: Child, requested_seats: int = MIN_SEATS_PER_ENROLMENT
+    ) -> None | EnrolmentDeniedReason:
         """
         Why, if for any reason, the given child can't enrol to this occurrence?
 
@@ -846,7 +906,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
         if reason := self.event.get_enrolment_denied_reason(child):
             return reason
 
-        if self.enrolments.count() >= self.get_capacity():
+        if not self.has_free_seats(requested_seats):
             return EnrolmentDeniedReason.OCCURRENCE_FULL
 
         if self.time < timezone.now():
@@ -875,7 +935,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
 
     def send_free_spot_notifications_if_needed(self):
         if (
-            self.get_remaining_capacity()
+            self.has_free_seats()
             # Normally the event shouldn't be unpublished or in the past ever when
             # coming here. These checks are just for making sure no notifications are
             # sent in possible abnormal situations either for those events.
@@ -886,6 +946,16 @@ class Occurrence(TimestampedModel, SerializableMixin):
 
 
 class EnrolmentQueryset(models.QuerySet):
+    @staticmethod
+    def seats_expression():
+        return Case(
+            When(extra_children_count__isnull=True, then=Value(1)),
+            default=Value(MIN_SEATS_PER_ENROLMENT)
+            + F("extra_children_count")
+            + F("extra_guardians_count"),
+            output_field=models.IntegerField(),
+        )
+
     def user_can_view(self, user):
         if not user.is_authenticated:
             return self.none()
@@ -976,6 +1046,18 @@ class Enrolment(TimestampedModel, SerializableMixin):
         verbose_name=_("occurrence"),
     )
     attended = models.BooleanField(verbose_name=_("attended"), null=True, blank=True)
+    extra_children_count = models.PositiveSmallIntegerField(
+        verbose_name=_("extra children count"),
+        null=True,
+        blank=True,
+        help_text=_("NULL means a legacy enrolment, which counts as 1 seat."),
+    )
+    extra_guardians_count = models.PositiveSmallIntegerField(
+        verbose_name=_("extra guardians count"),
+        null=True,
+        blank=True,
+        help_text=_("NULL means a legacy enrolment, which counts as 1 seat."),
+    )
     reminder_sent_at = models.DateTimeField(
         verbose_name=_("reminder sent at"), null=True, blank=True
     )
@@ -986,6 +1068,8 @@ class Enrolment(TimestampedModel, SerializableMixin):
     serialize_fields = (
         {"name": "child", "accessor": lambda c: str(c)},
         {"name": "occurrence"},
+        {"name": "extra_children_count"},
+        {"name": "extra_guardians_count"},
     )
 
     objects = SerializableMixin.SerializableManager.from_queryset(EnrolmentQueryset)()
@@ -996,9 +1080,32 @@ class Enrolment(TimestampedModel, SerializableMixin):
         constraints = [
             models.UniqueConstraint(
                 fields=["child", "occurrence"], name="unq_child_occurrence"
-            )
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        extra_children_count__isnull=True,
+                        extra_guardians_count__isnull=True,
+                    )
+                    | Q(
+                        extra_children_count__isnull=False,
+                        extra_guardians_count__isnull=False,
+                    )
+                ),
+                name="enrolment_extra_counts_both_or_neither",
+            ),
         ]
         ordering = ("id",)
+
+    @property
+    def total_seats(self) -> int:
+        if self.extra_children_count is None:
+            return 1
+        return (
+            MIN_SEATS_PER_ENROLMENT
+            + self.extra_children_count
+            + self.extra_guardians_count
+        )
 
     def __str__(self):
         return f"{self.pk} {self.child_id}"

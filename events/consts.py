@@ -28,6 +28,10 @@ notification_types_that_need_communication_acceptance = (
 )
 
 
+# Minimum seats reserved per new enrolment (1 child + 1 guardian)
+MIN_SEATS_PER_ENROLMENT = 2
+
+
 ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR: dict[
     EnrolmentDeniedReason, KukkuuGraphQLError
 ] = {
