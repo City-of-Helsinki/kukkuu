@@ -67,6 +67,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 1,
       'url': 'http://testserver/reports/event-group/1/',
     }),
     dict({
@@ -84,6 +85,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/2/',
     }),
     dict({
@@ -101,6 +103,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/3/',
     }),
     dict({
@@ -118,6 +121,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/4/',
     }),
     dict({
@@ -135,6 +139,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 0,
       'url': 'http://testserver/reports/event-group/5/',
     }),
   ])
@@ -155,6 +160,7 @@
       'id': 1,
       'year': 2020,
     }),
+    'reserved_seats': 2,
     'url': 'http://testserver/reports/event-group/1/',
   })
 # ---
@@ -205,6 +211,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 2,
       'ticket_system': 'internal',
     }),
     dict({
@@ -249,6 +256,7 @@
         'id': 1,
         'year': 2020,
       }),
+      'reserved_seats': 2,
       'ticket_system': 'internal',
     }),
   ])

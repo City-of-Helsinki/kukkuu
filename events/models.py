@@ -264,6 +264,9 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         except TypeError:
             return None
 
+    def get_reserved_seats(self) -> int:
+        return sum(event.get_reserved_seats() for event in self.events.all())
+
     def clean(self):
         from events.services import validate_event_group_and_events_project_match
 
@@ -664,6 +667,11 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             )
         except TypeError:
             return None
+
+    def get_reserved_seats(self) -> int:
+        return sum(
+            occurrence.get_reserved_seats() for occurrence in self.occurrences.all()
+        )
 
 
 class OccurrenceQueryset(models.QuerySet):

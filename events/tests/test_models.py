@@ -992,6 +992,29 @@ def test_occurrence_with_reserved_seats_query_matches_method():
 
 
 @pytest.mark.django_db
+def test_event_and_event_group_reserved_seats():
+    event_group = EventGroupFactory()
+    event_1 = EventFactory(event_group=event_group)
+    event_2 = EventFactory(event_group=event_group)
+
+    occ_1 = OccurrenceFactory(event=event_1)
+    occ_2 = OccurrenceFactory(event=event_2)
+
+    # Legacy enrolment (1 seat)
+    EnrolmentFactory(
+        occurrence=occ_1, extra_children_count=None, extra_guardians_count=None
+    )
+    # Family enrolment (2 + 1 + 1 = 4 seats)
+    EnrolmentFactory(occurrence=occ_2, extra_children_count=1, extra_guardians_count=1)
+
+    assert occ_1.get_reserved_seats() == 1
+    assert occ_2.get_reserved_seats() == 4
+    assert event_1.get_reserved_seats() == 1
+    assert event_2.get_reserved_seats() == 4
+    assert event_group.get_reserved_seats() == 5
+
+
+@pytest.mark.django_db
 def test_enrolment_negative_extra_participants_check_constraint():
     occurrence = OccurrenceFactory()
     child = ChildFactory()
