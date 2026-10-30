@@ -321,6 +321,7 @@ INSTALLED_APPS = [
     "events",
     "venues",
     "languages",
+    "tags",
     "subscriptions",
     "messaging",
     "importers",

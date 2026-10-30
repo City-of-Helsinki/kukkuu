@@ -57,6 +57,8 @@ from kukkuu.exceptions import (
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
+from tags.models import ThemePath
+from tags.schema import ThemePathNode
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
@@ -273,6 +275,7 @@ class EventNode(DjangoObjectType):
     participants_per_invite = EventParticipantsPerInvite(required=True)
     ticket_system = graphene.Field(EventTicketSystem)
     organisation = graphene.Field("organisations.schema.OrganisationNode")
+    theme_paths = graphene.List(graphene.NonNull(ThemePathNode), required=True)
     can_user_administer = graphene.Boolean()
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
     enrolment_denied_reason = EnrolmentDeniedReasonEnum(
@@ -306,6 +309,7 @@ class EventNode(DjangoObjectType):
             "short_description",
             "ticket_system",
             "organisation",
+            "theme_paths",
             "can_user_administer",
         )
 
@@ -336,7 +340,11 @@ class EventNode(DjangoObjectType):
                 Prefetch(
                     "translations",
                     queryset=EventTranslation.objects.order_by("language_code"),
-                )
+                ),
+                Prefetch(
+                    "theme_paths",
+                    queryset=ThemePathNode.get_queryset(ThemePath.objects.all(), info),
+                ),
             )
             .order_by("-created_at")
             .language(lang)
@@ -346,6 +354,9 @@ class EventNode(DjangoObjectType):
     @login_required
     def get_node(cls, info, id):
         return super().get_node(info, id)
+
+    def resolve_theme_paths(self, info, **kwargs):
+        return self.theme_paths.all()
 
     def resolve_image(self, info, **kwargs):
         if self.image:
@@ -960,7 +971,11 @@ class EventInputMixin:
 
 class AddEventMutation(graphene.relay.ClientIDMutation):
     class Input(EventInputMixin):
-        pass
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            required=True,
+            description="At least one theme path is required.",
+        )
 
     event = graphene.Field(EventNode)
 
@@ -975,6 +990,12 @@ class AddEventMutation(graphene.relay.ClientIDMutation):
 class CopyEventMutation(graphene.relay.ClientIDMutation):
     class Input(EventInputMixin):
         source_event_id = graphene.GlobalID(required=True)
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to copy the source event's theme paths. "
+            "If given, at least one theme path is required. "
+            "The resulting theme paths must not be empty.",
+        )
 
     event = graphene.Field(EventNode)
 
@@ -1004,6 +1025,11 @@ class UpdateEventMutation(graphene.relay.ClientIDMutation):
         event_group_id = graphene.GlobalID(required=False)
         ready_for_event_group_publishing = graphene.Boolean()
         ticket_system = UpdateEventTicketSystemInput()
+        theme_path_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to keep the current theme paths. "
+            "If given, at least one theme path is required.",
+        )
 
     event = graphene.Field(EventNode)
 

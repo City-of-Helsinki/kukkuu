@@ -133,6 +133,22 @@ query Events($projectId: ID, $upcoming: Boolean) {
 }
 """
 
+EVENTS_THEME_PATHS_QUERY = """
+query Events($themePath: String) {
+  events(themePath: $themePath) {
+    edges {
+      node {
+        name
+        themePaths {
+          slug
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
 OCCURRENCES_QUERY = """
 query Occurrences {
   occurrences {

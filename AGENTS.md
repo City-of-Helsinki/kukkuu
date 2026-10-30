@@ -22,6 +22,7 @@ For the full architectural picture, see [ARCHITECTURE.md](./ARCHITECTURE.md) and
 Key top-level Django apps and their purposes:
 - `children`: Manage children and their guardians.
 - `events`: Manage events, occurrences, and enrolments.
+- `tags`: Translatable tags, each kind of tag being its own model. Currently, theme paths ("teemapolku") attached to events.
 - `venues`: Manage event venues.
 - `projects`: Manage year projects (grouping children and events by birth year).
 - `users`: User extensions and custom models.
