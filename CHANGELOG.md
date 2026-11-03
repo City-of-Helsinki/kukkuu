@@ -1,4 +1,3 @@
-<!-- DOCTOC SKIP -->
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
