@@ -1,5 +1,3 @@
-<!-- DOCTOC SKIP -->
-
 # Kukkuu Backend Agent Instructions
 
 ## Role
