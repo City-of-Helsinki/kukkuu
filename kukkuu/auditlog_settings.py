@@ -73,7 +73,11 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
         "m2m_fields": ["theme_paths"],
     },
     "events.eventthemepath",
-    "events.occurrence",
+    {
+        "model": "events.occurrence",
+        "m2m_fields": ["accessibilities"],
+    },
+    "events.occurrenceaccessibility",
     "events.enrolment",
     "events.eventgroup",
     "events.ticketsystempassword",
@@ -85,6 +89,7 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "organisations.organisation",
     "users.user_organisations",
     "tags.themepath",
+    "tags.accessibility",
     # secondary
     "django_ilmoitin.notificationtemplatetranslation",
     "projects.projecttranslation",
@@ -93,6 +98,7 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "venues.venuetranslation",
     "languages.languagetranslation",
     "tags.themepathtranslation",
+    "tags.accessibilitytranslation",
     "messaging.messagetranslation",
     "messaging.message_occurrences",
     "users.guardian_languages_spoken_at_home",

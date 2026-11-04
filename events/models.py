@@ -807,6 +807,13 @@ class Occurrence(TimestampedModel, SerializableMixin):
         through="events.Enrolment",
         blank=True,
     )
+    accessibilities = models.ManyToManyField(
+        "tags.Accessibility",
+        through="OccurrenceAccessibility",
+        verbose_name=_("accessibilities"),
+        related_name="occurrences",
+        blank=True,
+    )
     occurrence_language = models.CharField(
         max_length=10,
         choices=settings.LANGUAGES,
@@ -967,6 +974,24 @@ class Occurrence(TimestampedModel, SerializableMixin):
             and timezone.now() < self.time
         ):
             self.free_spot_notification_subscriptions.send_notification()
+
+
+class OccurrenceAccessibility(models.Model):
+    occurrence = models.ForeignKey(Occurrence, on_delete=models.CASCADE)
+    accessibility = models.ForeignKey("tags.Accessibility", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = _("occurrence accessibility")
+        verbose_name_plural = _("occurrence accessibilities")
+        constraints = [
+            UniqueConstraint(
+                fields=["occurrence", "accessibility"],
+                name="unique_occurrence_accessibility",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.occurrence} – {self.accessibility}"
 
 
 class EnrolmentQueryset(models.QuerySet):

@@ -1,15 +1,14 @@
 import factory
 
-from tags.models import ThemePath
+from tags.models import Accessibility, ThemePath
 
 
-class ThemePathFactory(factory.django.DjangoModelFactory):
-    slug = factory.Sequence(lambda n: f"theme_path_{n}")
+class TagFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("text", max_nb_chars=32)
     description = factory.Faker("text")
 
     class Meta:
-        model = ThemePath
+        abstract = True
         django_get_or_create = ("slug",)
         skip_postgeneration_save = True  # Not needed after factory v4.0.0
 
@@ -23,3 +22,17 @@ class ThemePathFactory(factory.django.DjangoModelFactory):
             self.description = fields.get("description", "")
         if create:
             self.save()
+
+
+class ThemePathFactory(TagFactory):
+    slug = factory.Sequence(lambda n: f"theme_path_{n}")
+
+    class Meta:
+        model = ThemePath
+
+
+class AccessibilityFactory(TagFactory):
+    slug = factory.Sequence(lambda n: f"accessibility_{n}")
+
+    class Meta:
+        model = Accessibility

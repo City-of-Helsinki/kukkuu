@@ -21,3 +21,7 @@ kind of tag is a concrete model deriving from it with its own table.
   - Translated `name` and `description` to Finnish, Swedish and English.
   - Linked to events through the `EventThemePath` model of the `events` app. A theme path that is used by an event
     cannot be deleted.
+- `Accessibility`: A tag for an accessibility feature, e.g. "mobility" or "vision".
+  - Translated `name` and `description` to Finnish, Swedish and English.
+  - Linked to occurrences through the `OccurrenceAccessibility` model of the `events` app. An accessibility that is
+    used by an occurrence cannot be deleted.
