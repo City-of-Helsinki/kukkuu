@@ -57,3 +57,16 @@ class ThemePath(Tag):
     class Meta(Tag.Meta):
         verbose_name = _("theme path")
         verbose_name_plural = _("theme paths")
+
+
+class Accessibility(Tag):
+    """Accessibility (Finnish: "saavutettavuus") feature."""
+
+    translations = TranslatedFields(
+        name=models.CharField(verbose_name=_("name"), max_length=255),
+        description=models.TextField(verbose_name=_("description"), blank=True),
+    )
+
+    class Meta(Tag.Meta):
+        verbose_name = _("accessibility")
+        verbose_name_plural = _("accessibilities")
