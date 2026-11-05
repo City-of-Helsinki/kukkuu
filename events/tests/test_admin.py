@@ -17,7 +17,13 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.models import Event, EventGroup, EventThemePath, Occurrence
+from events.models import (
+    Event,
+    EventGroup,
+    EventThemePath,
+    Occurrence,
+    OccurrenceAccessibility,
+)
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
 from tags.factories import AccessibilityFactory, ThemePathFactory
@@ -543,3 +549,47 @@ def test_occurrence_admin_get_queryset_annotates_reserved_seats(rf):
     assert hasattr(obj, "reserved_seats")
     assert obj.reserved_seats == 3
     assert admin_instance.get_enrolments(obj) == "3 / 10"
+
+
+def _occurrence_form_data(occurrence):
+    time = timezone.localtime(occurrence.time)
+    return {
+        "time_0": time.strftime("%Y-%m-%d"),
+        "time_1": time.strftime("%H:%M:%S"),
+        "event": occurrence.event.pk,
+        "venue": occurrence.venue.pk,
+        "occurrence_language": occurrence.occurrence_language,
+        "enrolments-TOTAL_FORMS": "0",
+        "enrolments-INITIAL_FORMS": "0",
+        "free_spot_notification_subscriptions-TOTAL_FORMS": "0",
+        "free_spot_notification_subscriptions-INITIAL_FORMS": "0",
+    }
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_change_form_can_edit_accessibilities(admin_client):
+    first, second = AccessibilityFactory.create_batch(2)
+    occurrence = OccurrenceFactory(accessibilities=[first])
+    url = reverse("admin:events_occurrence_change", args=[occurrence.pk])
+    data = _occurrence_form_data(occurrence)
+    first_row = OccurrenceAccessibility.objects.get(occurrence=occurrence)
+
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "occurrenceaccessibility_set-TOTAL_FORMS": "2",
+            "occurrenceaccessibility_set-INITIAL_FORMS": "1",
+            # Delete existing accessibility:
+            "occurrenceaccessibility_set-0-id": first_row.pk,
+            "occurrenceaccessibility_set-0-occurrence": occurrence.pk,
+            "occurrenceaccessibility_set-0-accessibility": first.pk,
+            "occurrenceaccessibility_set-0-DELETE": "on",
+            # Add new accessibility:
+            "occurrenceaccessibility_set-1-occurrence": occurrence.pk,
+            "occurrenceaccessibility_set-1-accessibility": second.pk,
+        },
+    )
+
+    assert response.status_code == 302
+    assert list(occurrence.accessibilities.all()) == [second]
