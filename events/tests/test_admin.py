@@ -21,8 +21,8 @@ from events.factories import (
 from events.models import Event, EventGroup, EventThemePath, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
-from tags.factories import ThemePathFactory
-from tags.models import ThemePath
+from tags.factories import AccessibilityFactory, ThemePathFactory
+from tags.models import Accessibility, ThemePath
 from users.factories import UserFactory
 
 PUBLISH_TEMPLATE = "admin/events/publish_with_registration_opens_at.html"
@@ -442,6 +442,44 @@ def test_theme_path_admin_bulk_delete_is_refused_when_used_by_events(admin_clien
 
     assert response.status_code == 200
     assert ThemePath.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
+
+
+@pytest.mark.django_db
+def test_accessibility_admin_delete_is_refused_when_used_by_occurrences(admin_client):
+    accessibility = AccessibilityFactory()
+    occurrence = OccurrenceFactory(accessibilities=[accessibility])
+    url = reverse("admin:tags_accessibility_delete", args=[quote(accessibility.pk)])
+
+    response = admin_client.get(url)
+
+    assert len(response.context["protected"]) == 1
+    assert f"({occurrence.pk})" in response.context["protected"][0]
+
+    response = admin_client.post(url, {"post": "yes"})
+
+    assert response.status_code == 200
+    assert Accessibility.objects.filter(pk=accessibility.pk).exists()
+    assert list(occurrence.accessibilities.all()) == [accessibility]
+
+
+@pytest.mark.django_db
+def test_accessibility_admin_bulk_delete_is_refused_when_used_by_occurrences(
+    admin_client,
+):
+    unused, used = AccessibilityFactory.create_batch(2)
+    OccurrenceFactory(accessibilities=[used])
+
+    response = admin_client.post(
+        reverse("admin:tags_accessibility_changelist"),
+        {
+            "action": "delete_selected",
+            helpers.ACTION_CHECKBOX_NAME: [unused.pk, used.pk],
+            "post": "yes",
+        },
+    )
+
+    assert response.status_code == 200
+    assert Accessibility.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
 
 
 @pytest.mark.django_db
