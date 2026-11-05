@@ -27,14 +27,14 @@ Here are the most important fields of the Helsinki-profile service instance:
 
 ```python
 {
-    'service_type': None,
-    'name': 'helsinki_profile',
-    'idp': [],
-    'gdpr_url': '',
-    'gdpr_query_scope': '',
-    'gdpr_delete_scope': '',
-    'gdpr_audience': '',
-    'is_profile_service': True
+    "service_type": None,
+    "name": "helsinki_profile",
+    "idp": [],
+    "gdpr_url": "",
+    "gdpr_query_scope": "",
+    "gdpr_delete_scope": "",
+    "gdpr_audience": "",
+    "is_profile_service": True,
 }
 ```
 
@@ -87,8 +87,8 @@ In [4]: s.save()
 While in console, double check that the helsinki-profile UI is set as a client
 
 ```python
-In [5]: [sid.client_id for sid in s.client_ids.all()]
-Out[5]: ['https://api.hel.fi/auth/helsinkiprofile-ui']
+In[5]: [sid.client_id for sid in s.client_ids.all()]
+Out[5]: ["https://api.hel.fi/auth/helsinkiprofile-ui"]
 ```
 
 After the service with a proper client is configured, then also the GraphQL-queries works from the profile-backend itself. [An example Helsinki-profile query to fetch my profile data used by the helsinki-Profile UI](http://profile-backend:8080/graphql/#query=fragment%20MyProfileQueryVerifiedPersonalInformationPermanentForeignAddress%20on%20VerifiedPersonalInformationForeignAddressNode%20%7B%0A%20%20streetAddress%0A%20%20additionalAddress%0A%20%20countryCode%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryVerifiedPersonalInformationPermanentAddress%20on%20VerifiedPersonalInformationAddressNode%20%7B%0A%20%20streetAddress%0A%20%20postalCode%0A%20%20postOffice%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryVerifiedPersonalInformation%20on%20VerifiedPersonalInformationNode%20%7B%0A%20%20firstName%0A%20%20lastName%0A%20%20givenName%0A%20%20nationalIdentificationNumber%0A%20%20municipalityOfResidence%0A%20%20municipalityOfResidenceNumber%0A%20%20permanentAddress%20%7B%0A%20%20%20%20...MyProfileQueryVerifiedPersonalInformationPermanentAddress%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20permanentForeignAddress%20%7B%0A%20%20%20%20...MyProfileQueryVerifiedPersonalInformationPermanentForeignAddress%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPrimaryAddress%20on%20AddressNode%20%7B%0A%20%20id%0A%20%20primary%0A%20%20address%0A%20%20postalCode%0A%20%20city%0A%20%20countryCode%0A%20%20addressType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPrimaryEmail%20on%20EmailNode%20%7B%0A%20%20id%0A%20%20email%0A%20%20primary%0A%20%20emailType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPrimaryPhone%20on%20PhoneNode%20%7B%0A%20%20id%0A%20%20phone%0A%20%20primary%0A%20%20phoneType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryAddressesEdgesNode%20on%20AddressNode%20%7B%0A%20%20primary%0A%20%20id%0A%20%20address%0A%20%20postalCode%0A%20%20city%0A%20%20countryCode%0A%20%20addressType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryEmailsEdgesNode%20on%20EmailNode%20%7B%0A%20%20primary%0A%20%20id%0A%20%20email%0A%20%20emailType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPhonesEdgesNode%20on%20PhoneNode%20%7B%0A%20%20primary%0A%20%20id%0A%20%20phone%0A%20%20phoneType%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryAddressesEdges%20on%20AddressNodeEdge%20%7B%0A%20%20node%20%7B%0A%20%20%20%20...MyProfileQueryAddressesEdgesNode%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryEmailsEdges%20on%20EmailNodeEdge%20%7B%0A%20%20node%20%7B%0A%20%20%20%20...MyProfileQueryEmailsEdgesNode%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPhonesEdges%20on%20PhoneNodeEdge%20%7B%0A%20%20node%20%7B%0A%20%20%20%20...MyProfileQueryPhonesEdgesNode%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryAddresses%20on%20AddressNodeConnection%20%7B%0A%20%20edges%20%7B%0A%20%20%20%20...MyProfileQueryAddressesEdges%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryEmails%20on%20EmailNodeConnection%20%7B%0A%20%20edges%20%7B%0A%20%20%20%20...MyProfileQueryEmailsEdges%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQueryPhones%20on%20PhoneNodeConnection%20%7B%0A%20%20edges%20%7B%0A%20%20%20%20...MyProfileQueryPhonesEdges%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Afragment%20MyProfileQuery%20on%20ProfileNode%20%7B%0A%20%20id%0A%20%20firstName%0A%20%20lastName%0A%20%20nickname%0A%20%20language%0A%20%20primaryAddress%20%7B%0A%20%20%20%20...MyProfileQueryPrimaryAddress%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20addresses%20%7B%0A%20%20%20%20...MyProfileQueryAddresses%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20primaryEmail%20%7B%0A%20%20%20%20...MyProfileQueryPrimaryEmail%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20emails%20%7B%0A%20%20%20%20...MyProfileQueryEmails%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20primaryPhone%20%7B%0A%20%20%20%20...MyProfileQueryPrimaryPhone%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20phones%20%7B%0A%20%20%20%20...MyProfileQueryPhones%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20verifiedPersonalInformation%20%7B%0A%20%20%20%20...MyProfileQueryVerifiedPersonalInformation%0A%20%20%20%20**typename%0A%20%20%7D%0A%20%20**typename%0A%7D%0A%0Aquery%20MyProfile%20%7B%0A%20%20myProfile%20%7B%0A%20%20%20%20...MyProfileQuery%0A%20%20%20%20**typename%0A%20%20%7D%0A%7D%0A&operationName=MyProfile&variables=%7B%7D) (remember to use the authorization header with a bearer token issued by Tunnistamo).
