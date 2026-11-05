@@ -19,7 +19,7 @@ from events.services import (
 )
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
-from tags.models import ThemePath
+from tags.models import Accessibility, ThemePath
 
 from .models import (
     Enrolment,
@@ -27,6 +27,7 @@ from .models import (
     EventGroup,
     EventThemePath,
     Occurrence,
+    OccurrenceAccessibility,
     TicketSystemPassword,
 )
 
@@ -120,6 +121,7 @@ class OccurrenceIsUpcomingFilter(BaseBooleanListFilter):
 class OccurrencesInline(admin.StackedInline):
     model = Occurrence
     extra = 0
+    show_change_link = True
 
 
 class ThroughModelTabularInline(admin.TabularInline):
@@ -168,6 +170,26 @@ class EventThemePathInline(ThroughModelTabularInline):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "theme_path":
             kwargs["queryset"] = ThemePath.objects.prefetch_related("translations")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+class OccurrenceAccessibilityInline(ThroughModelTabularInline):
+    model = OccurrenceAccessibility
+    extra = 0
+
+    def get_queryset(self, request):
+        # The row labels (OccurrenceAccessibility.__str__) use the occurrence
+        # and the accessibility
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("occurrence", "accessibility")
+            .prefetch_related("accessibility__translations")
+        )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "accessibility":
+            kwargs["queryset"] = Accessibility.objects.prefetch_related("translations")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -298,7 +320,11 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         "capacity_override",
         "ticket_system_url",
     )
-    inlines = [EnrolmentsInline, FreeSpotNotificationSubscriptionInline]
+    inlines = [
+        OccurrenceAccessibilityInline,
+        EnrolmentsInline,
+        FreeSpotNotificationSubscriptionInline,
+    ]
     list_filter = (
         "event__project",
         ("event", admin.RelatedOnlyFieldListFilter),
