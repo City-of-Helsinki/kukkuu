@@ -108,6 +108,15 @@ def test_deleting_event_keeps_its_theme_paths():
 
 
 @pytest.mark.django_db
+def test_event_theme_path_pair_is_unique():
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+
+    with pytest.raises(IntegrityError):
+        EventThemePath.objects.create(event=event, theme_path=theme_path)
+
+
+@pytest.mark.django_db
 def test_occurrence_creation(event, venue):
     OccurrenceFactory(event=event, venue=venue)
 

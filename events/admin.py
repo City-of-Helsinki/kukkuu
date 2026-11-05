@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.template.response import TemplateResponse
-from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -26,6 +25,7 @@ from .models import (
     Enrolment,
     Event,
     EventGroup,
+    EventThemePath,
     Occurrence,
     TicketSystemPassword,
 )
@@ -122,19 +122,57 @@ class OccurrencesInline(admin.StackedInline):
     extra = 0
 
 
-class EventAdminForm(TranslatableModelForm):
-    # Because admin doesn't build form fields for M2M fields with a through model:
-    theme_paths = ModelMultipleChoiceField(
-        label=capfirst(Event._meta.get_field("theme_paths").verbose_name),
-        queryset=ThemePath.objects.prefetch_related("translations"),
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-    )
+class ThroughModelTabularInline(admin.TabularInline):
+    """Inline for an explicit many-to-many through model.
+
+    Django checks the permissions of the through model, for example
+    change_eventthemepath. Those currently cannot be assigned in the
+    Django admin's user and group pages (see users.admin.PermissionFilterMixin),
+    which offer only project and report permissions. So staff who may
+    change the parent object could not edit its through rows. The
+    permissions of the parent model are checked instead.
+    """
+
+    def get_parent_admin(self):
+        return self.admin_site.get_model_admin(self.parent_model)
+
+    def has_view_permission(self, request, obj=None):
+        return self.get_parent_admin().has_view_permission(request, obj)
+
+    def has_add_permission(self, request, obj=None):
+        parent_admin = self.get_parent_admin()
+        if obj is None:
+            return parent_admin.has_add_permission(request)
+        return parent_admin.has_change_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self.get_parent_admin().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self.get_parent_admin().has_change_permission(request, obj)
+
+
+class EventThemePathInline(ThroughModelTabularInline):
+    model = EventThemePath
+    extra = 0
+
+    def get_queryset(self, request):
+        # The row labels (EventThemePath.__str__) use the event and the theme path
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("event", "event__project", "theme_path")
+            .prefetch_related("theme_path__translations")
+        )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "theme_path":
+            kwargs["queryset"] = ThemePath.objects.prefetch_related("translations")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Event)
 class EventAdmin(PublishActionMixin, TranslatableAdmin):
-    form = EventAdminForm
     list_display = (
         "id",
         "name",
@@ -175,6 +213,7 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
     )
     search_fields = ("translations__name", "event_group__translations__name")
     inlines = [
+        EventThemePathInline,
         OccurrencesInline,
     ]
     actions = ["publish"]
@@ -201,12 +240,6 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
                 "event_group__project",
             )
         )
-
-    def get_fields(self, request, obj=None):
-        # System check admin.E013 rejects "theme_paths" in the static `fields`
-        # attribute, because the field has a through model, see:
-        # https://docs.djangoproject.com/en/5.2/ref/checks/#admin
-        return *super().get_fields(request, obj), "theme_paths"
 
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
