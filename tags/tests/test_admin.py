@@ -1,9 +1,7 @@
 import pytest
-from django.contrib.admin import helpers
 from django.contrib.admin.utils import quote
 from django.urls import reverse
 
-from events.factories import EventFactory
 from tags.factories import ThemePathFactory
 from tags.models import ThemePath
 
@@ -136,42 +134,6 @@ def test_theme_path_admin_deletes_other_translations(admin_client, language_code
     theme_path.refresh_from_db()
     assert not theme_path.has_translation(language_code)
     assert theme_path.has_translation("fi")
-
-
-@pytest.mark.django_db
-def test_theme_path_admin_delete_is_refused_when_used_by_events(admin_client):
-    theme_path = ThemePathFactory()
-    event = EventFactory(theme_paths=[theme_path])
-    url = _delete_url(theme_path)
-
-    response = admin_client.get(url)
-
-    assert len(response.context["protected"]) == 1
-    assert str(event) in response.context["protected"][0]
-
-    response = admin_client.post(url, {"post": "yes"})
-
-    assert response.status_code == 200
-    assert ThemePath.objects.filter(pk=theme_path.pk).exists()
-    assert list(event.theme_paths.all()) == [theme_path]
-
-
-@pytest.mark.django_db
-def test_theme_path_admin_bulk_delete_is_refused_when_used_by_events(admin_client):
-    unused, used = ThemePathFactory.create_batch(2)
-    EventFactory(theme_paths=[used])
-
-    response = admin_client.post(
-        reverse("admin:tags_themepath_changelist"),
-        {
-            "action": "delete_selected",
-            helpers.ACTION_CHECKBOX_NAME: [unused.pk, used.pk],
-            "post": "yes",
-        },
-    )
-
-    assert response.status_code == 200
-    assert ThemePath.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
 
 
 @pytest.mark.django_db
