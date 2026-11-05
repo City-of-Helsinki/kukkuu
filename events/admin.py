@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.forms import BaseInlineFormSet, ModelMultipleChoiceField
 from django.template.response import TemplateResponse
-from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
@@ -26,6 +25,7 @@ from .models import (
     Enrolment,
     Event,
     EventGroup,
+    EventThemePath,
     Occurrence,
     TicketSystemPassword,
 )
@@ -122,19 +122,27 @@ class OccurrencesInline(admin.StackedInline):
     extra = 0
 
 
-class EventAdminForm(TranslatableModelForm):
-    # Because admin doesn't build form fields for M2M fields with a through model:
-    theme_paths = ModelMultipleChoiceField(
-        label=capfirst(Event._meta.get_field("theme_paths").verbose_name),
-        queryset=ThemePath.objects.prefetch_related("translations"),
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-    )
+class EventThemePathInline(admin.TabularInline):
+    model = EventThemePath
+    extra = 0
+
+    def get_queryset(self, request):
+        # The row labels (EventThemePath.__str__) use the event and the theme path
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("event", "theme_path")
+            .prefetch_related("theme_path__translations")
+        )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "theme_path":
+            kwargs["queryset"] = ThemePath.objects.prefetch_related("translations")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Event)
 class EventAdmin(PublishActionMixin, TranslatableAdmin):
-    form = EventAdminForm
     list_display = (
         "id",
         "name",
@@ -175,6 +183,7 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
     )
     search_fields = ("translations__name", "event_group__translations__name")
     inlines = [
+        EventThemePathInline,
         OccurrencesInline,
     ]
     actions = ["publish"]
@@ -201,12 +210,6 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
                 "event_group__project",
             )
         )
-
-    def get_fields(self, request, obj=None):
-        # System check admin.E013 rejects "theme_paths" in the static `fields`
-        # attribute, because the field has a through model, see:
-        # https://docs.djangoproject.com/en/5.2/ref/checks/#admin
-        return *super().get_fields(request, obj), "theme_paths"
 
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):

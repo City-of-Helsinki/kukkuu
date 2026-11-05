@@ -16,7 +16,7 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.models import Event, EventGroup, Occurrence
+from events.models import Event, EventGroup, EventThemePath, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
 from tags.factories import ThemePathFactory
@@ -211,6 +211,8 @@ def test_event_admin_change_form_can_edit_registration_opens_at(admin_client, pa
             **_registration_opens_at_form_fields(past),
             "occurrences-TOTAL_FORMS": "0",
             "occurrences-INITIAL_FORMS": "0",
+            "eventthemepath_set-TOTAL_FORMS": "0",
+            "eventthemepath_set-INITIAL_FORMS": "0",
         },
     )
 
@@ -238,18 +240,48 @@ def test_event_admin_change_form_can_edit_theme_paths(admin_client):
         "occurrences-TOTAL_FORMS": "0",
         "occurrences-INITIAL_FORMS": "0",
     }
+    first_row = EventThemePath.objects.get(event=event)
+    assert list(event.theme_paths.all()) == [first]
 
-    response = admin_client.post(url, {**data, "theme_paths": [second.pk]})
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "eventthemepath_set-TOTAL_FORMS": "2",
+            "eventthemepath_set-INITIAL_FORMS": "1",
+            # Delete existing theme path:
+            "eventthemepath_set-0-id": first_row.pk,
+            "eventthemepath_set-0-event": event.pk,
+            "eventthemepath_set-0-theme_path": first.pk,
+            "eventthemepath_set-0-DELETE": "on",
+            # Add new theme path:
+            "eventthemepath_set-1-event": event.pk,
+            "eventthemepath_set-1-theme_path": second.pk,
+        },
+    )
     assert response.status_code == 302
     assert list(event.theme_paths.all()) == [second]
 
-    response = admin_client.post(url, data)
+    second_row = EventThemePath.objects.get(event=event)
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "eventthemepath_set-TOTAL_FORMS": "1",
+            "eventthemepath_set-INITIAL_FORMS": "1",
+            # Delete existing theme path:
+            "eventthemepath_set-0-id": second_row.pk,
+            "eventthemepath_set-0-event": event.pk,
+            "eventthemepath_set-0-theme_path": second.pk,
+            "eventthemepath_set-0-DELETE": "on",
+        },
+    )
     assert response.status_code == 302
     assert event.theme_paths.count() == 0
 
 
 @pytest.mark.django_db
-def test_event_admin_change_form_shows_theme_paths_with_current_ones_checked(
+def test_event_admin_change_form_shows_current_theme_paths_and_offers_all(
     admin_client,
 ):
     selected = ThemePathFactory()
@@ -258,10 +290,16 @@ def test_event_admin_change_form_shows_theme_paths_with_current_ones_checked(
 
     response = admin_client.get(reverse("admin:events_event_change", args=[event.pk]))
 
-    form_field = response.context["adminform"].form.fields["theme_paths"]
-    assert list(form_field.queryset) == list(ThemePath.objects.all())
-    assert response.context["adminform"].form.initial["theme_paths"] == [selected]
-    assert other in form_field.queryset
+    formsets = {
+        inline.formset.prefix: inline.formset
+        for inline in response.context["inline_admin_formsets"]
+    }
+    formset = formsets["eventthemepath_set"]
+    assert [form.instance.theme_path for form in formset.initial_forms] == [selected]
+    offered = formset.empty_form.fields["theme_path"].queryset
+    assert list(offered) == list(ThemePath.objects.all())
+    assert other in offered
+    assert offered.count() >= 2  # At least selected and other
 
 
 @pytest.mark.django_db
