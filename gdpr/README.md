@@ -96,9 +96,9 @@ from children.factories import ChildWithGuardianFactory
 from events.factories import EnrolmentFactory, TicketSystemPasswordFactory
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 
-child=ChildWithGuardianFactory()
-guardian=child.guardians.first()
-user=guardian.user
+child = ChildWithGuardianFactory()
+guardian = child.guardians.first()
+user = guardian.user
 
 guardian
 # <Guardian: Kenneth Lam (justindunlap@example.org)>

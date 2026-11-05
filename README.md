@@ -208,6 +208,7 @@ Here's how you can generate a value for `SECRET_KEY` using Python (Based on Djan
 
 ```python
 import secrets, string
+
 allowed_chars = string.ascii_lowercase + string.digits + "!@#$%^&*(-_=+)"
 "".join(secrets.choice(allowed_chars) for i in range(50))
 ```
@@ -441,8 +442,8 @@ To use the SMS notification functionality, you have to acquire an API key from
 The following environment variables are needed:
 
 ```python
-NOTIFICATION_SERVICE_API_TOKEN=your_api_key
-NOTIFICATION_SERVICE_API_URL=notification_service_end_point
+NOTIFICATION_SERVICE_API_TOKEN = your_api_key
+NOTIFICATION_SERVICE_API_URL = notification_service_end_point
 ```
 
 ## Releases, changelogs and deployments
