@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from django.contrib.admin import helpers
 from django.contrib.admin.sites import AdminSite
+from django.contrib.admin.utils import quote
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import now
@@ -316,6 +317,42 @@ def test_event_admin_can_be_filtered_by_theme_path(admin_client):
     assert filtered_events(a) == [event_with_a_b]
     assert filtered_events(b) == [event_with_a_b]
     assert filtered_events(c) == [event_with_c]
+
+
+@pytest.mark.django_db
+def test_theme_path_admin_delete_is_refused_when_used_by_events(admin_client):
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+    url = reverse("admin:tags_themepath_delete", args=[quote(theme_path.pk)])
+
+    response = admin_client.get(url)
+
+    assert len(response.context["protected"]) == 1
+    assert str(event) in response.context["protected"][0]
+
+    response = admin_client.post(url, {"post": "yes"})
+
+    assert response.status_code == 200
+    assert ThemePath.objects.filter(pk=theme_path.pk).exists()
+    assert list(event.theme_paths.all()) == [theme_path]
+
+
+@pytest.mark.django_db
+def test_theme_path_admin_bulk_delete_is_refused_when_used_by_events(admin_client):
+    unused, used = ThemePathFactory.create_batch(2)
+    EventFactory(theme_paths=[used])
+
+    response = admin_client.post(
+        reverse("admin:tags_themepath_changelist"),
+        {
+            "action": "delete_selected",
+            helpers.ACTION_CHECKBOX_NAME: [unused.pk, used.pk],
+            "post": "yes",
+        },
+    )
+
+    assert response.status_code == 200
+    assert ThemePath.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
 
 
 @pytest.mark.django_db
