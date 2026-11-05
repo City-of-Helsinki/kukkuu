@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from .models import ThemePath
+from .models import Accessibility, ThemePath
 
 
 class TagForm(TranslatableModelForm):
@@ -77,4 +77,20 @@ class ThemePathAdmin(TagAdmin):
 
     @admin.display(description=_("Event count"))
     def get_event_count(self, obj):
+        return obj.usage_count
+
+
+@admin.register(Accessibility)
+class AccessibilityAdmin(TagAdmin):
+    usage_relation = "occurrences"
+    list_display = (
+        "slug",
+        "name",
+        "all_languages_column",
+        "sort_order",
+        "get_occurrence_count",
+    )
+
+    @admin.display(description=_("Occurrence count"))
+    def get_occurrence_count(self, obj):
         return obj.usage_count
