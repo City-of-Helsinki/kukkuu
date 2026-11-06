@@ -1,10 +1,12 @@
 import binascii
 import enum
 from copy import deepcopy
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.utils import timezone
 from graphene import Node
 from graphql_jwt.decorators import (
     login_required as graphql_jwt_login_required,
@@ -168,3 +170,8 @@ def strtobool(val):
         return 0
     else:
         raise ValueError("invalid truth value %r" % (val,))
+
+
+def year_of(dt: datetime) -> int:
+    """Return the calendar year of a datetime in local time (Europe/Helsinki)."""
+    return timezone.localtime(dt).year

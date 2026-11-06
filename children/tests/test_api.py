@@ -2195,3 +2195,68 @@ def test_active_internal_and_ticketmaster_enrolments(
     )
 
     snapshot.assert_match(executed)
+
+
+def test_children_list_enrolment_counts_query_count_is_constant(
+    project_user_api_client, project, past, future, django_assert_num_queries
+):
+    """
+    Verify that resolving `enrolmentCount` and `pastEnrolmentCount` across a list of
+    children runs in a constant number of SQL queries without N+1 regressions.
+    """
+    assign_perm(
+        ProjectPermission.VIEW_FAMILIES.permission_name, project_user_api_client.user
+    )
+    query = """
+    query ChildrenEnrolmentCounts {
+      children {
+        edges {
+          node {
+            id
+            enrolmentCount
+            pastEnrolmentCount
+          }
+        }
+      }
+    }
+    """
+    ev_past = EventFactory(
+        project=project, published_at=past, capacity_per_occurrence=50
+    )
+    occ_past = OccurrenceFactory(event=ev_past, time=past)
+    ev_future = EventFactory(
+        project=project, published_at=past, capacity_per_occurrence=50
+    )
+    occ_future = OccurrenceFactory(event=ev_future, time=future)
+    ext_event = RandomExternalTicketSystemEventFactory(
+        project=project,
+        published_at=past,
+        ticket_system_url="https://example.com",
+        capacity_per_occurrence=None,
+    )
+
+    for _ in range(2):
+        c = ChildWithGuardianFactory(project=project)
+        EnrolmentFactory(child=c, occurrence=occ_past)
+        EnrolmentFactory(child=c, occurrence=occ_future)
+        TicketSystemPasswordFactory(event=ext_event, child=c, assigned_at=past)
+
+    # Warm up caches
+    project_user_api_client.execute(query)
+
+    with django_assert_num_queries(5) as captured_2:
+        res_2 = project_user_api_client.execute(query)
+    assert res_2.get("errors") is None
+    assert len(res_2["data"]["children"]["edges"]) == 2
+
+    # Add 5 more children with enrolments and ticket passwords (total 7 children)
+    for _ in range(5):
+        c = ChildWithGuardianFactory(project=project)
+        EnrolmentFactory(child=c, occurrence=occ_past)
+        EnrolmentFactory(child=c, occurrence=occ_future)
+        TicketSystemPasswordFactory(event=ext_event, child=c, assigned_at=past)
+
+    with django_assert_num_queries(len(captured_2)):
+        res_7 = project_user_api_client.execute(query)
+    assert res_7.get("errors") is None
+    assert len(res_7["data"]["children"]["edges"]) == 7

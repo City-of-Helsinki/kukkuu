@@ -143,7 +143,14 @@ class ChildNode(DjangoObjectType):
     @classmethod
     @login_required
     def get_queryset(cls, queryset, info):
-        return queryset.user_can_view(info.context.user).order_by("name", "created_at")
+        # Prefetch occurrences and ticket system passwords (with their events) so
+        # Child.get_enrolment_count() runs in-memory without N+1 queries when
+        # resolving enrolmentCount / pastEnrolmentCount across child lists.
+        return (
+            queryset.user_can_view(info.context.user)
+            .prefetch_related("occurrences", "ticket_system_passwords__event")
+            .order_by("name", "created_at")
+        )
 
     @classmethod
     @login_required

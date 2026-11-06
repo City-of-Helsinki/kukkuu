@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from helsinki_gdpr.models import SerializableMixin
 
 from common.models import TimestampedModel, UUIDPrimaryKeyModel
+from common.utils import year_of
 from gdpr.models import GDPRModel
 from languages.models import Language
 from users.models import Guardian
@@ -120,28 +121,71 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
     def can_user_administer(self, user):
         return user.can_administer_project(self.project)
 
-    def get_enrolment_count(self, year: Optional[int] = None, past=False):
-        from events.models import Event  # noqa
+    def get_enrolled_event_ids(self) -> set[int]:
+        """Set of event IDs the child has enrolled in."""
+        return {occ.event_id for occ in self.occurrences.all()}
 
+    def get_enrolled_event_group_ids(self) -> set[int]:
+        """Set of event group IDs the child has enrolled in."""
+        return {
+            occ.event.event_group_id
+            for occ in self.occurrences.all()
+            if occ.event and occ.event.event_group_id
+        }
+
+    def get_ticket_system_passwords_by_event_id(self) -> dict[int, str]:
+        """Mapping of event_id -> password value assigned to the child."""
+        return {pw.event_id: pw.value for pw in self.ticket_system_passwords.all()}
+
+    def get_ticket_system_password_event_group_ids(self) -> set[int]:
+        """Set of event group IDs where the child has a ticket password."""
+        return {
+            pw.event.event_group_id
+            for pw in self.ticket_system_passwords.all()
+            if pw.event and pw.event.event_group_id
+        }
+
+    def get_enrolment_count(
+        self, year: Optional[int] = None, past: bool = False
+    ) -> int:
+        """
+        Count the child's enrolments for a given year across ticketing systems.
+
+        Combines internal enrolments (occurrences) and external enrolments
+        (assigned ticket system passwords), determining the year via occurrence
+        time or external event publish date respectively in local time.
+
+        Evaluates over `.all()` in Python so that when relations are prefetched,
+        the calculation runs entirely in-memory with zero queries, while still
+        falling back to fresh database queries if uncached.
+
+        :param year: Calendar year to count enrolments for (defaults to current).
+        :param past: Whether to only count past enrolments (mutually exclusive
+            with year).
+        :return: Total number of active/past enrolments for the specified year.
+        :raises ValueError: If both year and past are specified.
+        """
         if year and past:
             raise ValueError("Cannot use year and past arguments at the same time.")
         now = timezone.now()
-        year = year or now.year
+        year = year or year_of(now)
 
-        occurrence_filters = Q(time__year=year)
-        # For external ticket system events published_at field is used to determine the
-        # event's year. That is obviously not a perfect solution, but the best we can
-        # do with the current data, and most probably good enough.
-        ticket_system_filters = Q(event__published_at__year=year)
-        if past:
-            occurrence_filters &= Q(time__lt=now)
-            ticket_system_filters &= Q(event__published_at__lt=now)
-        return (
-            self.occurrences.filter(occurrence_filters).count()
-            + self.ticket_system_passwords.filter(ticket_system_filters)
-            .distinct()
-            .count()
+        count = sum(
+            1
+            for occ in self.occurrences.all()
+            if year_of(occ.time) == year and (not past or occ.time < now)
         )
+        count += sum(
+            1
+            for pw in self.ticket_system_passwords.all()
+            if (
+                pw.event
+                and pw.event.published_at
+                and year_of(pw.event.published_at) == year
+                and (not past or pw.event.published_at < now)
+            )
+        )
+        return count
 
     @staticmethod
     def _hash(values: Iterable[str]) -> str:
