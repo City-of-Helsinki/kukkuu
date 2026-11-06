@@ -5,9 +5,18 @@ from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 
 from common.schema import LanguageEnum
-from tags.models import ThemePath
+from tags.models import Accessibility, ThemePath
 
+AccessibilityTranslation = apps.get_model("tags", "AccessibilityTranslation")
 ThemePathTranslation = apps.get_model("tags", "ThemePathTranslation")
+
+
+class AccessibilityTranslationType(DjangoObjectType):
+    language_code = LanguageEnum(required=True)
+
+    class Meta:
+        model = AccessibilityTranslation
+        exclude = ("id", "master")
 
 
 class ThemePathTranslationType(DjangoObjectType):
@@ -49,6 +58,15 @@ class ThemePathNode(TagNode):
         fields = ("slug", "sort_order", "name", "description", "translations")
 
 
+class AccessibilityNode(TagNode):
+    class Meta:
+        model = Accessibility
+        interfaces = (relay.Node,)
+        fields = ("slug", "sort_order", "name", "description", "translations")
+
+
 class Query:
     theme_path = relay.Node.Field(ThemePathNode)
     theme_paths = DjangoConnectionField(ThemePathNode)
+    accessibility = relay.Node.Field(AccessibilityNode)
+    accessibilities = DjangoConnectionField(AccessibilityNode)

@@ -9,7 +9,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, prefetch_related_objects
 from django.utils import timezone
 from django.utils.translation import get_language
 from graphene import Connection, ObjectType, relay
@@ -24,6 +24,7 @@ from common.schema import ErrorType, LanguageEnum
 from common.utils import (
     check_can_user_administer,
     get_node_id_from_global_id,
+    get_obj_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
     map_enums_to_values_in_kwargs,
@@ -60,8 +61,8 @@ from kukkuu.exceptions import (
 )
 from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
-from tags.models import ThemePath
-from tags.schema import ThemePathNode
+from tags.models import Accessibility, ThemePath
+from tags.schema import AccessibilityNode, ThemePathNode
 from venues.models import Venue
 
 logger = logging.getLogger(__name__)
@@ -588,6 +589,7 @@ class OccurrenceNode(DjangoObjectType):
             "moved to EventNode.ticketSystem."
         ),
     )
+    accessibilities = graphene.List(graphene.NonNull(AccessibilityNode), required=True)
 
     @classmethod
     @login_required
@@ -608,7 +610,13 @@ class OccurrenceNode(DjangoObjectType):
                     "venue__translations",
                     queryset=VenueTranslation.objects.order_by("language_code"),
                     to_attr="prefetched_translations",
-                )
+                ),
+                Prefetch(
+                    "accessibilities",
+                    queryset=AccessibilityNode.get_queryset(
+                        Accessibility.objects.all(), info
+                    ),
+                ),
             )
         )
 
@@ -656,6 +664,18 @@ class OccurrenceNode(DjangoObjectType):
         # Occurrence object is needed for resolving OccurrenceTicketSystem fields
         return self
 
+    def resolve_accessibilities(self, info, **kwargs):
+        prefetch_related_objects(
+            [self],
+            Prefetch(
+                "accessibilities",
+                queryset=AccessibilityNode.get_queryset(
+                    Accessibility.objects.all(), info
+                ),
+            ),
+        )
+        return self.accessibilities.all()
+
     class Meta:
         model = Occurrence
         interfaces = (relay.Node,)
@@ -678,6 +698,7 @@ class OccurrenceNode(DjangoObjectType):
             "free_spot_notification_subscriptions",
             "child_has_free_spot_notification_subscription",
             "ticket_system",
+            "accessibilities",
         )
 
 
@@ -1244,6 +1265,10 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         occurrence_language = LanguageEnum()
         capacity_override = graphene.Int()
         ticket_system = OccurrenceTicketSystemInput()
+        accessibility_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Accessibilities of the occurrence. Omit for none.",
+        )
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -1265,8 +1290,14 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
+        accessibilities = [
+            get_obj_from_global_id(info, global_id, Accessibility)
+            for global_id in kwargs.pop("accessibility_ids", None) or []
+        ]
+
         validate_occurrence_input(kwargs)
         occurrence = Occurrence.objects.create(**kwargs)
+        occurrence.accessibilities.set(accessibilities)
 
         # needed because enrolment_count is an annotated field
         occurrence.enrolment_count = 0
@@ -1288,6 +1319,11 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         occurrence_language = LanguageEnum()
         capacity_override = graphene.Int()
         ticket_system = OccurrenceTicketSystemInput()
+        accessibility_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to keep the current accessibilities. "
+            "If given, replaces them. An empty list removes them all.",
+        )
 
     occurrence = graphene.Field(OccurrenceNode)
 
@@ -1313,8 +1349,20 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         if ticket_system_url is not None:
             kwargs["ticket_system_url"] = ticket_system_url
 
+        accessibility_ids = kwargs.pop("accessibility_ids", None)
+        accessibilities = (
+            None
+            if accessibility_ids is None
+            else [
+                get_obj_from_global_id(info, global_id, Accessibility)
+                for global_id in accessibility_ids
+            ]
+        )
+
         validate_occurrence_input(kwargs, occurrence=occurrence)
         update_object(occurrence, kwargs)
+        if accessibilities is not None:
+            occurrence.accessibilities.set(accessibilities)
 
         try:
             occurrence.clean()

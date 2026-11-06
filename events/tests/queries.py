@@ -149,6 +149,49 @@ query Events($themePath: String) {
 }
 """
 
+OCCURRENCE_ACCESSIBILITIES_QUERY = """
+query Occurrence($id: ID!) {
+  occurrence(id: $id) {
+    accessibilities {
+      slug
+      name
+    }
+  }
+}
+"""
+
+EVENT_OCCURRENCES_ACCESSIBILITIES_QUERY = """
+query Event($id: ID!) {
+  event(id: $id) {
+    occurrences {
+      edges {
+        node {
+          accessibilities {
+            slug
+            name
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+OCCURRENCES_ACCESSIBILITIES_QUERY = """
+query Occurrences {
+  occurrences {
+    edges {
+      node {
+        accessibilities {
+          slug
+          name
+        }
+      }
+    }
+  }
+}
+"""
+
 OCCURRENCES_QUERY = """
 query Occurrences {
   occurrences {
