@@ -16,6 +16,7 @@ from graphql_relay import to_global_id
 from guardian.shortcuts import assign_perm
 from parler.utils.context import switch_language
 
+from children.cache import ChildRequestCache
 from children.factories import ChildWithGuardianFactory
 from children.models import Child
 from common.tests.utils import assert_match_error_code, assert_permission_denied
@@ -882,11 +883,18 @@ def test_delete_occurrence_permission_denied(api_client, user_api_client):
 
 
 def test_delete_occurrence_project_user(project_user_api_client, occurrence):
+    child = ChildWithGuardianFactory(project=occurrence.event.project)
+    EnrolmentFactory(occurrence=occurrence, child=child)
+    context = project_user_api_client.context
+    ChildRequestCache.set(context, child)
+    assert ChildRequestCache.get(context, child.id) == child
+
     project_user_api_client.execute(
         DELETE_OCCURRENCE_MUTATION,
         variables={"input": {"id": to_global_id("OccurrenceNode", occurrence.id)}},
     )
     assert Occurrence.objects.count() == 0
+    assert ChildRequestCache.get(context, child.id) is None
 
 
 def test_update_event_permission_denied(api_client, user_api_client):
