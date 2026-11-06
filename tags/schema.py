@@ -18,21 +18,20 @@ class ThemePathTranslationType(DjangoObjectType):
         exclude = ("id", "master")
 
 
-class ThemePathNode(DjangoObjectType):
+class TagNode(DjangoObjectType):
     name = graphene.String(required=True)
     description = graphene.String(required=True)
 
     class Meta:
-        model = ThemePath
-        interfaces = (relay.Node,)
-        fields = ("slug", "sort_order", "name", "description", "translations")
+        abstract = True
 
     @classmethod
     def get_queryset(cls, queryset, info):
+        translation_model = queryset.model._meta.get_field("translations").related_model
         return queryset.prefetch_related(
             Prefetch(
                 "translations",
-                queryset=ThemePathTranslation.objects.order_by("language_code"),
+                queryset=translation_model.objects.order_by("language_code"),
             )
         )
 
@@ -41,6 +40,13 @@ class ThemePathNode(DjangoObjectType):
 
     def resolve_description(self, info):
         return self.get_translated_value("description", default="")
+
+
+class ThemePathNode(TagNode):
+    class Meta:
+        model = ThemePath
+        interfaces = (relay.Node,)
+        fields = ("slug", "sort_order", "name", "description", "translations")
 
 
 class Query:
