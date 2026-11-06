@@ -271,6 +271,7 @@ def create_api_client_with_user(user) -> Client:
         schema, context=request, format_error=SentryGraphQLView.format_error
     )
     client.user = user
+    client.context = request
     return client
 
 

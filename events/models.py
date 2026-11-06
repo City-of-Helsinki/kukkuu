@@ -19,7 +19,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractYear, Greatest
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from helsinki_gdpr.models import SerializableMixin
@@ -29,7 +29,7 @@ import events.notification_service as notification_service
 from children.models import Child
 from common.decorators import execute_in_background
 from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
-from common.utils import get_translations_dict
+from common.utils import get_translations_dict, year_of
 from events.consts import MIN_SEATS_PER_ENROLMENT, NotificationType
 from events.enums import EnrolmentDeniedReason
 from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
@@ -61,6 +61,47 @@ class EventGroupQueryset(TranslatableQuerySet):
 
     def upcoming(self):
         return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
+
+    def with_enrolment_check_data(self):
+        """
+        Pre-annotate event groups with enrolment check data.
+
+        Annotates:
+        - `_group_year`: The calendar year of the group derived from earliest
+          occurrence time or external event publish date.
+        - `_published_event_count`: Number of published events in the group.
+        - `_published_with_opening_time_count`: Count of published events with
+          an explicit registration opening time.
+        - `_earliest_opening_time`: Earliest registration opening time among
+          published events in the group.
+        """
+        group_occ_year_subq = Subquery(
+            Occurrence.objects.filter(event__event_group=OuterRef("pk"))
+            .order_by("time")
+            .values(year=ExtractYear("time"))[:1]
+        )
+        group_ext_year_subq = Subquery(
+            Event.objects.filter(event_group=OuterRef("pk"))
+            .exclude(published_at=None)
+            .exclude(ticket_system=Event.INTERNAL)
+            .order_by("created_at", "id")
+            .values(year=ExtractYear("published_at"))[:1]
+        )
+        published_events_q = Q(events__published_at__isnull=False)
+        return self.annotate(
+            _group_year=Coalesce(
+                group_occ_year_subq,
+                group_ext_year_subq,
+                output_field=models.IntegerField(),
+            ),
+            _published_event_count=Count("events", filter=published_events_q),
+            _published_with_opening_time_count=Count(
+                "events__registration_opens_at", filter=published_events_q
+            ),
+            _earliest_opening_time=models.Min(
+                "events__registration_opens_at", filter=published_events_q
+            ),
+        )
 
 
 class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
@@ -133,6 +174,62 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
             organisation__in=user.organisations.all()
         ).exists()
 
+    def _get_enrolment_year(self) -> Optional[int]:
+        """
+        Determine the calendar year of this event group for enrolment quotas.
+
+        Uses pre-annotated `_group_year` if present, falling back to the year
+        of the earliest occurrence or external event publish date.
+        """
+        if hasattr(self, "_group_year"):
+            return self._group_year
+        if (
+            occurrence := Occurrence.objects.filter(event__event_group=self)
+            .order_by("time")
+            .first()
+        ):
+            return year_of(occurrence.time)
+        external_event = (
+            self.events.exclude(published_at=None)
+            .exclude(ticket_system=Event.INTERNAL)
+            .first()
+        )
+        return year_of(external_event.published_at) if external_event else None
+
+    def _is_registration_open(self) -> bool:
+        """
+        Check if registration is open for events in this event group.
+
+        Returns False if every published event in the group has a registration
+        opening time and all of those opening times are in the future; True otherwise.
+        """
+        # A null registration_opens_at means no limitation, and unpublished events
+        # can't be enrolled to. The registration is not open if every published event
+        # has a registration opening time and their earliest one is in the future.
+        if (
+            hasattr(self, "_published_event_count")
+            and hasattr(self, "_published_with_opening_time_count")
+            and hasattr(self, "_earliest_opening_time")
+        ):
+            total = self._published_event_count
+            with_opening_time = self._published_with_opening_time_count
+            earliest_opening_time = self._earliest_opening_time
+        else:
+            stats = self.events.published().aggregate(
+                total=Count("pk"),
+                with_opening_time=Count("registration_opens_at"),
+                earliest_opening_time=models.Min("registration_opens_at"),
+            )
+            total = stats["total"]
+            with_opening_time = stats["with_opening_time"]
+            earliest_opening_time = stats["earliest_opening_time"]
+
+        return not (
+            total > 0
+            and total == with_opening_time
+            and earliest_opening_time > timezone.now()
+        )
+
     def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
         """
         Why, if for any reason, the given child can't enrol to an event
@@ -140,54 +237,33 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
 
         :return: None if the child can enrol, otherwise the reason why not.
         """
+        # Unpublished event groups cannot be enrolled in.
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_GROUP_NOT_PUBLISHED
 
-        if child.project != self.project:
+        # The child must belong to the same project as the event group.
+        if child.project_id != self.project_id:
             return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_GROUP_PROJECT
 
-        # We check only the year based on the first occurrence or the first external
-        # ticket system event's published_at field. That has obvious shortcomings when
-        # the events span on multiple years. However, this should be good enough, and
-        # the whole yearly enrollment limit is probably going away before it is used in
-        # any complex situations.
-        if occurrence := Occurrence.objects.filter(event__event_group=self).first():
-            year = occurrence.time.year
-        elif (
-            external_ticket_system_event := self.events.exclude(published_at=None)
-            .exclude(ticket_system=Event.INTERNAL)
-            .first()
-        ):
-            year = external_ticket_system_event.published_at.year
-        else:
-            # Need to have at least one occurrence or at least one external ticket
-            # system event
+        # An event group must have at least one occurrence or published external event.
+        year = self._get_enrolment_year()
+        if year is None:
             return EnrolmentDeniedReason.EMPTY_EVENT_GROUP
 
+        # Check whether the child has reached the project's annual enrolment quota.
         if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
             return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
 
-        if child.occurrences.filter(event__event_group=self).exists():
+        # A child can only participate in one internal event per event group.
+        if self.id in child.get_enrolled_event_group_ids():
             return EnrolmentDeniedReason.ALREADY_JOINED_EVENT_GROUP
 
-        if child.ticket_system_passwords.filter(event__event_group=self).exists():
+        # A child can only receive one external ticket password per event group.
+        if self.id in child.get_ticket_system_password_event_group_ids():
             return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT_GROUP
 
-        # A null registration_opens_at means no limitation, and unpublished events
-        # can't be enrolled to. The registration is not open if every published event
-        # has a registration opening time and their earliest one is in the future.
-        registration_stats = self.events.published().aggregate(
-            total=Count("pk"),
-            with_opening_time=Count(
-                "registration_opens_at"
-            ),  # Count of non-null values
-            earliest_opening_time=models.Min("registration_opens_at"),
-        )
-        if (
-            registration_stats["total"] > 0
-            and registration_stats["total"] == registration_stats["with_opening_time"]
-            and registration_stats["earliest_opening_time"] > timezone.now()
-        ):
+        # At least one published event in the group must have open registration.
+        if not self._is_registration_open():
             return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
 
         return None
@@ -560,45 +636,62 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             return self.organisation_id in user_organisation_ids
         return user.organisations.filter(id=self.organisation_id).exists()
 
+    def _get_enrolment_year(self) -> Optional[int]:
+        """
+        Determine the calendar year of this event for enrolment quota checks.
+
+        Returns the publish year for external ticketing systems, pre-annotated
+        `_first_occurrence_year` if present, or the year of the earliest occurrence.
+        """
+        if self.ticket_system != Event.INTERNAL:
+            # For external ticket system events published_at field is used to determine
+            # the event's year. That is obviously not a perfect solution, but the best
+            # we can do with the current data, and most probably good enough.
+            return year_of(self.published_at)
+        if hasattr(self, "_first_occurrence_year"):
+            return self._first_occurrence_year
+        occurrence = Occurrence.objects.filter(event=self).order_by("time").first()
+        return year_of(occurrence.time) if occurrence else None
+
     def get_enrolment_denied_reason(self, child: Child) -> None | EnrolmentDeniedReason:
         """
         Why, if for any reason, the given child can't enrol to this event?
 
         :return: None if the child can enrol, otherwise the reason why not.
         """
-
+        # Unpublished events cannot be enrolled in.
         if not self.is_published():
             return EnrolmentDeniedReason.EVENT_NOT_PUBLISHED
 
+        # Enrolment is only allowed once the event's registration window has opened.
         if not self.is_registration_open():
             return EnrolmentDeniedReason.REGISTRATION_NOT_OPEN
 
-        if child.project != self.project:
+        # The child must belong to the same project as the event.
+        if child.project_id != self.project_id:
             return EnrolmentDeniedReason.CHILD_NOT_IN_EVENT_PROJECT
 
-        if self.ticket_system == Event.INTERNAL:
-            if not (occurrence := Occurrence.objects.filter(event=self).first()):
-                # Internal events need to have at least one occurrence
-                return EnrolmentDeniedReason.EMPTY_EVENT
-            year = occurrence.time.year
-        else:
-            # For external ticket system events published_at field is used to determine
-            # the event's year. That is obviously not a perfect solution, but the best
-            # we can do with the current data, and most probably good enough.
-            year = self.published_at.year
+        # Internal events must have at least one occurrence to determine their year.
+        year = self._get_enrolment_year()
+        if year is None:
+            return EnrolmentDeniedReason.EMPTY_EVENT
 
-        if self.event_group and (
+        # If the event belongs to an event group, group-level eligibility must pass.
+        if self.event_group_id and (
             reason := self.event_group.get_enrolment_denied_reason(child)
         ):
             return reason
 
+        # Check whether the child has reached the project's annual enrolment quota.
         if child.get_enrolment_count(year=year) >= child.project.enrolment_limit:
             return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
 
-        if child.occurrences.filter(event=self).exists():
+        # A child cannot enrol in the same internal event more than once.
+        if self.id in child.get_enrolled_event_ids():
             return EnrolmentDeniedReason.ALREADY_JOINED_EVENT
 
-        if child.ticket_system_passwords.filter(event=self).exists():
+        # A child cannot be assigned more than one password for the same external event.
+        if self.id in child.get_ticket_system_passwords_by_event_id():
             return EnrolmentDeniedReason.ALREADY_HAS_PASSWORD_TO_EVENT
 
         return None
@@ -777,6 +870,26 @@ class OccurrenceQueryset(models.QuerySet):
             )
         )
 
+    def with_remaining_capacity(self):
+        """
+        Annotate occurrences with remaining seat capacity.
+
+        Calculates `remaining_capacity` as effective capacity minus reserved
+        seats, floored at 0.
+        """
+        return self.with_reserved_seats().annotate(
+            remaining_capacity=Greatest(
+                Coalesce(
+                    "capacity_override",
+                    "event__capacity_per_occurrence",
+                    Value(0),
+                )
+                - F("reserved_seats"),
+                Value(0),
+                output_field=models.IntegerField(),
+            )
+        )
+
     def with_free_spot_notification_subscription_count(self):
         return self.annotate(
             free_spot_notification_subscription_count=Count(
@@ -864,6 +977,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
     def save(self, *args, **kwargs):
         created = self.pk is None
         super().save(*args, **kwargs)
+        self.__dict__.pop("remaining_capacity", None)
         if not created:
             self.send_free_spot_notifications_if_needed()
 
@@ -920,8 +1034,11 @@ class Occurrence(TimestampedModel, SerializableMixin):
             )["total"]
 
     def get_remaining_capacity(self) -> int:
-        capacity = self.get_capacity() or 0
-        return max(capacity - self.get_reserved_seats(), 0)
+        try:
+            return self.remaining_capacity
+        except AttributeError:
+            capacity = self.get_capacity() or 0
+            return max(capacity - self.get_reserved_seats(), 0)
 
     def has_free_seats(self, requested_seats: int = MIN_SEATS_PER_ENROLMENT) -> bool:
         return self.get_remaining_capacity() >= requested_seats
@@ -944,7 +1061,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
             return EnrolmentDeniedReason.PAST_OCCURRENCE
 
         if (
-            child.get_enrolment_count(year=self.time.year)
+            child.get_enrolment_count(year=year_of(self.time))
             >= self.event.project.enrolment_limit
         ):
             return EnrolmentDeniedReason.YEARLY_ENROLMENT_LIMIT_REACHED
