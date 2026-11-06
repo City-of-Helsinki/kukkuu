@@ -42,7 +42,13 @@ from events.exceptions import (
     PasswordAlreadyAssignedError,
 )
 from events.filters import EventFilter, OccurrenceFilter
-from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from events.models import (
+    Enrolment,
+    Event,
+    EventGroup,
+    Occurrence,
+    TicketSystemPassword,
+)
 from events.services import EventAPIService
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
@@ -202,6 +208,65 @@ class EventTicketSystem(graphene.Interface):
             )
 
 
+def _get_child(info, child_global_id: str) -> Child:
+    """
+    Retrieve and validate a Child instance for the current GraphQL request.
+
+    This function serves as the central child resolver for event queries and
+    field resolvers (e.g. enrolmentDeniedReason, canChildEnroll, and childPassword).
+
+    Key behaviors:
+    1. Permission check: Filters by `Child.objects.user_can_view(info.context.user)`
+       to ensure the requesting user has permission to view the child.
+    2. Eager prefetching: Prefetches `project`, `occurrences__event`, and
+       `ticket_system_passwords__event`. This allows methods on `Child` like
+       `get_enrolled_event_ids()`, `get_enrolment_count()`, and
+       `get_ticket_system_passwords_by_event_id()` to run in memory without
+       additional SQL queries.
+    3. Request-level caching: Memoizes the result on `info.context._child_cache`
+       (shared with `events.filters.EventFilter`). When querying lists of events
+       or resolving multiple payload fields, this prevents N+1 query explosions
+       by ensuring the child is fetched and prefetched at most once until
+       invalidated by a mutation that modifies the child's enrolment or password
+       state.
+
+    :param info: GraphQL ResolveInfo containing the request context and user.
+    :param child_global_id: Relay global ID (base64-encoded `ChildNode:<pk>`).
+    :return: Prefetched Child instance.
+    :raises ObjectDoesNotExistError: If child ID is invalid, child is not found,
+        or user lacks permission to view the child.
+    """
+    child_id = get_node_id_from_global_id(child_global_id, "ChildNode")
+    if not hasattr(info.context, "_child_cache"):
+        info.context._child_cache = {}
+    cache_key = str(child_id) if child_id is not None else ""
+    if cache_key in info.context._child_cache:
+        return info.context._child_cache[cache_key]
+
+    try:
+        if not child_id:
+            raise Child.DoesNotExist("Child matching query does not exist.")
+        child = (
+            Child.objects.user_can_view(info.context.user)
+            .select_related("project")
+            .prefetch_related(
+                "occurrences__event",
+                "ticket_system_passwords__event",
+            )
+            .get(id=child_id)
+        )
+    except (Child.DoesNotExist, ValidationError, ValueError) as e:
+        raise ObjectDoesNotExistError(e)
+
+    info.context._child_cache[cache_key] = child
+    return child
+
+
+def _invalidate_child_cache(info, child_id) -> None:
+    if hasattr(info.context, "_child_cache"):
+        info.context._child_cache.pop(str(child_id), None)
+
+
 class ExternalEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID())
     has_any_free_passwords = graphene.Boolean(required=True)
@@ -215,15 +280,8 @@ class ExternalEventTicketSystem(ObjectType):
 
     @staticmethod
     def resolve_child_password(event: Event, info, **kwargs):
-        try:
-            child = Child.objects.user_can_view(info.context.user).get(
-                id=get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
-            )
-            return event.ticket_system_passwords.get(child=child).value
-        except TicketSystemPassword.DoesNotExist:
-            return None
-        except Child.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        child = _get_child(info, kwargs["child_id"])
+        return child.get_ticket_system_passwords_by_event_id().get(event.id)
 
     @staticmethod
     @login_required
@@ -239,6 +297,8 @@ class ExternalEventTicketSystem(ObjectType):
             bool: True if there is at least one free password available for the event,
                   otherwise False.
         """
+        if hasattr(event, "_has_free_passwords"):
+            return bool(event._has_free_passwords)
         return event.ticket_system_passwords.free().count() > 0
 
     @staticmethod
@@ -294,6 +354,39 @@ class EventTranslationType(DjangoObjectType):
         exclude = ("id", "master")
 
 
+class EventsConnection(graphene.Connection):
+    class Meta:
+        abstract = True
+
+    count = graphene.Int(required=True)
+
+    def resolve_count(self, info, **kwargs):
+        return self.length
+
+
+class PrefetchableFilterConnectionField(DjangoFilterConnectionField):
+    """
+    FilterConnectionField that supports returning a pre-filtered Python list.
+
+    When `EventNode.resolve_occurrences` detects that `_prefetched_upcoming_occurrences`
+    is populated and only `upcoming=True` (plus standard Relay pagination args) was
+    requested, it returns the prefetched list directly. Returning that list here
+    is safe because the `Prefetch` queryset in `EventFilter._get_common_search_query`
+    already applied `Occurrence.objects.user_can_view(user).upcoming()`, capacity
+    annotations, and chronological ordering.
+    """
+
+    @classmethod
+    def resolve_queryset(
+        cls, connection, iterable, info, args, filtering_args, filterset_class
+    ):
+        if isinstance(iterable, list):
+            return iterable
+        return super().resolve_queryset(
+            connection, iterable, info, args, filtering_args, filterset_class
+        )
+
+
 class EventNode(DjangoObjectType):
     name = graphene.String()
     description = graphene.String()
@@ -303,6 +396,7 @@ class EventNode(DjangoObjectType):
     ticket_system = graphene.Field(EventTicketSystem)
     organisation = graphene.Field("organisations.schema.OrganisationNode")
     theme_paths = graphene.List(graphene.NonNull(ThemePathNode), required=True)
+    occurrences = PrefetchableFilterConnectionField("events.schema.OccurrenceNode")
     can_user_administer = graphene.Boolean()
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
     enrolment_denied_reason = EnrolmentDeniedReasonEnum(
@@ -313,6 +407,7 @@ class EventNode(DjangoObjectType):
     class Meta:
         model = Event
         interfaces = (relay.Node,)
+        connection_class = EventsConnection
         filterset_class = EventFilter
         fields = (
             "id",
@@ -391,6 +486,13 @@ class EventNode(DjangoObjectType):
         return ""
 
     def resolve_occurrences(self, info, **kwargs):
+        if (
+            hasattr(self, "_prefetched_upcoming_occurrences")
+            and set(kwargs.keys())
+            <= {"upcoming", "first", "after", "last", "before", "offset"}
+            and kwargs.get("upcoming") is True
+        ):
+            return self._prefetched_upcoming_occurrences
         return self.occurrences.annotate(
             enrolment_count=Count("enrolments", distinct=True)
         ).order_by("time")
@@ -403,19 +505,11 @@ class EventNode(DjangoObjectType):
         return self
 
     def resolve_can_child_enroll(self: Event, info, **kwargs) -> Optional[bool]:
-        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
-        try:
-            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        child = _get_child(info, kwargs["child_id"])
         return self.can_child_enroll(child)
 
     def resolve_enrolment_denied_reason(self: Event, info, **kwargs):
-        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
-        try:
-            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        child = _get_child(info, kwargs["child_id"])
         return self.get_enrolment_denied_reason(child)
 
 
@@ -487,19 +581,11 @@ class EventGroupNode(DjangoObjectType):
         return self.translations.order_by("language_code")
 
     def resolve_can_child_enroll(self: EventGroup, info, **kwargs) -> Optional[bool]:
-        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
-        try:
-            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        child = _get_child(info, kwargs["child_id"])
         return self.can_child_enroll(child)
 
     def resolve_enrolment_denied_reason(self: EventGroup, info, **kwargs):
-        child_id = get_node_id_from_global_id(kwargs["child_id"], "ChildNode")
-        try:
-            child = Child.objects.user_can_view(info.context.user).get(id=child_id)
-        except Child.DoesNotExist as e:
-            raise ObjectDoesNotExistError(e)
+        child = _get_child(info, kwargs["child_id"])
         return self.get_enrolment_denied_reason(child)
 
 
@@ -600,6 +686,7 @@ class OccurrenceNode(DjangoObjectType):
             .with_enrolment_count()
             .with_attended_enrolment_count()
             .with_reserved_seats()
+            .with_remaining_capacity()
             .with_free_spot_notification_subscription_count()
             .order_by("time")
             .select_related("event", "event__project", "venue", "venue__project")
@@ -655,6 +742,11 @@ class OccurrenceNode(DjangoObjectType):
     def resolve_ticket_system(self, info, **kwargs):
         # Occurrence object is needed for resolving OccurrenceTicketSystem fields
         return self
+
+    def resolve_venue(self, info, **kwargs):
+        return self.venue
+
+    resolve_venue._bypass_get_queryset = True
 
     class Meta:
         model = Occurrence
@@ -994,6 +1086,8 @@ class AssignTicketSystemPasswordMutation(graphene.relay.ClientIDMutation):
         except PasswordAlreadyAssignedError as e:
             raise TicketSystemPasswordAlreadyAssignedError(str(e))
 
+        _invalidate_child_cache(info, child.id)
+
         return AssignTicketSystemPasswordMutation(
             event=event, child=child, password=password.value
         )
@@ -1152,6 +1246,7 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             extra_children_count=extra_children_count,
             extra_guardians_count=extra_guardians_count,
         )
+        _invalidate_child_cache(info, child.id)
 
         logger.info(
             f"user {user.uuid} enrolled child {child.pk} to occurrence {occurrence}"
@@ -1192,6 +1287,7 @@ class UnenrolOccurrenceMutation(graphene.relay.ClientIDMutation):
 
         occurrence = enrolment.occurrence
         enrolment.delete_and_send_notification()
+        _invalidate_child_cache(info, child.id)
 
         logger.info(
             f"user {user.uuid} unenrolled child {child.pk} from occurrence {occurrence}"
