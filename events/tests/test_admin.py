@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from django.contrib.admin import helpers
 from django.contrib.admin.sites import AdminSite
+from django.contrib.admin.utils import quote
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import now
@@ -16,11 +17,17 @@ from events.factories import (
     EventGroupFactory,
     OccurrenceFactory,
 )
-from events.models import Event, EventGroup, Occurrence
+from events.models import (
+    Event,
+    EventGroup,
+    EventThemePath,
+    Occurrence,
+    OccurrenceAccessibility,
+)
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from projects.factories import ProjectFactory
-from tags.factories import ThemePathFactory
-from tags.models import ThemePath
+from tags.factories import AccessibilityFactory, ThemePathFactory
+from tags.models import Accessibility, ThemePath
 
 PUBLISH_TEMPLATE = "admin/events/publish_with_registration_opens_at.html"
 
@@ -211,6 +218,8 @@ def test_event_admin_change_form_can_edit_registration_opens_at(admin_client, pa
             **_registration_opens_at_form_fields(past),
             "occurrences-TOTAL_FORMS": "0",
             "occurrences-INITIAL_FORMS": "0",
+            "eventthemepath_set-TOTAL_FORMS": "0",
+            "eventthemepath_set-INITIAL_FORMS": "0",
         },
     )
 
@@ -238,18 +247,48 @@ def test_event_admin_change_form_can_edit_theme_paths(admin_client):
         "occurrences-TOTAL_FORMS": "0",
         "occurrences-INITIAL_FORMS": "0",
     }
+    first_row = EventThemePath.objects.get(event=event)
+    assert list(event.theme_paths.all()) == [first]
 
-    response = admin_client.post(url, {**data, "theme_paths": [second.pk]})
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "eventthemepath_set-TOTAL_FORMS": "2",
+            "eventthemepath_set-INITIAL_FORMS": "1",
+            # Delete existing theme path:
+            "eventthemepath_set-0-id": first_row.pk,
+            "eventthemepath_set-0-event": event.pk,
+            "eventthemepath_set-0-theme_path": first.pk,
+            "eventthemepath_set-0-DELETE": "on",
+            # Add new theme path:
+            "eventthemepath_set-1-event": event.pk,
+            "eventthemepath_set-1-theme_path": second.pk,
+        },
+    )
     assert response.status_code == 302
     assert list(event.theme_paths.all()) == [second]
 
-    response = admin_client.post(url, data)
+    second_row = EventThemePath.objects.get(event=event)
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "eventthemepath_set-TOTAL_FORMS": "1",
+            "eventthemepath_set-INITIAL_FORMS": "1",
+            # Delete existing theme path:
+            "eventthemepath_set-0-id": second_row.pk,
+            "eventthemepath_set-0-event": event.pk,
+            "eventthemepath_set-0-theme_path": second.pk,
+            "eventthemepath_set-0-DELETE": "on",
+        },
+    )
     assert response.status_code == 302
     assert event.theme_paths.count() == 0
 
 
 @pytest.mark.django_db
-def test_event_admin_change_form_shows_theme_paths_with_current_ones_checked(
+def test_event_admin_change_form_shows_current_theme_paths_and_offers_all(
     admin_client,
 ):
     selected = ThemePathFactory()
@@ -258,10 +297,16 @@ def test_event_admin_change_form_shows_theme_paths_with_current_ones_checked(
 
     response = admin_client.get(reverse("admin:events_event_change", args=[event.pk]))
 
-    form_field = response.context["adminform"].form.fields["theme_paths"]
-    assert list(form_field.queryset) == list(ThemePath.objects.all())
-    assert response.context["adminform"].form.initial["theme_paths"] == [selected]
-    assert other in form_field.queryset
+    formsets = {
+        inline.formset.prefix: inline.formset
+        for inline in response.context["inline_admin_formsets"]
+    }
+    formset = formsets["eventthemepath_set"]
+    assert [form.instance.theme_path for form in formset.initial_forms] == [selected]
+    offered = formset.empty_form.fields["theme_path"].queryset
+    assert list(offered) == list(ThemePath.objects.all())
+    assert other in offered
+    assert offered.count() >= 2  # At least selected and other
 
 
 @pytest.mark.django_db
@@ -278,6 +323,80 @@ def test_event_admin_can_be_filtered_by_theme_path(admin_client):
     assert filtered_events(a) == [event_with_a_b]
     assert filtered_events(b) == [event_with_a_b]
     assert filtered_events(c) == [event_with_c]
+
+
+@pytest.mark.django_db
+def test_theme_path_admin_delete_is_refused_when_used_by_events(admin_client):
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+    url = reverse("admin:tags_themepath_delete", args=[quote(theme_path.pk)])
+
+    response = admin_client.get(url)
+
+    assert len(response.context["protected"]) == 1
+    assert str(event) in response.context["protected"][0]
+
+    response = admin_client.post(url, {"post": "yes"})
+
+    assert response.status_code == 200
+    assert ThemePath.objects.filter(pk=theme_path.pk).exists()
+    assert list(event.theme_paths.all()) == [theme_path]
+
+
+@pytest.mark.django_db
+def test_theme_path_admin_bulk_delete_is_refused_when_used_by_events(admin_client):
+    unused, used = ThemePathFactory.create_batch(2)
+    EventFactory(theme_paths=[used])
+
+    response = admin_client.post(
+        reverse("admin:tags_themepath_changelist"),
+        {
+            "action": "delete_selected",
+            helpers.ACTION_CHECKBOX_NAME: [unused.pk, used.pk],
+            "post": "yes",
+        },
+    )
+
+    assert response.status_code == 200
+    assert ThemePath.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
+
+
+@pytest.mark.django_db
+def test_accessibility_admin_delete_is_refused_when_used_by_occurrences(admin_client):
+    accessibility = AccessibilityFactory()
+    occurrence = OccurrenceFactory(accessibilities=[accessibility])
+    url = reverse("admin:tags_accessibility_delete", args=[quote(accessibility.pk)])
+
+    response = admin_client.get(url)
+
+    assert len(response.context["protected"]) == 1
+    assert f"({occurrence.pk})" in response.context["protected"][0]
+
+    response = admin_client.post(url, {"post": "yes"})
+
+    assert response.status_code == 200
+    assert Accessibility.objects.filter(pk=accessibility.pk).exists()
+    assert list(occurrence.accessibilities.all()) == [accessibility]
+
+
+@pytest.mark.django_db
+def test_accessibility_admin_bulk_delete_is_refused_when_used_by_occurrences(
+    admin_client,
+):
+    unused, used = AccessibilityFactory.create_batch(2)
+    OccurrenceFactory(accessibilities=[used])
+
+    response = admin_client.post(
+        reverse("admin:tags_accessibility_changelist"),
+        {
+            "action": "delete_selected",
+            helpers.ACTION_CHECKBOX_NAME: [unused.pk, used.pk],
+            "post": "yes",
+        },
+    )
+
+    assert response.status_code == 200
+    assert Accessibility.objects.filter(pk__in=[unused.pk, used.pk]).count() == 2
 
 
 @pytest.mark.django_db
@@ -430,3 +549,47 @@ def test_occurrence_admin_get_queryset_annotates_reserved_seats(rf):
     assert hasattr(obj, "reserved_seats")
     assert obj.reserved_seats == 3
     assert admin_instance.get_enrolments(obj) == "3 / 10"
+
+
+def _occurrence_form_data(occurrence):
+    time = timezone.localtime(occurrence.time)
+    return {
+        "time_0": time.strftime("%Y-%m-%d"),
+        "time_1": time.strftime("%H:%M:%S"),
+        "event": occurrence.event.pk,
+        "venue": occurrence.venue.pk,
+        "occurrence_language": occurrence.occurrence_language,
+        "enrolments-TOTAL_FORMS": "0",
+        "enrolments-INITIAL_FORMS": "0",
+        "free_spot_notification_subscriptions-TOTAL_FORMS": "0",
+        "free_spot_notification_subscriptions-INITIAL_FORMS": "0",
+    }
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_change_form_can_edit_accessibilities(admin_client):
+    first, second = AccessibilityFactory.create_batch(2)
+    occurrence = OccurrenceFactory(accessibilities=[first])
+    url = reverse("admin:events_occurrence_change", args=[occurrence.pk])
+    data = _occurrence_form_data(occurrence)
+    first_row = OccurrenceAccessibility.objects.get(occurrence=occurrence)
+
+    response = admin_client.post(
+        url,
+        {
+            **data,
+            "occurrenceaccessibility_set-TOTAL_FORMS": "2",
+            "occurrenceaccessibility_set-INITIAL_FORMS": "1",
+            # Delete existing accessibility:
+            "occurrenceaccessibility_set-0-id": first_row.pk,
+            "occurrenceaccessibility_set-0-occurrence": occurrence.pk,
+            "occurrenceaccessibility_set-0-accessibility": first.pk,
+            "occurrenceaccessibility_set-0-DELETE": "on",
+            # Add new accessibility:
+            "occurrenceaccessibility_set-1-occurrence": occurrence.pk,
+            "occurrenceaccessibility_set-1-accessibility": second.pk,
+        },
+    )
+
+    assert response.status_code == 302
+    assert list(occurrence.accessibilities.all()) == [second]

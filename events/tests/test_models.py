@@ -16,8 +16,8 @@ from kukkuu.consts import (
 )
 from projects.factories import ProjectFactory
 from projects.models import Project
-from tags.factories import ThemePathFactory
-from tags.models import ThemePath
+from tags.factories import AccessibilityFactory, ThemePathFactory
+from tags.models import Accessibility, ThemePath
 from venues.models import Venue
 
 from ..enums import EnrolmentDeniedReason
@@ -37,6 +37,7 @@ from ..models import (
     EventGroup,
     EventThemePath,
     Occurrence,
+    OccurrenceAccessibility,
 )
 from ..services import validate_registration_opens_at
 
@@ -107,12 +108,72 @@ def test_deleting_event_keeps_its_theme_paths():
 
 
 @pytest.mark.django_db
+def test_event_theme_path_pair_is_unique():
+    theme_path = ThemePathFactory()
+    event = EventFactory(theme_paths=[theme_path])
+
+    with pytest.raises(IntegrityError):
+        EventThemePath.objects.create(event=event, theme_path=theme_path)
+
+
+@pytest.mark.django_db
 def test_occurrence_creation(event, venue):
     OccurrenceFactory(event=event, venue=venue)
 
     assert Occurrence.objects.count() == 1
     assert Event.objects.count() == 1
     assert Venue.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_occurrence_accessibilities_many_to_many():
+    acc1, acc2 = AccessibilityFactory.create_batch(2)
+    occ1 = OccurrenceFactory(accessibilities=[acc1, acc2])
+    occ2 = OccurrenceFactory(accessibilities=[acc1])
+
+    assert set(occ1.accessibilities.all()) == {acc1, acc2}
+    assert set(acc1.occurrences.all()) == {occ1, occ2}
+    assert list(acc2.occurrences.all()) == [occ1]
+
+
+@pytest.mark.django_db
+def test_occurrence_has_no_accessibilities_by_default():
+    occurrence = OccurrenceFactory()
+
+    assert occurrence.accessibilities.count() == 0
+
+
+@pytest.mark.django_db
+def test_deleting_used_accessibility_is_protected():
+    accessibility = AccessibilityFactory()
+    occurrence = OccurrenceFactory(accessibilities=[accessibility])
+
+    with pytest.raises(ProtectedError):
+        accessibility.delete()
+
+    assert list(occurrence.accessibilities.all()) == [accessibility]
+
+
+@pytest.mark.django_db
+def test_deleting_occurrence_keeps_its_accessibilities():
+    accessibility = AccessibilityFactory()
+    occurrence = OccurrenceFactory(accessibilities=[accessibility])
+
+    occurrence.delete()
+
+    assert Accessibility.objects.filter(pk=accessibility.pk).exists()
+    assert not OccurrenceAccessibility.objects.exists()
+
+
+@pytest.mark.django_db
+def test_occurrence_accessibility_pair_is_unique():
+    accessibility = AccessibilityFactory()
+    occurrence = OccurrenceFactory(accessibilities=[accessibility])
+
+    with pytest.raises(IntegrityError):
+        OccurrenceAccessibility.objects.create(
+            occurrence=occurrence, accessibility=accessibility
+        )
 
 
 @pytest.mark.django_db

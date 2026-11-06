@@ -98,6 +98,13 @@ class OccurrenceFactory(
             for message in extracted:
                 self.messages.add(message)
 
+    @factory.post_generation
+    def accessibilities(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            self.accessibilities.set(extracted)
+
 
 class EnrolmentFactory(factory.django.DjangoModelFactory):
     child = factory.SubFactory("children.factories.ChildFactory")

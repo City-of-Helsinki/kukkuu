@@ -57,6 +57,7 @@ from events.tests.queries import (
     CAN_CHILD_ENROLL_EVENT_QUERY,
     EVENT_GROUP_EVENTS_FILTER_QUERY,
     EVENT_GROUP_QUERY,
+    EVENT_OCCURRENCES_ACCESSIBILITIES_QUERY,
     EVENT_QUERY,
     EVENT_TICKET_SYSTEM_HAS_ANY_FREE_PASSWORDS_QUERY,
     EVENT_TICKET_SYSTEM_PASSWORD_COUNTS_QUERY,
@@ -67,8 +68,10 @@ from events.tests.queries import (
     EVENTS_QUERY,
     EVENTS_THEME_PATHS_QUERY,
     GET_ENROLMENT_REFERENCE_ID_QUERY,
+    OCCURRENCE_ACCESSIBILITIES_QUERY,
     OCCURRENCE_QUERY,
     OCCURRENCE_TICKET_SYSTEM_QUERY,
+    OCCURRENCES_ACCESSIBILITIES_QUERY,
     OCCURRENCES_COUNTS_QUERY_TEMPLATE,
     OCCURRENCES_FILTER_QUERY,
     OCCURRENCES_QUERY,
@@ -104,7 +107,7 @@ from kukkuu.views import SentryGraphQLView
 from projects.factories import ProjectFactory
 from projects.models import Project, ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
-from tags.factories import ThemePathFactory
+from tags.factories import AccessibilityFactory, ThemePathFactory
 from users.factories import GuardianFactory
 from venues.factories import VenueFactory
 
@@ -641,6 +644,146 @@ def test_add_occurrence_ticket_system_url(snapshot, project_user_api_client, ven
     )
 
     snapshot.assert_match(executed)
+
+
+def test_add_occurrence_accessibilities(project_user_api_client, event, venue):
+    first = AccessibilityFactory(slug="first")
+    second = AccessibilityFactory(slug="second")
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["accessibilityIds"] = [
+        get_global_id(first),
+        get_global_id(second),
+    ]
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    occurrence = executed["data"]["addOccurrence"]["occurrence"]
+    assert occurrence["accessibilities"] == [{"slug": "first"}, {"slug": "second"}]
+
+
+def test_add_occurrence_unknown_accessibility(project_user_api_client, event, venue):
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["accessibilityIds"] = [
+        to_global_id("AccessibilityNode", "unknown")
+    ]
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+@pytest.mark.parametrize(
+    "accessibility_input",
+    [{}, {"accessibilityIds": None}],
+    ids=["omitted", "null"],
+)
+def test_update_occurrence_keeps_accessibilities(
+    project_user_api_client, accessibility_input
+):
+    a = AccessibilityFactory(slug="a")
+    b = AccessibilityFactory(slug="b")
+    occurrence = OccurrenceFactory(accessibilities=[a, b])
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"].update(accessibility_input)
+    assert variables["input"].get("accessibilityIds", None) is None
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    updated = executed["data"]["updateOccurrence"]["occurrence"]
+    assert updated["accessibilities"] == [{"slug": "a"}, {"slug": "b"}]
+
+
+@pytest.mark.parametrize(
+    ("initial_slugs", "sent_slugs", "expected_slugs"),
+    [
+        pytest.param(["a", "b"], [], [], id="empty-list-removes-all"),
+        pytest.param(["a", "b"], ["c"], ["c"], id="replaces-with-less"),
+        pytest.param(["a"], ["a", "b"], ["a", "b"], id="replaces-with-more"),
+    ],
+)
+def test_update_occurrence_sets_accessibilities(
+    project_user_api_client, initial_slugs, sent_slugs, expected_slugs
+):
+    accessibilities = {
+        slug: AccessibilityFactory(slug=slug) for slug in {*initial_slugs, *sent_slugs}
+    }
+    occurrence = OccurrenceFactory(
+        accessibilities=[accessibilities[slug] for slug in initial_slugs]
+    )
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"]["accessibilityIds"] = [
+        to_global_id("AccessibilityNode", slug) for slug in sent_slugs
+    ]
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    updated = executed["data"]["updateOccurrence"]["occurrence"]
+    assert [a["slug"] for a in updated["accessibilities"]] == expected_slugs
+
+
+def test_occurrences_query_returns_accessibilities(project_user_api_client):
+    first = AccessibilityFactory(slug="first", name="Ensimmäinen")
+    second = AccessibilityFactory(slug="second", name="Toinen")
+    OccurrenceFactory(accessibilities=[first, second])
+
+    executed = project_user_api_client.execute(OCCURRENCES_ACCESSIBILITIES_QUERY)
+
+    occurrence = executed["data"]["occurrences"]["edges"][0]["node"]
+    assert occurrence["accessibilities"] == [
+        {"slug": "first", "name": "Ensimmäinen"},
+        {"slug": "second", "name": "Toinen"},
+    ]
+
+
+def test_occurrence_query_returns_accessibilities(project_user_api_client):
+    first = AccessibilityFactory(slug="first", name="Ensimmäinen")
+    second = AccessibilityFactory(slug="second", name="Toinen")
+    occurrence = OccurrenceFactory(accessibilities=[first, second])
+
+    executed = project_user_api_client.execute(
+        OCCURRENCE_ACCESSIBILITIES_QUERY,
+        variables={"id": get_global_id(occurrence)},
+    )
+
+    assert executed["data"]["occurrence"]["accessibilities"] == [
+        {"slug": "first", "name": "Ensimmäinen"},
+        {"slug": "second", "name": "Toinen"},
+    ]
+
+
+def test_event_occurrences_query_returns_accessibilities(project_user_api_client):
+    first = AccessibilityFactory(slug="first", name="Ensimmäinen")
+    second = AccessibilityFactory(slug="second", name="Toinen")
+    occurrence = OccurrenceFactory(accessibilities=[first, second])
+
+    executed = project_user_api_client.execute(
+        EVENT_OCCURRENCES_ACCESSIBILITIES_QUERY,
+        variables={"id": get_global_id(occurrence.event)},
+    )
+
+    node = executed["data"]["event"]["occurrences"]["edges"][0]["node"]
+    assert node["accessibilities"] == [
+        {"slug": "first", "name": "Ensimmäinen"},
+        {"slug": "second", "name": "Toinen"},
+    ]
 
 
 def test_update_occurrence_permission_denied(api_client, user_api_client):

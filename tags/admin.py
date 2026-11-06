@@ -8,10 +8,10 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
-from .models import ThemePath
+from .models import Accessibility, ThemePath
 
 
-class ThemePathForm(TranslatableModelForm):
+class TagForm(TranslatableModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if self.language_code != settings.LANGUAGE_CODE and (
@@ -25,26 +25,21 @@ class ThemePathForm(TranslatableModelForm):
         return cleaned_data
 
 
-@admin.register(ThemePath)
-class ThemePathAdmin(TranslatableAdmin):
-    form = ThemePathForm
-    list_display = (
-        "slug",
-        "name",
-        "all_languages_column",
-        "sort_order",
-        "get_event_count",
-    )
+class TagAdmin(TranslatableAdmin):
+    """Base of the tag admins. Not registered."""
+
+    form = TagForm
     list_display_links = ("slug", "name")
     fields = ("slug", "name", "description", "sort_order")
     search_fields = ("slug", "translations__name")
+    usage_relation: str  # Related name of the objects that use the tag
 
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
             .prefetch_related("translations")
-            .annotate(Count("events", distinct=True))
+            .annotate(usage_count=Count(self.usage_relation, distinct=True))
         )
 
     def get_readonly_fields(self, request, obj=None):
@@ -61,10 +56,41 @@ class ThemePathAdmin(TranslatableAdmin):
                 messages.ERROR,
             )
             return HttpResponseRedirect(
-                reverse("admin:tags_themepath_change", args=[object_id])
+                reverse(
+                    f"admin:{self.opts.app_label}_{self.opts.model_name}_change",
+                    args=[object_id],
+                )
             )
         return super().delete_translation(request, object_id, language_code)
 
+
+@admin.register(ThemePath)
+class ThemePathAdmin(TagAdmin):
+    usage_relation = "events"
+    list_display = (
+        "slug",
+        "name",
+        "all_languages_column",
+        "sort_order",
+        "get_event_count",
+    )
+
     @admin.display(description=_("Event count"))
     def get_event_count(self, obj):
-        return obj.events__count
+        return obj.usage_count
+
+
+@admin.register(Accessibility)
+class AccessibilityAdmin(TagAdmin):
+    usage_relation = "occurrences"
+    list_display = (
+        "slug",
+        "name",
+        "all_languages_column",
+        "sort_order",
+        "get_occurrence_count",
+    )
+
+    @admin.display(description=_("Occurrence count"))
+    def get_occurrence_count(self, obj):
+        return obj.usage_count

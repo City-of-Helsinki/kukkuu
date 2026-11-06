@@ -131,6 +131,9 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
           url
         }
       }
+      accessibilities {
+        slug
+      }
     }
   }
 }
@@ -158,6 +161,9 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
         ... on TicketmasterOccurrenceTicketSystem {
           url
         }
+      }
+      accessibilities {
+        slug
       }
     }
   }
