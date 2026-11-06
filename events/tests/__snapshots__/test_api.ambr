@@ -91,6 +91,8 @@
     'data': dict({
       'addOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 35,
           'capacityOverride': None,
           'event': dict({
@@ -114,6 +116,8 @@
     'data': dict({
       'addOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 48,
           'capacityOverride': None,
           'event': dict({
@@ -2041,6 +2045,8 @@
     'data': dict({
       'updateOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 5,
           'capacityOverride': 5,
           'enrolmentCount': 0,
@@ -2066,6 +2072,8 @@
     'data': dict({
       'updateOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 5,
           'capacityOverride': 5,
           'enrolmentCount': 0,
@@ -2091,6 +2099,8 @@
     'data': dict({
       'updateOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 5,
           'capacityOverride': 5,
           'enrolmentCount': 0,
@@ -2117,6 +2127,8 @@
     'data': dict({
       'updateOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 5,
           'capacityOverride': 5,
           'enrolmentCount': 0,
@@ -2143,6 +2155,8 @@
     'data': dict({
       'updateOccurrence': dict({
         'occurrence': dict({
+          'accessibilities': list([
+          ]),
           'capacity': 5,
           'capacityOverride': 5,
           'enrolmentCount': 0,

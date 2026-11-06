@@ -5,8 +5,8 @@ from django.utils import translation
 from factory.django import DjangoModelFactory
 
 from common.utils import get_global_id
-from tags.factories import ThemePathFactory
-from tags.models import Tag, ThemePath
+from tags.factories import AccessibilityFactory, ThemePathFactory
+from tags.models import Accessibility, Tag, ThemePath
 
 THEME_PATHS_QUERY = """
 query ThemePaths {
@@ -31,6 +31,42 @@ query ThemePaths {
 THEME_PATH_QUERY = """
 query ThemePath($id: ID!) {
   themePath(id: $id) {
+    slug
+    name
+    description
+    sortOrder
+    translations {
+      languageCode
+      name
+      description
+    }
+  }
+}
+"""
+
+ACCESSIBILITIES_QUERY = """
+query Accessibilities {
+  accessibilities {
+    edges {
+      node {
+        slug
+        name
+        description
+        sortOrder
+        translations {
+          languageCode
+          name
+          description
+        }
+      }
+    }
+  }
+}
+"""
+
+ACCESSIBILITY_QUERY = """
+query Accessibility($id: ID!) {
+  accessibility(id: $id) {
     slug
     name
     description
@@ -80,6 +116,15 @@ THEME_PATH_API = TagApi(
     node_field="themePath",
 )
 
+ACCESSIBILITY_API = TagApi(
+    model=Accessibility,
+    factory=AccessibilityFactory,
+    list_query=ACCESSIBILITIES_QUERY,
+    list_field="accessibilities",
+    node_query=ACCESSIBILITY_QUERY,
+    node_field="accessibility",
+)
+
 TEST_TRANSLATIONS = {
     "fi": {"name": "Nimi", "description": "Kuvaus"},
     "sv": {"name": "Namn", "description": "Beskrivning"},
@@ -100,7 +145,9 @@ TEST_NODE = {
 }
 
 
-@pytest.fixture(params=[THEME_PATH_API], ids=["theme_path"])
+@pytest.fixture(
+    params=[THEME_PATH_API, ACCESSIBILITY_API], ids=["theme_path", "accessibility"]
+)
 def tag_api(request):
     return request.param
 
