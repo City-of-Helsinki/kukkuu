@@ -2,6 +2,18 @@
 <!-- REMINDER: While updating changelog, also remember to update
 the version in kukkuu/__init.py__ -->
 
+## [3.21.12](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.11...kukkuu-v3.21.12) (2026-11-09)
+
+
+### Dependencies
+
+* Bump authlib from 1.7.2 to 1.9.1 ([da32e34](https://github.com/City-of-Helsinki/kukkuu/commit/da32e34b4c50f1122b7afea5ed5207fd8a3e8beb))
+* Bump brace-expansion from 1.1.11 to 1.1.21 in /browser-tests ([33d18c1](https://github.com/City-of-Helsinki/kukkuu/commit/33d18c1e4f9a0248e60e38ed8ad20eea95b8363d))
+* Bump django-helusers from 1.3.0 to 1.3.2 ([18dd8fc](https://github.com/City-of-Helsinki/kukkuu/commit/18dd8fcf97f9a6d40459d48aceacd0e45d5ce789))
+* Bump joserfc from 1.7.4 to 1.7.6 ([16042e1](https://github.com/City-of-Helsinki/kukkuu/commit/16042e18e0184a2dcf7ba3e5e27301f299dc4001))
+* Bump oauthlib from 4.0.0 to 4.0.1 ([d6f7a52](https://github.com/City-of-Helsinki/kukkuu/commit/d6f7a5278450658bc22abbff2a341b0c4e3fcdbf))
+* Bump social-auth-core from 5.2.0 to 6.2.0 ([6ece4ee](https://github.com/City-of-Helsinki/kukkuu/commit/6ece4eef3fc3408250ea47736497a3362e59877e))
+
 ## [3.21.11](https://github.com/City-of-Helsinki/kukkuu/compare/kukkuu-v3.21.10...kukkuu-v3.21.11) (2026-10-26)
 
 
