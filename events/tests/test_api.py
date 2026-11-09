@@ -31,7 +31,7 @@ from events.factories import (
     TixlyEventFactory,
 )
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
-from events.schema import OccurrenceNode
+from events.schema import EventNode, OccurrenceNode
 from events.tests.mutations import (
     ADD_EVENT_GROUP_MUTATION,
     ADD_EVENT_MUTATION,
@@ -1270,6 +1270,34 @@ def test_event_theme_paths(project_user_api_client, project):
             }
         }
     }
+
+
+def test_event_theme_paths_resolver_does_not_query_per_theme_path(
+    django_assert_num_queries, project
+):
+    """The theme paths and all their translations are loaded in 2 queries.
+
+    Not 1 query for the theme paths plus 1 per theme path for its
+    translations, which is what happens when the event has no prefetch.
+    """
+    translations = {
+        "fi": {"name": "Nimi", "description": "Kuvaus"},
+        "sv": {"name": "Namn", "description": "Beskrivning"},
+        "en": {"name": "Name", "description": "Description"},
+    }
+    event = EventFactory(
+        project=project,
+        theme_paths=[
+            ThemePathFactory(slug=slug, translations=translations)
+            for slug in ["a", "b", "c"]
+        ],
+    )
+    event = Event.objects.get(pk=event.pk)
+
+    with django_assert_num_queries(2):
+        theme_paths = EventNode.resolve_theme_paths(event, None)
+        for theme_path in theme_paths:
+            list(theme_path.translations.all())
 
 
 def test_event_filter_by_theme_path(project_user_api_client, project):

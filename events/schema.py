@@ -384,6 +384,13 @@ class EventNode(DjangoObjectType):
         return super().get_node(info, id)
 
     def resolve_theme_paths(self, info, **kwargs):
+        prefetch_related_objects(
+            [self],
+            Prefetch(
+                "theme_paths",
+                queryset=ThemePathNode.get_queryset(ThemePath.objects.all(), info),
+            ),
+        )
         return self.theme_paths.all()
 
     def resolve_image(self, info, **kwargs):
