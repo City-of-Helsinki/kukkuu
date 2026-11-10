@@ -7,78 +7,12 @@ from factory.django import DjangoModelFactory
 from common.utils import get_global_id
 from tags.factories import AccessibilityFactory, ThemePathFactory
 from tags.models import Accessibility, Tag, ThemePath
-
-THEME_PATHS_QUERY = """
-query ThemePaths {
-  themePaths {
-    edges {
-      node {
-        slug
-        name
-        description
-        sortOrder
-        translations {
-          languageCode
-          name
-          description
-        }
-      }
-    }
-  }
-}
-"""
-
-THEME_PATH_QUERY = """
-query ThemePath($id: ID!) {
-  themePath(id: $id) {
-    slug
-    name
-    description
-    sortOrder
-    translations {
-      languageCode
-      name
-      description
-    }
-  }
-}
-"""
-
-ACCESSIBILITIES_QUERY = """
-query Accessibilities {
-  accessibilities {
-    edges {
-      node {
-        slug
-        name
-        description
-        sortOrder
-        translations {
-          languageCode
-          name
-          description
-        }
-      }
-    }
-  }
-}
-"""
-
-ACCESSIBILITY_QUERY = """
-query Accessibility($id: ID!) {
-  accessibility(id: $id) {
-    slug
-    name
-    description
-    sortOrder
-    translations {
-      languageCode
-      name
-      description
-    }
-  }
-}
-"""
+from tags.tests.queries import (
+    ACCESSIBILITIES_QUERY,
+    ACCESSIBILITY_QUERY,
+    THEME_PATH_QUERY,
+    THEME_PATHS_QUERY,
+)
 
 
 @dataclass(frozen=True)
