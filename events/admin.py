@@ -19,7 +19,6 @@ from events.services import (
 )
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
-from tags.models import Accessibility, ThemePath
 
 from .models import (
     Enrolment,
@@ -157,6 +156,8 @@ class ThroughModelTabularInline(admin.TabularInline):
 class EventThemePathInline(ThroughModelTabularInline):
     model = EventThemePath
     extra = 0
+    autocomplete_fields = ("theme_path",)
+    raw_id_fields = ("theme_path",)
 
     def get_queryset(self, request):
         # The row labels (EventThemePath.__str__) use the event and the theme path
@@ -167,15 +168,12 @@ class EventThemePathInline(ThroughModelTabularInline):
             .prefetch_related("theme_path__translations")
         )
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "theme_path":
-            kwargs["queryset"] = ThemePath.objects.prefetch_related("translations")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 class OccurrenceAccessibilityInline(ThroughModelTabularInline):
     model = OccurrenceAccessibility
     extra = 0
+    autocomplete_fields = ("accessibility",)
+    raw_id_fields = ("accessibility",)
 
     def get_queryset(self, request):
         # The row labels (OccurrenceAccessibility.__str__) use the occurrence
@@ -186,11 +184,6 @@ class OccurrenceAccessibilityInline(ThroughModelTabularInline):
             .select_related("occurrence", "accessibility")
             .prefetch_related("accessibility__translations")
         )
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "accessibility":
-            kwargs["queryset"] = Accessibility.objects.prefetch_related("translations")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Event)
