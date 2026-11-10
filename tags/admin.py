@@ -33,6 +33,11 @@ class TagAdmin(TranslatableAdmin):
     fields = ("slug", "name", "description", "sort_order")
     search_fields = ("slug", "translations__name")
     usage_relation: str  # Related name of the objects that use the tag
+    ordering = ("sort_order", "slug")
+
+    def has_view_permission(self, request, obj=None):
+        """Allow all active staff users to view all tags, e.g. using auto-complete."""
+        return request.user.is_active and request.user.is_staff
 
     def get_queryset(self, request):
         return (
