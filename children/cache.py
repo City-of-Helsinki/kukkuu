@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Optional
+from typing import Optional
 
 from django.core.exceptions import ValidationError
 
@@ -23,12 +23,12 @@ class ChildRequestCache:
     CACHE_ATTR = "_child_cache"
 
     @classmethod
-    def _extract_context(cls, context_or_info: Any) -> Any:
+    def _extract_context(cls, context_or_info):
         """Extract the underlying HttpRequest or request context object."""
         return getattr(context_or_info, "context", context_or_info)
 
     @classmethod
-    def _canonicalize_id(cls, child_id: Any) -> str:
+    def _canonicalize_id(cls, child_id) -> str:
         """
         Normalize a child ID into a standard lowercase UUID string with hyphens.
 
@@ -46,7 +46,7 @@ class ChildRequestCache:
             return raw_str
 
     @classmethod
-    def _get_user_key(cls, user: Any) -> str:
+    def _get_user_key(cls, user) -> str:
         """
         Generate a unique cache partition key for the given user.
 
@@ -66,9 +66,7 @@ class ChildRequestCache:
         return f"user:{id(user)}"
 
     @classmethod
-    def _get_cache_dict(
-        cls, context_or_info: Any, user: Any = None
-    ) -> Optional[dict[str, Child]]:
+    def _get_cache_dict(cls, context_or_info, user=None) -> Optional[dict[str, Child]]:
         """
         Return the child cache dictionary for the specified user on the context.
 
@@ -93,9 +91,9 @@ class ChildRequestCache:
     @classmethod
     def get(
         cls,
-        context_or_info: Any,
+        context_or_info,
         child_id: int | str | uuid.UUID,
-        user: Any = None,
+        user=None,
     ) -> Optional[Child]:
         """
         Retrieve a cached Child by primary key or string representation of PK.
@@ -107,7 +105,7 @@ class ChildRequestCache:
         return cache.get(key) if key else None
 
     @classmethod
-    def set(cls, context_or_info: Any, child: Child, user: Any = None) -> None:
+    def set(cls, context_or_info, child: Child, user=None) -> None:
         """
         Store a Child instance in the request context cache.
         """
@@ -123,9 +121,9 @@ class ChildRequestCache:
     @classmethod
     def invalidate(
         cls,
-        context_or_info: Any,
+        context_or_info,
         child_id: int | str | uuid.UUID,
-        user: Any = None,
+        user=None,
     ) -> None:
         """
         Evict a Child instance from the request cache by primary key.
@@ -153,9 +151,9 @@ class ChildRequestCache:
     @classmethod
     def get_or_fetch(
         cls,
-        context_or_info: Any,
+        context_or_info,
         child_global_id: str,
-        user: Any = None,
+        user=None,
     ) -> Child:
         """
         Retrieve a Child instance from cache or fetch with eager prefetching.

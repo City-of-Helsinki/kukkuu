@@ -84,7 +84,7 @@ class EventGroupQueryset(TranslatableQuerySet):
             Event.objects.filter(event_group=OuterRef("pk"))
             .exclude(published_at=None)
             .exclude(ticket_system=Event.INTERNAL)
-            .order_by("created_at", "id")
+            .order_by("published_at", "id")
             .values(year=ExtractYear("published_at"))[:1]
         )
         published_events_q = Q(events__published_at__isnull=False)
@@ -192,6 +192,7 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         external_event = (
             self.events.exclude(published_at=None)
             .exclude(ticket_system=Event.INTERNAL)
+            .order_by("published_at", "id")
             .first()
         )
         return year_of(external_event.published_at) if external_event else None
