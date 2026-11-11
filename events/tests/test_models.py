@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 from django.conf import settings
@@ -298,6 +299,41 @@ def test_event_group_can_child_enroll_no_occurrence(child_with_random_guardian):
         name="Event group without any occurrences", published_at=now()
     )
     assert event_group.can_child_enroll(child_with_random_guardian) is False
+
+
+@pytest.mark.django_db
+def test_event_group_enrolment_year_uses_earliest_published_external_event():
+    """
+    Ensure event group enrolment year derives from the earliest published_at among
+    external events, even if an event published in a later year was created earlier.
+    """
+    tz = ZoneInfo("Europe/Helsinki")
+    group = EventGroupFactory(published_at=datetime(2025, 1, 1, tzinfo=tz))
+
+    # ev1: created earlier, published in 2026
+    ev1 = TicketmasterEventFactory(
+        event_group=group,
+        project=group.project,
+        published_at=datetime(2026, 6, 1, tzinfo=tz),
+    )
+    # ev2: created later, published in 2025
+    ev2 = TicketmasterEventFactory(
+        event_group=group,
+        project=group.project,
+        published_at=datetime(2025, 3, 1, tzinfo=tz),
+    )
+
+    # Force created_at order: ev1 created before ev2
+    Event.objects.filter(id=ev1.id).update(created_at=datetime(2024, 1, 1, tzinfo=tz))
+    Event.objects.filter(id=ev2.id).update(created_at=datetime(2024, 6, 1, tzinfo=tz))
+
+    # Un-annotated fallback method
+    assert group._get_enrolment_year() == 2025
+
+    # Pre-annotated queryset
+    annotated_group = EventGroup.objects.with_enrolment_check_data().get(id=group.id)
+    assert annotated_group._group_year == 2025
+    assert annotated_group._get_enrolment_year() == 2025
 
 
 @pytest.mark.django_db
