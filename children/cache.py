@@ -28,180 +28,74 @@ class ChildRequestCache:
         return getattr(context_or_info, "context", context_or_info)
 
     @classmethod
-    def _canonicalize_id(cls, child_id) -> str:
-        """
-        Normalize a child ID into a standard lowercase UUID string with hyphens.
-
-        Handles UUID instances, strings with or without hyphens, mixed case, and
-        whitespace. Falls back to stripped string representation for non-UUID keys.
-        """
-        if child_id is None:
-            return ""
-        if isinstance(child_id, uuid.UUID):
-            return str(child_id)
-        raw_str = str(child_id).strip()
-        try:
-            return str(uuid.UUID(raw_str))
-        except (ValueError, AttributeError):
-            return raw_str
-
-    @classmethod
-    def _get_user_key(cls, user) -> str:
-        """
-        Generate a unique cache partition key for the given user.
-
-        Ensures cache entries are strictly scoped to the viewing user so that
-        access permissions are never bypassed across user boundaries.
-        """
-        if user is None:
-            return "anon"
-        if hasattr(user, "is_authenticated") and not user.is_authenticated:
-            return "anon"
-        if hasattr(user, "pk") and user.pk is not None:
-            return f"user:{user.pk}"
-        if hasattr(user, "id") and user.id is not None:
-            return f"user:{user.id}"
-        if hasattr(user, "uuid") and user.uuid is not None:
-            return f"user:{user.uuid}"
-        return f"user:{id(user)}"
-
-    @classmethod
-    def _get_cache_dict(cls, context_or_info, user=None) -> Optional[dict[str, Child]]:
-        """
-        Return the child cache dictionary for the specified user on the context.
-
-        The root cache on the context partitions child entries by user key,
-        guaranteeing that different users sharing the same context cannot see
-        or resolve each other's cached child snapshots.
-        """
+    def _get_cache(cls, context_or_info) -> dict[str, Child]:
+        """Return the child cache dictionary stored on the request context."""
         context = cls._extract_context(context_or_info)
-        if context is None:
-            return None
-        if user is None and hasattr(context, "user"):
-            user = context.user
-        user_key = cls._get_user_key(user)
-        if not hasattr(context, cls.CACHE_ATTR):
-            setattr(context, cls.CACHE_ATTR, {})
-        root_cache = getattr(context, cls.CACHE_ATTR)
-        if not isinstance(root_cache, dict):
-            root_cache = {}
-            setattr(context, cls.CACHE_ATTR, root_cache)
-        return root_cache.setdefault(user_key, {})
-
-    @classmethod
-    def get(
-        cls,
-        context_or_info,
-        child_id: int | str | uuid.UUID,
-        user=None,
-    ) -> Optional[Child]:
-        """
-        Retrieve a cached Child by primary key or string representation of PK.
-        """
-        cache = cls._get_cache_dict(context_or_info, user)
+        cache = getattr(context, cls.CACHE_ATTR, None)
         if cache is None:
-            return None
-        key = cls._canonicalize_id(child_id)
-        return cache.get(key) if key else None
+            cache = {}
+            setattr(context, cls.CACHE_ATTR, cache)
+        return cache
 
     @classmethod
-    def set(cls, context_or_info, child: Child, user=None) -> None:
-        """
-        Store a Child instance in the request context cache.
-        """
-        if child is None or child.id is None:
-            return
-        key = cls._canonicalize_id(child.id)
-        if not key:
-            return
-        cache = cls._get_cache_dict(context_or_info, user)
-        if cache is not None:
-            cache[key] = child
+    def get(cls, context_or_info, child_id: str | uuid.UUID) -> Optional[Child]:
+        """Retrieve a cached Child by ID from the request cache."""
+        return cls._get_cache(context_or_info).get(str(child_id))
 
     @classmethod
-    def invalidate(
-        cls,
-        context_or_info,
-        child_id: int | str | uuid.UUID,
-        user=None,
-    ) -> None:
+    def set(cls, context_or_info, child: Child) -> None:
+        """Store a Child instance in the request cache."""
+        cls._get_cache(context_or_info)[str(child.id)] = child
+
+    @classmethod
+    def invalidate(cls, context_or_info, child_id: str | uuid.UUID) -> None:
         """
         Evict a Child instance from the request cache by primary key.
         Typically called after mutations that modify the child's enrolments
         or passwords.
         """
-        context = cls._extract_context(context_or_info)
-        if context is None or not hasattr(context, cls.CACHE_ATTR):
-            return
-        key = cls._canonicalize_id(child_id)
-        if not key:
-            return
-        root_cache = getattr(context, cls.CACHE_ATTR)
-        if not isinstance(root_cache, dict):
-            return
-        if user is not None:
-            user_key = cls._get_user_key(user)
-            if user_key in root_cache and isinstance(root_cache[user_key], dict):
-                root_cache[user_key].pop(key, None)
-        else:
-            for user_cache in root_cache.values():
-                if isinstance(user_cache, dict):
-                    user_cache.pop(key, None)
+        cls._get_cache(context_or_info).pop(str(child_id), None)
 
     @classmethod
-    def get_or_fetch(
-        cls,
-        context_or_info,
-        child_global_id: str,
-        user=None,
-    ) -> Child:
+    def get_or_fetch(cls, context_or_info, child_global_id: str) -> Child:
         """
         Retrieve a Child instance from cache or fetch with eager prefetching.
 
-        Key behaviors:
-        1. Checks request cache by decoded, canonicalized PK scoped to the user.
-        2. Permission check: Filters by `Child.objects.user_can_view(user)`.
+        1. Checks request cache by decoded ChildNode PK.
+        2. Permission check: Filters by `Child.objects.user_can_view(context.user)`.
         3. Eager prefetching: Prefetches `project`, `occurrences__event`, and
-           `ticket_system_passwords__event`. This allows methods on `Child` like
-           `can_child_enroll()`, `get_enrolled_event_ids()`, `get_enrolment_count()`,
-           and `get_ticket_system_passwords_by_event_id()` to run in memory without
-           additional SQL queries.
-        4. Memoizes on `context._child_cache` under the authorized user's partition.
+           `ticket_system_passwords__event`.
+        4. Memoizes on `context._child_cache`.
 
         :param context_or_info: Django HttpRequest or GraphQL ResolveInfo.
         :param child_global_id: Relay global ID (base64-encoded `ChildNode:<pk>`).
-        :param user: Optional User instance; defaults to `context.user`.
         :return: Prefetched Child instance.
         :raises ObjectDoesNotExistError: If child ID is invalid, child is not found,
             or user lacks view permission.
         """
         context = cls._extract_context(context_or_info)
-        if user is None and hasattr(context, "user"):
-            user = context.user
+        child_id = get_node_id_from_global_id(child_global_id, "ChildNode")
+        if not child_id:
+            raise ObjectDoesNotExistError(
+                Child.DoesNotExist("Child matching query does not exist.")
+            )
 
-        raw_id = get_node_id_from_global_id(child_global_id, "ChildNode")
-        canonical_id = cls._canonicalize_id(raw_id)
-
-        cache = cls._get_cache_dict(context, user)
-        if cache is not None and canonical_id and canonical_id in cache:
-            return cache[canonical_id]
+        cache = cls._get_cache(context)
+        if child_id in cache:
+            return cache[child_id]
 
         try:
-            if not canonical_id:
-                raise Child.DoesNotExist("Child matching query does not exist.")
             child = (
-                Child.objects.user_can_view(user)
+                Child.objects.user_can_view(context.user)
                 .select_related("project")
                 .prefetch_related(
                     "occurrences__event",
                     "ticket_system_passwords__event",
                 )
-                .get(id=canonical_id)
+                .get(id=child_id)
             )
         except (Child.DoesNotExist, ValidationError, ValueError) as e:
             raise ObjectDoesNotExistError(e)
 
-        if cache is not None and canonical_id:
-            cache[canonical_id] = child
-
+        cache[str(child.id)] = child
         return child
