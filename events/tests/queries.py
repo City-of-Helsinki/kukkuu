@@ -600,3 +600,53 @@ query eventsSearchQuery(
   }
 }
 """
+
+# Select the same occurrence fields with the same `occurrences` arguments from
+# `events(childId)` and from `event(id)` for comparison.
+EVENTS_SEARCH_VS_EVENT_OCCURRENCES_QUERY_TEMPLATE = """
+query($childId: ID!, $id: ID!) {
+  events(childId: $childId) {
+    edges { node { id occurrences(%(occurrences_args)s) { ...OccurrenceFields } } }
+  }
+  event(id: $id) {
+    id
+    occurrences(%(occurrences_args)s) { ...OccurrenceFields }
+  }
+}
+
+fragment OccurrenceFields on OccurrenceNodeConnection {
+  pageInfo { hasNextPage hasPreviousPage startCursor endCursor }
+  edges {
+    cursor
+    node {
+      id
+      time
+      occurrenceLanguage
+      remainingCapacity
+      enrolmentCount
+      seatCount
+      capacity
+      venue { id name address }
+    }
+  }
+}
+"""
+
+
+EVENTS_SEARCH_PAGINATION_QUERY = """
+query EventsPagination($childId: ID!, $first: Int, $after: String) {
+  events(childId: $childId, first: $first, after: $after) {
+    count
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    edges {
+      node {
+        id
+        name
+      }
+    }
+  }
+}
+"""

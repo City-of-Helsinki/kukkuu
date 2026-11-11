@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from django.utils import timezone
 from freezegun import freeze_time
-from graphql_relay import to_global_id
+from graphql_relay import offset_to_cursor, to_global_id
 
 from children.cache import ChildRequestCache
 from children.factories import ChildWithGuardianFactory
@@ -19,7 +19,11 @@ from events.factories import (
     TicketSystemPasswordFactory,
 )
 from events.models import Event, Occurrence
-from events.tests.queries import EVENTS_SEARCH_QUERY
+from events.tests.queries import (
+    EVENTS_SEARCH_PAGINATION_QUERY,
+    EVENTS_SEARCH_QUERY,
+    EVENTS_SEARCH_VS_EVENT_OCCURRENCES_QUERY_TEMPLATE,
+)
 from kukkuu.consts import API_USAGE_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
 from tags.factories import ThemePathFactory
 from users.factories import GuardianFactory
@@ -464,6 +468,128 @@ def test_events_search_returns_all_upcoming_occurrences_on_node(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "args, expected_count",
+    [
+        ("upcoming: true", 5),
+        ("upcoming: true, first: 2", 2),
+        ("upcoming: true, last: 4", 4),
+        (f'upcoming: true, first: 5, after: "{offset_to_cursor(1)}"', 3),
+        # These are not served from the prefetched occurrences, so they check the
+        # fallback to the queryset.
+        ("upcoming: false", 6),
+        ('upcoming: true, occurrenceLanguage: "fi"', 2),
+    ],
+)
+def test_events_search_occurrences_match_event_occurrences(
+    guardian_api_client, project, past, future, args, expected_count
+):
+    """
+    Verify that the events search query returns the same occurrences for an event as
+    the single event query does.
+
+    The search resolves `occurrences` calls with `upcoming: true` and pagination
+    arguments from occurrences it prefetches, while other calls and the single event
+    query use a queryset. These are separate code paths, so their results could
+    differ.
+    """
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian,
+        project=project,
+    )
+    other_child = ChildWithGuardianFactory(project=project)
+    event = EventFactory(project=project, published_at=past, capacity_per_occurrence=10)
+
+    # A past occurrence, which only `upcoming: false` returns
+    OccurrenceFactory(event=event, time=past)
+    # Created out of chronological order, so a missing ordering is visible
+    occurrences = [
+        OccurrenceFactory(
+            event=event,
+            time=future + timedelta(days=days),
+            occurrence_language=language,
+        )
+        for days, language in [(3, "fi"), (1, "sv"), (4, "en"), (0, "fi"), (2, "sv")]
+    ]
+    occurrences[1].capacity_override = 5
+    occurrences[1].save()
+    EnrolmentFactory(
+        occurrence=occurrences[0],
+        child=other_child,
+        extra_children_count=1,
+        extra_guardians_count=1,
+    )
+    EnrolmentFactory(occurrence=occurrences[1], child=child)
+
+    result = guardian_api_client.execute(
+        EVENTS_SEARCH_VS_EVENT_OCCURRENCES_QUERY_TEMPLATE % {"occurrences_args": args},
+        variables={"childId": get_global_id(child), "id": get_global_id(event)},
+    )
+
+    assert result.get("errors") is None
+    search_occurrences = result["data"]["events"]["edges"][0]["node"]["occurrences"]
+    assert len(search_occurrences["edges"]) == expected_count
+    assert search_occurrences == result["data"]["event"]["occurrences"]
+
+
+@pytest.mark.django_db
+def test_events_search_false_flags_without_child_id_allowed(user_api_client):
+    """
+    Ensure boolean search arguments set to false without childId do not trigger API_USAGE_ERROR.
+    """
+    query = """
+    query EventsWithoutChild($availableOnly: Boolean, $familyOnly: Boolean) {
+      events(availableOnly: $availableOnly, familyOnly: $familyOnly) {
+        count
+      }
+    }
+    """
+    executed = user_api_client.execute(
+        query, variables={"availableOnly": False, "familyOnly": False}
+    )
+    assert executed.get("errors") is None
+    assert "count" in executed["data"]["events"]
+
+
+@pytest.mark.django_db
+def test_events_search_external_event_without_occurrences(
+    guardian_api_client, project, past
+):
+    """
+    Verify external events without occurrences:
+    - Included when availableOnly=True (requires free passwords, no occurrences).
+    - Excluded when occurrence criteria (languages) are requested.
+    """
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian,
+        project=project,
+    )
+    ext_event = TicketmasterEventFactory(project=project, published_at=past)
+    TicketSystemPasswordFactory(event=ext_event, child=None)
+
+    # availableOnly=True returns the event without requiring occurrences
+    res_avail = guardian_api_client.execute(
+        EVENTS_SEARCH_QUERY,
+        variables={"childId": get_global_id(child), "availableOnly": True},
+    )
+    assert res_avail.get("errors") is None
+    ids = [e["node"]["id"] for e in res_avail["data"]["events"]["edges"]]
+    assert ids == [get_global_id(ext_event)]
+
+    # languages filter excludes external events without occurrences
+    res_lang = guardian_api_client.execute(
+        EVENTS_SEARCH_QUERY,
+        variables={
+            "childId": get_global_id(child),
+            "availableOnly": True,
+            "languages": ["fi"],
+        },
+    )
+    assert res_lang.get("errors") is None
+    assert len(res_lang["data"]["events"]["edges"]) == 0
+
+
+@pytest.mark.django_db
 def test_events_search_available_only_internal_event_with_seats(
     guardian_api_client, project, past, future
 ):
@@ -731,27 +857,9 @@ def test_events_search_ordering_and_cursor_pagination(
         name="External Middle",
     )
 
-    pagination_query = """
-    query EventsPagination($childId: ID!, $first: Int, $after: String) {
-      events(childId: $childId, first: $first, after: $after) {
-        count
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-        edges {
-          node {
-            id
-            name
-          }
-        }
-      }
-    }
-    """
-
     # Page 1 (first: 2): exact object match on first 2 items
     page1 = guardian_api_client.execute(
-        pagination_query,
+        EVENTS_SEARCH_PAGINATION_QUERY,
         variables={"childId": get_global_id(child), "first": 2},
     )
     cursor1 = page1["data"]["events"]["pageInfo"]["endCursor"]
@@ -778,7 +886,7 @@ def test_events_search_ordering_and_cursor_pagination(
 
     # Page 2 (first: 2, after: endCursor): exact object match on remaining item
     page2 = guardian_api_client.execute(
-        pagination_query,
+        EVENTS_SEARCH_PAGINATION_QUERY,
         variables={
             "childId": get_global_id(child),
             "first": 2,
