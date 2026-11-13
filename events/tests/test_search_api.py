@@ -552,13 +552,14 @@ def test_events_search_false_flags_without_child_id_allowed(user_api_client):
 
 
 @pytest.mark.django_db
-def test_events_search_external_event_without_occurrences(
+def test_events_search_external_event_with_occurrence(
     guardian_api_client, project, past
 ):
     """
-    Verify external events without occurrences:
-    - Included when availableOnly=True (requires free passwords, no occurrences).
-    - Excluded when occurrence criteria (languages) are requested.
+    Verify external events with single occurrence:
+    - Included when availableOnly=True (requires free passwords, upcoming occurrence).
+    - Matched when occurrence criteria (languages) match the occurrence language.
+    - Excluded when occurrence criteria (languages) do not match.
     """
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
@@ -567,7 +568,7 @@ def test_events_search_external_event_without_occurrences(
     ext_event = TicketmasterEventFactory(project=project, published_at=past)
     TicketSystemPasswordFactory(event=ext_event, child=None)
 
-    # availableOnly=True returns the event without requiring occurrences
+    # availableOnly=True returns the event with its upcoming occurrence
     res_avail = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
         variables={"childId": get_global_id(child), "availableOnly": True},
@@ -576,7 +577,7 @@ def test_events_search_external_event_without_occurrences(
     ids = [e["node"]["id"] for e in res_avail["data"]["events"]["edges"]]
     assert ids == [get_global_id(ext_event)]
 
-    # languages filter excludes external events without occurrences
+    # languages filter matching occurrence language ("fi") includes the event
     res_lang = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
         variables={
@@ -586,7 +587,21 @@ def test_events_search_external_event_without_occurrences(
         },
     )
     assert res_lang.get("errors") is None
-    assert len(res_lang["data"]["events"]["edges"]) == 0
+    assert [e["node"]["id"] for e in res_lang["data"]["events"]["edges"]] == [
+        get_global_id(ext_event)
+    ]
+
+    # languages filter not matching occurrence language excludes the event
+    res_lang_sv = guardian_api_client.execute(
+        EVENTS_SEARCH_QUERY,
+        variables={
+            "childId": get_global_id(child),
+            "availableOnly": True,
+            "languages": ["sv"],
+        },
+    )
+    assert res_lang_sv.get("errors") is None
+    assert len(res_lang_sv["data"]["events"]["edges"]) == 0
 
 
 @pytest.mark.django_db
@@ -854,6 +869,7 @@ def test_events_search_ordering_and_cursor_pagination(
         project=project,
         published_at=past,
         registration_opens_at=now + timedelta(days=5),
+        ticket_system_end_time=now + timedelta(days=5),
         name="External Middle",
     )
 

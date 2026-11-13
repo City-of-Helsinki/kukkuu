@@ -19,6 +19,7 @@ from projects.factories import ProjectFactory
 from projects.models import Project
 from tags.factories import AccessibilityFactory, ThemePathFactory
 from tags.models import Accessibility, ThemePath
+from venues.factories import SystemVenueFactory, VenueFactory
 from venues.models import Venue
 
 from ..enums import EnrolmentDeniedReason
@@ -1236,3 +1237,81 @@ def test_enrolment_denied_reason_capacity_threshold(child_with_random_guardian, 
         )
         == EnrolmentDeniedReason.OCCURRENCE_FULL
     )
+
+
+@pytest.mark.django_db
+def test_external_event_requires_ticket_system_end_time():
+    event = TicketmasterEventFactory()
+    assert event.ticket_system_end_time is not None
+    event.clean()  # Should pass
+
+    event.ticket_system_end_time = None
+    with pytest.raises(ValidationError) as exc_info:
+        event.clean()
+    assert "ticket_system_end_time" in exc_info.value.message_dict
+
+
+@pytest.mark.django_db
+def test_external_event_get_capacity_returns_zero():
+    event = TicketmasterEventFactory()
+    assert event.get_capacity() == 0
+
+
+@pytest.mark.django_db
+def test_external_event_occurrence_requires_system_venue():
+    event = TicketmasterEventFactory(occurrence=False)
+    regular_venue = VenueFactory(project=event.project)
+    system_venue = SystemVenueFactory()
+
+    # Regular venue raises ValidationError
+    occ = Occurrence(
+        event=event,
+        venue=regular_venue,
+        time=now(),
+        ticket_system_url="https://example.com",
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        occ.clean()
+    assert "venue" in exc_info.value.message_dict
+    assert "External ticket system events must use the system venue" in str(
+        exc_info.value
+    )
+
+    # System venue passes clean
+    occ.venue = system_venue
+    occ.clean()
+
+
+@pytest.mark.django_db
+def test_internal_event_occurrence_cannot_use_system_venue():
+    event = EventFactory()
+    system_venue = SystemVenueFactory()
+
+    occ = Occurrence(event=event, venue=system_venue, time=now())
+    with pytest.raises(ValidationError) as exc_info:
+        occ.clean()
+    assert "venue" in exc_info.value.message_dict
+    assert "Internal events cannot use the system venue" in str(exc_info.value)
+
+
+@pytest.mark.django_db
+def test_external_event_max_one_occurrence():
+    event = TicketmasterEventFactory(occurrence=False)
+    system_venue = SystemVenueFactory()
+
+    occ1 = Occurrence.objects.create(
+        event=event,
+        venue=system_venue,
+        time=now(),
+        ticket_system_url="https://example.com",
+    )
+    occ1.clean()  # Passes
+
+    occ2 = Occurrence(
+        event=event,
+        venue=system_venue,
+        time=now() + timedelta(days=1),
+        ticket_system_url="https://example.com",
+    )
+    with pytest.raises(ValidationError, match="at most one occurrence"):
+        occ2.clean()

@@ -1,21 +1,25 @@
 import logging
 
+import django_filters
 import graphene
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.utils.translation import get_language
 from graphene import relay
 from graphene_django import DjangoObjectType
-from graphene_django.filter import DjangoFilterConnectionField
+from graphene_django.filter import DjangoFilterConnectionField, TypedFilter
 
 from common.utils import (
+    get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
     map_enums_to_values_in_kwargs,
     project_user_required,
     update_object_with_translations,
 )
+from kukkuu.exceptions import DataValidationError
 from projects.models import Project
 from users.schema import LanguageEnum
 from venues.models import Venue
@@ -23,6 +27,30 @@ from venues.models import Venue
 logger = logging.getLogger(__name__)
 
 VenueTranslation = apps.get_model("venues", "VenueTranslation")
+
+
+class VenueFilter(django_filters.FilterSet):
+    project_id = TypedFilter(
+        input_type=graphene.ID, method="filter_by_project_global_id"
+    )
+    name = django_filters.CharFilter(method="filter_by_name")
+
+    class Meta:
+        model = Venue
+        fields = ["project_id", "name"]
+
+    def filter_by_project_global_id(self, qs, name, value):
+        node_id = get_node_id_from_global_id(value, "ProjectNode")
+        return qs.filter(project_id=node_id) if node_id else qs.none()
+
+    def filter_by_name(self, qs, name, value):
+        if not value:
+            return qs
+        return qs.filter(translations__name__icontains=value).distinct()
+
+    @property
+    def qs(self):
+        return super().qs.filter(is_system=False)
 
 
 class VenueTranslationType(DjangoObjectType):
@@ -42,6 +70,7 @@ class VenueNode(DjangoObjectType):
     additional_info = graphene.String()
     wc_and_facilities = graphene.String()
     www_url = graphene.String()
+    is_system = graphene.Boolean(required=True)
 
     class Meta:
         model = Venue
@@ -58,11 +87,12 @@ class VenueNode(DjangoObjectType):
             "additional_info",
             "wc_and_facilities",
             "www_url",
+            "is_system",
             "project",
             "translations",
             "occurrences",
         )
-        filter_fields = ("project_id",)
+        filterset_class = VenueFilter
 
     @classmethod
     @login_required
@@ -180,7 +210,10 @@ class DeleteVenueMutation(graphene.relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **kwargs):
         venue = get_obj_if_user_can_administer(info, kwargs["id"], Venue)
         log_text = f"user {info.context.user.uuid} deleted venue {venue}"
-        venue.delete()
+        try:
+            venue.delete()
+        except ValidationError as e:
+            raise DataValidationError(str(e))
 
         logger.info(log_text)
 

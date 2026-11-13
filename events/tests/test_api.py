@@ -111,7 +111,7 @@ from projects.models import Project, ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from tags.factories import AccessibilityFactory, ThemePathFactory
 from users.factories import GuardianFactory
-from venues.factories import VenueFactory
+from venues.factories import SystemVenueFactory, VenueFactory
 
 
 @pytest.fixture(autouse=True)
@@ -634,7 +634,7 @@ def test_update_occurrence_different_year(
         assert_match_error_code(executed, OCCURRENCE_MISMATCH_ERROR)
 
 
-def test_add_occurrence_ticket_system_url(snapshot, project_user_api_client, venue):
+def test_add_occurrence_ticket_system_url(project_user_api_client, venue):
     event = EventFactory(ticket_system=Event.TICKETMASTER)
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
     variables["input"]["eventId"] = get_global_id(event)
@@ -645,7 +645,10 @@ def test_add_occurrence_ticket_system_url(snapshot, project_user_api_client, ven
         ADD_OCCURRENCE_MUTATION, variables=variables
     )
 
-    snapshot.assert_match(executed)
+    assert executed.get("errors") is not None
+    assert "Cannot add occurrences to an external ticket system event" in str(
+        executed["errors"]
+    )
 
 
 def test_add_occurrence_accessibilities(project_user_api_client, event, venue):
@@ -852,7 +855,11 @@ def test_update_occurrence_ticket_system_url(
         event__published_at=now() if published else None,
         ticket_system_url="https://original.example.com",
     )
+    if occurrence.venue.created_at != now():
+        occurrence.venue.created_at = now()
+        occurrence.venue.save(update_fields=["created_at"])
     variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"].pop("capacityOverride", None)
     variables["input"]["id"] = get_global_id(occurrence)
     variables["input"]["eventId"] = get_global_id(occurrence.event)
     variables["input"]["venueId"] = get_global_id(occurrence.venue)
@@ -1226,7 +1233,6 @@ def test_publish_ticketmaster_event(snapshot, publisher_api_client, url_missing)
         ticket_system_url="" if url_missing else "https://example.com",
         event__ticket_system=Event.TICKETMASTER,
     )
-    OccurrenceFactory(ticket_system_url="https://example.com", event=occurrence.event)
 
     event_variables = deepcopy(PUBLISH_EVENT_VARIABLES)
     event_variables["input"]["id"] = get_global_id(occurrence.event)
@@ -1585,23 +1591,32 @@ def test_enrol_limit_reached(
     snapshot,
     use_ticket_system_passwords,
 ):
-    occurrences = OccurrenceFactory.create_batch(
-        enrolled_amount + 1,
-        time=timezone.now(),
-        event__published_at=timezone.now(),
-        event__ticket_system=(
-            Event.TICKETMASTER if use_ticket_system_passwords else Event.INTERNAL
-        ),
-    )
-    for i in range(enrolled_amount):
-        # Previous enrolments have been with TicketSystemPasswords
-        if use_ticket_system_passwords:
-            TicketSystemPasswordFactory(
-                child=child_with_user_guardian, event=occurrences[i].event
-            )
-        else:
+    if use_ticket_system_passwords:
+        previous_events = TicketmasterEventFactory.create_batch(
+            enrolled_amount,
+            published_at=timezone.now(),
+            project=child_with_user_guardian.project,
+        )
+        for ev in previous_events:
+            TicketSystemPasswordFactory(child=child_with_user_guardian, event=ev)
+        occurrence = OccurrenceFactory(
+            time=timezone.now(),
+            event__published_at=timezone.now(),
+            event__project=child_with_user_guardian.project,
+            event__ticket_system=Event.INTERNAL,
+        )
+    else:
+        occurrences = OccurrenceFactory.create_batch(
+            enrolled_amount + 1,
+            time=timezone.now(),
+            event__published_at=timezone.now(),
+            event__project=child_with_user_guardian.project,
+            event__ticket_system=Event.INTERNAL,
+        )
+        for i in range(enrolled_amount):
             EnrolmentFactory(child=child_with_user_guardian, occurrence=occurrences[i])
-    occurrence = occurrences[-1]
+        occurrence = occurrences[-1]
+
     enrolment_variables = deepcopy(ENROL_OCCURRENCE_VARIABLES)
     enrolment_variables["input"]["occurrenceId"] = to_global_id(
         "OccurrenceNode", occurrence.id
@@ -3954,3 +3969,222 @@ def test_unenrol_occurrence_restores_capacity(
     annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
     assert annotated.reserved_seats == 0
     assert annotated.get_remaining_capacity() == 10
+
+
+def test_add_external_event_without_end_time_rejected(project_user_api_client, project):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["ticketSystem"] = {
+        "type": "TICKETMASTER",
+        "url": "https://example.com",
+    }
+    variables["input"].pop("capacityPerOccurrence", None)
+    executed = project_user_api_client.execute(
+        ADD_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+    assert executed.get("errors") is not None
+    assert "ticket_system_end_time" in str(executed["errors"])
+
+
+def test_add_occurrence_to_external_event_rejected(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory()
+    project_user_api_client.user.administered_projects = [event.project]
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(VenueFactory(project=event.project))
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+    assert executed.get("errors") is not None
+    assert "Cannot add occurrences to an external ticket system event" in str(
+        executed["errors"]
+    )
+
+
+def test_add_occurrence_non_existent_event_rejected(project_user_api_client, venue):
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = to_global_id("EventNode", 999999)
+    variables["input"]["venueId"] = get_global_id(venue)
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+
+
+def test_update_occurrence_external_event_venue_change_rejected(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory()
+    project_user_api_client.user.administered_projects = [event.project]
+    occurrence = event.occurrences.first()
+    other_venue = VenueFactory(project=event.project)
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(occurrence),
+                "venueId": get_global_id(other_venue),
+            }
+        },
+    )
+    assert executed.get("errors") is not None
+    assert (
+        "Cannot change the venue of an external ticket system event occurrence"
+        in str(executed["errors"])
+    )
+
+
+def test_update_occurrence_internal_event_system_venue_rejected(
+    project_user_api_client, occurrence
+):
+    system_venue = SystemVenueFactory()
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(occurrence),
+                "venueId": get_global_id(system_venue),
+            }
+        },
+    )
+    assert executed.get("errors") is not None
+    assert "Internal events cannot use the system venue" in str(executed["errors"])
+
+
+def test_update_occurrence_external_event_capacity_override_rejected(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory()
+    project_user_api_client.user.administered_projects = [event.project]
+    occurrence = event.occurrences.first()
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(occurrence),
+                "capacityOverride": 50,
+            }
+        },
+    )
+    assert executed.get("errors") is not None
+    assert (
+        "Cannot set capacity override on an external ticket system event occurrence"
+        in str(executed["errors"])
+    )
+
+
+def test_delete_occurrence_external_event_rejected(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory()
+    project_user_api_client.user.administered_projects = [event.project]
+    occurrence = event.occurrences.first()
+
+    executed = project_user_api_client.execute(
+        DELETE_OCCURRENCE_MUTATION,
+        variables={"input": {"id": get_global_id(occurrence)}},
+    )
+    assert executed.get("errors") is not None
+    assert "Cannot delete the occurrence of an external ticket system event" in str(
+        executed["errors"]
+    )
+
+
+def test_enrol_occurrence_external_event_rejected(
+    guardian_api_client, child_with_user_guardian
+):
+    event = TicketmasterEventFactory(project=child_with_user_guardian.project)
+    system_venue = SystemVenueFactory()
+    occurrence = OccurrenceFactory(event=event, venue=system_venue)
+
+    executed = guardian_api_client.execute(
+        ENROL_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "occurrenceId": get_global_id(occurrence),
+                "childId": get_global_id(child_with_user_guardian),
+            }
+        },
+    )
+    assert executed.get("errors") is not None
+    assert "Direct enrolment is not supported for external ticket system events" in str(
+        executed["errors"]
+    )
+
+
+def test_add_external_event_mutation_creates_single_occurrence(
+    project_user_api_client, project
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["ticketSystem"] = {
+        "type": "TICKETMASTER",
+        "url": "https://example.com/tickets",
+        "endTime": "2025-10-10T12:00:00Z",
+    }
+    variables["input"].pop("capacityPerOccurrence", None)
+    executed = project_user_api_client.execute(
+        ADD_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+    assert "errors" not in executed
+    event = Event.objects.get(ticket_system_url="https://example.com/tickets")
+    assert event.occurrences.count() == 1
+    occ = event.occurrences.first()
+    assert occ.venue.is_system is True
+    assert occ.time.isoformat().startswith("2025-10-10T12:00:00")
+    assert occ.ticket_system_url == "https://example.com/tickets"
+
+
+def test_update_external_event_mutation_syncs_to_occurrence(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/old",
+        ticket_system_end_time="2025-01-01T10:00:00Z",
+    )
+    project_user_api_client.user.administered_projects = [event.project]
+    occ = event.occurrences.first()
+
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+    variables["input"]["ticketSystem"] = {
+        "url": "https://example.com/new",
+        "endTime": "2025-05-05T15:00:00Z",
+    }
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+    assert "errors" not in executed
+    occ.refresh_from_db()
+    assert occ.time.isoformat().startswith("2025-05-05T15:00:00")
+    assert occ.ticket_system_url == "https://example.com/new"
+
+
+def test_update_occurrence_mutation_syncs_back_to_event(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/old",
+        ticket_system_end_time="2025-01-01T10:00:00Z",
+    )
+    project_user_api_client.user.administered_projects = [event.project]
+    occ = event.occurrences.first()
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(occ),
+                "time": "2025-06-06T18:00:00Z",
+                "ticketSystem": {"url": "https://example.com/from-occ"},
+            }
+        },
+    )
+    assert "errors" not in executed
+    event.refresh_from_db()
+    assert event.ticket_system_end_time.isoformat().startswith("2025-06-06T18:00:00")
+    assert event.ticket_system_url == "https://example.com/from-occ"

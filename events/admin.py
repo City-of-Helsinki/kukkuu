@@ -14,11 +14,14 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from events.services import (
+    sync_external_event_occurrence,
+    sync_external_occurrence_to_event,
     validate_event_group_and_events_project_match,
     validate_registration_opens_at,
 )
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
+from venues.models import Venue
 
 from .models import (
     Enrolment,
@@ -121,6 +124,28 @@ class OccurrencesInline(admin.StackedInline):
     model = Occurrence
     extra = 0
     show_change_link = True
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "venue":
+            kwargs["queryset"] = Venue.objects.filter(is_system=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.is_external_ticket_system_event:
+            if "venue" not in readonly:
+                readonly.append("venue")
+        return tuple(readonly)
+
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.is_external_ticket_system_event and obj.occurrences.exists():
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.is_external_ticket_system_event:
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 class ThroughModelTabularInline(admin.TabularInline):
@@ -256,6 +281,10 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
             )
         )
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        sync_external_event_occurrence(obj)
+
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
     def delete_existing(self, obj, commit=True):
@@ -335,6 +364,27 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
         return obj.free_spot_notification_subscriptions.count()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "venue":
+            kwargs["queryset"] = Venue.objects.filter(is_system=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.event and obj.event.is_external_ticket_system_event:
+            if "venue" not in readonly:
+                readonly.append("venue")
+        return tuple(readonly)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.event and obj.event.is_external_ticket_system_event:
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        sync_external_occurrence_to_event(obj)
 
     def get_queryset(self, request):
         return (

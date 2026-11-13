@@ -2,6 +2,7 @@ import logging
 import os
 from copy import deepcopy
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -12,12 +13,13 @@ from common.utils import (
     get_obj_if_user_can_administer,
     update_object_with_translations,
 )
-from events.models import Event, EventGroup
+from events.models import Event, EventGroup, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
 from organisations.models import Organisation
 from projects.models import Project
 from tags.models import ThemePath
+from venues.utils import get_system_venue
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +113,55 @@ def validate_registration_opens_at_is_not_before_published_at(
             _("Registration opening time must not be before publication time"),
             code=DATA_VALIDATION_ERROR,
         )
+
+
+def sync_external_event_occurrence(event: Event) -> Occurrence | None:
+    """
+    Ensure an external ticket system event has exactly one Occurrence matching
+    its ticket_system_end_time, ticket_system_url, and the global system venue.
+    """
+    if not event.is_external_ticket_system_event or not event.ticket_system_end_time:
+        return None
+
+    system_venue = get_system_venue()
+
+    translated_langs = list(event.translations.values_list("language_code", flat=True))
+    if "fi" in translated_langs:
+        lang = "fi"
+    elif translated_langs:
+        lang = translated_langs[0]
+    else:
+        lang = settings.LANGUAGE_CODE
+
+    occurrence = event.occurrences.first()
+    if occurrence:
+        occurrence.time = event.ticket_system_end_time
+        occurrence.ticket_system_url = event.ticket_system_url
+        occurrence.venue = system_venue
+        occurrence.save(update_fields=["time", "ticket_system_url", "venue"])
+    else:
+        occurrence = Occurrence.objects.create(
+            event=event,
+            time=event.ticket_system_end_time,
+            ticket_system_url=event.ticket_system_url,
+            venue=system_venue,
+            occurrence_language=lang,
+        )
+    return occurrence
+
+
+def sync_external_occurrence_to_event(occurrence: Occurrence) -> Event | None:
+    """
+    Sync an external ticket system event occurrence's time and URL back to its Event.
+    """
+    if not (occurrence.event and occurrence.event.is_external_ticket_system_event):
+        return None
+
+    event = occurrence.event
+    event.ticket_system_end_time = occurrence.time
+    event.ticket_system_url = occurrence.ticket_system_url
+    event.save(update_fields=["ticket_system_end_time", "ticket_system_url"])
+    return event
 
 
 class EventAPIService:
@@ -385,6 +436,7 @@ class EventAPIService:
             if source_event is not None and not has_explicit_image:
                 cls._copy_image_file(source_event, event)
             event.clean()
+            sync_external_event_occurrence(event)
         except ValidationError as e:
             raise DataValidationError(str(e))
 
@@ -422,6 +474,7 @@ class EventAPIService:
             if theme_paths is not None:
                 event.theme_paths.set(theme_paths)
             event.clean()
+            sync_external_event_occurrence(event)
         except ValidationError as e:
             raise DataValidationError(str(e))
 
