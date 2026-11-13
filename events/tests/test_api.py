@@ -4114,3 +4114,89 @@ def test_enrol_occurrence_external_event_rejected(
     assert "Direct enrolment is not supported for external ticket system events" in str(
         executed["errors"]
     )
+
+
+def test_add_external_event_mutation_creates_single_occurrence(
+    project_user_api_client, project
+):
+    variables = deepcopy(ADD_EVENT_VARIABLES)
+    variables["input"]["projectId"] = get_global_id(project)
+    variables["input"]["ticketSystem"] = {
+        "type": "TICKETMASTER",
+        "url": "https://example.com/tickets",
+        "endTime": "2025-10-10T12:00:00Z",
+    }
+    variables["input"].pop("capacityPerOccurrence", None)
+    executed = project_user_api_client.execute(
+        ADD_TICKETMASTER_EVENT_MUTATION, variables=variables
+    )
+    assert "errors" not in executed
+    event = Event.objects.get(ticket_system_url="https://example.com/tickets")
+    assert event.occurrences.count() == 1
+    occ = event.occurrences.first()
+    assert occ.venue.is_system is True
+    assert occ.time.isoformat().startswith("2025-10-10T12:00:00")
+    assert occ.ticket_system_url == "https://example.com/tickets"
+
+
+def test_update_external_event_mutation_syncs_to_occurrence(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/old",
+        ticket_system_end_time="2025-01-01T10:00:00Z",
+    )
+    project_user_api_client.user.administered_projects = [event.project]
+    system_venue = SystemVenueFactory()
+    occ = OccurrenceFactory(
+        event=event,
+        venue=system_venue,
+        time="2025-01-01T10:00:00Z",
+        ticket_system_url="https://example.com/old",
+    )
+
+    variables = deepcopy(UPDATE_EVENT_VARIABLES)
+    variables["input"]["id"] = get_global_id(event)
+    variables["input"]["ticketSystem"] = {
+        "url": "https://example.com/new",
+        "endTime": "2025-05-05T15:00:00Z",
+    }
+    executed = project_user_api_client.execute(
+        UPDATE_EVENT_MUTATION, variables=variables
+    )
+    assert "errors" not in executed
+    occ.refresh_from_db()
+    assert occ.time.isoformat().startswith("2025-05-05T15:00:00")
+    assert occ.ticket_system_url == "https://example.com/new"
+
+
+def test_update_occurrence_mutation_syncs_back_to_event(
+    project_user_api_client,
+):
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/old",
+        ticket_system_end_time="2025-01-01T10:00:00Z",
+    )
+    project_user_api_client.user.administered_projects = [event.project]
+    system_venue = SystemVenueFactory()
+    occ = OccurrenceFactory(
+        event=event,
+        venue=system_venue,
+        time="2025-01-01T10:00:00Z",
+        ticket_system_url="https://example.com/old",
+    )
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(occ),
+                "time": "2025-06-06T18:00:00Z",
+                "ticketSystem": {"url": "https://example.com/from-occ"},
+            }
+        },
+    )
+    assert "errors" not in executed
+    event.refresh_from_db()
+    assert event.ticket_system_end_time.isoformat().startswith("2025-06-06T18:00:00")
+    assert event.ticket_system_url == "https://example.com/from-occ"

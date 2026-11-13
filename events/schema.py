@@ -53,7 +53,7 @@ from events.models import (
     Occurrence,
     TicketSystemPassword,
 )
-from events.services import EventAPIService
+from events.services import EventAPIService, sync_external_occurrence_to_event
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -1532,6 +1532,8 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
                 raise kukkuu_error(e.message)
             else:
                 raise
+
+        sync_external_occurrence_to_event(occurrence)
 
         logger.info(
             f"user {info.context.user.uuid} updated occurrence {occurrence} "

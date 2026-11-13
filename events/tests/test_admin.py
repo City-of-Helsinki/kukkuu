@@ -11,7 +11,12 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from events.admin import EventGroupAdmin, EventGroupForm, OccurrenceAdmin
+from events.admin import (
+    EventAdmin,
+    EventGroupAdmin,
+    EventGroupForm,
+    OccurrenceAdmin,
+)
 from events.factories import (
     EnrolmentFactory,
     EventFactory,
@@ -774,3 +779,44 @@ def test_occurrence_admin_has_delete_permission_for_external_event():
     ext_event = TicketmasterEventFactory()
     occ = OccurrenceFactory(event=ext_event)
     assert admin.has_delete_permission(MockRequest(), obj=occ) is False
+
+
+@pytest.mark.django_db
+def test_event_admin_save_model_syncs_to_occurrence():
+    site = AdminSite()
+    admin = EventAdmin(Event, site)
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/admin",
+        ticket_system_end_time=now() + timedelta(days=15),
+    )
+    assert event.occurrences.count() == 0
+
+    admin.save_model(MockRequest(), event, form=None, change=False)
+    assert event.occurrences.count() == 1
+    occ = event.occurrences.first()
+    assert occ.venue.is_system is True
+    assert occ.time == event.ticket_system_end_time
+    assert occ.ticket_system_url == "https://example.com/admin"
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_save_model_syncs_back_to_event():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    event = TicketmasterEventFactory(
+        ticket_system_url="https://example.com/old",
+        ticket_system_end_time=now() + timedelta(days=5),
+    )
+    occ = OccurrenceFactory(
+        event=event,
+        time=now() + timedelta(days=5),
+        ticket_system_url="https://example.com/old",
+    )
+    new_time = now() + timedelta(days=25)
+    occ.time = new_time
+    occ.ticket_system_url = "https://example.com/new"
+
+    admin.save_model(MockRequest(), occ, form=None, change=True)
+    event.refresh_from_db()
+    assert event.ticket_system_end_time == new_time
+    assert event.ticket_system_url == "https://example.com/new"

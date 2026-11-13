@@ -14,6 +14,8 @@ from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm
 
 from events.services import (
+    sync_external_event_occurrence,
+    sync_external_occurrence_to_event,
     validate_event_group_and_events_project_match,
     validate_registration_opens_at,
 )
@@ -279,6 +281,10 @@ class EventAdmin(PublishActionMixin, TranslatableAdmin):
             )
         )
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        sync_external_event_occurrence(obj)
+
 
 class EnrolmentsInlineFormSet(BaseInlineFormSet):
     def delete_existing(self, obj, commit=True):
@@ -375,6 +381,10 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         if obj and obj.event and obj.event.is_external_ticket_system_event:
             return False
         return super().has_delete_permission(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        sync_external_occurrence_to_event(obj)
 
     def get_queryset(self, request):
         return (
