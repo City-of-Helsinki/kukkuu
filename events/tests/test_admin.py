@@ -17,6 +17,7 @@ from events.factories import (
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
+    TicketmasterEventFactory,
 )
 from events.models import (
     Event,
@@ -745,3 +746,31 @@ def test_occurrence_admin_view_permission_allows_viewing_accessibilities(client)
     assert not inline.has_add_permission
     assert not inline.has_change_permission
     assert not inline.has_delete_permission
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_venue_field_excludes_system_venue():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    db_field = Occurrence._meta.get_field("venue")
+    formfield = admin.formfield_for_foreignkey(db_field, request=MockRequest())
+    assert not formfield.queryset.filter(is_system=True).exists()
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_readonly_fields_for_external_event():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    ext_event = TicketmasterEventFactory()
+    occ = OccurrenceFactory(event=ext_event)
+    readonly = admin.get_readonly_fields(MockRequest(), obj=occ)
+    assert "venue" in readonly
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_has_delete_permission_for_external_event():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    ext_event = TicketmasterEventFactory()
+    occ = OccurrenceFactory(event=ext_event)
+    assert admin.has_delete_permission(MockRequest(), obj=occ) is False

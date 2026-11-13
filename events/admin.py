@@ -19,6 +19,7 @@ from events.services import (
 )
 from events.ticket_service import check_ticket_validity
 from subscriptions.models import FreeSpotNotificationSubscription
+from venues.models import Venue
 
 from .models import (
     Enrolment,
@@ -121,6 +122,28 @@ class OccurrencesInline(admin.StackedInline):
     model = Occurrence
     extra = 0
     show_change_link = True
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "venue":
+            kwargs["queryset"] = Venue.objects.filter(is_system=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.is_external_ticket_system_event:
+            if "venue" not in readonly:
+                readonly.append("venue")
+        return tuple(readonly)
+
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.is_external_ticket_system_event and obj.occurrences.exists():
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.is_external_ticket_system_event:
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 class ThroughModelTabularInline(admin.TabularInline):
@@ -335,6 +358,23 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
         return obj.free_spot_notification_subscriptions.count()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "venue":
+            kwargs["queryset"] = Venue.objects.filter(is_system=False)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.event and obj.event.is_external_ticket_system_event:
+            if "venue" not in readonly:
+                readonly.append("venue")
+        return tuple(readonly)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.event and obj.event.is_external_ticket_system_event:
+            return False
+        return super().has_delete_permission(request, obj)
 
     def get_queryset(self, request):
         return (

@@ -10,6 +10,7 @@ from organisations.factories import DEFAULT_ORGANISATION_ID
 from projects.models import Project
 from tags.factories import ThemePathFactory
 from venues.factories import VenueFactory
+from venues.utils import get_system_venue
 
 
 class EventGroupFactory(factory.django.DjangoModelFactory):
@@ -64,6 +65,9 @@ class RandomExternalTicketSystemEventFactory(EventFactory):
         elements=[choice[0] for choice in Event.EXTERNAL_TICKET_SYSTEM_CHOICES],
     )
     ticket_system_url = factory.Faker("url")
+    ticket_system_end_time = factory.LazyFunction(
+        lambda: timezone.now() + timezone.timedelta(days=30)
+    )
     capacity_per_occurrence = None
     duration = None
 
@@ -85,7 +89,13 @@ class OccurrenceFactory(
 ):
     time = factory.Faker("date_time", tzinfo=ZoneInfo("Europe/Helsinki"))
     event = factory.SubFactory(EventFactory)
-    venue = factory.SubFactory(VenueFactory)
+
+    @factory.lazy_attribute
+    def venue(self):
+        if self.event and self.event.is_external_ticket_system_event:
+            return get_system_venue()
+        project = self.event.project if self.event else None
+        return VenueFactory(project=project) if project else VenueFactory()
 
     class Meta:
         model = Occurrence

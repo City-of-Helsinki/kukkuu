@@ -500,6 +500,9 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         default=INTERNAL,
     )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
+    # TODO: ticket_system_end_time is deprecated in favor of the occurrence time of
+    # the external event's single occurrence. Kept for backwards compatibility and
+    # bidirectional sync until external occurrences are fully adopted.
     ticket_system_end_time = models.DateTimeField(
         verbose_name=_("ticket system end time"), blank=True, null=True
     )
@@ -562,14 +565,25 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
                     ),
                     code=DATA_VALIDATION_ERROR,
                 )
-        elif self.is_external_ticket_system_event and not self.ticket_system_url:
-            raise ValidationError(
-                _(
-                    "Ticket system URL is required when ticket system is "
-                    "any of the external ticket systems."
-                ),
-                code=TICKET_SYSTEM_URL_MISSING_ERROR,
-            )
+        elif self.is_external_ticket_system_event:
+            if not self.ticket_system_url:
+                raise ValidationError(
+                    _(
+                        "Ticket system URL is required when ticket system is "
+                        "any of the external ticket systems."
+                    ),
+                    code=TICKET_SYSTEM_URL_MISSING_ERROR,
+                )
+            if not self.ticket_system_end_time:
+                raise ValidationError(
+                    {
+                        "ticket_system_end_time": _(
+                            "Ticket system end time is required for external ticket "
+                            "system events."
+                        )
+                    },
+                    code=DATA_VALIDATION_ERROR,
+                )
 
     def save(self, *args, **kwargs):
         from events.services import (
@@ -762,6 +776,8 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
         )
 
     def get_capacity(self) -> Optional[int]:
+        if self.is_external_ticket_system_event:
+            return 0
         try:
             return sum(
                 occurrence.get_capacity() for occurrence in self.occurrences.all()
@@ -962,18 +978,41 @@ class Occurrence(TimestampedModel, SerializableMixin):
         return f"{self.time} ({self.pk})"
 
     def clean(self):
-        if (
-            self.event.published_at
-            and self.event.is_external_ticket_system_event
-            and not self.ticket_system_url
-        ):
-            raise ValidationError(
-                _(
-                    "Ticket system URL is required for all occurrences of a "
-                    f"published {self.event.ticket_system} event."
-                ),
-                code=TICKET_SYSTEM_URL_MISSING_ERROR,
-            )
+        super().clean()
+        if event := getattr(self, "event", None):
+            if event.is_external_ticket_system_event and event.pk:
+                if event.occurrences.exclude(pk=self.pk).exists():
+                    raise ValidationError(
+                        _(
+                            "An external ticket system event can have at most one "
+                            "occurrence."
+                        )
+                    )
+
+            if (venue := getattr(self, "venue", None)) and getattr(
+                self, "venue_id", None
+            ):
+                is_external = event.is_external_ticket_system_event
+                if is_external != venue.is_system:
+                    msg = (
+                        _("External ticket system events must use the system venue.")
+                        if is_external
+                        else _("Internal events cannot use the system venue.")
+                    )
+                    raise ValidationError({"venue": msg})
+
+            if (
+                event.published_at
+                and event.is_external_ticket_system_event
+                and not self.ticket_system_url
+            ):
+                raise ValidationError(
+                    _(
+                        "Ticket system URL is required for all occurrences of a "
+                        f"published {event.ticket_system} event."
+                    ),
+                    code=TICKET_SYSTEM_URL_MISSING_ERROR,
+                )
 
     def save(self, *args, **kwargs):
         created = self.pk is None
@@ -1021,6 +1060,8 @@ class Occurrence(TimestampedModel, SerializableMixin):
             return self.free_spot_notification_subscriptions.count()
 
     def get_capacity(self) -> Optional[int]:
+        if self.event.is_external_ticket_system_event:
+            return 0
         if self.capacity_override is not None:
             return self.capacity_override
         else:

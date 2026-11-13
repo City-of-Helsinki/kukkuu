@@ -12,6 +12,7 @@ from django.db import transaction
 from django.db.models import Count, Prefetch, Q, prefetch_related_objects
 from django.utils import timezone
 from django.utils.translation import get_language
+from django.utils.translation import gettext_lazy as _
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -132,6 +133,32 @@ def validate_enrolment_deletion(enrolment: Enrolment) -> None:
 
 
 def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
+    if occurrence:
+        event = occurrence.event
+        if event.is_external_ticket_system_event:
+            if kwargs.get("capacity_override") is not None:
+                raise ApiUsageError(
+                    _(
+                        "Cannot set capacity override on an external ticket system "
+                        "event occurrence."
+                    )
+                )
+    elif event_id := kwargs.get("event_id"):
+        try:
+            event = Event.objects.get(pk=event_id)
+        except Event.DoesNotExist as e:
+            raise ObjectDoesNotExistError(e)
+        if event.is_external_ticket_system_event:
+            raise ApiUsageError(
+                _(
+                    "Cannot add occurrences to an external ticket system event; "
+                    "its single occurrence is created automatically. Use "
+                    "updateOccurrence to edit it."
+                )
+            )
+    else:
+        event = None
+
     if time := kwargs.get("time"):
         if occurrence:
             # Don't consider the occurrence which is being updated
@@ -139,15 +166,16 @@ def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
                 pk=occurrence.pk
             )
         else:
-            event = Event.objects.get(pk=kwargs["event_id"])
-            existing_occurrences = event.occurrences.all()
+            existing_occurrences = (
+                event.occurrences.all() if event else Occurrence.objects.none()
+            )
 
         if (
             existing_occurrences.exists()
             and not existing_occurrences.filter(time__year=time.year).exists()
         ):
             raise OccurrenceYearMismatchError(
-                "Occurrence has different year than the rest of the event occurrences"
+                _("The occurrence year must match the other occurrences of the event.")
             )
 
 
@@ -217,7 +245,11 @@ class ExternalEventTicketSystem(ObjectType):
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
     url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
-    end_time = graphene.DateTime()
+    # TODO: end_time is deprecated in favor of external event occurrences.
+    # Kept for backwards compatibility.
+    end_time = graphene.DateTime(
+        deprecation_reason="Deprecated in favor of the event's single occurrence time."
+    )
 
     class Meta:
         abstract = True
@@ -935,12 +967,18 @@ class AddEventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(required=True)
     # Keep this optional until Kukkuu admin supports the field.
     url = graphene.String()
-    end_time = graphene.String()
+    # TODO: end_time is deprecated in favor of external event occurrences.
+    end_time = graphene.String(
+        deprecation_reason="Deprecated in favor of the event's single occurrence time."
+    )
 
 
 class UpdateEventTicketSystemInput(graphene.InputObjectType):
     url = graphene.String()
-    end_time = graphene.String()
+    # TODO: end_time is deprecated in favor of external event occurrences.
+    end_time = graphene.String(
+        deprecation_reason="Deprecated in favor of the event's single occurrence time."
+    )
 
 
 class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
@@ -1216,6 +1254,14 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             )
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        if occurrence.event.is_external_ticket_system_event:
+            raise ApiUsageError(
+                _(
+                    "Direct enrolment is not supported for external ticket system "
+                    "events. Use ticket system passwords instead."
+                )
+            )
         try:
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
@@ -1359,7 +1405,9 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         ]
 
         validate_occurrence_input(kwargs)
-        occurrence = Occurrence.objects.create(**kwargs)
+        occurrence = Occurrence(**kwargs)
+        occurrence.clean()
+        occurrence.save()
         occurrence.accessibilities.set(accessibilities)
 
         # needed because enrolment_count is an annotated field
@@ -1371,6 +1419,43 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         )
 
         return AddOccurrenceMutation(occurrence=occurrence)
+
+
+def _resolve_occurrence_event_id(
+    info, occurrence: Occurrence, raw_event_id: str | None
+) -> int | None:
+    if raw_event_id is None:
+        return None
+    requested_id = from_global_id(raw_event_id)[1]
+    if occurrence.event.is_external_ticket_system_event:
+        if requested_id != str(occurrence.event_id):
+            raise ApiUsageError(
+                _("Cannot reassign an external ticket system event occurrence.")
+            )
+        return None
+    return get_obj_if_user_can_administer(info, raw_event_id, Event).pk
+
+
+def _resolve_occurrence_venue_id(
+    info, occurrence: Occurrence, raw_venue_id: str | None
+) -> int | None:
+    if raw_venue_id is None:
+        return None
+    requested_id = from_global_id(raw_venue_id)[1]
+    if occurrence.event.is_external_ticket_system_event:
+        if requested_id != str(occurrence.venue_id):
+            raise ApiUsageError(
+                _(
+                    "Cannot change the venue of an external ticket system "
+                    "event occurrence."
+                )
+            )
+        return None
+    venue = get_obj_from_global_id(info, raw_venue_id, Venue)
+    if venue.is_system:
+        raise ApiUsageError(_("Internal events cannot use the system venue."))
+    check_can_user_administer(venue, info.context.user)
+    return venue.pk
 
 
 class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
@@ -1398,15 +1483,27 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         original_kwargs = deepcopy(kwargs)
         occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
 
-        if kwargs.get("event_id"):
-            kwargs["event_id"] = get_obj_if_user_can_administer(
-                info, kwargs["event_id"], Event
-            ).pk
+        if "event_id" in kwargs:
+            resolved_event_id = _resolve_occurrence_event_id(
+                info, occurrence, kwargs["event_id"]
+            )
+            if resolved_event_id is not None:
+                kwargs["event_id"] = resolved_event_id
+            else:
+                kwargs.pop("event_id")
 
-        if kwargs.get("venue_id"):
-            kwargs["venue_id"] = get_obj_if_user_can_administer(
-                info, kwargs["venue_id"], Venue
-            ).pk
+        if "venue_id" in kwargs:
+            resolved_venue_id = _resolve_occurrence_venue_id(
+                info, occurrence, kwargs["venue_id"]
+            )
+            if resolved_venue_id is not None:
+                kwargs["venue_id"] = resolved_venue_id
+            else:
+                kwargs.pop("venue_id")
+
+        for non_nullable_field in ("time", "occurrence_language"):
+            if non_nullable_field in kwargs and kwargs[non_nullable_field] is None:
+                kwargs.pop(non_nullable_field)
 
         ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
         if ticket_system_url is not None:
@@ -1454,6 +1551,10 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
+        if occurrence.event.is_external_ticket_system_event:
+            raise DataValidationError(
+                _("Cannot delete the occurrence of an external ticket system event.")
+            )
         log_text = (
             f"user {info.context.user.uuid} deleted occurrence {occurrence} "
             f"of event {occurrence.event}"
