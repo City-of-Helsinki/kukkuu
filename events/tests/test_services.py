@@ -14,12 +14,12 @@ from events.services import (
     sync_external_event_occurrence,
     sync_external_occurrence_to_event,
 )
-from venues.factories import SystemVenueFactory
 
 
 @pytest.mark.django_db
 def test_sync_external_event_occurrence_creates_occurrence():
     event = TicketmasterEventFactory(
+        occurrence=False,
         ticket_system_url="https://example.com/tickets",
         ticket_system_end_time=now() + timedelta(days=10),
     )
@@ -59,14 +59,14 @@ def test_sync_external_event_occurrence_updates_existing_occurrence():
 @pytest.mark.django_db
 def test_sync_external_event_occurrence_language_defaulting():
     # Only Swedish translation
-    event_sv = TicketmasterEventFactory()
+    event_sv = TicketmasterEventFactory(occurrence=False)
     event_sv.translations.all().delete()
     event_sv.create_translation(language_code="sv", name="Svenskt namn")
     occ_sv = sync_external_event_occurrence(event_sv)
     assert occ_sv.occurrence_language == "sv"
 
     # Both Finnish and Swedish
-    event_fi = TicketmasterEventFactory()
+    event_fi = TicketmasterEventFactory(occurrence=False)
     event_fi.create_translation(language_code="sv", name="Svenskt namn")
     occ_fi = sync_external_event_occurrence(event_fi)
     assert occ_fi.occurrence_language == "fi"
@@ -86,13 +86,7 @@ def test_sync_external_occurrence_to_event():
         ticket_system_url="https://example.com/initial",
         ticket_system_end_time=now() + timedelta(days=5),
     )
-    system_venue = SystemVenueFactory()
-    occ = OccurrenceFactory(
-        event=event,
-        venue=system_venue,
-        time=now() + timedelta(days=5),
-        ticket_system_url="https://example.com/initial",
-    )
+    occ = event.occurrences.first()
     new_time = now() + timedelta(days=20)
     occ.time = new_time
     occ.ticket_system_url = "https://example.com/updated"

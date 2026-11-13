@@ -368,8 +368,6 @@ class EventFilter(django_filters.FilterSet):
                     to_attr="_prefetched_upcoming_occurrences",
                 ),
             )
-            # TODO: When external events have occurrences or date details,
-            # it will affect here.
             .annotate(
                 _first_occurrence_year=first_occ_year,
                 _has_free_passwords=Exists(
@@ -470,7 +468,6 @@ class EventFilter(django_filters.FilterSet):
         # When available_only=False, this method is only invoked if start_date or
         # languages was requested. Both internal and external events must have an
         # occurrence satisfying the requested occurrence-level criteria.
-        # TODO: Check when external events have details similar as in Occurrence.
         if not available_only:
             return qs.filter(Exists(occ_qs))
 
@@ -480,12 +477,7 @@ class EventFilter(django_filters.FilterSet):
         has_free_pw = Exists(
             TicketSystemPassword.objects.free().filter(event=OuterRef("pk"))
         )
-        external_q = ~Q(ticket_system=Event.INTERNAL) & has_free_pw
-        # When date or language filters are specified, external events must also have
-        # a matching occurrence since date and language reside on occurrences.
-        # TODO: Check when external events have details similar as in Occurrence.
-        if start_date or languages:
-            external_q &= Exists(occ_qs)
+        external_q = ~Q(ticket_system=Event.INTERNAL) & has_free_pw & Exists(occ_qs)
 
         return qs.filter(
             (Q(ticket_system=Event.INTERNAL) & Exists(internal_occ_qs)) | external_q

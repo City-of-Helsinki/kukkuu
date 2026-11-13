@@ -112,7 +112,9 @@ def test_migrate_child_and_1_or_2_guardians_to_family():
 
 @pytest.mark.django_db
 def test_populate_external_event_occurrences_creates_occurrences_and_reverts():
-    event = TicketmasterEventFactory(ticket_system_url="https://example.com/tickets")
+    event = TicketmasterEventFactory(
+        occurrence=False, ticket_system_url="https://example.com/tickets"
+    )
     assert event.occurrences.count() == 0
 
     populate_external_event_occurrences(apps, None)
@@ -130,7 +132,7 @@ def test_populate_external_event_occurrences_creates_occurrences_and_reverts():
 
 @pytest.mark.django_db
 def test_populate_external_event_occurrences_raises_if_end_time_null():
-    event = TicketmasterEventFactory()
+    event = TicketmasterEventFactory(occurrence=False)
     event.ticket_system_end_time = None
     event.save(update_fields=["ticket_system_end_time"])
 

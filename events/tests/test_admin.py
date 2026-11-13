@@ -767,7 +767,7 @@ def test_occurrence_admin_readonly_fields_for_external_event():
     site = AdminSite()
     admin = OccurrenceAdmin(Occurrence, site)
     ext_event = TicketmasterEventFactory()
-    occ = OccurrenceFactory(event=ext_event)
+    occ = ext_event.occurrences.first()
     readonly = admin.get_readonly_fields(MockRequest(), obj=occ)
     assert "venue" in readonly
 
@@ -777,7 +777,7 @@ def test_occurrence_admin_has_delete_permission_for_external_event():
     site = AdminSite()
     admin = OccurrenceAdmin(Occurrence, site)
     ext_event = TicketmasterEventFactory()
-    occ = OccurrenceFactory(event=ext_event)
+    occ = ext_event.occurrences.first()
     assert admin.has_delete_permission(MockRequest(), obj=occ) is False
 
 
@@ -786,6 +786,7 @@ def test_event_admin_save_model_syncs_to_occurrence():
     site = AdminSite()
     admin = EventAdmin(Event, site)
     event = TicketmasterEventFactory(
+        occurrence=False,
         ticket_system_url="https://example.com/admin",
         ticket_system_end_time=now() + timedelta(days=15),
     )
@@ -807,11 +808,7 @@ def test_occurrence_admin_save_model_syncs_back_to_event():
         ticket_system_url="https://example.com/old",
         ticket_system_end_time=now() + timedelta(days=5),
     )
-    occ = OccurrenceFactory(
-        event=event,
-        time=now() + timedelta(days=5),
-        ticket_system_url="https://example.com/old",
-    )
+    occ = event.occurrences.first()
     new_time = now() + timedelta(days=25)
     occ.time = new_time
     occ.ticket_system_url = "https://example.com/new"

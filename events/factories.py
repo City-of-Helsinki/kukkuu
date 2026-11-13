@@ -6,6 +6,7 @@ from django.utils import timezone
 from children.factories import ChildFactory
 from common.mixins import SaveAfterPostGenerationMixin
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
+from events.services import sync_external_event_occurrence
 from organisations.factories import DEFAULT_ORGANISATION_ID
 from projects.models import Project
 from tags.factories import ThemePathFactory
@@ -70,6 +71,12 @@ class RandomExternalTicketSystemEventFactory(EventFactory):
     )
     capacity_per_occurrence = None
     duration = None
+
+    @factory.post_generation
+    def occurrence(self, create, extracted, **kwargs):
+        if not create or extracted is False:
+            return
+        sync_external_event_occurrence(self)
 
 
 class TicketmasterEventFactory(RandomExternalTicketSystemEventFactory):

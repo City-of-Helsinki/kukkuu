@@ -76,7 +76,10 @@ class EventGroupQueryset(TranslatableQuerySet):
           published events in the group.
         """
         group_occ_year_subq = Subquery(
-            Occurrence.objects.filter(event__event_group=OuterRef("pk"))
+            Occurrence.objects.filter(
+                event__event_group=OuterRef("pk"),
+                event__ticket_system=Event.INTERNAL,
+            )
             .order_by("time")
             .values(year=ExtractYear("time"))[:1]
         )
@@ -184,7 +187,10 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         if hasattr(self, "_group_year"):
             return self._group_year
         if (
-            occurrence := Occurrence.objects.filter(event__event_group=self)
+            occurrence := Occurrence.objects.filter(
+                event__event_group=self,
+                event__ticket_system=Event.INTERNAL,
+            )
             .order_by("time")
             .first()
         ):
@@ -381,15 +387,7 @@ class EventQueryset(TranslatableQuerySet):
         return self.filter(published_at__isnull=True)
 
     def upcoming(self):
-        now = timezone.now()
-        return self.filter(
-            Q(occurrences__time__gte=now)
-            | (
-                # Not internal -> any of the external ticket systems
-                ~Q(ticket_system=Event.INTERNAL)
-                & (Q(ticket_system_end_time=None) | Q(ticket_system_end_time__gte=now))
-            )
-        ).distinct()
+        return self.filter(occurrences__time__gte=timezone.now()).distinct()
 
     def available(self, child):
         """

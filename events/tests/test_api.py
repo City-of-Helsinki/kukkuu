@@ -855,6 +855,9 @@ def test_update_occurrence_ticket_system_url(
         event__published_at=now() if published else None,
         ticket_system_url="https://original.example.com",
     )
+    if occurrence.venue.created_at != now():
+        occurrence.venue.created_at = now()
+        occurrence.venue.save(update_fields=["created_at"])
     variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
     variables["input"].pop("capacityOverride", None)
     variables["input"]["id"] = get_global_id(occurrence)
@@ -4015,8 +4018,7 @@ def test_update_occurrence_external_event_venue_change_rejected(
 ):
     event = TicketmasterEventFactory()
     project_user_api_client.user.administered_projects = [event.project]
-    system_venue = SystemVenueFactory()
-    occurrence = OccurrenceFactory(event=event, venue=system_venue)
+    occurrence = event.occurrences.first()
     other_venue = VenueFactory(project=event.project)
 
     executed = project_user_api_client.execute(
@@ -4057,8 +4059,7 @@ def test_update_occurrence_external_event_capacity_override_rejected(
 ):
     event = TicketmasterEventFactory()
     project_user_api_client.user.administered_projects = [event.project]
-    system_venue = SystemVenueFactory()
-    occurrence = OccurrenceFactory(event=event, venue=system_venue)
+    occurrence = event.occurrences.first()
 
     executed = project_user_api_client.execute(
         UPDATE_OCCURRENCE_MUTATION,
@@ -4081,8 +4082,7 @@ def test_delete_occurrence_external_event_rejected(
 ):
     event = TicketmasterEventFactory()
     project_user_api_client.user.administered_projects = [event.project]
-    system_venue = SystemVenueFactory()
-    occurrence = OccurrenceFactory(event=event, venue=system_venue)
+    occurrence = event.occurrences.first()
 
     executed = project_user_api_client.execute(
         DELETE_OCCURRENCE_MUTATION,
@@ -4147,13 +4147,7 @@ def test_update_external_event_mutation_syncs_to_occurrence(
         ticket_system_end_time="2025-01-01T10:00:00Z",
     )
     project_user_api_client.user.administered_projects = [event.project]
-    system_venue = SystemVenueFactory()
-    occ = OccurrenceFactory(
-        event=event,
-        venue=system_venue,
-        time="2025-01-01T10:00:00Z",
-        ticket_system_url="https://example.com/old",
-    )
+    occ = event.occurrences.first()
 
     variables = deepcopy(UPDATE_EVENT_VARIABLES)
     variables["input"]["id"] = get_global_id(event)
@@ -4178,13 +4172,7 @@ def test_update_occurrence_mutation_syncs_back_to_event(
         ticket_system_end_time="2025-01-01T10:00:00Z",
     )
     project_user_api_client.user.administered_projects = [event.project]
-    system_venue = SystemVenueFactory()
-    occ = OccurrenceFactory(
-        event=event,
-        venue=system_venue,
-        time="2025-01-01T10:00:00Z",
-        ticket_system_url="https://example.com/old",
-    )
+    occ = event.occurrences.first()
 
     executed = project_user_api_client.execute(
         UPDATE_OCCURRENCE_MUTATION,

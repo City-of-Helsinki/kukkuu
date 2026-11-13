@@ -21,7 +21,7 @@ def test_check_command_all_valid():
 
 @pytest.mark.django_db
 def test_check_command_missing_end_time_fails_with_hint():
-    event = RandomExternalTicketSystemEventFactory()
+    event = RandomExternalTicketSystemEventFactory(occurrence=False)
     event.ticket_system_end_time = None
     event.save(update_fields=["ticket_system_end_time"])
 
@@ -72,7 +72,7 @@ def test_check_command_fix_uses_published_at_and_created_at():
 
 @pytest.mark.django_db
 def test_check_command_multiple_occurrences_fails():
-    event = RandomExternalTicketSystemEventFactory()
+    event = RandomExternalTicketSystemEventFactory(occurrence=False)
     system_venue = SystemVenueFactory()
     # Create two occurrences directly
     OccurrenceFactory(event=event, venue=system_venue)
