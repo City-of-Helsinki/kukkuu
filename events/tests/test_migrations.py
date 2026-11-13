@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import migrations
 from guardian.shortcuts import assign_perm
 
-from events.factories import EventFactory
+from events.factories import EventFactory, TicketmasterEventFactory
 from events.models import Event
 from organisations.models import Organisation
 from projects.enums import ProjectPermission
@@ -26,6 +26,16 @@ replace_child_and_1_or_2_guardians_with_family = (
     migration_0036_module.replace_child_and_1_or_2_guardians_with_family
 )
 Migration0036 = migration_0036_module.Migration
+
+migration_0038_module = importlib.import_module(
+    "events.migrations.0038_populate_external_event_occurrences"
+)
+populate_external_event_occurrences = (
+    migration_0038_module.populate_external_event_occurrences
+)
+revert_external_event_occurrences = (
+    migration_0038_module.revert_external_event_occurrences
+)
 
 
 @pytest.mark.django_db
@@ -98,3 +108,31 @@ def test_migrate_child_and_1_or_2_guardians_to_family():
     )
     run_python_op = migration_instance.operations[0]
     assert run_python_op.reverse_code is migrations.RunPython.noop
+
+
+@pytest.mark.django_db
+def test_populate_external_event_occurrences_creates_occurrences_and_reverts():
+    event = TicketmasterEventFactory(ticket_system_url="https://example.com/tickets")
+    assert event.occurrences.count() == 0
+
+    populate_external_event_occurrences(apps, None)
+
+    assert event.occurrences.count() == 1
+    occ = event.occurrences.first()
+    assert occ.venue.is_system is True
+    assert occ.venue.name == settings.KUKKUU_DEFAULT_VENUE_NAME
+    assert occ.time == event.ticket_system_end_time
+    assert occ.ticket_system_url == "https://example.com/tickets"
+
+    revert_external_event_occurrences(apps, None)
+    assert event.occurrences.count() == 0
+
+
+@pytest.mark.django_db
+def test_populate_external_event_occurrences_raises_if_end_time_null():
+    event = TicketmasterEventFactory()
+    event.ticket_system_end_time = None
+    event.save(update_fields=["ticket_system_end_time"])
+
+    with pytest.raises(RuntimeError, match="NULL ticket_system_end_time"):
+        populate_external_event_occurrences(apps, None)
