@@ -110,7 +110,24 @@ class EventGroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = EventGroupSerializer
 
 
-@extend_schema_view(list=extend_schema(description="Get all venues."))
+@extend_schema_view(
+    list=extend_schema(
+        description=(
+            "Get all venues. Excludes the global system venue used "
+            "for external ticket system events."
+        )
+    )
+)
 class VenueViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Venue.objects.prefetch_related("translations").select_related("project")
+    """
+    Read-only viewset for venues reporting.
+
+    Restricted to non-system venues (is_system=False).
+    """
+
+    queryset = (
+        Venue.objects.filter(is_system=False)
+        .prefetch_related("translations")
+        .select_related("project")
+    )
     serializer_class = VenueSerializer
