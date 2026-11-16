@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from datetime import timedelta
 from typing import List, Optional
 
@@ -12,6 +11,7 @@ from django.db import transaction
 from django.db.models import Count, Prefetch, Q, prefetch_related_objects
 from django.utils import timezone
 from django.utils.translation import get_language
+from django.utils.translation import gettext_lazy as _
 from graphene import Connection, ObjectType, relay
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
@@ -26,12 +26,10 @@ from common.schema import ErrorType, LanguageEnum
 from common.utils import (
     check_can_user_administer,
     get_node_id_from_global_id,
-    get_obj_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
     map_enums_to_values_in_kwargs,
     project_user_required,
-    update_object,
     update_object_with_translations,
 )
 from events.consts import (
@@ -52,7 +50,7 @@ from events.models import (
     Occurrence,
     TicketSystemPassword,
 )
-from events.services import EventAPIService
+from events.services import EventAPIService, OccurrenceAPIService
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -60,7 +58,6 @@ from kukkuu.exceptions import (
     EventAlreadyPublishedError,
     NoFreeTicketSystemPasswordsError,
     ObjectDoesNotExistError,
-    OccurrenceYearMismatchError,
     PastEnrolmentError,
     TicketSystemPasswordAlreadyAssignedError,
     TicketSystemPasswordNothingToImportError,
@@ -71,7 +68,6 @@ from kukkuu.utils import get_kukkuu_error_by_code
 from projects.models import Project
 from tags.models import Accessibility, ThemePath
 from tags.schema import AccessibilityNode, ThemePathNode
-from venues.models import Venue
 
 logger = logging.getLogger(__name__)
 
@@ -131,24 +127,7 @@ def validate_enrolment_deletion(enrolment: Enrolment) -> None:
         )
 
 
-def validate_occurrence_input(kwargs, occurrence: Occurrence = None) -> None:
-    if time := kwargs.get("time"):
-        if occurrence:
-            # Don't consider the occurrence which is being updated
-            existing_occurrences = occurrence.event.occurrences.exclude(
-                pk=occurrence.pk
-            )
-        else:
-            event = Event.objects.get(pk=kwargs["event_id"])
-            existing_occurrences = event.occurrences.all()
-
-        if (
-            existing_occurrences.exists()
-            and not existing_occurrences.filter(time__year=time.year).exists()
-        ):
-            raise OccurrenceYearMismatchError(
-                "Occurrence has different year than the rest of the event occurrences"
-            )
+validate_occurrence_input = OccurrenceAPIService.Validator.validate_input
 
 
 def get_visible_ticket_system_url(event: Event, url: str, user) -> Optional[str]:
@@ -211,13 +190,20 @@ class EventTicketSystem(graphene.Interface):
             )
 
 
+EVENT_END_TIME_DEPRECATION_REASON = (
+    "Deprecated in favor of the event's single occurrence time."
+)
+
+
 class ExternalEventTicketSystem(ObjectType):
     child_password = graphene.String(child_id=graphene.ID())
     has_any_free_passwords = graphene.Boolean(required=True)
     free_password_count = graphene.Int(required=True)
     used_password_count = graphene.Int(required=True)
     url = graphene.String(description=TICKET_SYSTEM_URL_DESCRIPTION)
-    end_time = graphene.DateTime()
+    # Note: end_time is deprecated in favor of external event occurrences.
+    # Kept for backwards compatibility.
+    end_time = graphene.DateTime(deprecation_reason=EVENT_END_TIME_DEPRECATION_REASON)
 
     class Meta:
         abstract = True
@@ -935,12 +921,14 @@ class AddEventTicketSystemInput(graphene.InputObjectType):
     type = TicketSystem(required=True)
     # Keep this optional until Kukkuu admin supports the field.
     url = graphene.String()
-    end_time = graphene.String()
+    # Note: end_time is deprecated in favor of external event occurrences.
+    end_time = graphene.String(deprecation_reason=EVENT_END_TIME_DEPRECATION_REASON)
 
 
 class UpdateEventTicketSystemInput(graphene.InputObjectType):
     url = graphene.String()
-    end_time = graphene.String()
+    # Note: end_time is deprecated in favor of external event occurrences.
+    end_time = graphene.String(deprecation_reason=EVENT_END_TIME_DEPRECATION_REASON)
 
 
 class ImportTicketSystemPasswordsMutation(graphene.relay.ClientIDMutation):
@@ -1216,6 +1204,14 @@ class EnrolOccurrenceMutation(graphene.relay.ClientIDMutation):
             )
         except Occurrence.DoesNotExist as e:
             raise ObjectDoesNotExistError(e)
+
+        if occurrence.event.is_external_ticket_system_event:
+            raise ApiUsageError(
+                _(
+                    "Direct enrolment is not supported for external ticket system "
+                    "events. Use ticket system passwords instead."
+                )
+            )
         try:
             child = Child.objects.user_can_update(user).get(pk=child_id)
         except Child.DoesNotExist as e:
@@ -1340,37 +1336,9 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        original_kwargs = deepcopy(kwargs)
-
-        kwargs["event_id"] = get_obj_if_user_can_administer(
-            info, kwargs["event_id"], Event
-        ).pk
-        kwargs["venue_id"] = get_obj_if_user_can_administer(
-            info, kwargs["venue_id"], Venue
-        ).pk
-
-        ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
-        if ticket_system_url is not None:
-            kwargs["ticket_system_url"] = ticket_system_url
-
-        accessibilities = [
-            get_obj_from_global_id(info, global_id, Accessibility)
-            for global_id in kwargs.pop("accessibility_ids", None) or []
-        ]
-
-        validate_occurrence_input(kwargs)
-        occurrence = Occurrence.objects.create(**kwargs)
-        occurrence.accessibilities.set(accessibilities)
-
-        # needed because enrolment_count is an annotated field
-        occurrence.enrolment_count = 0
-
-        logger.info(
-            f"user {info.context.user.uuid} added occurrence {occurrence} with data "
-            f"{original_kwargs}"
+        return AddOccurrenceMutation(
+            occurrence=OccurrenceAPIService.create_occurrence(info, kwargs)
         )
-
-        return AddOccurrenceMutation(occurrence=occurrence)
 
 
 class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
@@ -1395,53 +1363,9 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        original_kwargs = deepcopy(kwargs)
-        occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
-
-        if kwargs.get("event_id"):
-            kwargs["event_id"] = get_obj_if_user_can_administer(
-                info, kwargs["event_id"], Event
-            ).pk
-
-        if kwargs.get("venue_id"):
-            kwargs["venue_id"] = get_obj_if_user_can_administer(
-                info, kwargs["venue_id"], Venue
-            ).pk
-
-        ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
-        if ticket_system_url is not None:
-            kwargs["ticket_system_url"] = ticket_system_url
-
-        accessibility_ids = kwargs.pop("accessibility_ids", None)
-        accessibilities = (
-            None
-            if accessibility_ids is None
-            else [
-                get_obj_from_global_id(info, global_id, Accessibility)
-                for global_id in accessibility_ids
-            ]
+        return UpdateOccurrenceMutation(
+            occurrence=OccurrenceAPIService.update_occurrence(info, kwargs)
         )
-
-        validate_occurrence_input(kwargs, occurrence=occurrence)
-        update_object(occurrence, kwargs)
-        if accessibilities is not None:
-            occurrence.accessibilities.set(accessibilities)
-
-        try:
-            occurrence.clean()
-        except ValidationError as e:
-            kukkuu_error = get_kukkuu_error_by_code(e.code)
-            if kukkuu_error:
-                raise kukkuu_error(e.message)
-            else:
-                raise
-
-        logger.info(
-            f"user {info.context.user.uuid} updated occurrence {occurrence} "
-            f"of event {occurrence.event} with data {original_kwargs}"
-        )
-
-        return UpdateOccurrenceMutation(occurrence=occurrence)
 
 
 class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
@@ -1454,6 +1378,10 @@ class DeleteOccurrenceMutation(graphene.relay.ClientIDMutation):
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
         occurrence = get_obj_if_user_can_administer(info, kwargs["id"], Occurrence)
+        if occurrence.event.is_external_ticket_system_event:
+            raise DataValidationError(
+                _("Cannot delete the occurrence of an external ticket system event.")
+            )
         log_text = (
             f"user {info.context.user.uuid} deleted occurrence {occurrence} "
             f"of event {occurrence.event}"

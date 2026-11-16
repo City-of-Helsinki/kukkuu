@@ -11,12 +11,18 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from events.admin import EventGroupAdmin, EventGroupForm, OccurrenceAdmin
+from events.admin import (
+    EventGroupAdmin,
+    EventGroupForm,
+    OccurrenceAdmin,
+    OccurrencesInline,
+)
 from events.factories import (
     EnrolmentFactory,
     EventFactory,
     EventGroupFactory,
     OccurrenceFactory,
+    TicketmasterEventFactory,
 )
 from events.models import (
     Event,
@@ -745,3 +751,49 @@ def test_occurrence_admin_view_permission_allows_viewing_accessibilities(client)
     assert not inline.has_add_permission
     assert not inline.has_change_permission
     assert not inline.has_delete_permission
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_venue_field_excludes_system_venue():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    db_field = Occurrence._meta.get_field("venue")
+    formfield = admin.formfield_for_foreignkey(db_field, request=MockRequest())
+    assert not formfield.queryset.filter(is_system=True).exists()
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_readonly_fields_for_external_event():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    ext_event = TicketmasterEventFactory()
+    occ = OccurrenceFactory(event=ext_event)
+    readonly = admin.get_readonly_fields(MockRequest(), obj=occ)
+    assert "venue" in readonly
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_has_delete_permission_for_external_event():
+    site = AdminSite()
+    admin = OccurrenceAdmin(Occurrence, site)
+    ext_event = TicketmasterEventFactory()
+    occ = OccurrenceFactory(event=ext_event)
+    assert admin.has_delete_permission(MockRequest(), obj=occ) is False
+
+
+@pytest.mark.django_db
+def test_occurrences_inline_supports_venue_parent():
+    from venues.factories import VenueFactory
+    from venues.models import Venue
+
+    site = AdminSite()
+    inline = OccurrencesInline(Venue, site)
+    venue = VenueFactory()
+
+    request = MockRequest()
+    request.user = UserFactory(is_superuser=True)
+    # Should not raise AttributeError when parent obj is a Venue
+    readonly = inline.get_readonly_fields(request, obj=venue)
+    assert isinstance(readonly, tuple)
+    assert inline.has_add_permission(request, obj=venue) is True
+    assert inline.has_delete_permission(request, obj=venue) is True
