@@ -1254,14 +1254,12 @@ def test_external_event_requires_ticket_system_end_time():
 @pytest.mark.django_db
 def test_external_event_get_capacity_returns_zero():
     event = TicketmasterEventFactory()
-    system_venue = SystemVenueFactory()
-    OccurrenceFactory(event=event, venue=system_venue)
     assert event.get_capacity() == 0
 
 
 @pytest.mark.django_db
 def test_external_event_occurrence_requires_system_venue():
-    event = TicketmasterEventFactory()
+    event = TicketmasterEventFactory(occurrence=False)
     regular_venue = VenueFactory(project=event.project)
     system_venue = SystemVenueFactory()
 
@@ -1298,7 +1296,7 @@ def test_internal_event_occurrence_cannot_use_system_venue():
 
 @pytest.mark.django_db
 def test_external_event_max_one_occurrence():
-    event = TicketmasterEventFactory()
+    event = TicketmasterEventFactory(occurrence=False)
     system_venue = SystemVenueFactory()
 
     occ1 = Occurrence.objects.create(
