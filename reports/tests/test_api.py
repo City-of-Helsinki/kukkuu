@@ -23,7 +23,7 @@ from events.models import Enrolment, Occurrence
 from languages.models import Language
 from reports.drf_permissions import ACCESS_REPORT_API_PERM
 from reports.serializers import get_primary_contact_language
-from venues.factories import VenueFactory
+from venues.factories import SystemVenueFactory, VenueFactory
 
 CHILDREN_ENDPOINT = "/reports/children/"
 EVENTS_ENDPOINT = "/reports/event/"
@@ -395,6 +395,22 @@ def test_venue_retrieve_endpoint(
         assert f"Example Address ({lang_code})" in json_data["address"][lang_code]
 
     snapshot.assert_match(json_data)
+
+
+@pytest.mark.django_db
+def test_venues_endpoint_includes_system_venue(project, user_api_client):
+    regular_venue = VenueFactory(project=project)
+    system_venue = SystemVenueFactory()
+
+    list_response = user_api_client.get(VENUES_ENDPOINT)
+    assert list_response.status_code == 200
+    list_ids = [v["id"] for v in list_response.json()]
+    assert regular_venue.id in list_ids
+    assert system_venue.id in list_ids
+
+    detail_response = user_api_client.get(f"{VENUES_ENDPOINT}{system_venue.id}/")
+    assert detail_response.status_code == 200
+    assert detail_response.json()["id"] == system_venue.id
 
 
 @pytest.mark.django_db
