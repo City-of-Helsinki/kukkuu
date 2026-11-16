@@ -6,18 +6,29 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from graphql_relay import from_global_id
 
 from common.utils import (
+    check_can_user_administer,
     get_obj_from_global_id,
     get_obj_if_user_can_administer,
+    update_object,
     update_object_with_translations,
 )
-from events.models import Event, EventGroup
+from events.models import Event, EventGroup, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
-from kukkuu.exceptions import DataValidationError, SingleEventsDisallowedError
+from kukkuu.exceptions import (
+    ApiUsageError,
+    DataValidationError,
+    ObjectDoesNotExistError,
+    OccurrenceYearMismatchError,
+    SingleEventsDisallowedError,
+)
+from kukkuu.utils import get_kukkuu_error_by_code
 from organisations.models import Organisation
 from projects.models import Project
-from tags.models import ThemePath
+from tags.models import Accessibility, ThemePath
+from venues.models import Venue
 
 logger = logging.getLogger(__name__)
 
@@ -463,3 +474,256 @@ class EventAPIService:
         )
 
         return event_group
+
+
+class OccurrenceAPIService:
+    """
+    Service class for Occurrence GraphQL API business logic.
+    """
+
+    NON_NULLABLE_UPDATE_FIELDS = ("time", "occurrence_language")
+
+    class Resolver:
+        """
+        Resolves Relay Global IDs into model instances with permission checks.
+        """
+
+        @staticmethod
+        def event_id_for_create(info, event_global_id: str) -> int:
+            return get_obj_if_user_can_administer(info, event_global_id, Event).pk
+
+        @staticmethod
+        def venue_id_for_create(info, venue_global_id: str) -> int:
+            return get_obj_if_user_can_administer(info, venue_global_id, Venue).pk
+
+        @staticmethod
+        def event_id_for_update(
+            info, occurrence: Occurrence, raw_event_id: str | None
+        ) -> int | None:
+            if raw_event_id is None:
+                return None
+            requested_id = from_global_id(raw_event_id)[1]
+            if occurrence.event.is_external_ticket_system_event:
+                if requested_id != str(occurrence.event_id):
+                    raise ApiUsageError(
+                        _("Cannot reassign an external ticket system event occurrence.")
+                    )
+                return None
+            return get_obj_if_user_can_administer(info, raw_event_id, Event).pk
+
+        @staticmethod
+        def venue_id_for_update(
+            info, occurrence: Occurrence, raw_venue_id: str | None
+        ) -> int | None:
+            if raw_venue_id is None:
+                return None
+            requested_id = from_global_id(raw_venue_id)[1]
+            if occurrence.event.is_external_ticket_system_event:
+                if requested_id != str(occurrence.venue_id):
+                    raise ApiUsageError(
+                        _(
+                            "Cannot change the venue of an external ticket system "
+                            "event occurrence."
+                        )
+                    )
+                return None
+            venue = get_obj_from_global_id(info, raw_venue_id, Venue)
+            if venue.is_system:
+                raise ApiUsageError(_("Internal events cannot use the system venue."))
+            check_can_user_administer(venue, info.context.user)
+            return venue.pk
+
+        @staticmethod
+        def accessibilities(
+            info, accessibility_ids: list[str] | None
+        ) -> list[Accessibility] | None:
+            if accessibility_ids is None:
+                return None
+            return [
+                get_obj_from_global_id(info, global_id, Accessibility)
+                for global_id in accessibility_ids
+            ]
+
+    class Cleaner:
+        """
+        Normalizes and cleans GraphQL mutation input kwargs for Occurrence models.
+        """
+
+        @classmethod
+        def _resolve_foreign_keys(
+            cls, info, occurrence: Occurrence, kwargs: dict
+        ) -> None:
+            if "event_id" in kwargs:
+                resolved_event_id = OccurrenceAPIService.Resolver.event_id_for_update(
+                    info, occurrence, kwargs["event_id"]
+                )
+                if resolved_event_id is not None:
+                    kwargs["event_id"] = resolved_event_id
+                else:
+                    kwargs.pop("event_id")
+
+            if "venue_id" in kwargs:
+                resolved_venue_id = OccurrenceAPIService.Resolver.venue_id_for_update(
+                    info, occurrence, kwargs["venue_id"]
+                )
+                if resolved_venue_id is not None:
+                    kwargs["venue_id"] = resolved_venue_id
+                else:
+                    kwargs.pop("venue_id")
+
+        @classmethod
+        def prepare_update_kwargs(
+            cls, info, occurrence: Occurrence, kwargs: dict
+        ) -> None:
+            cls._resolve_foreign_keys(info, occurrence, kwargs)
+
+            for field in OccurrenceAPIService.NON_NULLABLE_UPDATE_FIELDS:
+                if field in kwargs and kwargs[field] is None:
+                    kwargs.pop(field)
+
+            ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
+            if ticket_system_url is not None:
+                kwargs["ticket_system_url"] = ticket_system_url
+
+    class Validator:
+        """
+        Validates occurrence mutation inputs and constraints.
+        """
+
+        @staticmethod
+        def _resolve_and_validate_event(
+            kwargs: dict, occurrence: Occurrence | None = None
+        ) -> Event | None:
+            if occurrence:
+                event = occurrence.event
+                if (
+                    event.is_external_ticket_system_event
+                    and kwargs.get("capacity_override") is not None
+                ):
+                    raise ApiUsageError(
+                        _(
+                            "Cannot set capacity override on an external ticket system "
+                            "event occurrence."
+                        )
+                    )
+                return event
+
+            event_id = kwargs.get("event_id")
+            if not event_id:
+                return None
+
+            try:
+                event = Event.objects.get(pk=event_id)
+            except Event.DoesNotExist as e:
+                raise ObjectDoesNotExistError(e)
+
+            if event.is_external_ticket_system_event:
+                raise ApiUsageError(
+                    _(
+                        "Cannot add occurrences to an external ticket system event; "
+                        "its single occurrence is created automatically. Use "
+                        "updateOccurrence to edit it."
+                    )
+                )
+            return event
+
+        @staticmethod
+        def _validate_time_year(
+            kwargs: dict,
+            occurrence: Occurrence | None = None,
+            event: Event | None = None,
+        ) -> None:
+            time = kwargs.get("time")
+            if not time:
+                return
+
+            if occurrence:
+                existing_occurrences = occurrence.event.occurrences.exclude(
+                    pk=occurrence.pk
+                )
+            elif event:
+                existing_occurrences = event.occurrences.all()
+            else:
+                existing_occurrences = Occurrence.objects.none()
+
+            if (
+                existing_occurrences.exists()
+                and not existing_occurrences.filter(time__year=time.year).exists()
+            ):
+                raise OccurrenceYearMismatchError(
+                    _(
+                        "The occurrence year must match the other occurrences of the "
+                        "event."
+                    )
+                )
+
+        @classmethod
+        def validate_input(
+            cls, kwargs: dict, occurrence: Occurrence | None = None
+        ) -> None:
+            event = cls._resolve_and_validate_event(kwargs, occurrence=occurrence)
+            cls._validate_time_year(kwargs, occurrence=occurrence, event=event)
+
+        @staticmethod
+        def clean_occurrence(occurrence: Occurrence) -> None:
+            try:
+                occurrence.clean()
+            except ValidationError as e:
+                kukkuu_error = get_kukkuu_error_by_code(getattr(e, "code", None))
+                if kukkuu_error:
+                    raise kukkuu_error(e.message)
+                raise DataValidationError(str(e))
+
+    @classmethod
+    def create_occurrence(cls, info, kwargs: dict) -> Occurrence:
+        original_kwargs = deepcopy(kwargs)
+
+        kwargs["event_id"] = cls.Resolver.event_id_for_create(info, kwargs["event_id"])
+        kwargs["venue_id"] = cls.Resolver.venue_id_for_create(info, kwargs["venue_id"])
+
+        ticket_system_url = kwargs.pop("ticket_system", {}).get("url")
+        if ticket_system_url is not None:
+            kwargs["ticket_system_url"] = ticket_system_url
+
+        accessibilities = cls.Resolver.accessibilities(
+            info, kwargs.pop("accessibility_ids", None) or []
+        )
+
+        cls.Validator.validate_input(kwargs)
+        occurrence = Occurrence(**kwargs)
+        cls.Validator.clean_occurrence(occurrence)
+        occurrence.save()
+        if accessibilities:
+            occurrence.accessibilities.set(accessibilities)
+
+        # needed because enrolment_count is an annotated field
+        occurrence.enrolment_count = 0
+
+        logger.info(
+            f"user {info.context.user.uuid} added occurrence {occurrence} with data "
+            f"{original_kwargs}"
+        )
+        return occurrence
+
+    @classmethod
+    def update_occurrence(cls, info, kwargs: dict) -> Occurrence:
+        original_kwargs = deepcopy(kwargs)
+        occurrence = get_obj_if_user_can_administer(info, kwargs.pop("id"), Occurrence)
+
+        cls.Cleaner.prepare_update_kwargs(info, occurrence, kwargs)
+        accessibilities = cls.Resolver.accessibilities(
+            info, kwargs.pop("accessibility_ids", None)
+        )
+
+        cls.Validator.validate_input(kwargs, occurrence=occurrence)
+        update_object(occurrence, kwargs)
+        if accessibilities is not None:
+            occurrence.accessibilities.set(accessibilities)
+
+        cls.Validator.clean_occurrence(occurrence)
+
+        logger.info(
+            f"user {info.context.user.uuid} updated occurrence {occurrence} "
+            f"of event {occurrence.event} with data {original_kwargs}"
+        )
+        return occurrence

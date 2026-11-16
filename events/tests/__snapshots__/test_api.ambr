@@ -111,32 +111,6 @@
     }),
   })
 # ---
-# name: test_add_occurrence_ticket_system_url
-  dict({
-    'data': dict({
-      'addOccurrence': dict({
-        'occurrence': dict({
-          'accessibilities': list([
-          ]),
-          'capacity': 48,
-          'capacityOverride': None,
-          'event': dict({
-            'createdAt': '2020-12-12T00:00:00+00:00',
-          }),
-          'occurrenceLanguage': 'FI',
-          'ticketSystem': dict({
-            'type': 'TICKETMASTER',
-            'url': 'https://example.com',
-          }),
-          'time': '1986-12-12T16:40:48+00:00',
-          'venue': dict({
-            'createdAt': '2020-12-12T00:00:00+00:00',
-          }),
-        }),
-      }),
-    }),
-  })
-# ---
 # name: test_add_ticketmaster_event
   dict({
     'data': dict({
@@ -2101,14 +2075,14 @@
         'occurrence': dict({
           'accessibilities': list([
           ]),
-          'capacity': 5,
-          'capacityOverride': 5,
+          'capacity': 0,
+          'capacityOverride': None,
           'enrolmentCount': 0,
           'event': dict({
             'createdAt': '2020-12-12T00:00:00+00:00',
           }),
           'occurrenceLanguage': 'SV',
-          'remainingCapacity': 5,
+          'remainingCapacity': 0,
           'ticketSystem': dict({
             'type': 'TICKETMASTER',
             'url': 'https://updated.example.com',
@@ -2129,14 +2103,14 @@
         'occurrence': dict({
           'accessibilities': list([
           ]),
-          'capacity': 5,
-          'capacityOverride': 5,
+          'capacity': 0,
+          'capacityOverride': None,
           'enrolmentCount': 0,
           'event': dict({
             'createdAt': '2020-12-12T00:00:00+00:00',
           }),
           'occurrenceLanguage': 'SV',
-          'remainingCapacity': 5,
+          'remainingCapacity': 0,
           'ticketSystem': dict({
             'type': 'TICKETMASTER',
             'url': '',
@@ -2157,14 +2131,14 @@
         'occurrence': dict({
           'accessibilities': list([
           ]),
-          'capacity': 5,
-          'capacityOverride': 5,
+          'capacity': 0,
+          'capacityOverride': None,
           'enrolmentCount': 0,
           'event': dict({
             'createdAt': '2020-12-12T00:00:00+00:00',
           }),
           'occurrenceLanguage': 'SV',
-          'remainingCapacity': 5,
+          'remainingCapacity': 0,
           'ticketSystem': dict({
             'type': 'TICKETMASTER',
             'url': 'https://updated.example.com',
