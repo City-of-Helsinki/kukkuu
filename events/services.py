@@ -128,7 +128,7 @@ def validate_registration_opens_at_is_not_before_published_at(
 
 def sync_external_event_occurrence(event: Event) -> Occurrence | None:
     """
-    Ensure an external ticket system event has exactly one Occurrence matching
+    Ensure an external ticket system event has one Occurrence matching
     its ticket_system_end_time, ticket_system_url, and the global system venue.
     """
     if not event.is_external_ticket_system_event or not event.ticket_system_end_time:

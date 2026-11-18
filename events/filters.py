@@ -451,7 +451,7 @@ class EventFilter(django_filters.FilterSet):
         - External ticket system events (Ticketmaster, Lippupiste, Tixly) do not
           track seat capacity on occurrences; instead, they require at least one
           unassigned `TicketSystemPassword` (`has_free_pw`), plus a matching
-          occurrence in `occ_qs` if `start_date` or `languages` was specified.
+          occurrence in `occ_qs`.
 
         :param qs: Event QuerySet to filter.
         :param now: Current timezone-aware datetime.
