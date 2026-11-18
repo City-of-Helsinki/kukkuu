@@ -95,6 +95,11 @@ class Venue(TimestampedModel, TranslatableModel, SerializableMixin):
 
     def clean(self):
         super().clean()
+        if self.pk and not self._state.adding:
+            original = Venue.objects.filter(pk=self.pk).values("is_system").first()
+            if original and original["is_system"] and not self.is_system:
+                raise ValidationError(_("The system venue flag cannot be cleared."))
+
         if self.is_system:
             if self.project is not None:
                 raise ValidationError(_("System venue cannot belong to a project."))
@@ -105,11 +110,6 @@ class Venue(TimestampedModel, TranslatableModel, SerializableMixin):
                 raise ValidationError(_("There can be only one system venue."))
         elif self.project is None:
             raise ValidationError(_("Regular venue must belong to a project."))
-
-        if self.pk and not self._state.adding:
-            original = Venue.objects.filter(pk=self.pk).values("is_system").first()
-            if original and original["is_system"] and not self.is_system:
-                raise ValidationError(_("The system venue flag cannot be cleared."))
 
     def save(self, *args, **kwargs):
         self.clean()

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
@@ -23,27 +25,28 @@ def test_venue_creation(project):
 def test_system_venue_unique_constraint():
     """Verify database unique constraint permits only one system venue."""
     SystemVenueFactory()
-    with pytest.raises((ValidationError, IntegrityError)):
+    with pytest.raises(ValidationError, match="There can be only one system venue."):
         venue2 = Venue(is_system=True, project=None)
-        venue2.full_clean()
         venue2.save()
 
 
 @pytest.mark.django_db
 def test_system_venue_check_constraint_cannot_have_project(project):
     """Verify check constraint rejects a system venue with a project assignment."""
-    with pytest.raises((ValidationError, IntegrityError)):
+    with pytest.raises(
+        ValidationError, match="System venue cannot belong to a project."
+    ):
         venue = Venue(is_system=True, project=project)
-        venue.full_clean()
         venue.save()
 
 
 @pytest.mark.django_db
 def test_regular_venue_check_constraint_must_have_project():
     """Verify check constraint requires regular venues to belong to a project."""
-    with pytest.raises((ValidationError, IntegrityError)):
+    with pytest.raises(
+        ValidationError, match="Regular venue must belong to a project."
+    ):
         venue = Venue(is_system=False, project=None)
-        venue.full_clean()
         venue.save()
 
 
@@ -66,7 +69,17 @@ def test_system_venue_delete_protected():
     with pytest.raises(ValidationError, match="The system venue cannot be deleted."):
         Venue.objects.filter(id=system_venue.id).delete()
 
+    regular_venue = VenueFactory()
+    venues = Venue.objects.filter(id__in=[system_venue.id, regular_venue.id])
+    assert venues.count() >= 2
+
+    # Test that system venue can not be deleted as part of a larger queryset
+    with pytest.raises(ValidationError, match="The system venue cannot be deleted."):
+        venues.delete()
+
     assert Venue.objects.filter(id=system_venue.id).exists()
+    # The whole queryset's deletion should have been prevented:
+    assert Venue.objects.filter(id=regular_venue.id).exists()
 
 
 @pytest.mark.django_db
@@ -83,9 +96,23 @@ def test_system_venue_flag_clearing_prevented(project):
     """Verify clearing the is_system flag on an existing system venue is rejected."""
     system_venue = SystemVenueFactory()
     system_venue.is_system = False
-    system_venue.project = project
     with pytest.raises(
         ValidationError, match="The system venue flag cannot be cleared."
+    ):
+        system_venue.save()
+
+    system_venue.refresh_from_db()
+    assert system_venue.is_system is True
+    assert system_venue.project is None
+
+
+@pytest.mark.django_db
+def test_system_venue_project_assignment_prevented(project):
+    """Verify assigning a system venue to a project is rejected."""
+    system_venue = SystemVenueFactory()
+    system_venue.project = project
+    with pytest.raises(
+        ValidationError, match="System venue cannot belong to a project."
     ):
         system_venue.save()
 
@@ -110,20 +137,23 @@ def test_system_venue_str():
 
 @pytest.mark.django_db
 def test_system_venue_can_user_administer(project):
-    """Verify only superusers have administration rights over the system venue."""
+    """Verify only staff/superusers have administration rights over the system venue."""
     system_venue = SystemVenueFactory()
     regular_venue = VenueFactory(project=project)
 
-    sysadmin = UserFactory(is_superuser=True)
+    superuser = UserFactory(is_staff=False, is_superuser=True)
+    staff_user = UserFactory(is_staff=True, is_superuser=False)
     project_admin = UserFactory()
     project_admin.administered_projects = [project]
     regular_user = UserFactory()
 
-    assert system_venue.can_user_administer(sysadmin) is True
+    assert system_venue.can_user_administer(superuser) is True
+    assert system_venue.can_user_administer(staff_user) is True
     assert system_venue.can_user_administer(project_admin) is False
     assert system_venue.can_user_administer(regular_user) is False
 
-    assert regular_venue.can_user_administer(sysadmin) is True
+    assert regular_venue.can_user_administer(superuser) is True
+    assert regular_venue.can_user_administer(staff_user) is False
     assert regular_venue.can_user_administer(project_admin) is True
     assert regular_venue.can_user_administer(regular_user) is False
 
@@ -169,8 +199,6 @@ def test_get_system_venue_concurrent_creation_recovery(project):
     Venue.objects.filter(is_system=True).update(project_id=project.id, is_system=False)
     Venue.objects.all().delete()
 
-    from unittest.mock import patch
-
     first_call = True
     real_filter = Venue.objects.filter
 
@@ -208,10 +236,6 @@ def test_get_system_venue_concurrent_creation_recovery(project):
 def test_get_system_venue_unrelated_error_propagates(project):
     Venue.objects.filter(is_system=True).update(project_id=project.id, is_system=False)
     Venue.objects.all().delete()
-
-    from unittest.mock import patch
-
-    from django.db import IntegrityError
 
     with patch.object(
         Venue.objects,
