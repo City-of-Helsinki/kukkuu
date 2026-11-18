@@ -127,9 +127,6 @@ def validate_enrolment_deletion(enrolment: Enrolment) -> None:
         )
 
 
-validate_occurrence_input = OccurrenceAPIService.Validator.validate_input
-
-
 def get_visible_ticket_system_url(event: Event, url: str, user) -> Optional[str]:
     """
     Hide the external ticket system URL before the event's registration opens from
