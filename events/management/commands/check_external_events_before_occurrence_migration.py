@@ -26,9 +26,9 @@ class Command(BaseCommand):
             ),
         )
 
-    def _fix_missing_end_times(self, missing_end_time):
+    def _fix_missing_end_times(self, events_without_end_time):
         fixed_count = 0
-        for event in missing_end_time:
+        for event in events_without_end_time:
             fallback_time = event.published_at or event.created_at
             source = "published_at" if event.published_at else "created_at"
             event.ticket_system_end_time = fallback_time
@@ -42,17 +42,17 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Successfully fixed {fixed_count} external event(s).")
         )
 
-    def _report_missing_end_times(self, missing_end_time, *, fix: bool) -> bool:
-        if not missing_end_time.exists():
+    def _report_missing_end_times(self, events_without_end_time, *, fix: bool) -> bool:
+        if not events_without_end_time.exists():
             return False
 
         self.stderr.write(
             self.style.ERROR(
-                f"\nFound {missing_end_time.count()} external event(s) "
+                f"\nFound {events_without_end_time.count()} external event(s) "
                 "with missing ticket_system_end_time:"
             )
         )
-        for event in missing_end_time:
+        for event in events_without_end_time:
             self.stderr.write(
                 f"  - id={event.id}, name='{event.name}', project={event.project}, "
                 f"created_at={event.created_at}, published_at={event.published_at}"
@@ -67,17 +67,17 @@ class Command(BaseCommand):
             )
         return True
 
-    def _report_multiple_occurrences(self, multiple_occurrences) -> bool:
-        if not multiple_occurrences.exists():
+    def _report_multiple_occurrences(self, events_with_multiple_occurrences) -> bool:
+        if not events_with_multiple_occurrences.exists():
             return False
 
         self.stderr.write(
             self.style.ERROR(
-                f"\nFound {multiple_occurrences.count()} external event(s) "
+                f"\nFound {events_with_multiple_occurrences.count()} external event(s) "
                 "with more than 1 occurrence:"
             )
         )
-        for event in multiple_occurrences:
+        for event in events_with_multiple_occurrences:
             self.stderr.write(
                 f"  - id={event.id}, name='{event.name}', "
                 f"occurrences_count={event.occ_count}"
