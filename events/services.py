@@ -557,7 +557,7 @@ class OccurrenceAPIService:
         ) -> int | None:
             if raw_event_id is None:
                 return None
-            requested_id = from_global_id(raw_event_id)[1]
+            requested_id = from_global_id(raw_event_id).id
             if occurrence.event.is_external_ticket_system_event:
                 if requested_id != str(occurrence.event_id):
                     raise ApiUsageError(
@@ -572,7 +572,7 @@ class OccurrenceAPIService:
         ) -> int | None:
             if raw_venue_id is None:
                 return None
-            requested_id = from_global_id(raw_venue_id)[1]
+            requested_id = from_global_id(raw_venue_id).id
             if occurrence.event.is_external_ticket_system_event:
                 if requested_id != str(occurrence.venue_id):
                     raise ApiUsageError(
