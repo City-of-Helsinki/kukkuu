@@ -137,12 +137,13 @@ def sync_external_event_occurrence(event: Event) -> Occurrence | None:
     system_venue = get_system_venue()
 
     translated_langs = list(event.translations.values_list("language_code", flat=True))
-    if "fi" in translated_langs:
-        lang = "fi"
+    default_lang = settings.LANGUAGE_CODE
+    if default_lang in translated_langs:
+        lang = default_lang
     elif translated_langs:
         lang = translated_langs[0]
     else:
-        lang = settings.LANGUAGE_CODE
+        lang = default_lang
 
     occurrence = event.occurrences.first()
     if occurrence:
