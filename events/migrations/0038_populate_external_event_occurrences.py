@@ -6,7 +6,7 @@ import logging
 
 from django.conf import settings
 from django.db import migrations
-from django.db.models import Q
+from django.db.models import Count, Q
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,16 @@ def populate_external_event_occurrences(apps, schema_editor):
     external_events = Event.objects.exclude(ticket_system="internal")
     if not external_events.exists():
         return
+
+    multiple_occurrences = external_events.annotate(
+        occ_count=Count("occurrences")
+    ).filter(occ_count__gt=1)
+    if multiple_occurrences.exists():
+        raise RuntimeError(
+            f"Cannot migrate external events to single occurrence: found "
+            f"{multiple_occurrences.count()} external event(s) with multiple occurrences. "
+            "Remove the excess occurrences from external events to run this migration."
+        )
 
     null_end_time_count = external_events.filter(
         ticket_system_end_time__isnull=True
