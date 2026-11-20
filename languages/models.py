@@ -3,12 +3,19 @@ import gettext
 import pycountry
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, models, transaction
+from django.db.models import ExpressionWrapper, Q
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
-from common.models import TranslatableQuerySet
+from common.models import TranslatableModel, TranslatableQuerySet
 from kukkuu.settings import PARLER_SUPPORTED_LANGUAGE_CODES
+
+from .consts import (
+    OTHER_LANGUAGE_ALPHA_3_CODE,
+    OTHER_LANGUAGE_NAMES,
+    SPECIAL_LANGUAGE_ALPHA_3_CODES,
+)
 
 
 class InvalidLanguageCodeError(Exception):
@@ -47,20 +54,25 @@ class LanguageQueryset(TranslatableQuerySet):
 
         return obj
 
-    @transaction.atomic
     def create_option_other(self):
-        obj, created = self.language("en").get_or_create(
-            alpha_3_code=None,
-            translations__name="Other language",
-            defaults={"name": "Other language"},
+        try:
+            return self.create_translatable_object(
+                alpha_3_code=OTHER_LANGUAGE_ALPHA_3_CODE,
+                translations=[
+                    {"language_code": language_code, "name": name}
+                    for language_code, name in OTHER_LANGUAGE_NAMES.items()
+                ],
+            )
+        except IntegrityError as e:
+            raise LanguageAlreadyExistsError(e)
+
+    def with_is_special(self):
+        return self.annotate(
+            is_special=ExpressionWrapper(
+                Q(alpha_3_code__in=SPECIAL_LANGUAGE_ALPHA_3_CODES),
+                output_field=models.BooleanField(),
+            )
         )
-        if not created:
-            raise LanguageAlreadyExistsError()
-
-        obj.create_translation("sv", name="Annat språk")
-        obj.create_translation("fi", name="muu kieli")
-
-        return obj
 
 
 class Language(TranslatableModel):
@@ -69,8 +81,6 @@ class Language(TranslatableModel):
         verbose_name=_("alpha-3 code"),
         help_text=_("ISO 639-3 (language) or ISO 639-5 (language family) alpha-3 code"),
         unique=True,
-        null=True,
-        blank=True,
     )
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
@@ -86,11 +96,10 @@ class Language(TranslatableModel):
         return f"{self.name} ({self.alpha_3_code})"
 
     def clean(self):
-        if self.alpha_3_code:
-            try:
-                get_pycountry_language(self.alpha_3_code)
-            except InvalidLanguageCodeError as e:
-                raise ValidationError({"alpha_3_code": e})
+        try:
+            get_pycountry_language(self.alpha_3_code)
+        except InvalidLanguageCodeError as e:
+            raise ValidationError({"alpha_3_code": e})
 
 
 def get_pycountry_language(language_code):

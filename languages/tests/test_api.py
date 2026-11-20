@@ -1,6 +1,7 @@
 import pytest
 
 from common.utils import get_global_id
+from languages.consts import SPECIAL_LANGUAGE_ALPHA_3_CODES
 from languages.models import Language
 
 
@@ -11,6 +12,7 @@ def autouse_db(db):
 
 @pytest.fixture(autouse=True)
 def languages():
+    Language.objects.all().delete()
     for code in ("fin", "swe", "eng"):
         Language.objects.create_from_language_code(code)
 
@@ -58,3 +60,25 @@ def test_language_query(snapshot, api_client):
     executed = api_client.execute(LANGUAGE_QUERY, variables=variables)
 
     snapshot.assert_match(executed)
+
+
+def test_languages_query_orders_special_languages_last(api_client):
+    Language.objects.create_from_language_code("zxx")
+    Language.objects.create_from_language_code("ara")
+    Language.objects.create_option_other()
+
+    executed = api_client.execute(LANGUAGES_QUERY)
+
+    codes = [
+        edge["node"]["alpha3Code"] for edge in executed["data"]["languages"]["edges"]
+    ]
+    normal_codes = codes[:4]
+    special_codes = codes[4:]
+    assert not set(normal_codes) & set(SPECIAL_LANGUAGE_ALPHA_3_CODES)
+    assert (set(special_codes) & set(SPECIAL_LANGUAGE_ALPHA_3_CODES)) == set(
+        special_codes
+    )
+    assert normal_codes == ["ara", "eng", "swe", "fin"]
+    # Not asserting specific order because of collation differences between
+    # local test db and CI/CD pipeline, which make sorting differ for these:
+    assert set(special_codes) == {"und", "zxx"}

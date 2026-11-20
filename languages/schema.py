@@ -1,6 +1,6 @@
 import graphene
 from django.apps import apps
-from django.db.models import Count, Prefetch
+from django.db.models import Prefetch
 from graphene import relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 
@@ -33,8 +33,8 @@ class LanguageNode(DjangoObjectType):
                 )
             )
             .translated()
-            .annotate(has_code=Count("alpha_3_code"))  # to order null codes as last
-            .order_by("-has_code", "translations__name", "id")
+            .with_is_special()
+            .order_by("is_special", "translations__name", "id")  # special last
         )
 
 

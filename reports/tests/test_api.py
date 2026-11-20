@@ -33,6 +33,7 @@ VENUES_ENDPOINT = "/reports/venue/"
 
 @pytest.fixture(autouse=True)
 def languages():
+    Language.objects.all().delete()
     for code in ("fin", "swe", "eng"):
         Language.objects.create_from_language_code(code)
     Language.objects.create_option_other()
@@ -84,7 +85,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
             birthyear=2021,
             postal_code="11111",
             relationship__guardian__language="fi",
-            relationship__guardian__languages_spoken_at_home=["fin", None],
+            relationship__guardian__languages_spoken_at_home=["fin", "und"],
             relationship__guardian__email="advocate@example.org",
         )
 
@@ -94,7 +95,7 @@ def test_children_endpoint(user_api_client, snapshot, django_assert_max_num_quer
             birthyear=2021,
             postal_code="22222",
             relationship__guardian__language="sv",
-            relationship__guardian__languages_spoken_at_home=[None],
+            relationship__guardian__languages_spoken_at_home=["und"],
             relationship__guardian__email="parent@example.org",
         )
 
