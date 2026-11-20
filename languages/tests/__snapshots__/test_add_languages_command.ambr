@@ -19,7 +19,9 @@
   Created Portuguese (por)
   Created Romanian (ron)
   Created Russian (rus)
-  Created Sami languages (smi)
+  Created Northern Sami (sme)
+  Created Inari Sami (smn)
+  Created Skolt Sami (sms)
   Created Somali (som)
   Created Spanish (spa)
   Created Albanian (sqi)
@@ -40,132 +42,142 @@
     'ara': dict({
       'en': 'Arabic',
       'fi': 'arabia',
-      'sv': 'Arabiska',
+      'sv': 'arabiska',
     }),
     'ben': dict({
       'en': 'Bengali',
       'fi': 'bengali',
-      'sv': 'Bengali',
+      'sv': 'bengali',
     }),
     'deu': dict({
       'en': 'German',
       'fi': 'saksa',
-      'sv': 'Tyska',
+      'sv': 'tyska',
     }),
     'eng': dict({
       'en': 'English',
       'fi': 'englanti',
-      'sv': 'Engelska',
+      'sv': 'engelska',
     }),
     'est': dict({
       'en': 'Estonian',
       'fi': 'viro',
-      'sv': 'Estniska',
+      'sv': 'estniska',
     }),
     'fas': dict({
       'en': 'Persian',
       'fi': 'persia',
-      'sv': 'Persiska',
+      'sv': 'persiska',
     }),
     'fin': dict({
       'en': 'Finnish',
       'fi': 'suomi',
-      'sv': 'Finska',
+      'sv': 'finska',
     }),
     'fra': dict({
       'en': 'French',
       'fi': 'ranska',
-      'sv': 'Franska',
+      'sv': 'franska',
     }),
     'hin': dict({
       'en': 'Hindi',
       'fi': 'hindi',
-      'sv': 'Hindi',
+      'sv': 'hindi',
     }),
     'ita': dict({
       'en': 'Italian',
       'fi': 'italia',
-      'sv': 'Italienska',
+      'sv': 'italienska',
     }),
     'kur': dict({
       'en': 'Kurdish',
       'fi': 'kurdi',
-      'sv': 'Kurdiska',
+      'sv': 'kurdiska',
     }),
     'nep': dict({
       'en': 'Nepali (macrolanguage)',
-      'fi': 'Nepali (macrolanguage)',
-      'sv': 'Nepali',
+      'fi': 'nepali',
+      'sv': 'nepalesiska',
     }),
     'nor': dict({
       'en': 'Norwegian',
       'fi': 'norja',
-      'sv': 'Norska',
+      'sv': 'norska',
     }),
     'pol': dict({
       'en': 'Polish',
       'fi': 'puola',
-      'sv': 'Polska',
+      'sv': 'polska',
     }),
     'por': dict({
       'en': 'Portuguese',
       'fi': 'portugali',
-      'sv': 'Portugisiska',
+      'sv': 'portugisiska',
     }),
     'ron': dict({
       'en': 'Romanian',
       'fi': 'romania',
-      'sv': 'Rumänska',
+      'sv': 'rumänska',
     }),
     'rus': dict({
       'en': 'Russian',
       'fi': 'venäjä',
-      'sv': 'Ryska',
+      'sv': 'ryska',
     }),
-    'smi': dict({
-      'en': 'Sami languages',
-      'fi': 'Sami languages',
-      'sv': 'Sami languages',
+    'sme': dict({
+      'en': 'Northern Sami',
+      'fi': 'pohjoissaame',
+      'sv': 'nordsamiska',
+    }),
+    'smn': dict({
+      'en': 'Inari Sami',
+      'fi': 'inarinsaame',
+      'sv': 'enaresamiska',
+    }),
+    'sms': dict({
+      'en': 'Skolt Sami',
+      'fi': 'koltansaame',
+      'sv': 'skoltsamiska',
     }),
     'som': dict({
       'en': 'Somali',
       'fi': 'somali',
-      'sv': 'Somali',
+      'sv': 'somaliska',
     }),
     'spa': dict({
       'en': 'Spanish',
       'fi': 'espanja',
-      'sv': 'Spanska',
+      'sv': 'spanska',
     }),
     'sqi': dict({
       'en': 'Albanian',
       'fi': 'albania',
-      'sv': 'Albanska',
+      'sv': 'albanska',
     }),
     'swe': dict({
       'en': 'Swedish',
       'fi': 'ruotsi',
-      'sv': 'Svenska',
+      'sv': 'svenska',
     }),
     'tgl': dict({
       'en': 'Tagalog',
       'fi': 'tagalog',
-      'sv': 'Tagalog',
+      'sv': 'tagalog',
     }),
     'tha': dict({
       'en': 'Thai',
       'fi': 'thai',
-      'sv': 'Thailändska',
+      'sv': 'thailändska',
     }),
     'tur': dict({
       'en': 'Turkish',
       'fi': 'turkki',
-      'sv': 'Turkiska',
+      'sv': 'turkiska',
     }),
     'ukr': dict({
       'en': 'Ukrainian',
       'fi': 'ukraina',
-      'sv': 'Ukrainska',
+      'sv': 'ukrainska',
     }),
     'und': dict({
       'en': 'Other language',
@@ -175,62 +187,85 @@
     'urd': dict({
       'en': 'Urdu',
       'fi': 'urdu',
-      'sv': 'Urdu',
+      'sv': 'urdu',
     }),
     'vie': dict({
       'en': 'Vietnamese',
       'fi': 'vietnam',
-      'sv': 'Vietnamesiska',
+      'sv': 'vietnamesiska',
     }),
     'zho': dict({
       'en': 'Chinese',
       'fi': 'kiina',
-      'sv': 'Kinesiska',
+      'sv': 'kinesiska',
     }),
   })
 # ---
 # name: test_add_languages
   '''
-  Created Manide (abd)
-  Created Ngelima (agh)
+  Created Afrikaans (afr)
+  Created Zulu (zul)
   All done!
   
   '''
 # ---
 # name: test_add_languages.1
   dict({
-    'abd': dict({
-      'en': 'Manide',
-      'fi': 'Manide',
-      'sv': 'Manide',
+    'afr': dict({
+      'en': 'Afrikaans',
+      'fi': 'afrikaans',
+      'sv': 'afrikaans',
     }),
-    'agh': dict({
-      'en': 'Ngelima',
-      'fi': 'Ngelima',
-      'sv': 'Ngelima',
+    'zul': dict({
+      'en': 'Zulu',
+      'fi': 'zulu',
+      'sv': 'zulu',
     }),
   })
 # ---
 # name: test_add_languages_and_flush
   '''
   Flushed existing languages
-  Created Manide (abd)
-  Created Ngelima (agh)
+  Created Afrikaans (afr)
+  Created Zulu (zul)
   All done!
   
   '''
 # ---
 # name: test_add_languages_and_flush.1
   dict({
+    'afr': dict({
+      'en': 'Afrikaans',
+      'fi': 'afrikaans',
+      'sv': 'afrikaans',
+    }),
+    'zul': dict({
+      'en': 'Zulu',
+      'fi': 'zulu',
+      'sv': 'zulu',
+    }),
+  })
+# ---
+# name: test_add_languages_with_english_fallback
+  '''
+  Created Manide (abd)
+  Used the English name for abd in language(s): fi, sv
+  Created Finnish (fin)
+  All done!
+  
+  '''
+# ---
+# name: test_add_languages_with_english_fallback.1
+  dict({
     'abd': dict({
       'en': 'Manide',
       'fi': 'Manide',
       'sv': 'Manide',
     }),
-    'agh': dict({
-      'en': 'Ngelima',
-      'fi': 'Ngelima',
-      'sv': 'Ngelima',
+    'fin': dict({
+      'en': 'Finnish',
+      'fi': 'suomi',
+      'sv': 'finska',
     }),
   })
 # ---

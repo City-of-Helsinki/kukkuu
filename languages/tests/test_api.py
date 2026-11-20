@@ -71,4 +71,4 @@ def test_languages_query_orders_special_languages_last(api_client):
     codes = [
         edge["node"]["alpha3Code"] for edge in executed["data"]["languages"]["edges"]
     ]
-    assert codes == ["ara", "eng", "swe", "fin", "und", "zxx"]
+    assert codes == ["ara", "eng", "swe", "fin", "zxx", "und"]
