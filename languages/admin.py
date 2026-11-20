@@ -27,8 +27,8 @@ class LanguageAdmin(TranslatableAdmin):
             .prefetch_related("translations")
             .translated()
             .annotate(Count("guardians"))
-            .annotate(has_code=Count("alpha_3_code"))  # to order null codes as first
-            .order_by("has_code", "translations__name", "id")
+            .with_is_special()
+            .order_by("-is_special", "translations__name", "id")  # special first
         )
 
     @admin.display(description=_("Finnish"))

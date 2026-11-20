@@ -27,6 +27,11 @@ def get_serialized_languages():
     return ret
 
 
+@pytest.fixture(autouse=True)
+def delete_migrated_languages(db):
+    Language.objects.all().delete()
+
+
 @pytest.fixture
 def initial_language():
     return Language.objects.create(alpha_3_code="fin", name="INITIAL Finnish")
