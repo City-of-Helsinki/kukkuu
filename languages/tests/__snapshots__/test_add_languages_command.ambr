@@ -167,6 +167,11 @@
       'fi': 'ukraina',
       'sv': 'Ukrainska',
     }),
+    'und': dict({
+      'en': 'Other language',
+      'fi': 'Muu kieli',
+      'sv': 'Annat språk',
+    }),
     'urd': dict({
       'en': 'Urdu',
       'fi': 'urdu',
@@ -181,11 +186,6 @@
       'en': 'Chinese',
       'fi': 'kiina',
       'sv': 'Kinesiska',
-    }),
-    None: dict({
-      'en': 'Other language',
-      'fi': 'muu kieli',
-      'sv': 'Annat språk',
     }),
   })
 # ---

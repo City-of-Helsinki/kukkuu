@@ -2,7 +2,6 @@ import uuid
 
 import factory
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 
 from common.mixins import SaveAfterPostGenerationMixin
 from languages.models import Language
@@ -41,7 +40,6 @@ class GuardianFactory(SaveAfterPostGenerationMixin, factory.django.DjangoModelFa
     @factory.post_generation
     def languages_spoken_at_home(self, created, extracted, **kwargs):
         if languages_spoken_at_home := extracted:
-            filters = Q(alpha_3_code__in=languages_spoken_at_home)
-            if None in languages_spoken_at_home:
-                filters |= Q(alpha_3_code=None)
-            self.languages_spoken_at_home.set(Language.objects.filter(filters))
+            self.languages_spoken_at_home.set(
+                Language.objects.filter(alpha_3_code__in=languages_spoken_at_home)
+            )
