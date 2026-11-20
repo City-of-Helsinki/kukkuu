@@ -8,7 +8,7 @@ from helsinki_gdpr.models import SerializableMixin
 
 from children.models import Child
 from events.models import Occurrence
-from events.utils import send_event_notifications_to_guardians
+from events.notification_service import send_event_notifications_to_guardians
 from kukkuu.consts import OCCURRENCE_IS_NOT_FULL_ERROR
 from subscriptions.consts import NotificationType
 

@@ -9,10 +9,12 @@
 
     <p>{{ event_group.description }}</p>
 
+    {% if event_group_url is defined and event_group_url %}
     <p>
       Anmäl dig och läs mer på:
       <a href="{{ event_group_url }}">Anmäl dig</a>
     </p>
+    {% endif %}
 
     <h2>Kulturens fadderbarn</h2>
     <p>

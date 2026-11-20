@@ -33,10 +33,6 @@ from common.utils import get_translations_dict, year_of
 from events.consts import MIN_SEATS_PER_ENROLMENT, NotificationType
 from events.enums import EnrolmentDeniedReason
 from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
-from events.utils import (
-    send_event_group_notifications_to_guardians,
-    send_event_notifications_to_guardians,
-)
 from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
     EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
@@ -287,7 +283,9 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
             "The sending of the event group publishing notification "
             "will be executed in background!"
         )
-        send_event_group_notifications_to_guardians(*args, **kwargs)
+        notification_service.send_event_group_notifications_to_guardians(
+            *args, **kwargs
+        )
 
     def publish(self, *, registration_opens_at, send_notifications=True):
         """
@@ -719,7 +717,7 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             "The sending of the event publishing notification "
             "will be executed in background!"
         )
-        send_event_notifications_to_guardians(*args, **kwargs)
+        notification_service.send_event_notifications_to_guardians(*args, **kwargs)
 
     def publish(self, *, registration_opens_at, send_notifications=True):
         from events.services import validate_registration_opens_at
@@ -1038,7 +1036,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
 
             super().delete(*args, **kwargs)
 
-            send_event_notifications_to_guardians(
+            notification_service.send_event_notifications_to_guardians(
                 self.event,
                 NotificationType.OCCURRENCE_CANCELLED,
                 children,
@@ -1354,7 +1352,7 @@ class Enrolment(TimestampedModel, SerializableMixin):
         occurrence = self.occurrence
         self.delete()
 
-        send_event_notifications_to_guardians(
+        notification_service.send_event_notifications_to_guardians(
             occurrence.event,
             NotificationType.OCCURRENCE_UNENROLMENT,
             child,
@@ -1405,7 +1403,7 @@ class Enrolment(TimestampedModel, SerializableMixin):
         self.feedback_notification_sent_at = timezone.now()
         self.save()
 
-        send_event_notifications_to_guardians(
+        notification_service.send_event_notifications_to_guardians(
             self.occurrence.event,
             NotificationType.OCCURRENCE_FEEDBACK,
             self.child,
