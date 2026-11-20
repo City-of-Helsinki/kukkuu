@@ -64,8 +64,8 @@ class ChildSerializer(serializers.ModelSerializer):
     birthyear = serializers.SerializerMethodField()
     contact_language = serializers.SerializerMethodField()
     languages_spoken_at_home = serializers.SerializerMethodField(
-        help_text="Array of ISO 639-3 (language) or ISO 639-5 (language family) "
-        "alpha-3 codes. Value `__OTHER__` means any other language."  # noqa
+        help_text="Array of ISO 639-3 alpha-3 codes. "
+        "Value `__OTHER__` means any other language."
     )
     is_obsolete = serializers.SerializerMethodField(
         help_text="Are all the child's guardian user instances marked as obsolete?"
