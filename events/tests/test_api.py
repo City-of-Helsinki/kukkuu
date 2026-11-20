@@ -11,6 +11,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.utils import timezone, translation
 from django.utils.timezone import now
+from django_ilmoitin.dummy_context import dummy_context
+from django_ilmoitin.models import NotificationTemplate
+from django_ilmoitin.utils import render_notification_template
 from freezegun import freeze_time
 from graphql_relay import to_global_id
 from guardian.shortcuts import assign_perm
@@ -21,6 +24,7 @@ from children.factories import ChildWithGuardianFactory
 from children.models import Child
 from common.tests.utils import assert_match_error_code, assert_permission_denied
 from common.utils import get_global_id
+from events.consts import NotificationType
 from events.factories import (
     EnrolmentFactory,
     EventFactory,
@@ -57,7 +61,10 @@ from events.tests.mutations import (
 from events.tests.queries import (
     CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
     CAN_CHILD_ENROLL_EVENT_QUERY,
+    CHILD_UPCOMING_EVENT_GROUP_INVITATION_MESSAGE_QUERY,
     EVENT_GROUP_EVENTS_FILTER_QUERY,
+    EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+    EVENT_GROUP_INVITATION_MESSAGE_WITH_FORMAT_QUERY,
     EVENT_GROUP_QUERY,
     EVENT_OCCURRENCES_ACCESSIBILITIES_QUERY,
     EVENT_QUERY,
@@ -106,6 +113,7 @@ from kukkuu.consts import (
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
+from notification_importers.notification_importer import NotificationFileImporter
 from projects.factories import ProjectFactory
 from projects.models import Project, ProjectPermission
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
@@ -4205,3 +4213,219 @@ def test_update_occurrence_mutation_syncs_back_to_event(
     event.refresh_from_db()
     assert event.ticket_system_end_time.isoformat().startswith("2025-06-06T18:00:00")
     assert event.ticket_system_url == "https://example.com/from-occ"
+
+
+def test_event_group_invitation_message_with_notification_template(
+    guardian_api_client, child_with_user_guardian, future
+):
+    NotificationFileImporter().create_missing_notifications()
+
+    event_group = EventGroupFactory(
+        project=child_with_user_guardian.project,
+        published_at=now(),
+        description="Kevään 2026 kummitapahtumat ovat täällä!",
+    )
+    event = EventFactory(
+        project=child_with_user_guardian.project,
+        event_group=event_group,
+        published_at=now(),
+    )
+    OccurrenceFactory(event=event, time=future)
+
+    # Default (TEXT) format via eventGroup query
+    executed = guardian_api_client.execute(
+        EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+        variables={"id": get_global_id(event_group)},
+    )
+    assert "errors" not in executed
+    invitation_message = executed["data"]["eventGroup"]["invitationMessage"]
+    assert invitation_message is not None
+    assert all(
+        expected in invitation_message
+        for expected in (
+            "Hei Kulttuurin kummilapsi!",
+            "Kevään 2026 kummitapahtumat ovat täällä!",
+        )
+    )
+    assert all(
+        excluded not in invitation_message
+        for excluded in (
+            "Peruuta viestien tilaus",
+            "kummilapset.hel.fi",
+            "kulttuurin.kummilapset@hel.fi",
+            "<h1>",
+            "<p>",
+            "<a ",
+        )
+    )
+
+    # Explicit HTML format
+    executed_html = guardian_api_client.execute(
+        EVENT_GROUP_INVITATION_MESSAGE_WITH_FORMAT_QUERY,
+        variables={"id": get_global_id(event_group), "format": "HTML"},
+    )
+    assert "errors" not in executed_html
+    html_message = executed_html["data"]["eventGroup"]["invitationMessage"]
+    assert "<h1>Hei Kulttuurin kummilapsi!</h1>" in html_message
+    assert "Kevään 2026 kummitapahtumat ovat täällä!" in html_message
+    assert all(
+        excluded not in html_message
+        for excluded in (
+            "Peruuta viestien tilaus",
+            "<address>",
+            "kummilapset.hel.fi",
+            "kulttuurin.kummilapset@hel.fi",
+        )
+    )
+
+    # Via child.upcomingEventsAndEventGroups union
+    executed_child = guardian_api_client.execute(
+        CHILD_UPCOMING_EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+        variables={"id": get_global_id(child_with_user_guardian)},
+    )
+    assert "errors" not in executed_child
+    edges = executed_child["data"]["child"]["upcomingEventsAndEventGroups"]["edges"]
+    assert len(edges) == 1
+    assert edges[0]["node"]["invitationMessage"] == invitation_message
+
+
+@pytest.mark.parametrize(
+    "accept_language,expected_greeting,expected_description,excluded_unsubscribe",
+    [
+        (
+            "fi",
+            "Hei Kulttuurin kummilapsi!",
+            "Suomenkielinen kutsukuvaus",
+            "Peruuta viestien tilaus",
+        ),
+        (
+            "sv",
+            "Bästa Kulturens fadderbarn!",
+            "Svenskspråkig inbjudningsbeskrivning",
+            "Avsluta prenumerationen",
+        ),
+        (
+            "en",
+            "Greetings Culture Kid!",
+            "English invitation description",
+            "Unsubscribe",
+        ),
+    ],
+)
+def test_event_group_invitation_message_follows_accept_language_header(
+    client,
+    guardian_api_client,
+    project,
+    accept_language,
+    expected_greeting,
+    expected_description,
+    excluded_unsubscribe,
+):
+    NotificationFileImporter().create_missing_notifications()
+
+    event_group = EventGroupFactory(project=project, published_at=now())
+    for lang_code, desc in (
+        ("fi", "Suomenkielinen kutsukuvaus"),
+        ("sv", "Svenskspråkig inbjudningsbeskrivning"),
+        ("en", "English invitation description"),
+    ):
+        with switch_language(event_group, lang_code):
+            event_group.description = desc
+            event_group.save()
+
+    client.force_login(guardian_api_client.user)
+    response = client.post(
+        "/graphql",
+        {
+            "query": EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+            "variables": {"id": get_global_id(event_group)},
+        },
+        content_type="application/json",
+        headers={"Accept-Language": accept_language},
+    )
+
+    data = response.json()
+    assert "errors" not in data
+    invitation_message = data["data"]["eventGroup"]["invitationMessage"]
+    assert expected_greeting in invitation_message
+    assert expected_description in invitation_message
+    assert excluded_unsubscribe not in invitation_message
+    assert "kummilapset.hel.fi" not in invitation_message
+    assert "kulttuurin.kummilapset@hel.fi" not in invitation_message
+    assert "<p>" not in invitation_message
+
+
+def test_event_group_invitation_message_fallback_without_notification_template(
+    guardian_api_client, project
+):
+    event_group_with_desc = EventGroupFactory(
+        project=project,
+        published_at=now(),
+        description="Fallback description text",
+    )
+    executed = guardian_api_client.execute(
+        EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+        variables={"id": get_global_id(event_group_with_desc)},
+    )
+    assert "errors" not in executed
+    assert (
+        executed["data"]["eventGroup"]["invitationMessage"]
+        == "Fallback description text"
+    )
+
+    event_group_empty = EventGroupFactory(
+        project=project,
+        published_at=now(),
+        description="",
+    )
+    executed_empty = guardian_api_client.execute(
+        EVENT_GROUP_INVITATION_MESSAGE_QUERY,
+        variables={"id": get_global_id(event_group_empty)},
+    )
+    assert "errors" not in executed_empty
+    assert executed_empty["data"]["eventGroup"]["invitationMessage"] is None
+
+
+@pytest.mark.parametrize(
+    "notification_type",
+    [NotificationType.EVENT_GROUP_PUBLISHED, NotificationType.EVENT_PUBLISHED],
+)
+@pytest.mark.parametrize(
+    "language_code,expected_unsubscribe",
+    [
+        ("fi", "Peruuta viestien tilaus"),
+        ("sv", "Avsluta prenumerationen"),
+        ("en", "Unsubscribe"),
+    ],
+)
+def test_published_templates_respect_is_sending_email_flag(
+    notification_type, language_code, expected_unsubscribe
+):
+    NotificationFileImporter().create_missing_notifications()
+    template = NotificationTemplate.objects.get(type=notification_type)
+    base_context = dummy_context.get(notification_type)
+
+    # When sending email (is_sending_email=True), footer address & unsubscribe are included
+    rendered_email = render_notification_template(
+        template,
+        context={**base_context, "is_sending_email": True},
+        language_code=language_code,
+    )
+    assert "<address>" in rendered_email.body_html
+    assert "kummilapset.hel.fi" in rendered_email.body_html
+    assert "kulttuurin.kummilapset@hel.fi" in rendered_email.body_text
+    assert expected_unsubscribe in rendered_email.body_html
+    assert expected_unsubscribe in rendered_email.body_text
+
+    # When not sending email (is_sending_email=False), footer address & unsubscribe are omitted
+    rendered_ui = render_notification_template(
+        template,
+        context={**base_context, "is_sending_email": False},
+        language_code=language_code,
+    )
+    assert "<address>" not in rendered_ui.body_html
+    assert "kummilapset.hel.fi" not in rendered_ui.body_html
+    assert "kummilapset.hel.fi" not in rendered_ui.body_text
+    assert "kulttuurin.kummilapset@hel.fi" not in rendered_ui.body_text
+    assert expected_unsubscribe not in rendered_ui.body_html
+    assert expected_unsubscribe not in rendered_ui.body_text

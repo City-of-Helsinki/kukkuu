@@ -27,6 +27,7 @@
       the City of Helsinki Culture and Leisure Division.
     </p>
 
+    {% if is_sending_email %}
     <address>
       <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
       <a href="mailto:kulttuurin.kummilapset@hel.fi"
@@ -34,9 +35,12 @@
       >
     </address>
 
+    {% if unsubscribe_url %}
     <p>
       I no longer want to receive email about the publication of events:
       <a href="{{unsubscribe_url}}">Unsubscribe</a>
     </p>
+    {% endif %}
+    {% endif %}
   </body>
 </html>

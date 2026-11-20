@@ -1,13 +1,20 @@
+import html
 import logging
 import os
+import re
 from copy import deepcopy
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
+from django_ilmoitin.dummy_context import dummy_context
+from django_ilmoitin.models import NotificationTemplate, NotificationTemplateException
+from django_ilmoitin.utils import RenderedTemplate, render_notification_template
 from graphql_relay import from_global_id
+from parler.utils.context import switch_language
 
 from common.utils import (
     check_can_user_administer,
@@ -16,6 +23,8 @@ from common.utils import (
     update_object,
     update_object_with_translations,
 )
+from events.consts import NotificationType
+from events.enums import InvitationMessageFormat
 from events.models import Event, EventGroup, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import (
@@ -529,6 +538,84 @@ class EventAPIService:
         )
 
         return event_group
+
+    @staticmethod
+    def _render_invitation_template(
+        event_group: EventGroup, language: str
+    ) -> RenderedTemplate | None:
+        """
+        Render the EVENT_GROUP_PUBLISHED notification template for the given
+        event group and language without an unsubscribe URL.
+        """
+        template = NotificationTemplate.objects.filter(
+            type=NotificationType.EVENT_GROUP_PUBLISHED
+        ).first()
+        if not template:
+            return None
+
+        context = {
+            **(dummy_context.get(NotificationType.EVENT_GROUP_PUBLISHED) or {}),
+            "event_group": event_group,
+            "is_sending_email": False,
+            "unsubscribe_url": None,
+        }
+        try:
+            return render_notification_template(
+                template, context=context, language_code=language
+            )
+        except (NotificationTemplateException, ObjectDoesNotExist):
+            return None
+
+    @staticmethod
+    def _format_invitation_html(rendered: RenderedTemplate) -> str:
+        """
+        Return the trimmed HTML body of a rendered invitation notification.
+        """
+        return rendered.body_html.strip()
+
+    @staticmethod
+    def _format_invitation_text(rendered: RenderedTemplate) -> str:
+        """
+        Return the plain-text body of a rendered invitation notification with
+        HTML entities unescaped and wrapped lines collapsed per paragraph.
+        """
+        paragraphs = [
+            " ".join(paragraph.split())
+            for paragraph in re.split(r"\n\s*\n", html.unescape(rendered.body_text))
+        ]
+        return "\n".join(p for p in paragraphs if p)
+
+    @classmethod
+    def get_invitation_message(
+        cls,
+        event_group: EventGroup,
+        *,
+        message_format: InvitationMessageFormat = InvitationMessageFormat.TEXT,
+        language: str | None = None,
+    ) -> str | None:
+        """
+        Render the event group's invitation letter from the EVENT_GROUP_PUBLISHED
+        notification template in the requested format (TEXT or HTML).
+        Falls back to event_group.description (or None if empty) when no template
+        exists or rendering fails.
+        """
+        lang = (language or get_language() or settings.LANGUAGE_CODE).split("-")[0]
+        if lang not in settings.PARLER_SUPPORTED_LANGUAGE_CODES:
+            lang = settings.LANGUAGE_CODE
+
+        with switch_language(event_group, lang):
+            fallback = (
+                event_group.safe_translation_getter("description", any_language=True)
+                or None
+            )
+            rendered = cls._render_invitation_template(event_group, lang)
+            if not rendered:
+                return fallback
+
+            if message_format == InvitationMessageFormat.HTML:
+                return cls._format_invitation_html(rendered) or fallback
+
+            return cls._format_invitation_text(rendered) or fallback
 
 
 class OccurrenceAPIService:
