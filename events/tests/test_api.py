@@ -4251,6 +4251,7 @@ def test_event_group_invitation_message_with_notification_template(
         excluded not in invitation_message
         for excluded in (
             "Peruuta viestien tilaus",
+            "Ilmoittaudu ja lue lisää osoitteessa:",
             "kummilapset.hel.fi",
             "kulttuurin.kummilapset@hel.fi",
             "<h1>",
@@ -4266,12 +4267,18 @@ def test_event_group_invitation_message_with_notification_template(
     )
     assert "errors" not in executed_html
     html_message = executed_html["data"]["eventGroup"]["invitationMessage"]
+    dummy_event_group_url = dummy_context.get(NotificationType.EVENT_GROUP_PUBLISHED)[
+        "event_group_url"
+    ]
     assert "<h1>Hei Kulttuurin kummilapsi!</h1>" in html_message
     assert "Kevään 2026 kummitapahtumat ovat täällä!" in html_message
     assert all(
         excluded not in html_message
         for excluded in (
             "Peruuta viestien tilaus",
+            "Ilmoittaudu ja lue lisää osoitteessa:",
+            dummy_event_group_url,
+            "<a ",
             "<address>",
             "kummilapset.hel.fi",
             "kulttuurin.kummilapset@hel.fi",
@@ -4384,6 +4391,28 @@ def test_event_group_invitation_message_fallback_without_notification_template(
     )
     assert "errors" not in executed_empty
     assert executed_empty["data"]["eventGroup"]["invitationMessage"] is None
+
+
+def test_event_group_invitation_message_omits_dummy_event_group_url(
+    guardian_api_client, project
+):
+    NotificationTemplate.objects.language("fi").create(
+        type=NotificationType.EVENT_GROUP_PUBLISHED,
+        subject="Subject",
+        body_html='<p><a href="{{ event_group_url }}">Sign up</a></p>',
+        body_text="{{ event_group_url }}",
+    )
+    event_group = EventGroupFactory(
+        project=project,
+        published_at=now(),
+        description="Fallback description",
+    )
+    executed = guardian_api_client.execute(
+        EVENT_GROUP_INVITATION_MESSAGE_WITH_FORMAT_QUERY,
+        variables={"id": get_global_id(event_group), "format": "HTML"},
+    )
+    assert "errors" not in executed
+    assert executed["data"]["eventGroup"]["invitationMessage"] == "Fallback description"
 
 
 @pytest.mark.parametrize(

@@ -9,10 +9,12 @@
 
     <p>{{ event_group.description }}</p>
 
+    {% if event_group_url is defined and event_group_url %}
     <p>
       Sign up and read more in our service:
       <a href="{{ event_group_url }}">Sign up</a>
     </p>
+    {% endif %}
 
     <h2>Culture Kids</h2>
     <p>

@@ -25,13 +25,14 @@ from events.factories import (
     OccurrenceFactory,
 )
 from events.models import Enrolment, Occurrence
-from events.notifications import NotificationType
-from events.tests.mutations import PUBLISH_EVENT_MUTATION, UNENROL_OCCURRENCE_MUTATION
-from events.tests.test_api import PUBLISH_EVENT_VARIABLES
-from events.utils import (
+from events.notification_service import (
     send_event_group_notifications_to_guardians,
     send_event_notifications_to_guardians,
 )
+from events.notifications import NotificationType
+from events.tests.mutations import PUBLISH_EVENT_MUTATION, UNENROL_OCCURRENCE_MUTATION
+from events.tests.test_api import PUBLISH_EVENT_VARIABLES
+from events.utils import get_event_group_ui_url
 from notification_importers.notification_importer import NotificationFileImporter
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
@@ -721,3 +722,5 @@ def test_send_event_group_published_notification_includes_email_footer(
     assert "kummilapset.hel.fi" in sent_mail.body
     assert "kulttuurin.kummilapset@hel.fi" in sent_mail.body
     assert expected_unsubscribe in sent_mail.body
+    expected_url = get_event_group_ui_url(event_group, child, language)
+    assert any(expected_url in content for content, _ in sent_mail.alternatives)

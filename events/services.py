@@ -545,7 +545,7 @@ class EventAPIService:
     ) -> RenderedTemplate | None:
         """
         Render the EVENT_GROUP_PUBLISHED notification template for the given
-        event group and language without an unsubscribe URL.
+        event group and language without unsubscribe or per-child event group URLs.
         """
         template = NotificationTemplate.objects.filter(
             type=NotificationType.EVENT_GROUP_PUBLISHED
@@ -559,6 +559,7 @@ class EventAPIService:
             "is_sending_email": False,
             "unsubscribe_url": None,
         }
+        context.pop("event_group_url", None)
         try:
             return render_notification_template(
                 template, context=context, language_code=language
