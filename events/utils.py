@@ -45,6 +45,7 @@ def send_event_notifications_to_guardians(
                     "event_url": get_event_ui_url(event, child, guardian.language),
                     "localtime": timezone.template_localtime,
                     "get_global_id": get_global_id,
+                    "is_sending_email": True,
                     "unsubscribe_url": get_communication_unsubscribe_ui_url(
                         guardian, guardian.language
                     ),
@@ -118,6 +119,7 @@ def send_event_group_notifications_to_guardians(
                         }
                         for event in event_group.events.language(guardian.language)
                     ],
+                    "is_sending_email": True,
                     "unsubscribe_url": get_communication_unsubscribe_ui_url(
                         guardian, guardian.language
                     ),

@@ -25,6 +25,7 @@
       stad.
     </p>
 
+    {% if is_sending_email %}
     <address>
       <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
       <a href="mailto:kulttuurin.kummilapset@hel.fi"
@@ -32,9 +33,12 @@
       >
     </address>
 
+    {% if unsubscribe_url %}
     <p>
       Jag vill inte längre få e-post om publiceringen av evenemang:
       <a href="{{unsubscribe_url}}">Avsluta prenumerationen</a>
     </p>
+    {% endif %}
+    {% endif %}
   </body>
 </html>

@@ -57,6 +57,7 @@ common_event_context = {
     "event_url": get_event_ui_url(event, child, guardian.language),
     "localtime": timezone.template_localtime,
     "get_global_id": get_global_id,
+    "is_sending_email": True,
     "unsubscribe_url": unsubscribe_url,
 }
 
@@ -92,6 +93,7 @@ dummy_context.update(
             ],
             "localtime": timezone.template_localtime,
             "get_global_id": get_global_id,
+            "is_sending_email": True,
             "unsubscribe_url": unsubscribe_url,
         },
     }

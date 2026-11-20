@@ -650,3 +650,45 @@ query EventsPagination($childId: ID!, $first: Int, $after: String) {
   }
 }
 """
+
+EVENT_GROUP_INVITATION_MESSAGE_QUERY = """
+query EventGroupInvitationMessage($id: ID!) {
+  eventGroup(id: $id) {
+    id
+    name
+    description
+    invitationMessage
+  }
+}
+"""
+
+EVENT_GROUP_INVITATION_MESSAGE_WITH_FORMAT_QUERY = """
+query EventGroupInvitationMessageWithFormat(
+  $id: ID!
+  $format: InvitationMessageFormat
+) {
+  eventGroup(id: $id) {
+    id
+    invitationMessage(format: $format)
+  }
+}
+"""
+
+CHILD_UPCOMING_EVENT_GROUP_INVITATION_MESSAGE_QUERY = """
+query ChildUpcomingEventGroupInvitationMessage($id: ID!) {
+  child(id: $id) {
+    upcomingEventsAndEventGroups {
+      edges {
+        node {
+          ... on EventGroupNode {
+            __typename
+            name
+            description
+            invitationMessage
+          }
+        }
+      }
+    }
+  }
+}
+"""

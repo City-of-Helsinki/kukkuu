@@ -28,6 +28,11 @@ from events.models import Enrolment, Occurrence
 from events.notifications import NotificationType
 from events.tests.mutations import PUBLISH_EVENT_MUTATION, UNENROL_OCCURRENCE_MUTATION
 from events.tests.test_api import PUBLISH_EVENT_VARIABLES
+from events.utils import (
+    send_event_group_notifications_to_guardians,
+    send_event_notifications_to_guardians,
+)
+from notification_importers.notification_importer import NotificationFileImporter
 from projects.factories import ProjectFactory
 from users.factories import GuardianFactory
 
@@ -646,3 +651,73 @@ def test_reminder_notification_instance_checks(
     already_sent_enrolment.send_reminder_notification(force)
 
     assert_mails_match_snapshot(snapshot)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "language,expected_unsubscribe",
+    [
+        ("fi", "Peruuta viestien tilaus"),
+        ("sv", "Avsluta prenumerationen"),
+        ("en", "Unsubscribe"),
+    ],
+)
+def test_send_event_published_notification_includes_email_footer(
+    mock_user_create_subscriptions_management_auth_token,
+    language,
+    expected_unsubscribe,
+):
+    NotificationFileImporter().create_missing_notifications()
+
+    project = ProjectFactory()
+    child = ChildWithGuardianFactory(
+        project=project,
+        relationship__guardian__language=language,
+        relationship__guardian__has_accepted_communication=True,
+    )
+    event = EventFactory(project=project, published_at=now())
+
+    send_event_notifications_to_guardians(
+        event, NotificationType.EVENT_PUBLISHED, [child]
+    )
+
+    assert len(mail.outbox) == 1
+    sent_mail = mail.outbox[0]
+    assert "kummilapset.hel.fi" in sent_mail.body
+    assert "kulttuurin.kummilapset@hel.fi" in sent_mail.body
+    assert expected_unsubscribe in sent_mail.body
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "language,expected_unsubscribe",
+    [
+        ("fi", "Peruuta viestien tilaus"),
+        ("sv", "Avsluta prenumerationen"),
+        ("en", "Unsubscribe"),
+    ],
+)
+def test_send_event_group_published_notification_includes_email_footer(
+    mock_user_create_subscriptions_management_auth_token,
+    language,
+    expected_unsubscribe,
+):
+    NotificationFileImporter().create_missing_notifications()
+
+    project = ProjectFactory()
+    child = ChildWithGuardianFactory(
+        project=project,
+        relationship__guardian__language=language,
+        relationship__guardian__has_accepted_communication=True,
+    )
+    event_group = EventGroupFactory(project=project, published_at=now())
+
+    send_event_group_notifications_to_guardians(
+        event_group, NotificationType.EVENT_GROUP_PUBLISHED, [child]
+    )
+
+    assert len(mail.outbox) == 1
+    sent_mail = mail.outbox[0]
+    assert "kummilapset.hel.fi" in sent_mail.body
+    assert "kulttuurin.kummilapset@hel.fi" in sent_mail.body
+    assert expected_unsubscribe in sent_mail.body

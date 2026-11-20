@@ -25,6 +25,7 @@
       Helsingin kulttuurin ja vapaa-ajan toimiala.
     </p>
 
+    {% if is_sending_email %}
     <address>
       <a href="https://kummilapset.hel.fi">kummilapset.hel.fi</a><br />
       <a href="mailto:kulttuurin.kummilapset@hel.fi"
@@ -32,9 +33,12 @@
       >
     </address>
 
+    {% if unsubscribe_url %}
     <p>
       En halua enää viestejä kummitapahtumien julkaisusta:
       <a href="{{unsubscribe_url}}">Peruuta viestien tilaus</a>
     </p>
+    {% endif %}
+    {% endif %}
   </body>
 </html>

@@ -36,7 +36,7 @@ from events.consts import (
     ENROLMENT_DENIED_REASON_TO_GRAPHQL_ERROR,
     MIN_SEATS_PER_ENROLMENT,
 )
-from events.enums import EnrolmentDeniedReason
+from events.enums import EnrolmentDeniedReason, InvitationMessageFormat
 from events.exceptions import (
     InvalidTicketSystemError,
     NoFreePasswordsError,
@@ -162,6 +162,7 @@ EnrolmentDeniedReasonEnum = graphene.Enum.from_enum(EnrolmentDeniedReason)
 ENROLMENT_DENIED_REASON_DESCRIPTION = (
     "Null if the child can enroll, otherwise a reason why not."
 )
+InvitationMessageFormatEnum = graphene.Enum.from_enum(InvitationMessageFormat)
 
 
 class EventTicketSystem(graphene.Interface):
@@ -469,6 +470,19 @@ class EventGroupNode(DjangoObjectType):
     description = graphene.String()
     short_description = graphene.String()
     image_alt_text = graphene.String()
+    invitation_message = graphene.String(
+        format=InvitationMessageFormatEnum(
+            default_value=InvitationMessageFormat.TEXT.value,
+            description=(
+                "Format of the invitation message. "
+                "Defaults to plain text without HTML tags."
+            ),
+        ),
+        description=(
+            "Invitation letter for the event group in the active language, "
+            "without email footer/unsubscribe notes."
+        ),
+    )
     can_child_enroll = graphene.Boolean(child_id=graphene.ID(required=True))
     enrolment_denied_reason = EnrolmentDeniedReasonEnum(
         child_id=graphene.ID(required=True),
@@ -525,6 +539,19 @@ class EventGroupNode(DjangoObjectType):
     def resolve_enrolment_denied_reason(self: EventGroup, info, **kwargs):
         child = ChildRequestCache.get_or_fetch(info, kwargs["child_id"])
         return self.get_enrolment_denied_reason(child)
+
+    def resolve_invitation_message(
+        self: EventGroup,
+        info,
+        format=InvitationMessageFormat.TEXT.value,
+        **kwargs,
+    ) -> Optional[str]:
+        message_format = InvitationMessageFormat(
+            getattr(format, "value", format) or InvitationMessageFormat.TEXT.value
+        )
+        return EventAPIService.get_invitation_message(
+            self, message_format=message_format
+        )
 
 
 class EventOrEventGroupUnion(graphene.Union):

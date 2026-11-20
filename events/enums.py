@@ -16,3 +16,8 @@ class EnrolmentDeniedReason(Enum):
     PAST_OCCURRENCE = "past_occurrence"
     REGISTRATION_NOT_OPEN = "registration_not_open"
     YEARLY_ENROLMENT_LIMIT_REACHED = "yearly_enrolment_limit_reached"
+
+
+class InvitationMessageFormat(Enum):
+    TEXT = "text"
+    HTML = "html"
