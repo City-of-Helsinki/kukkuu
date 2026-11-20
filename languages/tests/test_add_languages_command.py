@@ -4,7 +4,7 @@ import pytest
 from django.core.management import call_command
 
 from kukkuu.settings import PARLER_SUPPORTED_LANGUAGE_CODES
-from languages.models import Language
+from languages.models import Language, LanguageNameNotFoundError
 
 
 def call_command_and_assert_output(snapshot, *args, **kwargs):
@@ -27,6 +27,11 @@ def get_serialized_languages():
     return ret
 
 
+@pytest.fixture(autouse=True)
+def delete_migrated_languages(db):
+    Language.objects.all().delete()
+
+
 @pytest.fixture
 def initial_language():
     return Language.objects.create(alpha_3_code="fin", name="INITIAL Finnish")
@@ -45,11 +50,24 @@ def test_add_default_languages(snapshot):
 
 @pytest.mark.django_db
 def test_add_languages(snapshot):
-    call_command_and_assert_output(snapshot, "abd,agh")
+    call_command_and_assert_output(snapshot, "afr,zul")
     snapshot.assert_match(get_serialized_languages())
 
 
 @pytest.mark.django_db
 def test_add_languages_and_flush(snapshot, initial_language):
-    call_command_and_assert_output(snapshot, "abd,agh", "--flush")
+    call_command_and_assert_output(snapshot, "afr,zul", "--flush")
+    snapshot.assert_match(get_serialized_languages())
+
+
+@pytest.mark.django_db
+def test_add_language_without_cldr_names_raises_error():
+    with pytest.raises(LanguageNameNotFoundError, match='"abd"'):
+        call_command("add_languages", "abd", stdout=StringIO())
+    assert not Language.objects.filter(alpha_3_code="abd").exists()
+
+
+@pytest.mark.django_db
+def test_add_languages_with_english_fallback(snapshot):
+    call_command_and_assert_output(snapshot, "abd,fin", "--use-english-fallback")
     snapshot.assert_match(get_serialized_languages())

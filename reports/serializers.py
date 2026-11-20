@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from children.models import Child
 from events.models import Event, EventGroup, Occurrence
+from languages.consts import OTHER_LANGUAGE_ALPHA_3_CODE
 from projects.models import Project
 from reports.consts import (
     CONTACT_LANGUAGE_PRIORITIES,
@@ -63,8 +64,8 @@ class ChildSerializer(serializers.ModelSerializer):
     birthyear = serializers.SerializerMethodField()
     contact_language = serializers.SerializerMethodField()
     languages_spoken_at_home = serializers.SerializerMethodField(
-        help_text="Array of ISO 639-3 (language) or ISO 639-5 (language family) "
-        "alpha-3 codes. Value `__OTHER__` means any other language."  # noqa
+        help_text="Array of ISO 639-3 alpha-3 codes. "
+        "Value `__OTHER__` means any other language."
     )
     is_obsolete = serializers.SerializerMethodField(
         help_text="Are all the child's guardian user instances marked as obsolete?"
@@ -119,7 +120,11 @@ class ChildSerializer(serializers.ModelSerializer):
     )
     def get_languages_spoken_at_home(self, obj: Child) -> List[Optional[str]]:
         return [
-            lang.alpha_3_code or OTHER_LANGUAGE_API_NAME
+            (
+                OTHER_LANGUAGE_API_NAME
+                if lang.alpha_3_code == OTHER_LANGUAGE_ALPHA_3_CODE
+                else lang.alpha_3_code
+            )
             for lang in obj.guardians.all()[0].prefetched_languages_spoken_at_home
         ]
 

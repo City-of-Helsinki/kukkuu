@@ -75,8 +75,9 @@ def past():
 
 @pytest.fixture
 def languages():
+    Language.objects.all().delete()
     return [
-        Language.objects.create_from_language_code(code)
+        Language.objects.create_from_language_code(code).language
         for code in ("fin", "swe", "eng")
     ] + [Language.objects.create_option_other()]
 

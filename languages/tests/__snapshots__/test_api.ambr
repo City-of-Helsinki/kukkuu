@@ -16,7 +16,7 @@
           }),
           dict({
             'languageCode': 'SV',
-            'name': 'Finska',
+            'name': 'finska',
           }),
         ]),
       }),
@@ -43,7 +43,7 @@
                 }),
                 dict({
                   'languageCode': 'SV',
-                  'name': 'Engelska',
+                  'name': 'engelska',
                 }),
               ]),
             }),
@@ -63,7 +63,7 @@
                 }),
                 dict({
                   'languageCode': 'SV',
-                  'name': 'Svenska',
+                  'name': 'svenska',
                 }),
               ]),
             }),
@@ -83,7 +83,7 @@
                 }),
                 dict({
                   'languageCode': 'SV',
-                  'name': 'Finska',
+                  'name': 'finska',
                 }),
               ]),
             }),

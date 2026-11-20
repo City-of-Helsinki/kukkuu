@@ -8,7 +8,7 @@ DEFAULT_LANGUAGES_FILE = "data/default_languages.csv"
 
 
 class Command(BaseCommand):
-    help = "Adds languages and language families by their ISO 639-3 or ISO 639-5 alpha-3 codes."  # noqa: E501
+    help = "Adds languages by their ISO 639-3 alpha-3 codes."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -23,6 +23,14 @@ class Command(BaseCommand):
             help=(
                 f'Add default languages provided in file "{DEFAULT_LANGUAGES_FILE}" '
                 'and special language "Other".'
+            ),
+        )
+        parser.add_argument(
+            "--use-english-fallback",
+            action="store_true",
+            help=(
+                "Use the English name for the names that Unicode CLDR does not have, "
+                "instead of failing."
             ),
         )
         parser.add_argument(
@@ -60,12 +68,23 @@ class Command(BaseCommand):
         for code in codes:
             code = code.strip()
             try:
-                language = Language.objects.create_from_language_code(code)
-                self.stdout.write(f"Created {language}")
+                created = Language.objects.create_from_language_code(
+                    code, use_english_fallback=options["use_english_fallback"]
+                )
             except LanguageAlreadyExistsError:
                 language_str = (
                     Language.objects.filter(alpha_3_code=code).first() or code
                 )
                 self.stdout.write(f"{language_str} already exists")
+            else:
+                self.stdout.write(f"Created {created.language}")
+                if created.fallback_language_codes:
+                    fallback_language_codes = ", ".join(created.fallback_language_codes)
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Used the English name for {code} "
+                            f"in language(s): {fallback_language_codes}"
+                        )
+                    )
 
         self.stdout.write(self.style.SUCCESS("All done!"))
