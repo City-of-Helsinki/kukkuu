@@ -22,7 +22,7 @@ class Command(BaseCommand):
             action="store_true",
             help=(
                 f'Add default languages provided in file "{DEFAULT_LANGUAGES_FILE}" '
-                'and special language "Other".'
+                'and special languages "Other" and "Speechless".'
             ),
         )
         parser.add_argument(
@@ -55,12 +55,7 @@ class Command(BaseCommand):
         if options["default"]:
             with open(DEFAULT_LANGUAGES_FILE, "rt") as f:
                 codes.extend(f.read().split(","))
-
-            try:
-                Language.objects.create_option_other()
-                self.stdout.write('Created special language "Other"')
-            except LanguageAlreadyExistsError:
-                self.stdout.write('Special language "Other" already exists')
+            self._create_special_languages()
 
         if options["codes"] is not None:
             codes.extend(options["codes"].split(","))
@@ -88,3 +83,14 @@ class Command(BaseCommand):
                     )
 
         self.stdout.write(self.style.SUCCESS("All done!"))
+
+    def _create_special_languages(self):
+        for special_name, create_special_language in (
+            ("Other", Language.objects.create_option_other),
+            ("Speechless", Language.objects.create_option_speechless),
+        ):
+            try:
+                create_special_language()
+                self.stdout.write(f'Created special language "{special_name}"')
+            except LanguageAlreadyExistsError:
+                self.stdout.write(f'Special language "{special_name}" already exists')

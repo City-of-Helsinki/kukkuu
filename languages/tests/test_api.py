@@ -63,8 +63,8 @@ def test_language_query(snapshot, api_client):
 
 
 def test_languages_query_orders_special_languages_last(api_client):
-    Language.objects.create_from_language_code("zxx")
     Language.objects.create_from_language_code("ara")
+    Language.objects.create_option_speechless()
     Language.objects.create_option_other()
 
     executed = api_client.execute(LANGUAGES_QUERY)

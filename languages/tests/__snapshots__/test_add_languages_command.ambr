@@ -2,6 +2,7 @@
 # name: test_add_default_languages
   '''
   Created special language "Other"
+  Created special language "Speechless"
   Created Arabic (ara)
   Created Bengali (ben)
   Created German (deu)
@@ -198,6 +199,11 @@
       'en': 'Chinese',
       'fi': 'kiina',
       'sv': 'kinesiska',
+    }),
+    'zxx': dict({
+      'en': 'Speechless',
+      'fi': 'Sanaton',
+      'sv': 'Ordlös',
     }),
   })
 # ---
