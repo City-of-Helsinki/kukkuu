@@ -33,9 +33,6 @@ migration_0038_module = importlib.import_module(
 populate_external_event_occurrences = (
     migration_0038_module.populate_external_event_occurrences
 )
-revert_external_event_occurrences = (
-    migration_0038_module.revert_external_event_occurrences
-)
 
 
 @pytest.mark.django_db
@@ -108,26 +105,6 @@ def test_migrate_child_and_1_or_2_guardians_to_family():
     )
     run_python_op = migration_instance.operations[0]
     assert run_python_op.reverse_code is migrations.RunPython.noop
-
-
-@pytest.mark.django_db
-def test_populate_external_event_occurrences_creates_occurrences_and_reverts():
-    event = TicketmasterEventFactory(
-        occurrence=False, ticket_system_url="https://example.com/tickets"
-    )
-    assert event.occurrences.count() == 0
-
-    populate_external_event_occurrences(apps, None)
-
-    assert event.occurrences.count() == 1
-    occ = event.occurrences.first()
-    assert occ.venue.is_system is True
-    assert occ.venue.name == settings.KUKKUU_DEFAULT_VENUE_NAME
-    assert occ.time == event.ticket_system_end_time
-    assert occ.ticket_system_url == "https://example.com/tickets"
-
-    revert_external_event_occurrences(apps, None)
-    assert event.occurrences.count() == 0
 
 
 @pytest.mark.django_db

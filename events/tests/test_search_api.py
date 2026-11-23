@@ -25,8 +25,13 @@ from events.tests.queries import (
     EVENTS_SEARCH_VS_EVENT_OCCURRENCES_QUERY_TEMPLATE,
 )
 from kukkuu.consts import API_USAGE_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
+from languages.models import Language
 from tags.factories import ThemePathFactory
 from users.factories import GuardianFactory
+
+
+def get_languages(*alpha_3_codes):
+    return [Language.objects.get(alpha_3_code=code) for code in alpha_3_codes]
 
 
 @pytest.mark.django_db
@@ -299,7 +304,7 @@ def test_events_search_unpublished_and_other_project_never_returned(
     [
         {"availableOnly": True},
         {"startDate": "2026-11-10"},
-        {"languages": ["fi"]},
+        {"languages": ["fin"]},
         {"themePaths": ["music"]},
         {"accessibility": ["wheelchair"]},
         {"familyOnly": True},
@@ -352,12 +357,12 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
             "themePaths matches only events tagged with the circus theme path",
         ),
         (
-            {"languages": ["SV"]},
+            {"languages": ["SWE"]},
             [0, 1],
             "languages matches upcoming occurrences in Swedish (case-insensitive)",
         ),
         (
-            {"startDateOffset": 10, "languages": ["sv"]},
+            {"startDateOffset": 10, "languages": ["swe"]},
             [0],
             "startDate + languages requires a single occurrence satisfying both",
         ),
@@ -397,7 +402,7 @@ def test_events_search_filters_parametrized(
         theme_paths=[tp_music],
         name="Match",
     )
-    OccurrenceFactory(event=ev_match, time=day_15, occurrence_language="sv")
+    OccurrenceFactory(event=ev_match, time=day_15, languages=get_languages("swe"))
 
     ev_split = EventFactory(
         project=project,
@@ -406,8 +411,8 @@ def test_events_search_filters_parametrized(
         theme_paths=[tp_music],
         name="Split",
     )
-    OccurrenceFactory(event=ev_split, time=day_5, occurrence_language="sv")
-    OccurrenceFactory(event=ev_split, time=day_15, occurrence_language="fi")
+    OccurrenceFactory(event=ev_split, time=day_5, languages=get_languages("swe"))
+    OccurrenceFactory(event=ev_split, time=day_15, languages=get_languages("fin"))
 
     ev_past_sv = EventFactory(
         project=project,
@@ -416,8 +421,8 @@ def test_events_search_filters_parametrized(
         theme_paths=[tp_circus],
         name="Past SV",
     )
-    OccurrenceFactory(event=ev_past_sv, time=past, occurrence_language="sv")
-    OccurrenceFactory(event=ev_past_sv, time=day_15, occurrence_language="fi")
+    OccurrenceFactory(event=ev_past_sv, time=past, languages=get_languages("swe"))
+    OccurrenceFactory(event=ev_past_sv, time=day_15, languages=get_languages("fin"))
 
     events = [ev_match, ev_split, ev_past_sv]
     expected_ids = {get_global_id(events[i]) for i in expected_indices}
@@ -451,10 +456,10 @@ def test_events_search_returns_all_upcoming_occurrences_on_node(
         participants_per_invite=Event.FAMILY,
     )
     OccurrenceFactory(
-        event=event, time=now + timedelta(days=5), occurrence_language="sv"
+        event=event, time=now + timedelta(days=5), languages=get_languages("swe")
     )
     OccurrenceFactory(
-        event=event, time=now + timedelta(days=15), occurrence_language="fi"
+        event=event, time=now + timedelta(days=15), languages=get_languages("fin")
     )
 
     executed = guardian_api_client.execute(
@@ -478,7 +483,7 @@ def test_events_search_returns_all_upcoming_occurrences_on_node(
         # These are not served from the prefetched occurrences, so they check the
         # fallback to the queryset.
         ("upcoming: false", 6),
-        ('upcoming: true, occurrenceLanguage: "fi"', 2),
+        ('upcoming: true, languages: ["fin"]', 2),
     ],
 )
 def test_events_search_occurrences_match_event_occurrences(
@@ -507,9 +512,15 @@ def test_events_search_occurrences_match_event_occurrences(
         OccurrenceFactory(
             event=event,
             time=future + timedelta(days=days),
-            occurrence_language=language,
+            languages=get_languages(language),
         )
-        for days, language in [(3, "fi"), (1, "sv"), (4, "en"), (0, "fi"), (2, "sv")]
+        for days, language in [
+            (3, "fin"),
+            (1, "swe"),
+            (4, "eng"),
+            (0, "fin"),
+            (2, "swe"),
+        ]
     ]
     occurrences[1].capacity_override = 5
     occurrences[1].save()
@@ -577,13 +588,13 @@ def test_events_search_external_event_with_occurrence(
     ids = [e["node"]["id"] for e in res_avail["data"]["events"]["edges"]]
     assert ids == [get_global_id(ext_event)]
 
-    # languages filter matching occurrence language ("fi") includes the event
+    # languages filter matching occurrence language ("fin") includes the event
     res_lang = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
             "availableOnly": True,
-            "languages": ["fi"],
+            "languages": ["fin"],
         },
     )
     assert res_lang.get("errors") is None
@@ -597,7 +608,7 @@ def test_events_search_external_event_with_occurrence(
         variables={
             "childId": get_global_id(child),
             "availableOnly": True,
-            "languages": ["sv"],
+            "languages": ["swe"],
         },
     )
     assert res_lang_sv.get("errors") is None
@@ -934,15 +945,16 @@ def test_events_search_query_count_is_constant(
     Prove that the events search query count is strictly constant (O(1) database queries).
 
     1. Executes search with 3 events:
-       - Captures baseline query count (13 queries):
+       - Captures baseline query count (15 queries):
          * User and child authorization check
          * Child project and prefetch relations (occurrences, passwords)
          * Events connection count query
-         * Events page query with theme paths, occurrences, venues, and ticket passwords
+         * Events page query with theme paths, occurrences, venues, occurrence
+           languages and ticket passwords
        - Asserts 3 events returned.
     2. Adds 22 more events (total 25 events, including external ticketmaster events):
        - Asserts all 25 events returned.
-       - Asserts query count is EXACTLY identical to the 3-event baseline (13 queries),
+       - Asserts query count is EXACTLY identical to the 3-event baseline (15 queries),
          proving complete absence of N+1 query regressions across event list scaling.
     """
     child = ChildWithGuardianFactory(
@@ -966,8 +978,8 @@ def test_events_search_query_count_is_constant(
     # Warm up caches
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    # Baseline: exactly 13 queries for 3 events
-    with django_assert_num_queries(13) as captured_3:
+    # Baseline: exactly 15 queries for 3 events
+    with django_assert_num_queries(15) as captured_3:
         res_3 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_3.get("errors") is None
     # Returns all 3 initial events
@@ -992,7 +1004,7 @@ def test_events_search_query_count_is_constant(
     for ext in ext_events:
         TicketSystemPasswordFactory(event=ext, child=None)
 
-    # 25 events must produce the EXACT same query count (13 queries) as 3 events
+    # 25 events must produce the EXACT same query count (15 queries) as 3 events
     with django_assert_num_queries(len(captured_3)):
         res_25 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_25.get("errors") is None
@@ -1008,15 +1020,15 @@ def test_events_search_query_count_with_all_filters(
     Verify constant O(1) query count when all search filters are simultaneously active.
 
     Sets up a child with past enrolments, 8 internal events, and 2 ticketmaster events
-    matching all filters: availableOnly=True, themePaths=["rhythm"], languages=["fi"],
+    matching all filters: availableOnly=True, themePaths=["rhythm"], languages=["fin"],
     startDate, familyOnly=False.
 
     Proves:
-    - Search with all filters runs in exactly 14 queries (1 extra query compared to the
+    - Search with all filters runs in exactly 16 queries (1 extra query compared to the
       basic search for filter join/count evaluations).
     - Querying 10 events: count == 10, len(edges) == 10.
     - Querying first 5 events (pagination): count == 10 (total matching), len(edges) == 5.
-    - Query count for first 5 events is IDENTICAL to 10 events (14 queries), proving that
+    - Query count for first 5 events is IDENTICAL to 10 events (16 queries), proving that
       pagination and heavy filtering do not introduce per-row N+1 queries.
     """
     child = ChildWithGuardianFactory(
@@ -1042,7 +1054,7 @@ def test_events_search_query_count_with_all_filters(
         OccurrenceFactory(
             event=ev,
             time=future + timedelta(days=i + 1),
-            occurrence_language="fi",
+            languages=get_languages("fin"),
             capacity_override=10,
         )
 
@@ -1056,7 +1068,7 @@ def test_events_search_query_count_with_all_filters(
         OccurrenceFactory(
             event=ext,
             time=future + timedelta(days=i + 9),
-            occurrence_language="fi",
+            languages=get_languages("fin"),
         )
         TicketSystemPasswordFactory(event=ext, child=None)
 
@@ -1065,7 +1077,7 @@ def test_events_search_query_count_with_all_filters(
         "first": 10,
         "availableOnly": True,
         "themePaths": ["rhythm"],
-        "languages": ["fi"],
+        "languages": ["fin"],
         "startDate": future.date().isoformat(),
         "familyOnly": False,
     }
@@ -1073,8 +1085,8 @@ def test_events_search_query_count_with_all_filters(
     # Warm up caches
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    # Exactly 14 queries when all filters are active (availableOnly, themePaths, languages, startDate)
-    with django_assert_num_queries(14) as captured_10:
+    # Exactly 16 queries when all filters are active (availableOnly, themePaths, languages, startDate)
+    with django_assert_num_queries(16) as captured_10:
         res_10 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
     assert res_10.get("errors") is None
@@ -1083,7 +1095,7 @@ def test_events_search_query_count_with_all_filters(
     # first: 10 returns all 10 matching edges
     assert len(res_10["data"]["events"]["edges"]) == 10
 
-    # Querying first 5 events with same filters: query count is identical to 10 events (14 queries)
+    # Querying first 5 events with same filters: query count is identical to 10 events (16 queries)
     variables_5 = dict(variables, first=5)
     with django_assert_num_queries(len(captured_10)):
         res_5 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables_5)
@@ -1120,7 +1132,7 @@ def test_events_search_available_only_external_event_with_occurrence_filters(
     OccurrenceFactory(
         event=ext_with_free_pw,
         time=future + timedelta(days=2),
-        occurrence_language="sv",
+        languages=get_languages("swe"),
     )
     TicketSystemPasswordFactory(event=ext_with_free_pw, child=None, assigned_at=None)
 
@@ -1128,7 +1140,7 @@ def test_events_search_available_only_external_event_with_occurrence_filters(
     OccurrenceFactory(
         event=ext_exhausted,
         time=future + timedelta(days=2),
-        occurrence_language="sv",
+        languages=get_languages("swe"),
         capacity_override=10,
     )
     TicketSystemPasswordFactory(
@@ -1140,7 +1152,7 @@ def test_events_search_available_only_external_event_with_occurrence_filters(
         variables={
             "childId": get_global_id(child),
             "availableOnly": True,
-            "languages": ["sv"],
+            "languages": ["swe"],
             "startDate": future.date().isoformat(),
         },
     )
@@ -1301,7 +1313,7 @@ def test_events_search_grouped_events_query_count_is_constant(
     variables = {"childId": get_global_id(child), "first": 25}
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    with django_assert_num_queries(14) as captured_3:
+    with django_assert_num_queries(16) as captured_3:
         res_3 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_3.get("errors") is None
     assert len(res_3["data"]["events"]["edges"]) == 3
@@ -1415,12 +1427,12 @@ def test_events_search_available_only_checks_matching_occurrence_year_quota(
     OccurrenceFactory(
         event=ev_cross_year,
         time=datetime(2025, 12, 20, 12, 0, tzinfo=helsinki),
-        occurrence_language="fi",
+        languages=get_languages("fin"),
     )
     OccurrenceFactory(
         event=ev_cross_year,
         time=datetime(2026, 1, 10, 12, 0, tzinfo=helsinki),
-        occurrence_language="sv",
+        languages=get_languages("swe"),
     )
 
     executed = guardian_api_client.execute(
@@ -1428,7 +1440,7 @@ def test_events_search_available_only_checks_matching_occurrence_year_quota(
         variables={
             "childId": get_global_id(child),
             "availableOnly": True,
-            "languages": ["sv"],
+            "languages": ["swe"],
         },
     )
     assert executed.get("errors") is None

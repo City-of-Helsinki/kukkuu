@@ -113,6 +113,7 @@ from kukkuu.consts import (
 )
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
+from languages.models import Language
 from notification_importers.notification_importer import NotificationFileImporter
 from projects.factories import ProjectFactory
 from projects.models import Project, ProjectPermission
@@ -207,13 +208,18 @@ ADD_OCCURRENCE_VARIABLES = {
 }
 
 
+def get_language_ids(*alpha_3_codes):
+    return [
+        get_global_id(Language.objects.get(alpha_3_code=code)) for code in alpha_3_codes
+    ]
+
+
 UPDATE_OCCURRENCE_VARIABLES = {
     "input": {
         "id": "",
         "eventId": "",
         "venueId": "",
         "time": "1986-12-12T16:40:48+00:00",
-        "occurrenceLanguage": "SV",
         "capacityOverride": 5,
     }
 }
@@ -575,6 +581,7 @@ def test_add_ticketmaster_event(snapshot, project_user_api_client, project):
 
 def test_add_occurrence_permission_denied(unauthorized_user_api_client, event, venue):
     occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["languageIds"] = get_language_ids("fin")
     occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
     occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
 
@@ -586,6 +593,7 @@ def test_add_occurrence_permission_denied(unauthorized_user_api_client, event, v
 
 def test_add_occurrence_project_user(snapshot, project_user_api_client, event, venue):
     occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["languageIds"] = get_language_ids("swe", "fin")
     occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
     occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
     executed = project_user_api_client.execute(
@@ -598,6 +606,7 @@ def test_add_occurrence_different_year(project_user_api_client, event, venue):
     """All occurrences have to be within the same calendar year."""
     OccurrenceFactory(time=timezone.now(), venue=venue, event=event)
     occurrence_variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    occurrence_variables["input"]["languageIds"] = get_language_ids("fin")
     occurrence_variables["input"]["eventId"] = to_global_id("EventNode", event.id)
     occurrence_variables["input"]["venueId"] = to_global_id("VenueNode", venue.id)
     occurrence_variables["input"]["time"] = (
@@ -645,6 +654,7 @@ def test_update_occurrence_different_year(
 def test_add_occurrence_ticket_system_url(project_user_api_client, venue):
     event = EventFactory(ticket_system=Event.TICKETMASTER)
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = get_global_id(event)
     variables["input"]["venueId"] = get_global_id(venue)
     variables["input"]["ticketSystem"] = {"url": "https://example.com"}
@@ -663,6 +673,7 @@ def test_add_occurrence_accessibilities(project_user_api_client, event, venue):
     first = AccessibilityFactory(slug="first")
     second = AccessibilityFactory(slug="second")
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = get_global_id(event)
     variables["input"]["venueId"] = get_global_id(venue)
     variables["input"]["accessibilityIds"] = [
@@ -680,6 +691,7 @@ def test_add_occurrence_accessibilities(project_user_api_client, event, venue):
 
 def test_add_occurrence_unknown_accessibility(project_user_api_client, event, venue):
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = get_global_id(event)
     variables["input"]["venueId"] = get_global_id(venue)
     variables["input"]["accessibilityIds"] = [
@@ -750,6 +762,149 @@ def test_update_occurrence_sets_accessibilities(
 
     updated = executed["data"]["updateOccurrence"]["occurrence"]
     assert [a["slug"] for a in updated["accessibilities"]] == expected_slugs
+
+
+@pytest.mark.parametrize(
+    "alpha_3_codes",
+    [("fin",), ("swe", "fin"), ("fin", "swe", "eng")],
+    ids=["one_lang", "two_langs", "three_langs"],
+)
+def test_add_occurrence_languages(project_user_api_client, event, venue, alpha_3_codes):
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["languageIds"] = get_language_ids(*alpha_3_codes)
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    occurrence = executed["data"]["addOccurrence"]["occurrence"]
+    assert {language["alpha3Code"] for language in occurrence["languages"]} == set(
+        alpha_3_codes
+    )
+
+
+@pytest.mark.parametrize(
+    "language_input",
+    [{}, {"languageIds": None}],
+    ids=["omitted", "null"],
+)
+def test_add_occurrence_language_ids_is_required_by_the_schema(
+    project_user_api_client, event, venue, language_input
+):
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"].update(language_input)
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert "languageIds" in str(executed["errors"])
+    assert not Occurrence.objects.exists()
+
+
+def test_add_occurrence_requires_at_least_one_language(
+    project_user_api_client, event, venue
+):
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["languageIds"] = []
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "An occurrence needs at least one language." in str(executed["errors"])
+    assert not Occurrence.objects.exists()
+
+
+def test_add_occurrence_rejects_language_that_can_not_be_occurrence_language(
+    project_user_api_client, event, venue
+):
+    language = Language.objects.create_from_language_code("deu").language
+    language.can_be_occurrence_language = False
+    language.save()
+    variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["eventId"] = get_global_id(event)
+    variables["input"]["venueId"] = get_global_id(venue)
+    variables["input"]["languageIds"] = [get_global_id(language)]
+
+    executed = project_user_api_client.execute(
+        ADD_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert 'Language "deu" can not be chosen as an occurrence language.' in str(
+        executed["errors"]
+    )
+    assert not Occurrence.objects.exists()
+
+
+@pytest.mark.parametrize(
+    "language_input",
+    [{}, {"languageIds": None}],
+    ids=["omitted", "null"],
+)
+def test_update_occurrence_keeps_languages(project_user_api_client, language_input):
+    swe = Language.objects.get(alpha_3_code="swe")
+    eng = Language.objects.get(alpha_3_code="eng")
+    occurrence = OccurrenceFactory(languages=[swe, eng])
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"].update(language_input)
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    updated = executed["data"]["updateOccurrence"]["occurrence"]
+    assert {language["alpha3Code"] for language in updated["languages"]} == {
+        "swe",
+        "eng",
+    }
+
+
+def test_update_occurrence_replaces_languages(project_user_api_client):
+    occurrence = OccurrenceFactory(languages=[Language.objects.get(alpha_3_code="fin")])
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"]["languageIds"] = get_language_ids("swe", "eng")
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    updated = executed["data"]["updateOccurrence"]["occurrence"]
+    assert {language["alpha3Code"] for language in updated["languages"]} == {
+        "swe",
+        "eng",
+    }
+
+
+def test_update_occurrence_requires_at_least_one_language(project_user_api_client):
+    occurrence = OccurrenceFactory()
+    variables = deepcopy(UPDATE_OCCURRENCE_VARIABLES)
+    variables["input"]["id"] = get_global_id(occurrence)
+    variables["input"]["eventId"] = get_global_id(occurrence.event)
+    variables["input"]["venueId"] = get_global_id(occurrence.venue)
+    variables["input"]["languageIds"] = []
+
+    executed = project_user_api_client.execute(
+        UPDATE_OCCURRENCE_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
+    assert "An occurrence needs at least one language." in str(executed["errors"])
+    assert [language.alpha_3_code for language in occurrence.languages.all()] == ["fin"]
 
 
 def test_occurrences_query_returns_accessibilities(project_user_api_client):
@@ -1995,21 +2150,34 @@ def test_occurrences_filter_by_event(user_api_client, snapshot, event, project):
     snapshot.assert_match(executed)
 
 
-def test_occurrences_filter_by_language(user_api_client, snapshot, event, venue):
-    occurrences = OccurrenceFactory.create_batch(2, venue=venue, event=event)
-    sv_occurrences = OccurrenceFactory.create_batch(
-        2, venue=venue, event=event, occurrence_language="sv"
+@pytest.mark.parametrize(
+    ("language_codes", "expected_count"),
+    [
+        pytest.param(["fin"], 3, id="one-language"),
+        pytest.param(["swe"], 2, id="another-language"),
+        pytest.param(["FIN"], 3, id="uppercase-code"),
+        pytest.param(["swe", "eng"], 3, id="any-of-languages"),
+        pytest.param(["fin", "eng"], 3, id="no-duplicates-when-several-match"),
+        pytest.param(["fin", "swe", "eng"], 5, id="all-languages"),
+        pytest.param(["xxx"], 0, id="unknown-code"),
+        pytest.param([], 5, id="empty-list-applies-no-filter"),
+    ],
+)
+def test_occurrences_filter_by_languages(
+    user_api_client, event, venue, language_codes, expected_count
+):
+    fin, swe, eng = (
+        Language.objects.get(alpha_3_code=code) for code in ("fin", "swe", "eng")
+    )
+    OccurrenceFactory.create_batch(2, venue=venue, event=event, languages=[fin])
+    OccurrenceFactory.create_batch(2, venue=venue, event=event, languages=[swe])
+    OccurrenceFactory(venue=venue, event=event, languages=[fin, eng])
+
+    executed = user_api_client.execute(
+        OCCURRENCES_FILTER_QUERY, variables={"languages": language_codes}
     )
 
-    variables = {"occurrenceLanguage": "FI"}
-    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
-    assert len(executed["data"]["occurrences"]["edges"]) == len(occurrences)
-
-    variables = {"occurrenceLanguage": "SV"}
-    executed = user_api_client.execute(OCCURRENCES_FILTER_QUERY, variables=variables)
-    assert len(executed["data"]["occurrences"]["edges"]) == len(sv_occurrences)
-
-    snapshot.assert_match(executed)
+    assert len(executed["data"]["occurrences"]["edges"]) == expected_count
 
 
 def test_occurrences_filter_by_project(
@@ -4000,6 +4168,7 @@ def test_add_occurrence_to_external_event_rejected(
     event = TicketmasterEventFactory()
     project_user_api_client.user.administered_projects = [event.project]
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = get_global_id(event)
     variables["input"]["venueId"] = get_global_id(VenueFactory(project=event.project))
     executed = project_user_api_client.execute(
@@ -4019,6 +4188,7 @@ def test_add_occurrence_clean_validation_error_converted_to_data_validation_erro
     system_venue = SystemVenueFactory()
 
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = get_global_id(event)
     variables["input"]["venueId"] = get_global_id(system_venue)
     executed = project_user_api_client.execute(
@@ -4030,6 +4200,7 @@ def test_add_occurrence_clean_validation_error_converted_to_data_validation_erro
 
 def test_add_occurrence_non_existent_event_rejected(project_user_api_client, venue):
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)
+    variables["input"]["languageIds"] = get_language_ids("fin")
     variables["input"]["eventId"] = to_global_id("EventNode", 999999)
     variables["input"]["venueId"] = get_global_id(venue)
     executed = project_user_api_client.execute(

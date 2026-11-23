@@ -33,6 +33,7 @@ from events.models import (
     OccurrenceAccessibility,
 )
 from kukkuu.consts import DATA_VALIDATION_ERROR
+from languages.models import Language
 from projects.factories import ProjectFactory
 from tags.factories import AccessibilityFactory, ThemePathFactory
 from tags.models import Accessibility, ThemePath
@@ -649,12 +650,21 @@ def test_occurrence_admin_get_queryset_annotates_reserved_seats(rf):
 
 def _occurrence_form_data(occurrence):
     time = timezone.localtime(occurrence.time)
+    language_rows = list(occurrence.occurrencelanguage_set.all())
+    language_data = {
+        "occurrencelanguage_set-TOTAL_FORMS": str(len(language_rows)),
+        "occurrencelanguage_set-INITIAL_FORMS": str(len(language_rows)),
+    }
+    for index, row in enumerate(language_rows):
+        language_data[f"occurrencelanguage_set-{index}-id"] = row.pk
+        language_data[f"occurrencelanguage_set-{index}-occurrence"] = occurrence.pk
+        language_data[f"occurrencelanguage_set-{index}-language"] = row.language_id
     return {
         "time_0": time.strftime("%Y-%m-%d"),
         "time_1": time.strftime("%H:%M:%S"),
         "event": occurrence.event.pk,
         "venue": occurrence.venue.pk,
-        "occurrence_language": occurrence.occurrence_language,
+        **language_data,
         "enrolments-TOTAL_FORMS": "0",
         "enrolments-INITIAL_FORMS": "0",
         "free_spot_notification_subscriptions-TOTAL_FORMS": "0",
@@ -689,6 +699,55 @@ def test_occurrence_admin_change_form_can_edit_accessibilities(admin_client):
 
     assert response.status_code == 302
     assert list(occurrence.accessibilities.all()) == [second]
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_change_form_rejects_deleting_the_only_language(admin_client):
+    occurrence = OccurrenceFactory()
+    language = occurrence.languages.get()
+    data = _occurrence_form_data(occurrence)
+
+    response = admin_client.post(
+        reverse("admin:events_occurrence_change", args=[occurrence.pk]),
+        {
+            **data,
+            "occurrenceaccessibility_set-TOTAL_FORMS": "0",
+            "occurrenceaccessibility_set-INITIAL_FORMS": "0",
+            "occurrencelanguage_set-0-DELETE": "on",
+        },
+    )
+
+    assert response.status_code == 200
+    language_formset = response.context["inline_admin_formsets"][0].formset
+    assert list(language_formset.non_form_errors()) == [
+        "At least one occurrence language is required."
+    ]
+    assert list(occurrence.languages.all()) == [language]
+
+
+@pytest.mark.django_db
+def test_occurrence_admin_change_form_can_replace_the_only_language(admin_client):
+    occurrence = OccurrenceFactory()
+    swedish = Language.objects.get(alpha_3_code="swe")
+    data = _occurrence_form_data(occurrence)
+
+    response = admin_client.post(
+        reverse("admin:events_occurrence_change", args=[occurrence.pk]),
+        {
+            **data,
+            "occurrenceaccessibility_set-TOTAL_FORMS": "0",
+            "occurrenceaccessibility_set-INITIAL_FORMS": "0",
+            "occurrencelanguage_set-TOTAL_FORMS": "2",
+            # Delete existing language:
+            "occurrencelanguage_set-0-DELETE": "on",
+            # Add new language:
+            "occurrencelanguage_set-1-occurrence": occurrence.pk,
+            "occurrencelanguage_set-1-language": swedish.pk,
+        },
+    )
+
+    assert response.status_code == 302
+    assert list(occurrence.languages.all()) == [swedish]
 
 
 @pytest.mark.django_db
@@ -834,5 +893,5 @@ def test_occurrences_inline_supports_venue_parent():
     # Should not raise AttributeError when parent obj is a Venue
     readonly = inline.get_readonly_fields(request, obj=venue)
     assert isinstance(readonly, tuple)
-    assert inline.has_add_permission(request, obj=venue) is True
+    assert inline.has_add_permission(request, obj=venue) is False
     assert inline.has_delete_permission(request, obj=venue) is True

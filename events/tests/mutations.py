@@ -122,7 +122,9 @@ mutation AddOccurrence($input: AddOccurrenceMutationInput!) {
         createdAt
       }
       time
-      occurrenceLanguage
+      languages {
+        alpha3Code
+      }
       capacity
       capacityOverride
       ticketSystem {
@@ -151,7 +153,9 @@ mutation UpdateOccurrence($input: UpdateOccurrenceMutationInput!) {
         createdAt
       }
       time
-      occurrenceLanguage
+      languages {
+        alpha3Code
+      }
       enrolmentCount
       remainingCapacity
       capacity

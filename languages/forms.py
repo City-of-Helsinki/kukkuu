@@ -17,3 +17,18 @@ class LanguageSpokenAtHomeInlineForm(forms.ModelForm):
         self.fields["language"].queryset = Language.objects.filter(
             Q(can_be_spoken_at_home=True) | Q(pk=self.instance.language_id)
         )
+
+
+class OccurrenceLanguageInlineForm(forms.ModelForm):
+    """
+    Form for an admin inline that links an occurrence to its language. Only languages
+    with `can_be_occurrence_language` can be chosen, except that the language already
+    linked by the form's instance stays available so that an existing link can be
+    saved after the flag has been switched off.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["language"].queryset = Language.objects.filter(
+            Q(can_be_occurrence_language=True) | Q(pk=self.instance.language_id)
+        )

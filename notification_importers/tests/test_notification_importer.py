@@ -64,21 +64,27 @@ def test_create_non_existing_and_update_existing_notifications(
 ):
     NotificationImporter().create_missing_and_update_existing_notifications()
 
-    snapshot.assert_match(serialize_notifications(NotificationTemplate.objects.all()))
+    snapshot.assert_match(
+        serialize_notifications(NotificationTemplate.objects.order_by("type"))
+    )
 
 
 @pytest.mark.django_db
 def test_create_non_existing_notifications(event_published_notification, snapshot):
     NotificationImporter().create_missing_notifications()
 
-    snapshot.assert_match(serialize_notifications(NotificationTemplate.objects.all()))
+    snapshot.assert_match(
+        serialize_notifications(NotificationTemplate.objects.order_by("type"))
+    )
 
 
 @pytest.mark.django_db
 def test_update_notifications(event_published_notification, snapshot):
     NotificationImporter().update_notifications([event_published_notification])
 
-    snapshot.assert_match(serialize_notifications(NotificationTemplate.objects.all()))
+    snapshot.assert_match(
+        serialize_notifications(NotificationTemplate.objects.order_by("type"))
+    )
 
 
 @pytest.mark.django_db

@@ -35,8 +35,10 @@ from kukkuu.exceptions import (
     SingleEventsDisallowedError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
+from languages.models import Language
 from organisations.models import Organisation
 from projects.models import Project
+from reports.consts import CONTACT_LANGUAGE_TO_LANGUAGE
 from tags.models import Accessibility, ThemePath
 from venues.models import Venue
 from venues.services import get_system_venue
@@ -166,7 +168,9 @@ def sync_external_event_occurrence(event: Event) -> Occurrence | None:
             time=event.ticket_system_end_time,
             ticket_system_url=event.ticket_system_url,
             venue=system_venue,
-            occurrence_language=lang,
+        )
+        occurrence.languages.set(
+            [Language.objects.get(alpha_3_code=CONTACT_LANGUAGE_TO_LANGUAGE[lang])]
         )
     return occurrence
 
@@ -624,7 +628,7 @@ class OccurrenceAPIService:
     Service class for Occurrence GraphQL API business logic.
     """
 
-    NON_NULLABLE_UPDATE_FIELDS = ("time", "occurrence_language")
+    NON_NULLABLE_UPDATE_FIELDS = ("time",)
 
     class Resolver:
         """
@@ -686,6 +690,24 @@ class OccurrenceAPIService:
                 get_obj_from_global_id(info, global_id, Accessibility)
                 for global_id in accessibility_ids
             ]
+
+        @staticmethod
+        def languages(info, language_ids: list[str] | None) -> list[Language]:
+            if not language_ids:
+                raise DataValidationError(
+                    _("An occurrence needs at least one language.")
+                )
+            languages = [
+                get_obj_from_global_id(info, global_id, Language)
+                for global_id in language_ids
+            ]
+            for language in languages:
+                if not language.can_be_occurrence_language:
+                    raise DataValidationError(
+                        f'Language "{language.alpha_3_code}" can not be chosen as an '
+                        "occurrence language."
+                    )
+            return languages
 
     class Cleaner:
         """
@@ -831,11 +853,13 @@ class OccurrenceAPIService:
         accessibilities = cls.Resolver.accessibilities(
             info, kwargs.pop("accessibility_ids", None) or []
         )
+        languages = cls.Resolver.languages(info, kwargs.pop("language_ids", None))
 
         cls.Validator.validate_input(kwargs)
         occurrence = Occurrence(**kwargs)
         cls.Validator.clean_occurrence(occurrence)
         occurrence.save()
+        occurrence.languages.set(languages)
         if accessibilities:
             occurrence.accessibilities.set(accessibilities)
 
@@ -857,11 +881,17 @@ class OccurrenceAPIService:
         accessibilities = cls.Resolver.accessibilities(
             info, kwargs.pop("accessibility_ids", None)
         )
+        language_ids = kwargs.pop("language_ids", None)
+        languages = (
+            None if language_ids is None else cls.Resolver.languages(info, language_ids)
+        )
 
         cls.Validator.validate_input(kwargs, occurrence=occurrence)
         update_object(occurrence, kwargs)
         if accessibilities is not None:
             occurrence.accessibilities.set(accessibilities)
+        if languages is not None:
+            occurrence.languages.set(languages)
 
         cls.Validator.clean_occurrence(occurrence)
         sync_external_occurrence_to_event(occurrence)
