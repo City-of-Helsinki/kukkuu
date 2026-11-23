@@ -16,6 +16,8 @@ from .consts import (
     OTHER_LANGUAGE_ALPHA_3_CODE,
     OTHER_LANGUAGE_NAMES,
     SPECIAL_LANGUAGE_ALPHA_3_CODES,
+    SPEECHLESS_LANGUAGE_ALPHA_3_CODE,
+    SPEECHLESS_LANGUAGE_NAMES,
 )
 
 
@@ -89,17 +91,27 @@ class LanguageQueryset(TranslatableQuerySet):
 
         return CreatedLanguage(language=obj, fallback_language_codes=tuple(missing))
 
-    def create_option_other(self):
+    def _create_special_language(self, alpha_3_code, names):
         try:
             return self.create_translatable_object(
-                alpha_3_code=OTHER_LANGUAGE_ALPHA_3_CODE,
+                alpha_3_code=alpha_3_code,
                 translations=[
                     {"language_code": language_code, "name": name}
-                    for language_code, name in OTHER_LANGUAGE_NAMES.items()
+                    for language_code, name in names.items()
                 ],
             )
         except IntegrityError as e:
             raise LanguageAlreadyExistsError(e)
+
+    def create_option_other(self):
+        return self._create_special_language(
+            OTHER_LANGUAGE_ALPHA_3_CODE, OTHER_LANGUAGE_NAMES
+        )
+
+    def create_option_speechless(self):
+        return self._create_special_language(
+            SPEECHLESS_LANGUAGE_ALPHA_3_CODE, SPEECHLESS_LANGUAGE_NAMES
+        )
 
     def with_is_special(self):
         return self.annotate(

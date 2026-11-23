@@ -1,7 +1,7 @@
 import pytest
 from django.core.exceptions import ValidationError
 
-from languages.models import Language
+from languages.models import Language, LanguageAlreadyExistsError
 
 
 @pytest.mark.parametrize("alpha_3_code", ["sme", "und"])
@@ -12,3 +12,19 @@ def test_language_clean_accepts_iso_639_3_codes(alpha_3_code):
 def test_language_clean_rejects_iso_639_5_codes():
     with pytest.raises(ValidationError):
         Language(alpha_3_code="smi").clean()
+
+
+@pytest.mark.django_db
+def test_create_option_speechless():
+    Language.objects.all().delete()
+
+    language = Language.objects.create_option_speechless()
+
+    assert language.alpha_3_code == "zxx"
+    assert {t.language_code: t.name for t in language.translations.all()} == {
+        "fi": "Sanaton",
+        "sv": "Ordlös",
+        "en": "Speechless",
+    }
+    with pytest.raises(LanguageAlreadyExistsError):
+        Language.objects.create_option_speechless()

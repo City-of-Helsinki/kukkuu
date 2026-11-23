@@ -6,6 +6,15 @@ OTHER_LANGUAGE_NAMES = {
     "en": "Other language",
 }
 
+# ISO 639-3 special code "zxx" (No linguistic content) is used for the "Speechless"
+# option, e.g. for occurrences that have no linguistic content at all.
+SPEECHLESS_LANGUAGE_ALPHA_3_CODE = "zxx"
+SPEECHLESS_LANGUAGE_NAMES = {
+    "fi": "Sanaton",
+    "sv": "Ordlös",
+    "en": "Speechless",
+}
+
 # ISO 639-3 special codes:
 # - "mis" (Uncoded languages)
 # - "mul" (Multiple languages)
