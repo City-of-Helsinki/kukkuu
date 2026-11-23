@@ -7,6 +7,7 @@ from children.factories import ChildFactory
 from common.mixins import SaveAfterPostGenerationMixin
 from events.models import Enrolment, Event, EventGroup, Occurrence, TicketSystemPassword
 from events.services import sync_external_event_occurrence
+from languages.models import Language
 from organisations.factories import DEFAULT_ORGANISATION_ID
 from projects.models import Project
 from tags.factories import ThemePathFactory
@@ -114,6 +115,14 @@ class OccurrenceFactory(
         if extracted:
             for message in extracted:
                 self.messages.add(message)
+
+    @factory.post_generation
+    def languages(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted is None:
+            extracted = [Language.objects.get(alpha_3_code="fin")]
+        self.languages.set(extracted)
 
     @factory.post_generation
     def accessibilities(self, create, extracted, **kwargs):

@@ -20,6 +20,7 @@ from events.services import (
     validate_registration_opens_at,
 )
 from events.ticket_service import check_ticket_validity
+from languages.forms import OccurrenceLanguageInlineForm
 from subscriptions.models import FreeSpotNotificationSubscription
 from venues.models import Venue
 
@@ -30,6 +31,7 @@ from .models import (
     EventThemePath,
     Occurrence,
     OccurrenceAccessibility,
+    OccurrenceLanguage,
     TicketSystemPassword,
 )
 
@@ -138,12 +140,10 @@ class OccurrencesInline(admin.StackedInline):
         return tuple(readonly)
 
     def has_add_permission(self, request, obj=None):
-        if (
-            getattr(obj, "is_external_ticket_system_event", False)
-            and obj.occurrences.exists()
-        ):
-            return False
-        return super().has_add_permission(request, obj)
+        """
+        Disabled because the inline has no languages field. Use OccurrenceAdmin to add.
+        """
+        return False
 
     def has_delete_permission(self, request, obj=None):
         if getattr(obj, "is_external_ticket_system_event", False):
@@ -211,6 +211,34 @@ class OccurrenceAccessibilityInline(ThroughModelTabularInline):
             .get_queryset(request)
             .select_related("occurrence", "accessibility")
             .prefetch_related("accessibility__translations")
+        )
+
+
+class OccurrenceLanguageInlineFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if all(
+            not form.cleaned_data.get("language") or form.cleaned_data.get("DELETE")
+            for form in self.forms
+        ):
+            raise ValidationError(_("At least one occurrence language is required."))
+
+
+class OccurrenceLanguageInline(ThroughModelTabularInline):
+    model = OccurrenceLanguage
+    form = OccurrenceLanguageInlineForm
+    formset = OccurrenceLanguageInlineFormSet
+    extra = 0
+    min_num = 1
+
+    def get_queryset(self, request):
+        # The row labels (OccurrenceLanguage.__str__) use the occurrence and the
+        # language
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("occurrence", "language")
+            .prefetch_related("language__translations")
         )
 
 
@@ -332,7 +360,7 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         "venue",
         "get_enrolments",
         "get_free_spot_notification_subscriptions",
-        "occurrence_language",
+        "get_languages",
         "ticket_system_url",
         "created_at",
         "updated_at",
@@ -341,11 +369,11 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         "time",
         "event",
         "venue",
-        "occurrence_language",
         "capacity_override",
         "ticket_system_url",
     )
     inlines = [
+        OccurrenceLanguageInline,
         OccurrenceAccessibilityInline,
         EnrolmentsInline,
         FreeSpotNotificationSubscriptionInline,
@@ -367,6 +395,12 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
         return obj.free_spot_notification_subscriptions.count()
+
+    @admin.display(description=_("languages"))
+    def get_languages(self, obj):
+        return ", ".join(
+            sorted(language.alpha_3_code for language in obj.languages.all())
+        )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "venue":
@@ -398,6 +432,7 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
                 "event__translations",
                 "venue__translations",
                 "free_spot_notification_subscriptions",
+                "languages",
             )
         )
 

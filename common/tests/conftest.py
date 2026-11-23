@@ -40,6 +40,17 @@ def clean_auditlog(db):
 
 
 @pytest.fixture(autouse=True)
+def occurrence_languages(db):
+    """
+    Ensure the default occurrence languages exist, because the tests that use
+    transactions flush the rows seeded by migrations.
+    """
+    for alpha_3_code in ("fin", "swe", "eng"):
+        if not Language.objects.filter(alpha_3_code=alpha_3_code).exists():
+            Language.objects.create_from_language_code(alpha_3_code)
+
+
+@pytest.fixture(autouse=True)
 def setup_test_environment(settings):
     factory.random.reseed_random("777")
     settings.DEFAULT_FROM_EMAIL = "kukkuu@example.com"

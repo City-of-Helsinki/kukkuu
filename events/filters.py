@@ -24,6 +24,8 @@ from events.models import (
 )
 from events.utils import convert_to_localtime_tz
 from kukkuu.exceptions import ApiUsageError
+from languages.models import Language
+from languages.schema import LanguageNode
 
 
 class OccurrenceFilter(django_filters.FilterSet):
@@ -42,8 +44,10 @@ class OccurrenceFilter(django_filters.FilterSet):
     event_id = django_filters.CharFilter(
         field_name="event", method="filter_by_event_global_id"
     )
-    occurrence_language = django_filters.CharFilter(
-        field_name="occurrence_language", method="filter_by_occurrence_language"
+    languages = ListFilter(
+        input_type=graphene.List(graphene.String),
+        method="filter_by_languages",
+        label="ISO 639-3 (alpha-3) codes. Matches occurrences with any of them.",
     )
     project_id = django_filters.Filter(method="filter_by_project_global_id")
 
@@ -56,7 +60,7 @@ class OccurrenceFilter(django_filters.FilterSet):
             "upcoming_with_leeway",
             "venue_id",
             "event_id",
-            "occurrence_language",
+            "languages",
         ]
 
     def filter_by_time(self, qs, name, value):
@@ -86,8 +90,10 @@ class OccurrenceFilter(django_filters.FilterSet):
         event_id = from_global_id(value)[1]
         return qs.filter(event_id=event_id)
 
-    def filter_by_occurrence_language(self, qs, name, value):
-        return qs.filter(occurrence_language=value.lower())
+    def filter_by_languages(self, qs, name, value):
+        if not value:
+            return qs
+        return qs.in_any_language([code.lower() for code in value if code])
 
     def filter_by_project_global_id(self, qs, name, value):
         node_id = get_node_id_from_global_id(value, "ProjectNode")
@@ -363,7 +369,13 @@ class EventFilter(django_filters.FilterSet):
                         Prefetch(
                             "venue__translations",
                             queryset=VenueTranslation.objects.order_by("language_code"),
-                        )
+                        ),
+                        Prefetch(
+                            "languages",
+                            queryset=LanguageNode.get_queryset(
+                                Language.objects.all(), None
+                            ),
+                        ),
                     ),
                     to_attr="_prefetched_upcoming_occurrences",
                 ),
@@ -417,7 +429,8 @@ class EventFilter(django_filters.FilterSet):
 
         :param now: Current timezone-aware datetime.
         :param start_date: Optional minimum occurrence date (date object).
-        :param languages: Optional list of lowercase ISO language codes.
+        :param languages: Optional list of lowercase ISO 639-3 (alpha-3) codes.
+            An occurrence matches if it has any of them.
         :return: Occurrence QuerySet suitable for use in an Exists subquery.
         """
         occ_qs = Occurrence.objects.filter(event=OuterRef("pk"), time__gte=now)
@@ -425,7 +438,7 @@ class EventFilter(django_filters.FilterSet):
             start_dt = make_aware(datetime.combine(start_date, time.min))
             occ_qs = occ_qs.filter(time__gte=start_dt)
         if languages:
-            occ_qs = occ_qs.filter(occurrence_language__in=languages)
+            occ_qs = occ_qs.in_any_language(languages)
         return occ_qs
 
     def _apply_occurrence_filters(
@@ -456,7 +469,7 @@ class EventFilter(django_filters.FilterSet):
         :param qs: Event QuerySet to filter.
         :param now: Current timezone-aware datetime.
         :param start_date: Optional minimum occurrence date (date object).
-        :param languages: Optional list of lowercase ISO language codes.
+        :param languages: Optional list of lowercase ISO 639-3 (alpha-3) codes.
         :param available_only: Whether to restrict to events with available
             capacity (internal) or unassigned passwords (external).
         :return: Filtered Event QuerySet.

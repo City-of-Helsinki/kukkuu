@@ -65,6 +65,8 @@ from kukkuu.exceptions import (
     TooLateToUnenrolError,
 )
 from kukkuu.utils import get_kukkuu_error_by_code
+from languages.models import Language
+from languages.schema import LanguageNode
 from projects.models import Project
 from tags.models import Accessibility, ThemePath
 from tags.schema import AccessibilityNode, ThemePathNode
@@ -623,7 +625,6 @@ class InternalOccurrenceTicketSystem(ObjectType):
 
 class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
-    occurrence_language = LanguageEnum(required=True)
     enrolment_count = graphene.Int(required=True)
     attended_enrolment_count = graphene.Int(required=True)
     seat_count = graphene.Int(required=True)
@@ -640,6 +641,7 @@ class OccurrenceNode(DjangoObjectType):
         ),
     )
     accessibilities = graphene.List(graphene.NonNull(AccessibilityNode), required=True)
+    languages = graphene.List(graphene.NonNull(LanguageNode), required=True)
 
     @classmethod
     @login_required
@@ -667,6 +669,10 @@ class OccurrenceNode(DjangoObjectType):
                     queryset=AccessibilityNode.get_queryset(
                         Accessibility.objects.all(), info
                     ),
+                ),
+                Prefetch(
+                    "languages",
+                    queryset=LanguageNode.get_queryset(Language.objects.all(), info),
                 ),
             )
         )
@@ -727,6 +733,16 @@ class OccurrenceNode(DjangoObjectType):
         )
         return self.accessibilities.all()
 
+    def resolve_languages(self, info, **kwargs):
+        prefetch_related_objects(
+            [self],
+            Prefetch(
+                "languages",
+                queryset=LanguageNode.get_queryset(Language.objects.all(), info),
+            ),
+        )
+        return self.languages.all()
+
     @bypass_get_queryset
     def resolve_venue(self, info, **kwargs):
         """
@@ -757,7 +773,6 @@ class OccurrenceNode(DjangoObjectType):
             "event",
             "venue",
             "children",
-            "occurrence_language",
             "enrolments",
             "capacity",
             "capacity_override",
@@ -768,6 +783,7 @@ class OccurrenceNode(DjangoObjectType):
             "child_has_free_spot_notification_subscription",
             "ticket_system",
             "accessibilities",
+            "languages",
         )
 
 
@@ -1345,7 +1361,11 @@ class AddOccurrenceMutation(graphene.relay.ClientIDMutation):
         time = graphene.DateTime(required=True)
         event_id = graphene.GlobalID()
         venue_id = graphene.GlobalID()
-        occurrence_language = LanguageEnum()
+        language_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            required=True,
+            description="Languages of the occurrence. At least one is required.",
+        )
         capacity_override = graphene.Int()
         ticket_system = OccurrenceTicketSystemInput()
         accessibility_ids = graphene.List(
@@ -1371,7 +1391,11 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
         time = graphene.DateTime()
         event_id = graphene.GlobalID(required=False)
         venue_id = graphene.GlobalID(required=False)
-        occurrence_language = LanguageEnum()
+        language_ids = graphene.List(
+            graphene.NonNull(graphene.ID),
+            description="Omit to keep the current languages. "
+            "If given, replaces them. At least one is required.",
+        )
         capacity_override = graphene.Int()
         ticket_system = OccurrenceTicketSystemInput()
         accessibility_ids = graphene.List(

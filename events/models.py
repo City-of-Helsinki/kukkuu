@@ -9,6 +9,7 @@ from django.db import models, transaction
 from django.db.models import (
     Case,
     Count,
+    Exists,
     ExpressionWrapper,
     F,
     OuterRef,
@@ -845,6 +846,21 @@ class OccurrenceQueryset(models.QuerySet):
     def in_past(self):
         return self.exclude(time__gt=timezone.now())
 
+    def in_any_language(self, alpha_3_codes):
+        """
+        Return occurrences that have at least one of the given languages.
+
+        :param alpha_3_codes: Lowercase ISO 639-3 (alpha-3) codes.
+        """
+        return self.filter(
+            Exists(
+                OccurrenceLanguage.objects.filter(
+                    occurrence=OuterRef("pk"),
+                    language__alpha_3_code__in=alpha_3_codes,
+                )
+            )
+        )
+
     def with_end_time(self):
         return self.annotate(
             end_time=ExpressionWrapper(
@@ -940,11 +956,12 @@ class Occurrence(TimestampedModel, SerializableMixin):
         related_name="occurrences",
         blank=True,
     )
-    occurrence_language = models.CharField(
-        max_length=10,
-        choices=settings.LANGUAGES,
-        verbose_name=_("occurrence language"),
-        default=settings.LANGUAGE_CODE,
+    languages = models.ManyToManyField(
+        "languages.Language",
+        through="OccurrenceLanguage",
+        verbose_name=_("languages"),
+        related_name="occurrences",
+        blank=True,
     )
     capacity_override = models.PositiveSmallIntegerField(
         verbose_name=_("capacity override"),
@@ -1158,6 +1175,24 @@ class OccurrenceAccessibility(models.Model):
 
     def __str__(self):
         return f"{self.occurrence} – {self.accessibility}"
+
+
+class OccurrenceLanguage(models.Model):
+    occurrence = models.ForeignKey(Occurrence, on_delete=models.CASCADE)
+    language = models.ForeignKey("languages.Language", on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = _("occurrence language")
+        verbose_name_plural = _("occurrence languages")
+        constraints = [
+            UniqueConstraint(
+                fields=["occurrence", "language"],
+                name="unique_occurrence_language",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.occurrence} – {self.language}"
 
 
 class EnrolmentQueryset(models.QuerySet):

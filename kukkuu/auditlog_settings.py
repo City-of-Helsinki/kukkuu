@@ -75,9 +75,10 @@ AUDITLOG_INCLUDE_TRACKING_MODELS = (
     "events.eventthemepath",
     {
         "model": "events.occurrence",
-        "m2m_fields": ["accessibilities"],
+        "m2m_fields": ["accessibilities", "languages"],
     },
     "events.occurrenceaccessibility",
+    "events.occurrencelanguage",
     "events.enrolment",
     "events.eventgroup",
     "events.ticketsystempassword",

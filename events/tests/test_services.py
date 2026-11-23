@@ -32,7 +32,7 @@ def test_sync_external_event_occurrence_creates_occurrence():
     assert occ.venue.name == settings.KUKKUU_DEFAULT_VENUE_NAME
     assert occ.time == event.ticket_system_end_time
     assert occ.ticket_system_url == "https://example.com/tickets"
-    assert occ.occurrence_language == "fi"
+    assert [language.alpha_3_code for language in occ.languages.all()] == ["fin"]
 
 
 @pytest.mark.django_db
@@ -63,13 +63,13 @@ def test_sync_external_event_occurrence_language_defaulting():
     event_sv.translations.all().delete()
     event_sv.create_translation(language_code="sv", name="Svenskt namn")
     occ_sv = sync_external_event_occurrence(event_sv)
-    assert occ_sv.occurrence_language == "sv"
+    assert [language.alpha_3_code for language in occ_sv.languages.all()] == ["swe"]
 
     # Both Finnish and Swedish
     event_fi = TicketmasterEventFactory(occurrence=False)
     event_fi.create_translation(language_code="sv", name="Svenskt namn")
     occ_fi = sync_external_event_occurrence(event_fi)
-    assert occ_fi.occurrence_language == "fi"
+    assert [language.alpha_3_code for language in occ_fi.languages.all()] == ["fin"]
 
 
 @pytest.mark.django_db

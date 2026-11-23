@@ -245,10 +245,10 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $occurrenceLanguage: String, $projectId: String,
+                  $eventId: String, $languages: [String], $projectId: String,
                   $upcomingWithLeeway: Boolean, $upcomingWithOngoing: Boolean) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
-              eventId: $eventId, occurrenceLanguage: $occurrenceLanguage,
+              eventId: $eventId, languages: $languages,
               projectId: $projectId, upcomingWithLeeway: $upcomingWithLeeway,
               upcomingWithOngoing: $upcomingWithOngoing) {
     edges {
@@ -275,7 +275,9 @@ query Occurrence($id: ID!) {
     time
     remainingCapacity
     enrolmentCount
-    occurrenceLanguage
+    languages {
+      alpha3Code
+    }
     event {
       translations {
         name
@@ -586,7 +588,9 @@ query eventsSearchQuery(
               id
               time
               remainingCapacity
-              occurrenceLanguage
+              languages {
+                alpha3Code
+              }
               venue {
                 id
                 name
@@ -621,7 +625,7 @@ fragment OccurrenceFields on OccurrenceNodeConnection {
     node {
       id
       time
-      occurrenceLanguage
+      languages { alpha3Code }
       remainingCapacity
       enrolmentCount
       seatCount
