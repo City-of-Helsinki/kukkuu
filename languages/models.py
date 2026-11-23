@@ -91,10 +91,19 @@ class LanguageQueryset(TranslatableQuerySet):
 
         return CreatedLanguage(language=obj, fallback_language_codes=tuple(missing))
 
-    def _create_special_language(self, alpha_3_code, names):
+    def _create_special_language(
+        self,
+        *,
+        alpha_3_code,
+        names,
+        can_be_spoken_at_home,
+        can_be_occurrence_language,
+    ):
         try:
             return self.create_translatable_object(
                 alpha_3_code=alpha_3_code,
+                can_be_spoken_at_home=can_be_spoken_at_home,
+                can_be_occurrence_language=can_be_occurrence_language,
                 translations=[
                     {"language_code": language_code, "name": name}
                     for language_code, name in names.items()
@@ -104,14 +113,33 @@ class LanguageQueryset(TranslatableQuerySet):
             raise LanguageAlreadyExistsError(e)
 
     def create_option_other(self):
+        """
+        Create the "Other" language, which can't be used as an occurrence language.
+        """
         return self._create_special_language(
-            OTHER_LANGUAGE_ALPHA_3_CODE, OTHER_LANGUAGE_NAMES
+            alpha_3_code=OTHER_LANGUAGE_ALPHA_3_CODE,
+            names=OTHER_LANGUAGE_NAMES,
+            can_be_spoken_at_home=True,
+            can_be_occurrence_language=False,
         )
 
     def create_option_speechless(self):
+        """
+        Create the "Speechless" language, which can't be used as a language spoken
+        at home.
+        """
         return self._create_special_language(
-            SPEECHLESS_LANGUAGE_ALPHA_3_CODE, SPEECHLESS_LANGUAGE_NAMES
+            alpha_3_code=SPEECHLESS_LANGUAGE_ALPHA_3_CODE,
+            names=SPEECHLESS_LANGUAGE_NAMES,
+            can_be_spoken_at_home=False,
+            can_be_occurrence_language=True,
         )
+
+    def get_option_other(self):
+        return self.get(alpha_3_code=OTHER_LANGUAGE_ALPHA_3_CODE)
+
+    def get_option_speechless(self):
+        return self.get(alpha_3_code=SPEECHLESS_LANGUAGE_ALPHA_3_CODE)
 
     def with_is_special(self):
         return self.annotate(
@@ -123,11 +151,34 @@ class LanguageQueryset(TranslatableQuerySet):
 
 
 class Language(TranslatableModel):
+    """
+    A language identified by its ISO 639-3 alpha-3 code.
+
+    The flags `can_be_spoken_at_home` and `can_be_occurrence_language` tell where the
+    language may be used. They are enforced when a language is chosen, so changing
+    a flag does not remove existing links to the language.
+    """
+
     alpha_3_code = models.CharField(
         max_length=3,
         verbose_name=_("alpha-3 code"),
         help_text=_("ISO 639-3 alpha-3 code"),
         unique=True,
+    )
+    can_be_spoken_at_home = models.BooleanField(
+        default=True,
+        verbose_name=_("can be spoken at home"),
+        help_text=_(
+            "Whether this language can be chosen as a language spoken at home."
+        ),
+    )
+    can_be_occurrence_language = models.BooleanField(
+        default=True,
+        verbose_name=_("can be occurrence language"),
+        help_text=_(
+            "Whether this language can be chosen as an occurrence language "
+            "and be used for filtering occurrences."
+        ),
     )
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),

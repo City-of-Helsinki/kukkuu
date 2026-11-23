@@ -88,6 +88,46 @@
               ]),
             }),
           }),
+          dict({
+            'node': dict({
+              'alpha3Code': 'und',
+              'name': 'Muu kieli',
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'Other language',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'Muu kieli',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Annat språk',
+                }),
+              ]),
+            }),
+          }),
+          dict({
+            'node': dict({
+              'alpha3Code': 'zxx',
+              'name': 'Sanaton',
+              'translations': list([
+                dict({
+                  'languageCode': 'EN',
+                  'name': 'Speechless',
+                }),
+                dict({
+                  'languageCode': 'FI',
+                  'name': 'Sanaton',
+                }),
+                dict({
+                  'languageCode': 'SV',
+                  'name': 'Ordlös',
+                }),
+              ]),
+            }),
+          }),
         ]),
       }),
     }),

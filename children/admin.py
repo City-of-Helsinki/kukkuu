@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from events.models import Enrolment, TicketSystemPassword
+from languages.forms import LanguageSpokenAtHomeInlineForm
 from languages.models import Language
 from subscriptions.models import FreeSpotNotificationSubscription
 
@@ -28,6 +29,7 @@ class EnrolmentInline(admin.TabularInline):
 
 class LanguagesSpokenAtHomeInline(admin.TabularInline):
     model = Language.children.through
+    form = LanguageSpokenAtHomeInlineForm
     extra = 0
     verbose_name = _("Language spoken at home")
     verbose_name_plural = _("Languages spoken at home")

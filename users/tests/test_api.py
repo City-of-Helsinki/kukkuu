@@ -11,10 +11,11 @@ from children.tests.test_api import (
     assert_permission_denied,
 )
 from common.tests.conftest import create_api_client_with_user
-from common.tests.utils import assert_match_error_code
+from common.tests.utils import assert_error_message, assert_match_error_code
 from common.utils import get_global_id
 from events.factories import EventFactory
 from kukkuu.consts import INVALID_EMAIL_FORMAT_ERROR, VERIFICATION_TOKEN_INVALID_ERROR
+from languages.models import Language
 from organisations.factories import OrganisationFactory
 from projects.factories import ProjectFactory
 from projects.models import ProjectPermission
@@ -263,6 +264,30 @@ def test_update_my_profile_mutation(snapshot, user_api_client, languages):
     snapshot.assert_match(executed)
     guardian = Guardian.objects.get(user=user_api_client.user)
     assert_guardian_matches_data(guardian, variables["input"])
+
+
+def test_update_my_profile_mutation_rejects_language_that_cannot_be_spoken_at_home(
+    user_api_client, languages
+):
+    guardian = GuardianFactory(user=user_api_client.user, language="fi")
+    language = languages[0]
+    speechless = Language.objects.get_option_speechless()
+    assert language.can_be_spoken_at_home
+    assert not speechless.can_be_spoken_at_home
+    variables = deepcopy(UPDATE_MY_PROFILE_VARIABLES)
+    variables["input"]["languagesSpokenAtHome"] = [
+        get_global_id(language),
+        get_global_id(speechless),
+    ]
+
+    executed = user_api_client.execute(UPDATE_MY_PROFILE_MUTATION, variables=variables)
+
+    assert_error_message(
+        executed,
+        f'Language "{speechless.alpha_3_code}" can not be chosen as a language '
+        "spoken at home.",
+    )
+    assert not guardian.languages_spoken_at_home.exists()
 
 
 @pytest.mark.parametrize(

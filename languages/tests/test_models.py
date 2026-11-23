@@ -21,6 +21,9 @@ def test_create_option_speechless():
     language = Language.objects.create_option_speechless()
 
     assert language.alpha_3_code == "zxx"
+    assert Language.objects.get_option_speechless() == language
+    assert not language.can_be_spoken_at_home
+    assert language.can_be_occurrence_language
     assert {t.language_code: t.name for t in language.translations.all()} == {
         "fi": "Sanaton",
         "sv": "Ordlös",
@@ -28,3 +31,15 @@ def test_create_option_speechless():
     }
     with pytest.raises(LanguageAlreadyExistsError):
         Language.objects.create_option_speechless()
+
+
+@pytest.mark.django_db
+def test_create_option_other():
+    Language.objects.all().delete()
+
+    language = Language.objects.create_option_other()
+
+    assert language.alpha_3_code == "und"
+    assert Language.objects.get_option_other() == language
+    assert language.can_be_spoken_at_home
+    assert not language.can_be_occurrence_language
