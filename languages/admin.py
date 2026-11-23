@@ -14,10 +14,18 @@ class LanguageAdmin(TranslatableAdmin):
         "get_name_fi",
         "get_name_sv",
         "get_name_en",
+        "can_be_spoken_at_home",
+        "can_be_occurrence_language",
         "get_guardian_count",
     )
     list_display_links = ("alpha_3_code", "get_name_fi", "get_name_sv", "get_name_en")
-    fields = ("alpha_3_code", "name", "get_guardian_count")
+    fields = (
+        "alpha_3_code",
+        "name",
+        "can_be_spoken_at_home",
+        "can_be_occurrence_language",
+        "get_guardian_count",
+    )
     readonly_fields = ("get_guardian_count",)
 
     def get_queryset(self, request):

@@ -5,7 +5,7 @@ from graphene_django import DjangoConnectionField
 from graphene_django.filter import DjangoFilterConnectionField
 
 from common.utils import get_node_id_from_global_id, get_obj_from_global_id
-from kukkuu.exceptions import ApiUsageError
+from kukkuu.exceptions import ApiUsageError, DataValidationError
 from languages.models import Language
 from projects.models import Project, ProjectPermission
 
@@ -15,12 +15,18 @@ LanguageEnum = graphene.Enum(
 
 
 def set_obj_languages_spoken_at_home(info, obj, language_global_ids):
-    obj.languages_spoken_at_home.clear()
+    languages = [
+        get_obj_from_global_id(info, language_global_id, Language)
+        for language_global_id in language_global_ids
+    ]
+    for language in languages:
+        if not language.can_be_spoken_at_home:
+            raise DataValidationError(
+                f'Language "{language.alpha_3_code}" can not be chosen as a language '
+                "spoken at home."
+            )
 
-    for language_global_id in language_global_ids:
-        obj.languages_spoken_at_home.add(
-            get_obj_from_global_id(info, language_global_id, Language)
-        )
+    obj.languages_spoken_at_home.set(languages)
 
 
 class ErrorType(graphene.ObjectType):

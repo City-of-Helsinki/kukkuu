@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from guardian.admin import GuardedModelAdmin
 
 from children.models import Relationship
+from languages.forms import LanguageSpokenAtHomeInlineForm
 from languages.models import Language
 from projects.models import Project
 from reports.models import Permission as ReportPermission
@@ -46,6 +47,7 @@ class GuardianForm(forms.ModelForm):
 
 class LanguagesSpokenAtHomeInline(admin.TabularInline):
     model = Language.guardians.through
+    form = LanguageSpokenAtHomeInlineForm
     extra = 0
     verbose_name = _("Language spoken at home")
     verbose_name_plural = _("Languages spoken at home")

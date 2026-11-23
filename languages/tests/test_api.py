@@ -15,6 +15,8 @@ def languages():
     Language.objects.all().delete()
     for code in ("fin", "swe", "eng"):
         Language.objects.create_from_language_code(code)
+    Language.objects.create_option_other()
+    Language.objects.create_option_speechless()
 
 
 LANGUAGES_QUERY = """
@@ -62,10 +64,58 @@ def test_language_query(snapshot, api_client):
     snapshot.assert_match(executed)
 
 
+LANGUAGES_FILTER_QUERY = """
+query Languages($canBeSpokenAtHome: Boolean, $canBeOccurrenceLanguage: Boolean) {
+  languages(
+    canBeSpokenAtHome: $canBeSpokenAtHome
+    canBeOccurrenceLanguage: $canBeOccurrenceLanguage
+  ) {
+    edges {
+      node {
+        alpha3Code
+      }
+    }
+  }
+}
+"""
+
+
+@pytest.mark.parametrize(
+    "variables, expected_codes",
+    [
+        ({}, {"eng", "fin", "swe", "und", "zxx"}),
+        ({"canBeSpokenAtHome": True}, {"eng", "fin", "swe", "und"}),
+        ({"canBeSpokenAtHome": False}, {"zxx"}),
+        ({"canBeOccurrenceLanguage": True}, {"eng", "fin", "swe", "zxx"}),
+        ({"canBeOccurrenceLanguage": False}, {"und"}),
+        (
+            {"canBeSpokenAtHome": True, "canBeOccurrenceLanguage": True},
+            {"eng", "fin", "swe"},
+        ),
+        (
+            {"canBeSpokenAtHome": True, "canBeOccurrenceLanguage": False},
+            {"und"},
+        ),
+        (
+            {"canBeSpokenAtHome": False, "canBeOccurrenceLanguage": True},
+            {"zxx"},
+        ),
+        (
+            {"canBeSpokenAtHome": False, "canBeOccurrenceLanguage": False},
+            set(),
+        ),
+    ],
+)
+def test_languages_query_filters_by_usage_flags(api_client, variables, expected_codes):
+    executed = api_client.execute(LANGUAGES_FILTER_QUERY, variables=variables)
+
+    assert {
+        edge["node"]["alpha3Code"] for edge in executed["data"]["languages"]["edges"]
+    } == expected_codes
+
+
 def test_languages_query_orders_special_languages_last(api_client):
     Language.objects.create_from_language_code("ara")
-    Language.objects.create_option_speechless()
-    Language.objects.create_option_other()
 
     executed = api_client.execute(LANGUAGES_QUERY)
 

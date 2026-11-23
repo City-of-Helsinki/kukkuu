@@ -736,6 +736,30 @@ def test_update_child_mutation_postal_code_validation(
     assert "Postal code must be 5 digits" in str(executed["errors"])
 
 
+def test_update_child_mutation_rejects_language_that_cannot_be_spoken_at_home(
+    guardian_api_client, child_with_user_guardian, languages
+):
+    language = languages[0]
+    speechless = Language.objects.get_option_speechless()
+    assert language.can_be_spoken_at_home
+    assert not speechless.can_be_spoken_at_home
+    variables = deepcopy(UPDATE_CHILD_VARIABLES)
+    variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
+    variables["input"]["languagesSpokenAtHome"] = [
+        get_global_id(language),
+        get_global_id(speechless),
+    ]
+
+    executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
+
+    assert_error_message(
+        executed,
+        f'Language "{speechless.alpha_3_code}" can not be chosen as a language '
+        "spoken at home.",
+    )
+    assert not child_with_user_guardian.languages_spoken_at_home.exists()
+
+
 def test_update_child_mutation_birthdate_validation_illegal_date(
     guardian_api_client, illegal_birthyear, child_with_user_guardian
 ):
