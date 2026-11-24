@@ -24,7 +24,6 @@ from children.models import Child
 from children.schema import ChildNode
 from common.schema import ErrorType, LanguageEnum
 from common.utils import (
-    check_can_user_administer,
     get_node_id_from_global_id,
     get_obj_if_user_can_administer,
     login_required,
@@ -70,6 +69,7 @@ from languages.schema import LanguageNode
 from projects.models import Project
 from tags.models import Accessibility, ThemePath
 from tags.schema import AccessibilityNode, ThemePathNode
+from users.cache import UserRequestCache
 
 logger = logging.getLogger(__name__)
 
@@ -370,19 +370,9 @@ class EventNode(DjangoObjectType):
         )
 
     def resolve_can_user_administer(self, info):
-        user = info.context.user
-        if not hasattr(info.context, "_user_organisation_ids"):
-            # Memoise org IDs on info.context (the per-request HttpRequest) on
-            # first access to avoid N+1 queries when iterating many Event nodes
-            # (one DB call instead of one per node). Scoped per request to ensure
-            # no cross-request state leakage.
-            info.context._user_organisation_ids = (
-                frozenset(user.organisations.values_list("id", flat=True))
-                if user and user.is_authenticated and not user.is_system_administrator
-                else None
-            )
         return self.can_user_administer(
-            user, user_organisation_ids=info.context._user_organisation_ids
+            info.context.user,
+            user_organisation_ids=UserRequestCache.get_organisation_ids(info),
         )
 
     @classmethod
@@ -689,11 +679,11 @@ class OccurrenceNode(DjangoObjectType):
         return self.get_enrolment_count()
 
     def resolve_attended_enrolment_count(self, info, **kwargs):
-        check_can_user_administer(self, info.context.user)
+        OccurrenceAPIService.check_can_user_administer(self, info)
         return self.get_attended_enrolment_count()
 
     def resolve_free_spot_notification_subscription_count(self, info, **kwargs):
-        check_can_user_administer(self, info.context.user)
+        OccurrenceAPIService.check_can_user_administer(self, info)
         return self.get_free_spot_notification_subscription_count()
 
     def resolve_capacity(self, info, **kwargs):
