@@ -1936,8 +1936,8 @@ def test_can_unenrol_outside_48_hours(
 def test_maximum_enrolment(
     guardian_api_client, occurrence, project, child_with_user_guardian
 ):
-    max_capactity = occurrence.event.capacity_per_occurrence
-    children = ChildWithGuardianFactory.create_batch(max_capactity, project=project)
+    max_capacity = occurrence.event.capacity_per_occurrence
+    children = ChildWithGuardianFactory.create_batch(max_capacity, project=project)
     for child in children:
         EnrolmentFactory(occurrence=occurrence, child=child)
 
@@ -2207,18 +2207,19 @@ def test_occurrence_available_capacity_and_enrolment_count(
     user_api_client, snapshot, occurrence, project
 ):
     max_capacity = occurrence.event.capacity_per_occurrence
+    # Each enrolment reserves 2 physical seats (1 child + 1 adult).
     EnrolmentFactory.create_batch(3, occurrence=occurrence, child__project=project)
     variables = {"id": to_global_id("OccurrenceNode", occurrence.id)}
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 6
     assert executed["data"]["occurrence"]["enrolmentCount"] == 3
     e = EnrolmentFactory(occurrence=occurrence, child__project=project)
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 4
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 8
     assert executed["data"]["occurrence"]["enrolmentCount"] == 4
     e.delete()
     executed = user_api_client.execute(OCCURRENCE_QUERY, variables=variables)
-    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 3
+    assert executed["data"]["occurrence"]["remainingCapacity"] == max_capacity - 6
     assert executed["data"]["occurrence"]["enrolmentCount"] == 3
     snapshot.assert_match(executed)
 
@@ -2449,48 +2450,79 @@ def test_set_enrolment_attendance_another_project_child(
 
 
 @pytest.mark.parametrize(
-    "capacity_override, enrolment_count",
+    "capacity_override, enrolment_count, expected_capacity, expected_remaining_capacity",
     (
-        (5, 0),
-        (5, 4),
-        (5, 5),
-        (5, 6),
-        (None, 0),
-        (None, 9),
-        (None, 10),
-        (None, 11),
-        (0, 0),
+        (5, 0, 5, 5),
+        (5, 2, 5, 1),
+        (5, 3, 5, 0),
+        (None, 0, 10, 10),
+        (None, 4, 10, 2),
+        (None, 5, 10, 0),
+        (None, 6, 10, 0),
+        (0, 0, 0, 0),
     ),
 )
 def test_occurrence_capacity(
-    snapshot, guardian_api_client, project, capacity_override, enrolment_count
+    guardian_api_client,
+    project,
+    django_assert_num_queries,
+    capacity_override,
+    enrolment_count,
+    expected_capacity,
+    expected_remaining_capacity,
 ):
+    """
+    Test OccurrenceNode capacity and remainingCapacity across default event
+    capacity (10) and capacityOverride values. Each enrolment reserves 2
+    physical seats (1 child + 1 adult), and remainingCapacity is clamped at 0.
+    """
+    default_capacity = 10
     occurrence = OccurrenceFactory(
         event__project=project,
         venue__project=project,
         event__published_at=now(),
-        event__capacity_per_occurrence=10,
+        event__capacity_per_occurrence=default_capacity,
         capacity_override=capacity_override,
     )
     EnrolmentFactory.create_batch(
         enrolment_count, occurrence=occurrence, child__project=project
     )
 
-    executed = guardian_api_client.execute(
-        """
-            query OccurrenceCapacity($id: ID!) {
-              occurrence(id: $id){
-                capacity
-                capacityOverride
-                enrolmentCount
-                remainingCapacity
-              }
-            }
-        """,
-        variables={"id": get_global_id(occurrence)},
-    )
+    # Prime the user's cached `administered_projects` property so we measure the
+    # GraphQL occurrence query count deterministically across all 8 parametrized runs.
+    _ = guardian_api_client.user.administered_projects
 
-    snapshot.assert_match(executed)
+    # Constant 5 queries regardless of enrolment_count (0..6):
+    # 1. Fetch Occurrence with annotated reserved_seats and remaining_capacity
+    # 2. Prefetch venue translations
+    # 3. Prefetch accessibilities
+    # 4. Prefetch languages
+    # 5. Prefetch language translations
+    with django_assert_num_queries(5):
+        executed = guardian_api_client.execute(
+            """
+                query OccurrenceCapacity($id: ID!) {
+                  occurrence(id: $id){
+                    capacity
+                    capacityOverride
+                    enrolmentCount
+                    remainingCapacity
+                  }
+                }
+            """,
+            variables={"id": get_global_id(occurrence)},
+        )
+
+    assert executed == {
+        "data": {
+            "occurrence": {
+                "capacity": expected_capacity,
+                "capacityOverride": capacity_override,
+                "enrolmentCount": enrolment_count,
+                "remainingCapacity": expected_remaining_capacity,
+            }
+        }
+    }
 
 
 @pytest.mark.parametrize("published", (False, True))

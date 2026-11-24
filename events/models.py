@@ -7,7 +7,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
-    Case,
     Count,
     Exists,
     ExpressionWrapper,
@@ -18,7 +17,6 @@ from django.db.models import (
     Sum,
     UniqueConstraint,
     Value,
-    When,
 )
 from django.db.models.functions import Coalesce, ExtractYear, Greatest
 from django.utils import timezone
@@ -1198,12 +1196,23 @@ class OccurrenceLanguage(models.Model):
 class EnrolmentQueryset(models.QuerySet):
     @staticmethod
     def seats_expression():
-        return Case(
-            When(extra_children_count__isnull=True, then=Value(1)),
-            default=Value(MIN_SEATS_PER_ENROLMENT)
-            + F("extra_children_count")
-            + F("extra_guardians_count"),
-            output_field=models.IntegerField(),
+        """
+        Return a SQL expression calculating the total booked physical seats for an
+        enrolment: `MIN_SEATS_PER_ENROLMENT` (1 default child + 1 default guardian = 2)
+        plus `extra_children_count` and `extra_guardians_count` (treating NULL as 0).
+        """
+        return (
+            Value(MIN_SEATS_PER_ENROLMENT, output_field=models.IntegerField())
+            + Coalesce(
+                "extra_children_count",
+                Value(0),
+                output_field=models.IntegerField(),
+            )
+            + Coalesce(
+                "extra_guardians_count",
+                Value(0),
+                output_field=models.IntegerField(),
+            )
         )
 
     def user_can_view(self, user):
@@ -1349,12 +1358,14 @@ class Enrolment(TimestampedModel, SerializableMixin):
 
     @property
     def total_seats(self) -> int:
-        if self.extra_children_count is None:
-            return 1
+        """
+        Return the total number of physical seats reserved by this enrolment
+        (1 default child + 1 default guardian + any extra children and guardians).
+        """
         return (
             MIN_SEATS_PER_ENROLMENT
-            + self.extra_children_count
-            + self.extra_guardians_count
+            + (self.extra_children_count or 0)
+            + (self.extra_guardians_count or 0)
         )
 
     def __str__(self):

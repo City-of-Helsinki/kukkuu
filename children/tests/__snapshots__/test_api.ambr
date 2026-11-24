@@ -481,7 +481,7 @@
                   'edges': list([
                     dict({
                       'node': dict({
-                        'remainingCapacity': 22,
+                        'remainingCapacity': 21,
                       }),
                     }),
                     dict({

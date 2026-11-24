@@ -38,7 +38,7 @@ Key top-level Django apps and their purposes:
 - **Enrollment Limits & Seat Capacity**:
   - A project configures how many times a child can enrol per year (usually twice).
   - A child can participate in only **one** event within a single event group. For example, if only one event group is published for a spring season, a child can only participate once during that spring.
-  - An occurrence tracks physical seats. Each new enrolment reserves a minimum of 2 seats (1 child + 1 guardian), and family events can reserve up to 6 seats. Legacy enrolments count as 1 seat. An occurrence with remaining capacity < 2 is considered full. For architectural details and operational rules, see [docs/enrolment-decisions.md](docs/enrolment-decisions.md).
+  - An occurrence tracks physical seats. Each enrolment reserves a minimum of 2 seats (1 child + 1 guardian), and family events can reserve up to 6 seats. An occurrence with remaining capacity < 2 is considered full. For architectural details and operational rules, see [docs/enrolment-decisions.md](docs/enrolment-decisions.md).
 - **Visibility Rules (Events vs Enrolments)**:
   - Published events and occurrences remain globally visible so the public UI and other event organizers can view them.
   - Unpublished events and occurrences are strictly isolated. Only system administrators and users who are members of the event's designated organisation can view or administer them.
