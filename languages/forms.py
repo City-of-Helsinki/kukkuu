@@ -1,7 +1,16 @@
 from django import forms
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 from languages.models import Language
+
+
+class LivingLanguageSearchForm(forms.Form):
+    """
+    Form for searching the living ISO 639-3 languages in the admin.
+    """
+
+    search_term = forms.CharField(label=_("Search term"), min_length=2)
 
 
 class LanguageSpokenAtHomeInlineForm(forms.ModelForm):
