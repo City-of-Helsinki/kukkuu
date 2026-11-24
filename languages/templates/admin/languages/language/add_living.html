@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<p><a href="{% url 'admin:languages_language_changelist' %}">&larr; {% translate "Back to languages" %}</a></p>
+<p>{% blocktranslate trimmed with code_tables_url="https://iso639-3.sil.org/code_tables/639/data" %}
+  Search by the ISO 639-3 alpha-3 code (See <a href="{{ code_tables_url }}" target="_blank" rel="noopener">ISO 639 Code Tables</a>) or the Finnish, Swedish or English name.
+{% endblocktranslate %}</p>
+<form method="get">
+  {{ form.as_p }}
+  <input type="submit" value="{% translate 'Search' %}">
+</form>
+
+{% if page %}
+  {% if page.object_list %}
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Code" %}</th>
+        <th>{% translate "Finnish" %}</th>
+        <th>{% translate "Swedish" %}</th>
+        <th>{% translate "English" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for language in page %}
+      <tr>
+        <td>{{ language.alpha_3 }}</td>
+        <td>{{ language.name_fi }}</td>
+        <td>{{ language.name_sv }}</td>
+        <td>{{ language.name_en }}</td>
+        <td>
+          {% if language.alpha_3 in existing_codes %}
+          {% translate "Already added" %}
+          {% else %}
+          <form method="post">{% csrf_token %}
+            <input type="hidden" name="code" value="{{ language.alpha_3 }}">
+            <input type="submit" value="{% translate 'Add language' %}">
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    {% if page.has_previous %}<a href="{% querystring page=page.previous_page_number %}">&laquo; {% translate "Previous" %}</a>{% endif %}
+    {% blocktranslate with number=page.number total=page.paginator.num_pages %}Page {{ number }} of {{ total }}{% endblocktranslate %}
+    {% if page.has_next %}<a href="{% querystring page=page.next_page_number %}">{% translate "Next" %} &raquo;</a>{% endif %}
+  </p>
+  {% else %}
+  <p>{% translate "No languages found." %}</p>
+  {% endif %}
+{% endif %}
+{% endblock %}
