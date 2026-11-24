@@ -291,6 +291,9 @@ The API requires authentication via HTTP basic authentication, or alternatively 
 
 API documentation of the report API can be viewed at http://localhost:8081/reports/schema/redoc/.
 
+> **Historical Note on Report Comparability (Pre-2027 vs. 2027+ / Hekla Release):**
+> Before 2027 (prior to the Hekla release), reports counted only enrolments (`1 enrolment = 1 child`) without counting accompanying adults, and event organizers set occurrence capacities to half of the physical room seats. Starting from the Hekla release (2027+), every enrolment explicitly counts real physical attendees ($2 + \text{extra children} + \text{extra guardians}$, i.e., at least 1 child and 1 accompanying adult per enrolment). Reports exported before 2027 are therefore not directly comparable with reports exported from 2027 onward. See [enrolment decisions documentation](docs/enrolment-decisions.md).
+
 ### GDPR API data export
 
 The [GDPR API data export and API tester documentation](./gdpr/README.MD).
@@ -308,7 +311,7 @@ For events managed internally, Kukkuu provides the following features:
 - **Enrolment Management:**
   - Enrolments are handled directly through the Kukkuu API and can be managed using the Kukkuu Admin UI.
   - Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
-  - Capacity tracks real physical seat headcounts ($2 + \text{extra children} + \text{extra guardians}$ per enrolment, with legacy enrolments counted as 1 seat). See [enrolment decisions documentation](docs/enrolment-decisions.md).
+  - Capacity tracks real physical seat headcounts ($2 + \text{extra children} + \text{extra guardians}$ per enrolment, minimum 1 child + 1 adult). See [enrolment decisions documentation](docs/enrolment-decisions.md).
 - **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API. Admins have access only to events within their assigned projects.
 - **QR Code Ticket Verification:**
 

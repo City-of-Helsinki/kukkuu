@@ -5,9 +5,8 @@
 - [Enrolment and Capacity Decisions (Hekla Release)](#enrolment-and-capacity-decisions-hekla-release)
   - [1. Background & Context](#1-background--context)
   - [2. Core Decisions & Rules](#2-core-decisions--rules)
-    - [Rule 1: Legacy-Safe Seat Accounting](#rule-1-legacy-safe-seat-accounting)
-    - [Rule 2: Real Physical Headcount for New Enrolments](#rule-2-real-physical-headcount-for-new-enrolments)
-    - [Rule 3: Event Types & Removal of `CHILD_AND_1_OR_2_GUARDIANS`](#rule-3-event-types--removal-of-child_and_1_or_2_guardians)
+    - [Rule 1: Single Seat-Accounting Formula](#rule-1-single-seat-accounting-formula)
+    - [Rule 2: Event Types & Removal of `CHILD_AND_1_OR_2_GUARDIANS`](#rule-2-event-types--removal-of-child_and_1_or_2_guardians)
   - [3. Known Operational Consequences](#3-known-operational-consequences)
   - [4. Cross-Repository Alignment](#4-cross-repository-alignment)
 
@@ -33,22 +32,15 @@ With the introduction of dynamic enrolments and family events (allowing families
 
 ## 2. Core Decisions & Rules
 
-### Rule 1: Legacy-Safe Seat Accounting
+### Rule 1: Single Seat-Accounting Formula
 
-- **Legacy enrolments** in the database (`extra_children_count IS NULL` and `extra_guardians_count IS NULL`) continue to count as **1 seat taken**.
-- **No data migration** backfills or rewrites historical enrolments or event capacities.
-- This ensures historical reports, snapshots, and metrics remain consistent without corrupting past attendance data.
-
-### Rule 2: Real Physical Headcount for New Enrolments
-
-- Starting in the Hekla release, new enrolments store explicit extra participant counts (`extra_children_count` and `extra_guardians_count` >= 0).
-- Every new enrolment requires at least 1 child and 1 guardian:
-  `Total Seats = 2 + extra_children_count + extra_guardians_count`
-- The minimum seat consumption for any new enrolment is **2 seats**.
+- Starting in the Hekla release, there is **only one** seat-counting formula across the entire application, database queries, and Reports API:
+  `Total Seats = 2 + (extra_children_count or 0) + (extra_guardians_count or 0)`
+- Every enrolment always includes at least **1 child and 1 accompanying adult/guardian** (minimum **2 physical seats**). When `extra_children_count` and `extra_guardians_count` are omitted (`NULL`), they represent `0` extra children and `0` extra adults.
 - An occurrence with `remaining_capacity < 2` is considered full (`OCCURRENCE_FULL`).
 - In the public UI (`kukkuu-ui`), an occurrence with fewer than 2 remaining seats displays *"Täynnä"* (Full), disabling enrolment and allowing guardians to subscribe to free-spot notifications instead.
 
-### Rule 3: Event Types & Removal of `CHILD_AND_1_OR_2_GUARDIANS`
+### Rule 2: Event Types & Removal of `CHILD_AND_1_OR_2_GUARDIANS`
 
 - To simplify the domain model and user experience, `Event.CHILD_AND_1_OR_2_GUARDIANS` ("Child and 1–2 guardians") has been **removed** from `Event.PARTICIPANTS_PER_INVITE_CHOICES` and the GraphQL schema.
 - All existing events with `participants_per_invite = "child_and_1_or_2_guardians"` are migrated to `Event.FAMILY` (`"family"`).
@@ -67,13 +59,11 @@ With the introduction of dynamic enrolments and family events (allowing families
 
 ## 3. Known Operational Consequences
 
-1. **Deploy-Day Effect**:
-   - Legacy enrolments consume 1 seat, but any *new* enrolment requires at least 2 seats.
-   - Any active occurrence that has exactly 1 remaining seat at the moment Hekla is deployed will immediately become full for new enrolments.
-2. **Mixed Units in Reports for Cutover Events**:
-   - For events or occurrences that span the pre-Hekla and post-Hekla timeframe, `capacity`, `enrolment_count`, and `reserved_seats` reflect mixed units (invitations for old enrolments, physical headcounts for new enrolments). Historical and post-Hekla raw numbers should not be directly compared without noting the cutover.
-3. **Consistent Free-Spot Threshold (>= 2)**:
-   - Occurrence booking, notification subscriptions (`FreeSpotNotificationSubscription`), and automatic free-spot notification dispatching all use the threshold >= 2 seats (`Occurrence.has_free_seats()`). If only 1 seat opens up (e.g. from a legacy cancellation), notifications are not sent because no new enrolment can take only 1 seat.
+1. **Historical Report Comparability (Pre-2027 vs. 2027+ / Hekla Release)**:
+   - Reports exported before 2027 (prior to the Hekla release) counted enrolments (`1 enrolment = 1 child`) without accompanying adults, and occurrence capacities were configured as half of the physical room seats.
+   - Starting from the Hekla release (2027+), all seat metrics (`reserved_seats`, `remaining_capacity`) count real physical attendees (`2 + extra_children_count + extra_guardians_count`). Reports exported before 2027 are therefore not directly comparable with reports exported from 2027 onward.
+2. **Consistent Free-Spot Threshold (>= 2)**:
+   - Occurrence booking, notification subscriptions (`FreeSpotNotificationSubscription`), and automatic free-spot notification dispatching all use the threshold >= 2 seats (`Occurrence.has_free_seats()`). If only 1 seat is free, notifications are not sent because every enrolment requires at least 2 seats.
 
 ---
 

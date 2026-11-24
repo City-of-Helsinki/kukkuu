@@ -287,7 +287,7 @@
             'alpha3Code': 'fin',
           }),
         ]),
-        'remainingCapacity': 44,
+        'remainingCapacity': 40,
         'ticketSystem': dict({
           'type': 'INTERNAL',
         }),
@@ -1092,7 +1092,7 @@
             'alpha3Code': 'fin',
           }),
         ]),
-        'remainingCapacity': 45,
+        'remainingCapacity': 42,
         'ticketSystem': dict({
           'type': 'INTERNAL',
         }),
@@ -1120,114 +1120,6 @@
             }),
           ]),
         }),
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[0-0]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 0,
-        'capacityOverride': 0,
-        'enrolmentCount': 0,
-        'remainingCapacity': 0,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[5-0]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 5,
-        'capacityOverride': 5,
-        'enrolmentCount': 0,
-        'remainingCapacity': 5,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[5-4]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 5,
-        'capacityOverride': 5,
-        'enrolmentCount': 4,
-        'remainingCapacity': 1,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[5-5]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 5,
-        'capacityOverride': 5,
-        'enrolmentCount': 5,
-        'remainingCapacity': 0,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[5-6]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 5,
-        'capacityOverride': 5,
-        'enrolmentCount': 6,
-        'remainingCapacity': 0,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[None-0]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 10,
-        'capacityOverride': None,
-        'enrolmentCount': 0,
-        'remainingCapacity': 10,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[None-10]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 10,
-        'capacityOverride': None,
-        'enrolmentCount': 10,
-        'remainingCapacity': 0,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[None-11]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 10,
-        'capacityOverride': None,
-        'enrolmentCount': 11,
-        'remainingCapacity': 0,
-      }),
-    }),
-  })
-# ---
-# name: test_occurrence_capacity[None-9]
-  dict({
-    'data': dict({
-      'occurrence': dict({
-        'capacity': 10,
-        'capacityOverride': None,
-        'enrolmentCount': 9,
-        'remainingCapacity': 1,
       }),
     }),
   })

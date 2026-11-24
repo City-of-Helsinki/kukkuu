@@ -11,7 +11,7 @@ from subscriptions.tests.utils import assert_child_has_subscriptions
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("final_occurrence_capacity", (5, None))
+@pytest.mark.parametrize("final_occurrence_capacity", (8, None))
 def test_free_spot_notification_occurrence_capacity_changes(
     snapshot,
     notification_template_free_spot,
@@ -24,19 +24,19 @@ def test_free_spot_notification_occurrence_capacity_changes(
         time=now() + timedelta(days=14),
         event__id=777,
         event__published_at=now(),
-        event__capacity_per_occurrence=5,
-        capacity_override=3,
+        event__capacity_per_occurrence=8,
+        capacity_override=6,
     )
     EnrolmentFactory.create_batch(3, occurrence=occurrence)
     FreeSpotNotificationSubscriptionFactory(occurrence=occurrence, child=child)
     other_subscription = FreeSpotNotificationSubscriptionFactory(child=child)
 
-    occurrence.capacity_override = 2
+    occurrence.capacity_override = 4
     occurrence.save()
 
     assert len(mail.outbox) == 0
 
-    occurrence.capacity_override = 3
+    occurrence.capacity_override = 6
     occurrence.save()
 
     assert len(mail.outbox) == 0
@@ -61,24 +61,24 @@ def test_free_spot_notification_event_capacity_changes(
         time=now() + timedelta(days=14),
         event__id=777,
         event__published_at=now(),
-        event__capacity_per_occurrence=3,
+        event__capacity_per_occurrence=6,
     )
     EnrolmentFactory.create_batch(3, occurrence=occurrence)
     FreeSpotNotificationSubscriptionFactory(occurrence=occurrence, child=child)
     other_subscription = FreeSpotNotificationSubscriptionFactory(child=child)
     event = occurrence.event
 
-    event.capacity_per_occurrence = 2
+    event.capacity_per_occurrence = 4
     event.save()
 
     assert len(mail.outbox) == 0
 
-    event.capacity_per_occurrence = 3
+    event.capacity_per_occurrence = 6
     event.save()
 
     assert len(mail.outbox) == 0
 
-    event.capacity_per_occurrence = 5
+    event.capacity_per_occurrence = 8
     event.save()
 
     assert len(mail.outbox) == 1
@@ -99,7 +99,7 @@ def test_free_spot_notification_someone_unenrols(
         event__id=777,
         event__published_at=now(),
         event__capacity_per_occurrence=2,
-        capacity_override=4,
+        capacity_override=7,
     )
     enrolments = EnrolmentFactory.create_batch(4, occurrence=occurrence)
     FreeSpotNotificationSubscriptionFactory(occurrence=occurrence, child=child)

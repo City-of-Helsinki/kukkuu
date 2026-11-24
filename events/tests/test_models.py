@@ -1077,17 +1077,21 @@ def test_event_group_events_project_mismatch_raises_validation_error():
 
 
 @pytest.mark.django_db
-def test_occurrence_reserved_seats_legacy():
+def test_occurrence_reserved_seats_without_extra_participants():
+    """
+    Verify an enrolment with omitted (NULL) extra participant counts reserves
+    2 physical seats (1 child + 1 adult).
+    """
     occurrence = OccurrenceFactory()
     enrolment = EnrolmentFactory(
         occurrence=occurrence,
         extra_children_count=None,
         extra_guardians_count=None,
     )
-    assert enrolment.total_seats == 1
-    assert occurrence.get_reserved_seats() == 1
+    assert enrolment.total_seats == 2
+    assert occurrence.get_reserved_seats() == 2
     annotated = Occurrence.objects.with_reserved_seats().get(pk=occurrence.pk)
-    assert annotated.reserved_seats == 1
+    assert annotated.reserved_seats == 2
 
 
 @pytest.mark.django_db
@@ -1125,7 +1129,7 @@ def test_occurrence_with_reserved_seats_query_matches_method():
     occ_empty = OccurrenceFactory()
     occ_mixed = OccurrenceFactory()
 
-    # Legacy enrolment (1 seat)
+    # Standard enrolment without extra participants (2 seats: 1 child + 1 adult)
     EnrolmentFactory(
         occurrence=occ_mixed,
         extra_children_count=None,
@@ -1146,7 +1150,7 @@ def test_occurrence_with_reserved_seats_query_matches_method():
     res_mixed = qs.get(pk=occ_mixed.pk)
 
     assert res_empty.reserved_seats == occ_empty.get_reserved_seats() == 0
-    assert res_mixed.reserved_seats == occ_mixed.get_reserved_seats() == 4
+    assert res_mixed.reserved_seats == occ_mixed.get_reserved_seats() == 5
 
 
 @pytest.mark.django_db
@@ -1158,18 +1162,18 @@ def test_event_and_event_group_reserved_seats():
     occ_1 = OccurrenceFactory(event=event_1)
     occ_2 = OccurrenceFactory(event=event_2)
 
-    # Legacy enrolment (1 seat)
+    # Standard enrolment without extra participants (2 seats: 1 child + 1 adult)
     EnrolmentFactory(
         occurrence=occ_1, extra_children_count=None, extra_guardians_count=None
     )
     # Family enrolment (2 + 1 + 1 = 4 seats)
     EnrolmentFactory(occurrence=occ_2, extra_children_count=1, extra_guardians_count=1)
 
-    assert occ_1.get_reserved_seats() == 1
+    assert occ_1.get_reserved_seats() == 2
     assert occ_2.get_reserved_seats() == 4
-    assert event_1.get_reserved_seats() == 1
+    assert event_1.get_reserved_seats() == 2
     assert event_2.get_reserved_seats() == 4
-    assert event_group.get_reserved_seats() == 5
+    assert event_group.get_reserved_seats() == 6
 
 
 @pytest.mark.django_db
