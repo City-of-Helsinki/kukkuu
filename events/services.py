@@ -40,6 +40,7 @@ from organisations.models import Organisation
 from projects.models import Project
 from reports.consts import CONTACT_LANGUAGE_TO_LANGUAGE
 from tags.models import Accessibility, ThemePath
+from users.cache import UserRequestCache
 from venues.models import Venue
 from venues.services import get_system_venue
 
@@ -629,6 +630,18 @@ class OccurrenceAPIService:
     """
 
     NON_NULLABLE_UPDATE_FIELDS = ("time",)
+
+    @staticmethod
+    def check_can_user_administer(occurrence: Occurrence, info) -> None:
+        """
+        Verify the request's user can administer the given occurrence, using the
+        request-scoped organisation IDs cache to avoid N+1 database queries.
+        """
+        if not occurrence.can_user_administer(
+            info.context.user,
+            user_organisation_ids=UserRequestCache.get_organisation_ids(info),
+        ):
+            raise PermissionDenied()
 
     class Resolver:
         """
