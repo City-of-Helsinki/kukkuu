@@ -248,6 +248,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -257,6 +265,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),
@@ -470,6 +486,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -479,6 +503,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),
@@ -571,6 +603,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -580,6 +620,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),
@@ -672,6 +720,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -681,6 +737,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),
@@ -773,6 +837,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -782,6 +854,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),
@@ -874,6 +954,14 @@
                                 ]),
                                 'key': 'VENUE',
                               }),
+                              dict({
+                                'key': 'ATTENDED_CHILDREN_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
+                              dict({
+                                'key': 'ATTENDED_ADULTS_COUNT_OVERRIDE',
+                                'value': None,
+                              }),
                             ]),
                             'key': 'OCCURRENCE',
                           }),
@@ -883,6 +971,14 @@
                           }),
                           dict({
                             'key': 'EXTRA_GUARDIANS_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_CHILDREN_COUNT',
+                            'value': None,
+                          }),
+                          dict({
+                            'key': 'ARRIVED_GUARDIANS_COUNT',
                             'value': None,
                           }),
                         ]),

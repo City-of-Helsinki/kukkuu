@@ -2206,6 +2206,8 @@ def test_occurrences_filter_by_project(
 def test_occurrence_available_capacity_and_enrolment_count(
     user_api_client, snapshot, occurrence, project
 ):
+    occurrence.event.capacity_per_occurrence = 48
+    occurrence.event.save(update_fields=["capacity_per_occurrence"])
     max_capacity = occurrence.event.capacity_per_occurrence
     # Each enrolment reserves 2 physical seats (1 child + 1 adult).
     EnrolmentFactory.create_batch(3, occurrence=occurrence, child__project=project)
@@ -3651,9 +3653,21 @@ def test_assign_ticket_system_password_not_own_child(guardian_api_client):
     assert not another_child.ticket_system_passwords.filter(event=event).exists()
 
 
+TICKET_VERIFICATION_OCCURRENCE_CAPACITY = 24
+
+
 # NOTE: api_client is for anonymous users
 def test_verify_valid_ticket(api_client, snapshot):
-    upcoming_occurrence = OccurrenceFactory(time=timezone.now())
+    # Explicitly set event capacity_per_occurrence to
+    # TICKET_VERIFICATION_OCCURRENCE_CAPACITY (24).
+    # 1 standard enrolment reserves 2 seats (1 child + 1 adult) and has not yet
+    # arrived (attended=None), so:
+    # - reservedSeats = 2, pendingArrivalSeats = 2, handledEnrolmentCount = 0
+    # - attendedSeats = 0, remainingEmptySeats = 24 (all 24 room seats are empty)
+    upcoming_occurrence = OccurrenceFactory(
+        time=timezone.now(),
+        event__capacity_per_occurrence=TICKET_VERIFICATION_OCCURRENCE_CAPACITY,
+    )
     valid_enrolment = EnrolmentFactory(occurrence=upcoming_occurrence)
     executed = api_client.execute(
         VERIFY_TICKET_QUERY, variables={"referenceId": valid_enrolment.reference_id}
@@ -3669,17 +3683,30 @@ def test_verify_valid_ticket(api_client, snapshot):
     assert (
         executed["data"]["verifyTicket"]["venueName"] == upcoming_occurrence.venue.name
     )
+    assert (
+        executed["data"]["verifyTicket"]["occurrenceArrivalStatus"]["capacity"]
+        == TICKET_VERIFICATION_OCCURRENCE_CAPACITY
+    )
     snapshot.assert_match(executed)
 
 
 # NOTE: api_client is for anonymous users
 def test_verify_invalid_ticket(api_client, snapshot):
-    past_occurrence = OccurrenceFactory(time=timezone.now() - timedelta(days=1))
+    # Same seat accounting as test_verify_valid_ticket
+    # (capacity=TICKET_VERIFICATION_OCCURRENCE_CAPACITY=24 via capacity_override,
+    # 1 unhandled 2-seat enrolment -> reservedSeats=2, pendingArrivalSeats=2,
+    # attendedSeats=0, remainingEmptySeats=24),
+    # but validity=False because the occurrence is in the past.
+    past_occurrence = OccurrenceFactory(
+        time=timezone.now() - timedelta(days=1),
+        capacity_override=TICKET_VERIFICATION_OCCURRENCE_CAPACITY,
+    )
     invalid_enrolment = EnrolmentFactory(occurrence=past_occurrence)
     executed = api_client.execute(
         VERIFY_TICKET_QUERY, variables={"referenceId": invalid_enrolment.reference_id}
     )
     assert executed["data"]["verifyTicket"]["validity"] is False
+    assert executed["data"]["verifyTicket"]["occurrenceArrivalStatus"] is None
     snapshot.assert_match(executed)
 
 
@@ -3703,7 +3730,19 @@ def test_erroneous_ticket_verification(api_client, snapshot):
 # how many person have arrived and how many are still left to come.
 def test_update_valid_ticket_attended(init_value, updated_value, api_client, snapshot):
     """The ticket can be marked as attended and unattended."""
-    upcoming_occurrence = OccurrenceFactory(time=timezone.now())
+    # Explicitly set event capacity_per_occurrence to
+    # TICKET_VERIFICATION_OCCURRENCE_CAPACITY (24).
+    # The single enrolment reserves 2 seats (1 child + 1 adult).
+    # After updateTicketAttended runs, the ticket is handled (handledEnrolmentCount=1,
+    # pendingArrivalSeats=0):
+    # - When updated_value=True (1 child + 1 adult arrived): attendedSeats=2,
+    #   remainingEmptySeats=22 (24 - 2).
+    # - When updated_value=False (0 arrived): attendedSeats=0,
+    #   remainingEmptySeats=24 (24 - 0).
+    upcoming_occurrence = OccurrenceFactory(
+        time=timezone.now(),
+        event__capacity_per_occurrence=TICKET_VERIFICATION_OCCURRENCE_CAPACITY,
+    )
     valid_enrolment = EnrolmentFactory(
         occurrence=upcoming_occurrence, attended=init_value
     )
@@ -3717,7 +3756,8 @@ def test_update_valid_ticket_attended(init_value, updated_value, api_client, sna
         variables={
             "input": {
                 "referenceId": valid_enrolment.reference_id,
-                "attended": updated_value,
+                "arrivedChildrenCount": 1 if updated_value else 0,
+                "arrivedGuardiansCount": 1 if updated_value else 0,
             }
         },
     )

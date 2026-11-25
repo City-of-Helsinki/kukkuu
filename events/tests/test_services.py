@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 import pytest
@@ -5,15 +6,18 @@ from django.conf import settings
 from django.utils.timezone import now
 
 from events.factories import (
+    EnrolmentFactory,
     EventFactory,
     OccurrenceFactory,
     TicketmasterEventFactory,
 )
 from events.models import Event
 from events.services import (
+    EnrolmentAPIService,
     sync_external_event_occurrence,
     sync_external_occurrence_to_event,
 )
+from kukkuu.exceptions import DataValidationError
 
 
 @pytest.mark.django_db
@@ -120,3 +124,284 @@ def test_sync_external_occurrence_to_event_preserves_url_when_empty():
 def test_sync_external_occurrence_to_event_ignores_internal():
     occ = OccurrenceFactory(event__ticket_system=Event.INTERNAL)
     assert sync_external_occurrence_to_event(occ) is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "enrolment_data,arrival_input,expected_result",
+    [
+        # Explicit arrived counts (including full, partial, and 0/0 absent)
+        pytest.param(
+            {"extra_children_count": 0, "extra_guardians_count": 0},
+            {"arrived_children_count": 1, "arrived_guardians_count": 1},
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 2,
+            },
+            id="explicit_counts_full_arrival_with_zero_extras",
+        ),
+        pytest.param(
+            {"extra_children_count": None, "extra_guardians_count": None},
+            {"arrived_children_count": 1, "arrived_guardians_count": 1},
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 2,
+            },
+            id="explicit_counts_full_arrival_with_null_extras",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"arrived_children_count": 2, "arrived_guardians_count": 1},
+            {
+                "attended": True,
+                "arrived_children_count": 2,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 3,
+            },
+            id="explicit_counts_partial_family_arrival",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"arrived_children_count": 3, "arrived_guardians_count": 2},
+            {
+                "attended": True,
+                "arrived_children_count": 3,
+                "arrived_guardians_count": 2,
+                "arrived_seats": 5,
+            },
+            id="explicit_counts_full_family_arrival",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"arrived_children_count": 0, "arrived_guardians_count": 1},
+            {
+                "attended": True,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 1,
+            },
+            id="explicit_counts_guardian_only_arrival",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"arrived_children_count": 0, "arrived_guardians_count": 0},
+            {
+                "attended": False,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 0,
+                "arrived_seats": 0,
+            },
+            id="explicit_counts_zero_arrival_marks_not_attended",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+            },
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 2,
+            },
+            id="explicit_counts_with_matching_attended_true",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {
+                "attended": False,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 0,
+            },
+            {
+                "attended": False,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 0,
+                "arrived_seats": 0,
+            },
+            id="explicit_counts_with_matching_attended_false",
+        ),
+        # Boolean attended flag only (defaults counts to booked counts / 0 / None)
+        pytest.param(
+            {"extra_children_count": None, "extra_guardians_count": None},
+            {"attended": True},
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 2,
+            },
+            id="attended_true_only_defaults_to_booked_counts_for_null_extras",
+        ),
+        pytest.param(
+            {"extra_children_count": 0, "extra_guardians_count": 0},
+            {"attended": True},
+            {
+                "attended": True,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+                "arrived_seats": 2,
+            },
+            id="attended_true_only_defaults_to_booked_counts_for_zero_extras",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"attended": True},
+            {
+                "attended": True,
+                "arrived_children_count": 3,
+                "arrived_guardians_count": 2,
+                "arrived_seats": 5,
+            },
+            id="attended_true_only_defaults_to_booked_family_counts",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"attended": False},
+            {
+                "attended": False,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 0,
+                "arrived_seats": 0,
+            },
+            id="attended_false_only_defaults_counts_to_zero",
+        ),
+        pytest.param(
+            {"extra_children_count": 2, "extra_guardians_count": 1},
+            {"attended": None},
+            {
+                "attended": None,
+                "arrived_children_count": None,
+                "arrived_guardians_count": None,
+                "arrived_seats": 0,
+            },
+            id="attended_none_only_clears_counts_to_null",
+        ),
+    ],
+)
+def test_enrolment_api_service_apply_arrival_valid(
+    enrolment_data,
+    arrival_input,
+    expected_result,
+):
+    """
+    Verify EnrolmentAPIService.apply_arrival updates and persists arrived
+    children/guardian counts and attended status for explicit count pairs and
+    attended-only calls across default (NULL/0) and family enrolments.
+    """
+    enrolment = EnrolmentFactory(
+        attended=True,
+        arrived_children_count=1,
+        arrived_guardians_count=1,
+        **enrolment_data,
+    )
+
+    updated = EnrolmentAPIService.apply_arrival(
+        enrolment,
+        **arrival_input,
+    )
+    updated.refresh_from_db()
+
+    assert {
+        "attended": updated.attended,
+        "arrived_children_count": updated.arrived_children_count,
+        "arrived_guardians_count": updated.arrived_guardians_count,
+        "arrived_seats": updated.arrived_seats,
+    } == expected_result
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "arrival_input,expected_message",
+    [
+        pytest.param(
+            {"arrived_children_count": 1},
+            "Both arrivedChildrenCount and arrivedGuardiansCount "
+            "must be provided together.",
+            id="only_arrived_children_provided",
+        ),
+        pytest.param(
+            {"arrived_guardians_count": 1},
+            "Both arrivedChildrenCount and arrivedGuardiansCount "
+            "must be provided together.",
+            id="only_arrived_guardians_provided",
+        ),
+        pytest.param(
+            {"arrived_children_count": -1, "arrived_guardians_count": 1},
+            "Arrived participant counts cannot be negative.",
+            id="negative_arrived_children",
+        ),
+        pytest.param(
+            {"arrived_children_count": 1, "arrived_guardians_count": -1},
+            "Arrived participant counts cannot be negative.",
+            id="negative_arrived_guardians",
+        ),
+        pytest.param(
+            {"arrived_children_count": 3, "arrived_guardians_count": 1},
+            "Arrived children count (3) cannot exceed booked children count (2).",
+            id="arrived_children_exceeds_booked_children",
+        ),
+        pytest.param(
+            {"arrived_children_count": 1, "arrived_guardians_count": 3},
+            "Arrived guardians count (3) cannot exceed booked guardians count (2).",
+            id="arrived_guardians_exceeds_booked_guardians",
+        ),
+        pytest.param(
+            {
+                "attended": False,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 1,
+            },
+            "Attended status contradicts the provided arrived participant counts.",
+            id="attended_false_contradicts_nonzero_arrived_counts",
+        ),
+        pytest.param(
+            {
+                "attended": True,
+                "arrived_children_count": 0,
+                "arrived_guardians_count": 0,
+            },
+            "Attended status contradicts the provided arrived participant counts.",
+            id="attended_true_contradicts_zero_arrived_counts",
+        ),
+        pytest.param(
+            {
+                "attended": None,
+                "arrived_children_count": 1,
+                "arrived_guardians_count": 0,
+            },
+            "Attended status contradicts the provided arrived participant counts.",
+            id="attended_none_contradicts_explicit_arrived_counts",
+        ),
+        pytest.param(
+            {},
+            '"attended" or arrived participant counts are required.',
+            id="empty_input_without_attended_or_counts",
+        ),
+    ],
+)
+def test_enrolment_api_service_apply_arrival_validation_errors(
+    arrival_input,
+    expected_message,
+):
+    """
+    Verify EnrolmentAPIService.apply_arrival raises DataValidationError when
+    only one arrived count is provided, counts are negative or exceed booked
+    counts, attended contradicts counts, or neither attended nor counts are given.
+    """
+    enrolment = EnrolmentFactory(
+        extra_children_count=1,
+        extra_guardians_count=1,
+    )
+
+    with pytest.raises(DataValidationError, match=re.escape(expected_message)):
+        EnrolmentAPIService.apply_arrival(
+            enrolment,
+            **arrival_input,
+        )

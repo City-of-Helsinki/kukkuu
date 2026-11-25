@@ -313,7 +313,7 @@ For events managed internally, Kukkuu provides the following features:
   - Each enrolment creates an `Enrolment` model instance in the database, storing all relevant contact information.
   - Capacity tracks real physical seat headcounts ($2 + \text{extra children} + \text{extra guardians}$ per enrolment, minimum 1 child + 1 adult). See [enrolment decisions documentation](docs/enrolment-decisions.md).
 - **GraphQL API Access:** Project admins can fetch enrolment data for their events via the GraphQL API. Admins have access only to events within their assigned projects.
-- **QR Code Ticket Verification:**
+- **QR Code Ticket Verification & Arrival Tracking:**
 
   - Enrolment confirmation emails include a QR code for easy ticket verification.
   - This QR code links to a verification URL (configurable via `KUKKUU_TICKET_VERIFICATION_URL`) and includes a unique reference ID generated using `Hashids` (with a salt defined in `KUKKUU_HASHID_SALT`).
@@ -322,6 +322,11 @@ For events managed internally, Kukkuu provides the following features:
   KUKKUU_HASHID_SALT=your_secret_salt
   KUKKUU_TICKET_VERIFICATION_URL=http://your-verification-domain/check-ticket-validity/{reference_id}
   ```
+
+  - There are two ways to mark participants as having arrived for an occurrence:
+    1. **Doorway QR ticket scanning:** Staff at the door scan the QR code to open `/check-ticket-validity/{reference_id}` in `kukkuu-admin` (using `verifyTicket` and `updateTicketAttended`). Staff can confirm or adjust the arrived children and adults counts (pre-filled from the ticket's booked counts and bounded between `0` and booked counts).
+    2. **Admin UI attendee list:** Event organizers can mark attendance (`attended`, `arrivedChildrenCount`, and `arrivedGuardiansCount`) directly in the occurrence's attendee table in `kukkuu-admin` (`setEnrolmentAttendance`).
+  - **Arrival Count Override:** If ticket scanning was unavailable or for any other reason participants could not be marked individually on an internal event, organizers can set both `attendedChildrenCountOverride` and `attendedAdultsCountOverride` (they must be set together, or both cleared) on the occurrence via `kukkuu-admin` (`updateOccurrence`). `attendedCountOverride` is their read-only sum. Reports (`attended_seats`) and Admin UI use the overridden total instead of the calculated sum, ignoring the per-enrolment arrived counts, while keeping the override clearly indicated. (External ticket system events manage tickets and attendance externally and do not use QR verification or arrival counts.)
 
 ### External Ticketing
 

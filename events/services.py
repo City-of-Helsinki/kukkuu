@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django_ilmoitin.dummy_context import dummy_context
 from django_ilmoitin.models import NotificationTemplate, NotificationTemplateException
 from django_ilmoitin.utils import RenderedTemplate, render_notification_template
+from graphene.utils.str_converters import to_camel_case
 from graphql_relay import from_global_id
 from parler.utils.context import switch_language
 
@@ -25,7 +26,7 @@ from common.utils import (
 )
 from events.consts import NotificationType
 from events.enums import InvitationMessageFormat
-from events.models import Event, EventGroup, Occurrence
+from events.models import Enrolment, Event, EventGroup, Occurrence
 from kukkuu.consts import DATA_VALIDATION_ERROR
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -47,6 +48,107 @@ from venues.services import get_system_venue
 logger = logging.getLogger(__name__)
 
 _DEFAULT_TICKET_SYSTEM_URL = "https://example.com"
+# Maximum value for a 16-bit signed integer (2^15 - 1), matching PostgreSQL
+# `smallint` and Django's `PositiveSmallIntegerField` upper bound.
+_POSITIVE_SMALL_INT_MAX = 32767
+UNSET = object()
+
+
+class EnrolmentAPIService:
+    """Service class for enrolment arrival validation and updates."""
+
+    @staticmethod
+    def _should_use_explicit_counts(
+        arrived_children_count: int | None,
+        arrived_guardians_count: int | None,
+    ) -> bool:
+        has_children = arrived_children_count is not None
+        has_guardians = arrived_guardians_count is not None
+        if has_children != has_guardians:
+            raise DataValidationError(
+                "Both arrivedChildrenCount and arrivedGuardiansCount "
+                "must be provided together."
+            )
+        return has_children and has_guardians
+
+    @staticmethod
+    def _apply_explicit_arrived_counts(
+        enrolment: Enrolment,
+        arrived_children_count: int,
+        arrived_guardians_count: int,
+        attended=UNSET,
+    ) -> None:
+        if arrived_children_count < 0 or arrived_guardians_count < 0:
+            raise DataValidationError("Arrived participant counts cannot be negative.")
+        if arrived_children_count > enrolment.booked_children_count:
+            raise DataValidationError(
+                f"Arrived children count ({arrived_children_count}) cannot exceed "
+                f"booked children count ({enrolment.booked_children_count})."
+            )
+        if arrived_guardians_count > enrolment.booked_guardians_count:
+            raise DataValidationError(
+                f"Arrived guardians count ({arrived_guardians_count}) cannot exceed "
+                f"booked guardians count ({enrolment.booked_guardians_count})."
+            )
+
+        derived_attended = (arrived_children_count + arrived_guardians_count) > 0
+        if attended is not UNSET and attended is not derived_attended:
+            raise DataValidationError(
+                "Attended status contradicts the provided arrived participant counts."
+            )
+
+        enrolment.arrived_children_count = arrived_children_count
+        enrolment.arrived_guardians_count = arrived_guardians_count
+        enrolment.attended = derived_attended
+
+    @staticmethod
+    def _apply_attended_flag(enrolment: Enrolment, attended) -> None:
+        if attended is UNSET:
+            raise DataValidationError(
+                '"attended" or arrived participant counts are required.'
+            )
+        if attended is True:
+            enrolment.arrived_children_count = enrolment.booked_children_count
+            enrolment.arrived_guardians_count = enrolment.booked_guardians_count
+        elif attended is False:
+            enrolment.arrived_children_count = 0
+            enrolment.arrived_guardians_count = 0
+        else:
+            enrolment.arrived_children_count = None
+            enrolment.arrived_guardians_count = None
+        enrolment.attended = attended
+
+    @classmethod
+    def apply_arrival(
+        cls,
+        enrolment: Enrolment,
+        *,
+        attended=UNSET,
+        arrived_children_count: int | None = None,
+        arrived_guardians_count: int | None = None,
+    ) -> Enrolment:
+        """
+        Validate and apply arrival counts and/or attended status to an enrolment.
+
+        Supports either explicit (arrived_children_count, arrived_guardians_count)
+        pairs (deriving `attended = (children + guardians) > 0`), or an `attended`
+        boolean/null alone (defaulting counts to booked counts when True, 0 when False,
+        and None when None).
+        """
+        if cls._should_use_explicit_counts(
+            arrived_children_count, arrived_guardians_count
+        ):
+            cls._apply_explicit_arrived_counts(
+                enrolment,
+                arrived_children_count,
+                arrived_guardians_count,
+                attended=attended,
+            )
+        else:
+            cls._apply_attended_flag(enrolment, attended)
+
+        enrolment.save()
+        return enrolment
 
 
 def validate_event_and_event_group_project_match(event):
@@ -630,6 +732,10 @@ class OccurrenceAPIService:
     """
 
     NON_NULLABLE_UPDATE_FIELDS = ("time",)
+    ATTENDED_OVERRIDE_FIELDS = (
+        "attended_children_count_override",
+        "attended_adults_count_override",
+    )
 
     @staticmethod
     def check_can_user_administer(occurrence: Occurrence, info) -> None:
@@ -784,6 +890,16 @@ class OccurrenceAPIService:
                             "event occurrence."
                         )
                     )
+                if event.is_external_ticket_system_event and any(
+                    kwargs.get(field) is not None
+                    for field in OccurrenceAPIService.ATTENDED_OVERRIDE_FIELDS
+                ):
+                    raise ApiUsageError(
+                        _(
+                            "Cannot set attended count override on an external ticket "
+                            "system event occurrence."
+                        )
+                    )
                 return event
 
             event_id = kwargs.get("event_id")
@@ -835,12 +951,39 @@ class OccurrenceAPIService:
                     )
                 )
 
+        @staticmethod
+        def _validate_attended_count_overrides(
+            kwargs: dict, occurrence: Occurrence | None = None
+        ) -> None:
+            fields = OccurrenceAPIService.ATTENDED_OVERRIDE_FIELDS
+            for field in fields:
+                value = kwargs.get(field)
+                if value is not None and not 0 <= value <= _POSITIVE_SMALL_INT_MAX:
+                    raise DataValidationError(
+                        f"{to_camel_case(field)} must be between 0 and "
+                        f"{_POSITIVE_SMALL_INT_MAX}."
+                    )
+
+            # Resulting state after the update: omitted keys keep the stored
+            # value, an explicit null clears it. This must run before the object
+            # is saved, otherwise the DB check constraint fires first.
+            resulting = [
+                kwargs[field] if field in kwargs else getattr(occurrence, field, None)
+                for field in fields
+            ]
+            if (resulting[0] is None) != (resulting[1] is None):
+                raise DataValidationError(
+                    "attendedChildrenCountOverride and attendedAdultsCountOverride "
+                    "must both be set or both be null."
+                )
+
         @classmethod
         def validate_input(
             cls, kwargs: dict, occurrence: Occurrence | None = None
         ) -> None:
             event = cls._resolve_and_validate_event(kwargs, occurrence=occurrence)
             cls._validate_time_year(kwargs, occurrence=occurrence, event=event)
+            cls._validate_attended_count_overrides(kwargs, occurrence)
 
         @staticmethod
         def clean_occurrence(occurrence: Occurrence) -> None:
@@ -878,6 +1021,10 @@ class OccurrenceAPIService:
 
         # needed because enrolment_count is an annotated field
         occurrence.enrolment_count = 0
+        occurrence.calculated_attended_seats = 0
+        occurrence.attended_seats = 0
+        occurrence.handled_enrolment_count = 0
+        occurrence.pending_arrival_seats = 0
 
         logger.info(
             f"user {info.context.user.uuid} added occurrence {occurrence} with data "

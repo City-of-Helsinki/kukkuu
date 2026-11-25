@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import (
+    Case,
     Count,
     Exists,
     ExpressionWrapper,
@@ -17,6 +18,7 @@ from django.db.models import (
     Sum,
     UniqueConstraint,
     Value,
+    When,
 )
 from django.db.models.functions import Coalesce, ExtractYear, Greatest
 from django.utils import timezone
@@ -337,6 +339,13 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
 
     def get_attended_enrolment_count(self) -> int:
         return sum(event.get_attended_enrolment_count() for event in self.events.all())
+
+    def get_attended_seats(self) -> int:
+        """
+        Return the total effective arrived physical seats summed across all
+        events in this event group.
+        """
+        return sum(event.get_attended_seats() for event in self.events.all())
 
     def get_capacity(self) -> Optional[int]:
         try:
@@ -770,6 +779,17 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             for occurrence in self.occurrences.all()
         )
 
+    def get_attended_seats(self) -> int:
+        """
+        Return the total effective arrived physical seats summed across all
+        occurrences of this event (0 for external ticket system events).
+        """
+        if self.is_external_ticket_system_event:
+            return 0
+        return sum(
+            occurrence.get_attended_seats() for occurrence in self.occurrences.all()
+        )
+
     def get_capacity(self) -> Optional[int]:
         if self.is_external_ticket_system_event:
             return 0
@@ -882,6 +902,73 @@ class OccurrenceQueryset(models.QuerySet):
             )
         )
 
+    def with_handled_enrolment_count(self):
+        """
+        Annotate occurrences with `handled_enrolment_count`: the number of
+        enrolments whose attendance has been processed (`attended` is True or False).
+        """
+        return self.annotate(
+            handled_enrolment_count=Count(
+                "enrolments", Q(enrolments__attended__isnull=False), distinct=True
+            )
+        )
+
+    def with_attended_seats(self):
+        """
+        Annotate occurrences with arrived seat counts:
+        - `calculated_attended_seats`: sum of arrived physical seats across enrolments.
+        - `attended_seats`: the sum of the children and adults count overrides
+          when set, otherwise `calculated_attended_seats`.
+        """
+        Enrolment = apps.get_model("events", "Enrolment")
+        arrived_seats = (
+            Enrolment.objects.filter(occurrence=OuterRef("pk"))
+            .order_by()
+            .values("occurrence")
+            .annotate(total=Sum(EnrolmentQueryset.arrived_seats_expression()))
+            .values("total")
+        )
+        return self.annotate(
+            calculated_attended_seats=Coalesce(
+                Subquery(arrived_seats, output_field=models.IntegerField()), Value(0)
+            )
+        ).annotate(
+            attended_seats=Coalesce(
+                Case(
+                    When(
+                        attended_children_count_override__isnull=False,
+                        attended_adults_count_override__isnull=False,
+                        then=F("attended_children_count_override")
+                        + F("attended_adults_count_override"),
+                    ),
+                    default=None,
+                    output_field=models.IntegerField(),
+                ),
+                "calculated_attended_seats",
+                output_field=models.IntegerField(),
+            )
+        )
+
+    def with_pending_arrival_seats(self):
+        """
+        Annotate occurrences with `pending_arrival_seats`: the total booked
+        physical seats of enrolments not yet marked arrived or absent
+        (`attended` is NULL).
+        """
+        Enrolment = apps.get_model("events", "Enrolment")
+        pending_seats = (
+            Enrolment.objects.filter(occurrence=OuterRef("pk"), attended__isnull=True)
+            .order_by()
+            .values("occurrence")
+            .annotate(total=Sum(EnrolmentQueryset.seats_expression()))
+            .values("total")
+        )
+        return self.annotate(
+            pending_arrival_seats=Coalesce(
+                Subquery(pending_seats, output_field=models.IntegerField()), Value(0)
+            )
+        )
+
     def with_reserved_seats(self):
         Enrolment = apps.get_model("events", "Enrolment")
         seats = (
@@ -971,12 +1058,34 @@ class Occurrence(TimestampedModel, SerializableMixin):
             "(1 child + 1 guardian)."
         ),
     )
+    attended_children_count_override = models.PositiveSmallIntegerField(
+        verbose_name=_("attended children count override"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Override arrived children count for this occurrence. "
+            "Must be set together with attended adults count override. "
+            "When set, reports and Admin UI use the overrides instead of the sum "
+            "of arrived enrolment participants."
+        ),
+    )
+    attended_adults_count_override = models.PositiveSmallIntegerField(
+        verbose_name=_("attended adults count override"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Override arrived adults count for this occurrence. "
+            "Must be set together with attended children count override."
+        ),
+    )
     ticket_system_url = models.URLField(verbose_name=_("ticket system URL"), blank=True)
 
     serialize_fields = (
         {"name": "time", "accessor": lambda t: t.isoformat() if t else None},
         {"name": "event"},
         {"name": "venue"},
+        {"name": "attended_children_count_override"},
+        {"name": "attended_adults_count_override"},
     )
 
     objects = SerializableMixin.SerializableManager.from_queryset(OccurrenceQueryset)()
@@ -984,6 +1093,24 @@ class Occurrence(TimestampedModel, SerializableMixin):
     class Meta:
         verbose_name = _("occurrence")
         verbose_name_plural = _("occurrences")
+        constraints = [
+            # The manual arrival override is a (children, adults) pair: both NULL
+            # (no override) or both non-NULL, so the combined total is never
+            # computed from a half-specified pair.
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        attended_children_count_override__isnull=True,
+                        attended_adults_count_override__isnull=True,
+                    )
+                    | Q(
+                        attended_children_count_override__isnull=False,
+                        attended_adults_count_override__isnull=False,
+                    )
+                ),
+                name="occurrence_attended_overrides_both_or_neither",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.time} ({self.pk})"
@@ -1026,6 +1153,55 @@ class Occurrence(TimestampedModel, SerializableMixin):
                 code=TICKET_SYSTEM_URL_MISSING_ERROR,
             )
 
+    # Queryset annotation attribute names cached on `self.__dict__` by
+    # OccurrenceQueryset (`with_remaining_capacity`, `with_attended_seats`,
+    # `with_handled_enrolment_count`, `with_pending_arrival_seats`) and read first
+    # by the corresponding `get_*` methods. These must be invalidated on `save()`
+    # so updates to fields like `capacity_override` or `attended_count_override`
+    # recalculate fresh values instead of returning stale pre-save annotations.
+    _CACHED_ANNOTATION_ATTRS = (
+        "remaining_capacity",
+        "attended_seats",
+        "calculated_attended_seats",
+        "handled_enrolment_count",
+        "pending_arrival_seats",
+    )
+
+    def _clean_attended_count_overrides_pair(self):
+        """
+        Validate that the children and adults arrival overrides are either both
+        set or both empty.
+        """
+        if (self.attended_children_count_override is None) != (
+            self.attended_adults_count_override is None
+        ):
+            raise ValidationError(
+                {
+                    "attended_children_count_override": _(
+                        "Attended children and adults count overrides must both be "
+                        "set or both be empty."
+                    )
+                }
+            )
+
+    def _clean_external_attended_count_override(self, event):
+        """
+        Validate that the attended count overrides are not set on occurrences of
+        external ticket system events.
+        """
+        if event.is_external_ticket_system_event and (
+            self.attended_children_count_override is not None
+            or self.attended_adults_count_override is not None
+        ):
+            raise ValidationError(
+                {
+                    "attended_children_count_override": _(
+                        "Cannot set attended count override on an external ticket "
+                        "system event occurrence."
+                    )
+                }
+            )
+
     def clean(self):
         super().clean()
         event = getattr(self, "event", None)
@@ -1035,11 +1211,14 @@ class Occurrence(TimestampedModel, SerializableMixin):
         self._clean_external_occurrence_count(event)
         self._clean_venue_system_compatibility(event)
         self._clean_ticket_system_url(event)
+        self._clean_external_attended_count_override(event)
+        self._clean_attended_count_overrides_pair()
 
     def save(self, *args, **kwargs):
         created = self.pk is None
         super().save(*args, **kwargs)
-        self.__dict__.pop("remaining_capacity", None)
+        for attr in self._CACHED_ANNOTATION_ATTRS:
+            self.__dict__.pop(attr, None)
         if not created:
             self.send_free_spot_notifications_if_needed()
 
@@ -1073,6 +1252,103 @@ class Occurrence(TimestampedModel, SerializableMixin):
             return self.attended_enrolment_count
         except AttributeError:
             return self.enrolments.filter(attended=True).count()
+
+    def get_handled_enrolment_count(self) -> int:
+        """
+        Return the number of enrolments whose attendance has been processed
+        (`attended` is True or False, not NULL), or 0 for external events.
+        """
+        if self.event.is_external_ticket_system_event:
+            return 0
+        try:
+            return self.handled_enrolment_count
+        except AttributeError:
+            return self.enrolments.filter(attended__isnull=False).count()
+
+    def get_calculated_attended_seats(self) -> int:
+        """
+        Return the sum of arrived physical seats calculated across all enrolments
+        of this occurrence, ignoring `attended_count_override` (0 for external events).
+        """
+        if self.event.is_external_ticket_system_event:
+            return 0
+        try:
+            return self.calculated_attended_seats
+        except AttributeError:
+            return self.enrolments.aggregate(
+                total=Coalesce(
+                    Sum(EnrolmentQueryset.arrived_seats_expression()), Value(0)
+                )
+            )["total"]
+
+    def get_attended_seats(self) -> int:
+        """
+        Return the effective arrived physical seats for this occurrence:
+        `attended_count_override` when set, otherwise `get_calculated_attended_seats()`
+        (0 for external events).
+        """
+        if self.event.is_external_ticket_system_event:
+            return 0
+        try:
+            return self.attended_seats
+        except AttributeError:
+            if self.attended_count_override is not None:
+                return self.attended_count_override
+            return self.get_calculated_attended_seats()
+
+    @property
+    def attended_count_override(self) -> Optional[int]:
+        """
+        Return the combined manual arrival override (children + adults) when both
+        override fields are set, otherwise None. Read-only: write the two
+        underlying fields instead.
+        """
+        if (
+            self.attended_children_count_override is None
+            or self.attended_adults_count_override is None
+        ):
+            return None
+        return (
+            self.attended_children_count_override + self.attended_adults_count_override
+        )
+
+    @property
+    def is_attended_count_overridden(self) -> bool:
+        """
+        Return True if this is an internal event occurrence with a manual
+        arrival override (children + adults) set.
+        """
+        return (
+            not self.event.is_external_ticket_system_event
+            and self.attended_count_override is not None
+        )
+
+    def get_pending_arrival_seats(self) -> int:
+        """
+        Return the total booked physical seats of enrolments on this occurrence
+        whose attendance has not yet been handled (`attended` is NULL), or 0 for
+        external events.
+        """
+        if self.event.is_external_ticket_system_event:
+            return 0
+        try:
+            return self.pending_arrival_seats
+        except AttributeError:
+            return self.enrolments.filter(attended__isnull=True).aggregate(
+                total=Coalesce(Sum(EnrolmentQueryset.seats_expression()), Value(0))
+            )["total"]
+
+    def get_remaining_empty_seats(self) -> Optional[int]:
+        """
+        Return the number of physical seats currently unoccupied in this occurrence
+        (`capacity - attended_seats`, floored at 0), or None if capacity is unset.
+        """
+        if self.event.is_external_ticket_system_event:
+            return 0
+        capacity = self.get_capacity()
+        if capacity is None:
+            return None
+        return max(capacity - self.get_attended_seats(), 0)
 
     def get_free_spot_notification_subscription_count(self):
         try:
@@ -1215,6 +1491,25 @@ class EnrolmentQueryset(models.QuerySet):
             )
         )
 
+    @staticmethod
+    def arrived_seats_expression():
+        """
+        Return a SQL expression calculating the arrived physical seats for an
+        enrolment: `arrived_children_count + arrived_guardians_count` when both are
+        present, falling back to booked `seats_expression()` when `attended=True`
+        without explicit arrived counts (legacy rows), or 0 otherwise.
+        """
+        return Case(
+            When(
+                arrived_children_count__isnull=False,
+                arrived_guardians_count__isnull=False,
+                then=F("arrived_children_count") + F("arrived_guardians_count"),
+            ),
+            When(attended=True, then=EnrolmentQueryset.seats_expression()),
+            default=Value(0),
+            output_field=models.IntegerField(),
+        )
+
     def user_can_view(self, user):
         if not user.is_authenticated:
             return self.none()
@@ -1305,17 +1600,32 @@ class Enrolment(TimestampedModel, SerializableMixin):
         verbose_name=_("occurrence"),
     )
     attended = models.BooleanField(verbose_name=_("attended"), null=True, blank=True)
+    arrived_children_count = models.PositiveSmallIntegerField(
+        verbose_name=_("arrived children count"),
+        null=True,
+        blank=True,
+    )
+    arrived_guardians_count = models.PositiveSmallIntegerField(
+        verbose_name=_("arrived guardians count"),
+        null=True,
+        blank=True,
+    )
     extra_children_count = models.PositiveSmallIntegerField(
         verbose_name=_("extra children count"),
         null=True,
         blank=True,
-        help_text=_("NULL means a legacy enrolment, which counts as 1 seat."),
+        help_text=_(
+            "Additional children beyond the enrolled child (empty/NULL means 0)."
+        ),
     )
     extra_guardians_count = models.PositiveSmallIntegerField(
         verbose_name=_("extra guardians count"),
         null=True,
         blank=True,
-        help_text=_("NULL means a legacy enrolment, which counts as 1 seat."),
+        help_text=_(
+            "Additional adults/guardians beyond the accompanying adult "
+            "(empty/NULL means 0)."
+        ),
     )
     reminder_sent_at = models.DateTimeField(
         verbose_name=_("reminder sent at"), null=True, blank=True
@@ -1329,6 +1639,8 @@ class Enrolment(TimestampedModel, SerializableMixin):
         {"name": "occurrence"},
         {"name": "extra_children_count"},
         {"name": "extra_guardians_count"},
+        {"name": "arrived_children_count"},
+        {"name": "arrived_guardians_count"},
     )
 
     objects = SerializableMixin.SerializableManager.from_queryset(EnrolmentQueryset)()
@@ -1340,6 +1652,9 @@ class Enrolment(TimestampedModel, SerializableMixin):
             models.UniqueConstraint(
                 fields=["child", "occurrence"], name="unq_child_occurrence"
             ),
+            # Extra participant counts must be recorded as a pair (both NULL when not
+            # used, or both non-NULL integers) so seat calculations and admin/API state
+            # never see a half-specified extra participant pair.
             models.CheckConstraint(
                 condition=(
                     Q(
@@ -1352,6 +1667,25 @@ class Enrolment(TimestampedModel, SerializableMixin):
                     )
                 ),
                 name="enrolment_extra_counts_both_or_neither",
+            ),
+            # Arrived participant counts must also be recorded as a pair: either both
+            # NULL (when attendance has not been handled yet, or on legacy rows that
+            # only recorded the boolean `attended` flag) or both non-NULL integers.
+            # This prevents half-populated arrival state and guarantees SQL addition
+            # (`arrived_children_count + arrived_guardians_count`) never yields NULL
+            # due to a single missing column.
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        arrived_children_count__isnull=True,
+                        arrived_guardians_count__isnull=True,
+                    )
+                    | Q(
+                        arrived_children_count__isnull=False,
+                        arrived_guardians_count__isnull=False,
+                    )
+                ),
+                name="enrolment_arrived_counts_both_or_neither",
             ),
         ]
         ordering = ("id",)
@@ -1367,6 +1701,79 @@ class Enrolment(TimestampedModel, SerializableMixin):
             + (self.extra_children_count or 0)
             + (self.extra_guardians_count or 0)
         )
+
+    @property
+    def booked_children_count(self) -> int:
+        """
+        Return the total number of children booked on this enrolment
+        (1 enrolled child + `extra_children_count`).
+        """
+        return 1 + (self.extra_children_count or 0)
+
+    @property
+    def booked_guardians_count(self) -> int:
+        """
+        Return the total number of adults/guardians booked on this enrolment
+        (1 accompanying guardian + `extra_guardians_count`).
+        """
+        return 1 + (self.extra_guardians_count or 0)
+
+    @property
+    def arrived_seats(self) -> int:
+        """
+        Return the number of arrived physical seats for this enrolment:
+        `arrived_children_count + arrived_guardians_count` when recorded, falling
+        back to `total_seats` when `attended=True` without explicit counts, or 0.
+        """
+        if (
+            self.arrived_children_count is not None
+            and self.arrived_guardians_count is not None
+        ):
+            return self.arrived_children_count + self.arrived_guardians_count
+        if self.attended is True:
+            return self.total_seats
+        return 0
+
+    def clean(self):
+        super().clean()
+        children = self.arrived_children_count
+        guardians = self.arrived_guardians_count
+        if (children is None) != (guardians is None):
+            raise ValidationError(
+                _(
+                    "Arrived children count and arrived guardians count must both be "
+                    "set or both be empty."
+                )
+            )
+        if children is not None and guardians is not None:
+            if children > self.booked_children_count:
+                raise ValidationError(
+                    {
+                        "arrived_children_count": _(
+                            "Arrived children count cannot exceed "
+                            "booked children count."
+                        )
+                    }
+                )
+            if guardians > self.booked_guardians_count:
+                raise ValidationError(
+                    {
+                        "arrived_guardians_count": _(
+                            "Arrived guardians count cannot exceed "
+                            "booked guardians count."
+                        )
+                    }
+                )
+            expected_attended = (children + guardians) > 0
+            if self.attended is not expected_attended:
+                raise ValidationError(
+                    {
+                        "attended": _(
+                            "Attended status must match whether any arrived "
+                            "participants were recorded."
+                        )
+                    }
+                )
 
     def __str__(self):
         return f"{self.pk} {self.child_id}"

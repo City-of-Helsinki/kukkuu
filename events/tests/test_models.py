@@ -217,7 +217,15 @@ def test_enrolment_reference_id():
 
 @pytest.mark.django_db
 def test_enrolment_serialize():
-    enrolment = EnrolmentFactory(extra_children_count=2, extra_guardians_count=1)
+    enrolment = EnrolmentFactory(
+        extra_children_count=2,
+        extra_guardians_count=1,
+        attended=True,
+        arrived_children_count=2,
+        arrived_guardians_count=1,
+        occurrence__attended_children_count_override=5,
+        occurrence__attended_adults_count_override=7,
+    )
     serialized = enrolment.serialize()
     assert serialized["key"] == "ENROLMENT"
     data = {
@@ -225,6 +233,18 @@ def test_enrolment_serialize():
     }
     assert data["EXTRA_CHILDREN_COUNT"] == 2
     assert data["EXTRA_GUARDIANS_COUNT"] == 1
+    assert data["ARRIVED_CHILDREN_COUNT"] == 2
+    assert data["ARRIVED_GUARDIANS_COUNT"] == 1
+    occurrence_item = next(
+        item for item in serialized["children"] if item["key"] == "OCCURRENCE"
+    )
+    occurrence_data = {
+        item["key"]: item["value"]
+        for item in occurrence_item["children"]
+        if "value" in item
+    }
+    assert occurrence_data["ATTENDED_CHILDREN_COUNT_OVERRIDE"] == 5
+    assert occurrence_data["ATTENDED_ADULTS_COUNT_OVERRIDE"] == 7
 
 
 @pytest.mark.django_db

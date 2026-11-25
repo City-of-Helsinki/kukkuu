@@ -9,6 +9,7 @@
     - [Rule 2: Event Types & Removal of `CHILD_AND_1_OR_2_GUARDIANS`](#rule-2-event-types--removal-of-child_and_1_or_2_guardians)
   - [3. Known Operational Consequences](#3-known-operational-consequences)
   - [4. Cross-Repository Alignment](#4-cross-repository-alignment)
+  - [5. Arrival & Attendance Seat Accounting](#5-arrival--attendance-seat-accounting)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -61,8 +62,12 @@ With the introduction of dynamic enrolments and family events (allowing families
 
 1. **Historical Report Comparability (Pre-2027 vs. 2027+ / Hekla Release)**:
    - Reports exported before 2027 (prior to the Hekla release) counted enrolments (`1 enrolment = 1 child`) without accompanying adults, and occurrence capacities were configured as half of the physical room seats.
-   - Starting from the Hekla release (2027+), all seat metrics (`reserved_seats`, `remaining_capacity`) count real physical attendees (`2 + extra_children_count + extra_guardians_count`). Reports exported before 2027 are therefore not directly comparable with reports exported from 2027 onward.
-2. **Consistent Free-Spot Threshold (>= 2)**:
+   - Starting from the Hekla release (2027+), all seat and attendance metrics (`reserved_seats`, `attended_seats`, `remaining_capacity`, `pending_arrival_seats`, `remaining_empty_seats`) count real physical attendees (`2 + extra_children_count + extra_guardians_count`). Reports exported before 2027 are therefore not directly comparable with reports exported from 2027 onward.
+2. **Existing & Upcoming Occurrences and Seasonal Deployment Cutover**:
+   - Under `Enrolment.total_seats`, `NULL` values for `extra_children_count` and `extra_guardians_count` count as `0`, meaning every enrolment—including legacy rows with both extra counts `NULL`—reserves at least `2` physical seats instead of `1`.
+   - Database migrations (including `0039`) do **not** convert stored `Event.capacity_per_occurrence` or `Occurrence.capacity_override` values. After deployment, both fields are interpreted directly as total physical seats when computing `remaining_capacity` (`effective_capacity - reserved_seats`).
+   - **Deployment Cutover Step**: Deployment takes place at the seasonal cutover between event seasons once pre-Hekla occurrences have concluded, ensuring no active upcoming legacy occurrences remain with half-capacity invitation counts alongside legacy enrolments. All new-season events and occurrences are created from scratch with `capacity_per_occurrence` and `capacity_override` configured as full physical seat capacities (and any pre-existing draft upcoming occurrences must have their capacity fields updated to full physical seat counts or be recreated prior to opening registration).
+3. **Consistent Free-Spot Threshold (>= 2)**:
    - Occurrence booking, notification subscriptions (`FreeSpotNotificationSubscription`), and automatic free-spot notification dispatching all use the threshold >= 2 seats (`Occurrence.has_free_seats()`). If only 1 seat is free, notifications are not sent because every enrolment requires at least 2 seats.
 
 ---
@@ -80,3 +85,11 @@ With the introduction of dynamic enrolments and family events (allowing families
 - **`kukkuu-ui` (Public UI)**:
   - Dynamic enrolment modal with yellow event card, clear child/guardian details, HDS `NumberInput` steppers for `FAMILY`, in-modal success view, and cancellation breakdown.
   - WCAG 2.2 AA compliant focus management, accessible labels, and minimum target sizes.
+
+---
+
+## 5. Arrival & Attendance Seat Accounting
+
+- **Per-Enrolment Arrived Headcounts**: `Enrolment` stores `arrived_children_count` and `arrived_guardians_count` (both nullable, enforced as both-or-neither). When set, `attended` is derived as `(arrived_children_count + arrived_guardians_count) > 0`. Bounds are `0..booked_children_count` (`1 + (extra_children_count or 0)`) and `0..booked_guardians_count` (`1 + (extra_guardians_count or 0)`).
+- **Fallback for Unedited Existing Rows**: Rows that already have `attended=True` without explicit `arrived_*_count` fall back to `Enrolment.total_seats` (`2 + (extra_children_count or 0) + (extra_guardians_count or 0)`).
+- **Occurrence Arrival Count Override**: `Occurrence.attended_children_count_override` and `Occurrence.attended_adults_count_override` (stored together: both set or both empty, enforced by a DB check constraint) optionally override `attended_seats` in the Reports REST API and Admin UI without altering individual `Enrolment` records. The read-only property `Occurrence.attended_count_override` returns their sum (or `None`). When an override is active, per-enrolment arrived counts are ignored for `attended_seats`. In reports, `attended_count` continues to count attended enrolments (`attended=True`), while `attended_seats` reports physical arrived seats (using the override when set).
