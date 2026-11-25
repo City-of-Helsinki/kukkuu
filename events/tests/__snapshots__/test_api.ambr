@@ -2081,15 +2081,25 @@
     'data': dict({
       'updateTicketAttended': dict({
         'ticket': dict({
+          'arrivedChildrenCount': 0,
+          'arrivedGuardiansCount': 0,
           'attended': False,
+          'bookedChildrenCount': 1,
+          'bookedGuardiansCount': 1,
           'eventName': 'Record card my. Sure sister return.',
           'occurrenceArrivalStatus': dict({
             'attendedEnrolmentCount': 0,
+            'attendedSeats': 0,
+            'capacity': 24,
             'enrolmentCount': 1,
+            'handledEnrolmentCount': 1,
+            'pendingArrivalSeats': 0,
+            'remainingEmptySeats': 24,
+            'reservedSeats': 2,
           }),
           'occurrenceTime': '2020-12-12T00:00:00+00:00',
           'validity': True,
-          'venueName': 'Remember stay public high concern glass person.',
+          'venueName': 'Newspaper force newspaper business himself exist.',
         }),
       }),
     }),
@@ -2100,15 +2110,25 @@
     'data': dict({
       'updateTicketAttended': dict({
         'ticket': dict({
+          'arrivedChildrenCount': 1,
+          'arrivedGuardiansCount': 1,
           'attended': True,
+          'bookedChildrenCount': 1,
+          'bookedGuardiansCount': 1,
           'eventName': 'Record card my. Sure sister return.',
           'occurrenceArrivalStatus': dict({
             'attendedEnrolmentCount': 1,
+            'attendedSeats': 2,
+            'capacity': 24,
             'enrolmentCount': 1,
+            'handledEnrolmentCount': 1,
+            'pendingArrivalSeats': 0,
+            'remainingEmptySeats': 22,
+            'reservedSeats': 2,
           }),
           'occurrenceTime': '2020-12-12T00:00:00+00:00',
           'validity': True,
-          'venueName': 'Remember stay public high concern glass person.',
+          'venueName': 'Newspaper force newspaper business himself exist.',
         }),
       }),
     }),
@@ -2119,15 +2139,25 @@
     'data': dict({
       'updateTicketAttended': dict({
         'ticket': dict({
+          'arrivedChildrenCount': 0,
+          'arrivedGuardiansCount': 0,
           'attended': False,
+          'bookedChildrenCount': 1,
+          'bookedGuardiansCount': 1,
           'eventName': 'Record card my. Sure sister return.',
           'occurrenceArrivalStatus': dict({
             'attendedEnrolmentCount': 0,
+            'attendedSeats': 0,
+            'capacity': 24,
             'enrolmentCount': 1,
+            'handledEnrolmentCount': 1,
+            'pendingArrivalSeats': 0,
+            'remainingEmptySeats': 24,
+            'reservedSeats': 2,
           }),
           'occurrenceTime': '2020-12-12T00:00:00+00:00',
           'validity': True,
-          'venueName': 'Remember stay public high concern glass person.',
+          'venueName': 'Newspaper force newspaper business himself exist.',
         }),
       }),
     }),
@@ -2138,15 +2168,25 @@
     'data': dict({
       'updateTicketAttended': dict({
         'ticket': dict({
+          'arrivedChildrenCount': 1,
+          'arrivedGuardiansCount': 1,
           'attended': True,
+          'bookedChildrenCount': 1,
+          'bookedGuardiansCount': 1,
           'eventName': 'Record card my. Sure sister return.',
           'occurrenceArrivalStatus': dict({
             'attendedEnrolmentCount': 1,
+            'attendedSeats': 2,
+            'capacity': 24,
             'enrolmentCount': 1,
+            'handledEnrolmentCount': 1,
+            'pendingArrivalSeats': 0,
+            'remainingEmptySeats': 22,
+            'reservedSeats': 2,
           }),
           'occurrenceTime': '2020-12-12T00:00:00+00:00',
           'validity': True,
-          'venueName': 'Remember stay public high concern glass person.',
+          'venueName': 'Newspaper force newspaper business himself exist.',
         }),
       }),
     }),
@@ -2156,12 +2196,13 @@
   dict({
     'data': dict({
       'verifyTicket': dict({
+        'arrivedChildrenCount': None,
+        'arrivedGuardiansCount': None,
         'attended': None,
+        'bookedChildrenCount': 1,
+        'bookedGuardiansCount': 1,
         'eventName': 'Record card my. Sure sister return.',
-        'occurrenceArrivalStatus': dict({
-          'attendedEnrolmentCount': 0,
-          'enrolmentCount': 1,
-        }),
+        'occurrenceArrivalStatus': None,
         'occurrenceTime': '2020-12-11T00:00:00+00:00',
         'validity': False,
         'venueName': 'Remember stay public high concern glass person.',
@@ -2173,15 +2214,25 @@
   dict({
     'data': dict({
       'verifyTicket': dict({
+        'arrivedChildrenCount': None,
+        'arrivedGuardiansCount': None,
         'attended': None,
+        'bookedChildrenCount': 1,
+        'bookedGuardiansCount': 1,
         'eventName': 'Record card my. Sure sister return.',
         'occurrenceArrivalStatus': dict({
           'attendedEnrolmentCount': 0,
+          'attendedSeats': 0,
+          'capacity': 24,
           'enrolmentCount': 1,
+          'handledEnrolmentCount': 0,
+          'pendingArrivalSeats': 2,
+          'remainingEmptySeats': 24,
+          'reservedSeats': 2,
         }),
         'occurrenceTime': '2020-12-12T00:00:00+00:00',
         'validity': True,
-        'venueName': 'Remember stay public high concern glass person.',
+        'venueName': 'Newspaper force newspaper business himself exist.',
       }),
     }),
   })

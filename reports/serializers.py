@@ -187,8 +187,22 @@ class OccurrenceSerializer(serializers.ModelSerializer):
         help_text="Count of how many children atteded in this occurrence of an event."
     )
 
+    attended_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total arrived physical seats (children + adults) in this occurrence of an "
+            "event. Uses attended_count_override when set."
+        )
+    )
+
     capacity = serializers.SerializerMethodField(
         help_text="The total physical seat capacity of this occurrence of an event."
+    )
+
+    attended_count_override = serializers.ReadOnlyField(
+        help_text=(
+            "Read-only total (children + adults) of the manual arrival override, "
+            "or null when no override is set."
+        )
     )
 
     reserved_seats = serializers.SerializerMethodField(
@@ -215,6 +229,10 @@ class OccurrenceSerializer(serializers.ModelSerializer):
             "venue",
             "enrolment_count",
             "attended_count",
+            "attended_seats",
+            "attended_count_override",
+            "attended_children_count_override",
+            "attended_adults_count_override",
             "capacity",
             "reserved_seats",
         ]
@@ -224,6 +242,9 @@ class OccurrenceSerializer(serializers.ModelSerializer):
 
     def get_attended_count(self, obj: Occurrence) -> int:
         return obj.get_attended_enrolment_count()
+
+    def get_attended_seats(self, obj: Occurrence) -> int:
+        return obj.get_attended_seats()
 
     def get_capacity(self, obj: Occurrence) -> Optional[int]:
         return obj.get_capacity()
@@ -258,6 +279,12 @@ class EventGroupSerializer(
         help_text="Count of how many children atteded "
         "in this event group's event occurrences."
     )
+    attended_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total arrived physical seats (children + adults) across this event "
+            "group's occurrences. Uses occurrence attended_count_override when set."
+        )
+    )
     capacity = serializers.SerializerMethodField(
         help_text="The total capacity of how many children can there participate "
         "in this event group's event occurrences."
@@ -279,6 +306,7 @@ class EventGroupSerializer(
             "events_count",
             "enrolment_count",
             "attended_count",
+            "attended_seats",
             "capacity",
             "reserved_seats",
         ]
@@ -291,6 +319,9 @@ class EventGroupSerializer(
 
     def get_attended_count(self, obj: EventGroup) -> int:
         return obj.get_attended_enrolment_count()
+
+    def get_attended_seats(self, obj: EventGroup) -> int:
+        return obj.get_attended_seats()
 
     def get_capacity(self, obj: EventGroup) -> Optional[int]:
         return obj.get_capacity()
@@ -344,6 +375,12 @@ class EventSerializer(serializers.ModelSerializer):
     attended_count = serializers.SerializerMethodField(
         help_text="Count of how many children atteded in this event's occurrences."
     )
+    attended_seats = serializers.SerializerMethodField(
+        help_text=(
+            "Total arrived physical seats (children + adults) across this event's "
+            "occurrences. Uses occurrence attended_count_override when set."
+        )
+    )
     capacity = serializers.SerializerMethodField(
         help_text="The total capacity of how many children can there participate "
         "in this event's occurrences."
@@ -366,6 +403,7 @@ class EventSerializer(serializers.ModelSerializer):
             "occurrences_count",
             "enrolment_count",
             "attended_count",
+            "attended_seats",
             "capacity",
             "reserved_seats",
         ]
@@ -378,6 +416,9 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_attended_count(self, obj: Event) -> int:
         return obj.get_attended_enrolment_count()
+
+    def get_attended_seats(self, obj: Event) -> int:
+        return obj.get_attended_seats()
 
     def get_capacity(self, obj: Event) -> Optional[int]:
         return obj.get_capacity()

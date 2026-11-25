@@ -495,9 +495,19 @@ VERIFY_TICKET_QUERY = """
       venueName
       validity
       attended
+      bookedChildrenCount
+      bookedGuardiansCount
+      arrivedChildrenCount
+      arrivedGuardiansCount
       occurrenceArrivalStatus {
         enrolmentCount
         attendedEnrolmentCount
+        handledEnrolmentCount
+        attendedSeats
+        reservedSeats
+        capacity
+        pendingArrivalSeats
+        remainingEmptySeats
       }
     }
   }
@@ -691,6 +701,71 @@ query ChildUpcomingEventGroupInvitationMessage($id: ID!) {
             invitationMessage
           }
         }
+      }
+    }
+  }
+}
+"""
+
+OCCURRENCE_ARRIVAL_FIELDS_QUERY = """
+query OccurrenceArrivalFields($id: ID!) {
+  occurrence(id: $id) {
+    id
+    attendedCountOverride
+    attendedChildrenCountOverride
+    attendedAdultsCountOverride
+    attendedSeats
+    calculatedAttendedSeats
+    attendedEnrolmentCount
+    handledEnrolmentCount
+    pendingArrivalSeats
+    remainingEmptySeats
+    enrolmentCount
+    seatCount
+    capacity
+    enrolments {
+      edges {
+        node {
+          id
+          attended
+          arrivedChildrenCount
+          arrivedGuardiansCount
+          bookedChildrenCount
+          bookedGuardiansCount
+          arrivedSeats
+          totalSeats
+        }
+      }
+    }
+  }
+}
+"""
+
+OCCURRENCE_SINGLE_FIELD_QUERY_TEMPLATE = """
+query OccurrenceSingleField($id: ID!) {
+  occurrence(id: $id) {
+    %s
+  }
+}
+"""
+
+OCCURRENCES_ARRIVAL_FIELDS_QUERY = """
+query OccurrencesArrivalFields {
+  occurrences {
+    edges {
+      node {
+        id
+        attendedCountOverride
+        attendedSeats
+        calculatedAttendedSeats
+        attendedEnrolmentCount
+        handledEnrolmentCount
+        pendingArrivalSeats
+        remainingEmptySeats
+        enrolmentCount
+        seatCount
+        capacity
+        remainingCapacity
       }
     }
   }

@@ -322,6 +322,7 @@ def test_event_groups_retrieve_endpoint(
     assert json_data["enrolment_count"] == 2
     assert json_data["reserved_seats"] == 4
     assert json_data["attended_count"] == 1
+    assert json_data["attended_seats"] == 2
     assert json_data["capacity"] == 20
     assert json_data["project"]["id"] == project.id
     assert json_data["project"]["year"] == project.year
@@ -432,3 +433,86 @@ def test_venues_endpoint_no_permission(user_api_client):
     venue = VenueFactory()
     response = user_api_client.get(f"{VENUES_ENDPOINT}{venue.id}/")
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "override,expected_occ_seats,expected_event_seats",
+    [
+        (None, 3, 5),
+        ((0, 0), 0, 2),
+        ((4, 6), 10, 12),
+    ],
+)
+def test_reports_attended_seats_and_override(
+    project,
+    user_api_client,
+    django_assert_max_num_queries,
+    override,
+    expected_occ_seats,
+    expected_event_seats,
+):
+    """
+    Verify /reports/event/ and /reports/event-group/ return arrived physical seats
+    in attended_seats, use occurrence.attended_count_override when set, and preserve
+    attended_count as attended enrolments without increasing query count.
+    """
+    event_group = EventGroupFactory(project=project)
+    event = EventFactory(
+        project=project, event_group=event_group, capacity_per_occurrence=30
+    )
+    children_override, adults_override = override if override else (None, None)
+    total_override = None if override is None else sum(override)
+    occ_overridable = OccurrenceFactory(
+        event=event,
+        time=timezone.now(),
+        attended_children_count_override=children_override,
+        attended_adults_count_override=adults_override,
+    )
+    occ_regular = OccurrenceFactory(event=event, time=timezone.now())
+
+    EnrolmentFactory(
+        occurrence=occ_overridable,
+        extra_children_count=2,
+        extra_guardians_count=1,
+        attended=True,
+        arrived_children_count=2,
+        arrived_guardians_count=1,
+    )
+    EnrolmentFactory(
+        occurrence=occ_regular,
+        extra_children_count=0,
+        extra_guardians_count=0,
+        attended=True,
+        arrived_children_count=1,
+        arrived_guardians_count=1,
+    )
+
+    with django_assert_max_num_queries(7):
+        event_res = user_api_client.get(EVENTS_ENDPOINT)
+    assert event_res.status_code == 200
+    event_data = event_res.json()[0]
+    assert event_data["attended_count"] == 2
+    assert event_data["attended_seats"] == expected_event_seats
+
+    occ_by_id = {o["id"]: o for o in event_data["occurrences"]}
+    assert occ_by_id[occ_overridable.id]["attended_count"] == 1
+    assert occ_by_id[occ_overridable.id]["attended_seats"] == expected_occ_seats
+    assert occ_by_id[occ_overridable.id]["attended_count_override"] == total_override
+    assert (
+        occ_by_id[occ_overridable.id]["attended_children_count_override"]
+        == children_override
+    )
+    assert (
+        occ_by_id[occ_overridable.id]["attended_adults_count_override"]
+        == adults_override
+    )
+    assert occ_by_id[occ_regular.id]["attended_seats"] == 2
+    assert occ_by_id[occ_regular.id]["attended_count_override"] is None
+
+    with django_assert_max_num_queries(7):
+        group_res = user_api_client.get(f"{EVENT_GROUPS_ENDPOINT}{event_group.id}/")
+    assert group_res.status_code == 200
+    group_data = group_res.json()
+    assert group_data["attended_count"] == 2
+    assert group_data["attended_seats"] == expected_event_seats

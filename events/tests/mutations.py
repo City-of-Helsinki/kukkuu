@@ -336,9 +336,19 @@ UPDATE_TICKET_ATTENDED_MUTATION = """
         venueName
         validity
         attended
+        bookedChildrenCount
+        bookedGuardiansCount
+        arrivedChildrenCount
+        arrivedGuardiansCount
         occurrenceArrivalStatus {
           enrolmentCount
           attendedEnrolmentCount
+          handledEnrolmentCount
+          attendedSeats
+          reservedSeats
+          capacity
+          pendingArrivalSeats
+          remainingEmptySeats
         }
       }
     }
@@ -392,6 +402,40 @@ mutation copyEvent($input: CopyEventMutationInput!) {
         shortDescription
         description
       }
+    }
+  }
+}
+"""
+
+SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION = """
+mutation SetEnrolmentAttendanceWithCounts($input: SetEnrolmentAttendanceMutationInput!) {
+  setEnrolmentAttendance(input: $input) {
+    enrolment {
+      id
+      attended
+      arrivedChildrenCount
+      arrivedGuardiansCount
+      bookedChildrenCount
+      bookedGuardiansCount
+      arrivedSeats
+    }
+  }
+}
+"""
+
+UPDATE_OCCURRENCE_WITH_OVERRIDE_MUTATION = """
+mutation UpdateOccurrenceWithOverride($input: UpdateOccurrenceMutationInput!) {
+  updateOccurrence(input: $input) {
+    occurrence {
+      id
+      attendedCountOverride
+      attendedChildrenCountOverride
+      attendedAdultsCountOverride
+      attendedSeats
+      calculatedAttendedSeats
+      handledEnrolmentCount
+      pendingArrivalSeats
+      remainingEmptySeats
     }
   }
 }

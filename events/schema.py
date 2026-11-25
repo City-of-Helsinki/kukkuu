@@ -49,7 +49,12 @@ from events.models import (
     Occurrence,
     TicketSystemPassword,
 )
-from events.services import EventAPIService, OccurrenceAPIService
+from events.services import (
+    UNSET,
+    EnrolmentAPIService,
+    EventAPIService,
+    OccurrenceAPIService,
+)
 from events.ticket_service import check_ticket_validity
 from kukkuu.exceptions import (
     ApiUsageError,
@@ -617,6 +622,59 @@ class OccurrenceNode(DjangoObjectType):
     remaining_capacity = graphene.Int()
     enrolment_count = graphene.Int(required=True)
     attended_enrolment_count = graphene.Int(required=True)
+    handled_enrolment_count = graphene.Int(
+        required=True,
+        description=(
+            "Number of enrolments whose attendance has been handled "
+            "(marked arrived or absent)."
+        ),
+    )
+    attended_count_override = graphene.Int(
+        description=(
+            "Read-only total (children + adults) of the manual arrival override, or "
+            "null when no override is set. When set, reports and Admin UI use it "
+            "instead of calculatedAttendedSeats."
+        ),
+    )
+    attended_children_count_override = graphene.Int(
+        description=(
+            "Manual override for arrived children. Set together with "
+            "attendedAdultsCountOverride, or both null."
+        ),
+    )
+    attended_adults_count_override = graphene.Int(
+        description=(
+            "Manual override for arrived adults. Set together with "
+            "attendedChildrenCountOverride, or both null."
+        ),
+    )
+    attended_seats = graphene.Int(
+        required=True,
+        description=(
+            "Effective arrived physical seats (children and adults), using "
+            "the arrival count override (attendedCountOverride) when set."
+        ),
+    )
+    calculated_attended_seats = graphene.Int(
+        required=True,
+        description=(
+            "Sum of arrived physical seats calculated from enrolments, ignoring "
+            "the arrival count override."
+        ),
+    )
+    pending_arrival_seats = graphene.Int(
+        required=True,
+        description=(
+            "Booked physical seats belonging to enrolled tickets not yet marked "
+            "arrived or absent."
+        ),
+    )
+    remaining_empty_seats = graphene.Int(
+        description=(
+            "Total physical seats currently unoccupied in the occurrence "
+            "(capacity minus attendedSeats), or null if capacity is unset."
+        ),
+    )
     seat_count = graphene.Int(required=True)
     free_spot_notification_subscription_count = graphene.Int(required=True)
     capacity = graphene.Int()
@@ -643,6 +701,9 @@ class OccurrenceNode(DjangoObjectType):
             .with_end_time()
             .with_enrolment_count()
             .with_attended_enrolment_count()
+            .with_handled_enrolment_count()
+            .with_attended_seats()
+            .with_pending_arrival_seats()
             .with_reserved_seats()
             .with_remaining_capacity()
             .with_free_spot_notification_subscription_count()
@@ -681,6 +742,44 @@ class OccurrenceNode(DjangoObjectType):
     def resolve_attended_enrolment_count(self, info, **kwargs):
         OccurrenceAPIService.check_can_user_administer(self, info)
         return self.get_attended_enrolment_count()
+
+    def resolve_handled_enrolment_count(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        return self.get_handled_enrolment_count()
+
+    def resolve_attended_count_override(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        if self.event.is_external_ticket_system_event:
+            return None
+        return self.attended_count_override
+
+    def resolve_attended_children_count_override(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        if self.event.is_external_ticket_system_event:
+            return None
+        return self.attended_children_count_override
+
+    def resolve_attended_adults_count_override(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        if self.event.is_external_ticket_system_event:
+            return None
+        return self.attended_adults_count_override
+
+    def resolve_attended_seats(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        return self.get_attended_seats()
+
+    def resolve_calculated_attended_seats(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        return self.get_calculated_attended_seats()
+
+    def resolve_pending_arrival_seats(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        return self.get_pending_arrival_seats()
+
+    def resolve_remaining_empty_seats(self, info, **kwargs):
+        OccurrenceAPIService.check_can_user_administer(self, info)
+        return self.get_remaining_empty_seats()
 
     def resolve_free_spot_notification_subscription_count(self, info, **kwargs):
         OccurrenceAPIService.check_can_user_administer(self, info)
@@ -780,7 +879,42 @@ class OccurrenceNode(DjangoObjectType):
 @auditlog_access
 class EnrolmentNode(DjangoObjectType):
     reference_id = graphene.String(description="An unique encoded reference id")
-    total_seats = graphene.Int(required=True)
+    attended = graphene.Boolean(
+        description=(
+            "Indicates whether the ticket has been handled and someone with the ticket "
+            "has attended: true if handled and at least one participant attended, "
+            "false if handled and no one attended, or null if not yet handled."
+        )
+    )
+    total_seats = graphene.Int(
+        required=True,
+        description=(
+            "Total physical seats reserved by this enrolment "
+            "(2 + extraChildrenCount + extraGuardiansCount)."
+        ),
+    )
+    booked_children_count = graphene.Int(
+        required=True,
+        description=(
+            "Read-only number of children booked on this enrolment "
+            "(1 + extraChildrenCount)."
+        ),
+    )
+    booked_guardians_count = graphene.Int(
+        required=True,
+        description=(
+            "Read-only number of adults/guardians booked on this enrolment "
+            "(1 + extraGuardiansCount)."
+        ),
+    )
+    arrived_seats = graphene.Int(
+        required=True,
+        description=(
+            "Total arrived physical seats recorded for this enrolment "
+            "(arrivedChildrenCount + arrivedGuardiansCount, or totalSeats fallback "
+            "if attended=True without explicit counts)."
+        ),
+    )
 
     class Meta:
         model = Enrolment
@@ -789,6 +923,8 @@ class EnrolmentNode(DjangoObjectType):
             "occurrence",
             "child",
             "attended",
+            "arrived_children_count",
+            "arrived_guardians_count",
             "extra_children_count",
             "extra_guardians_count",
             "created_at",
@@ -805,6 +941,15 @@ class EnrolmentNode(DjangoObjectType):
 
     def resolve_total_seats(self, info, **kwargs):
         return self.total_seats
+
+    def resolve_booked_children_count(self, info, **kwargs):
+        return self.booked_children_count
+
+    def resolve_booked_guardians_count(self, info, **kwargs):
+        return self.booked_guardians_count
+
+    def resolve_arrived_seats(self, info, **kwargs):
+        return self.arrived_seats
 
 
 @auditlog_access
@@ -888,21 +1033,61 @@ class InternalOrTicketSystemEnrolmentConnection(Connection):
         node = InternalOrTicketSystemEnrolmentUnion
 
 
+# In KK-1224, `verifyTicket` and `updateTicketAttended` were left accessible without
+# authentication so doorway QR scanners can verify tickets via their secret referenceId.
+# All fields on `OccurrenceArrivalStatusNode` are marked deprecated to document that
+# occurrence-wide arrival totals should eventually move behind authenticated endpoints.
+OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON = (
+    "This field exposes potentially sensitive data "
+    "and will be removed in a future release. "
+    "Consider using a more secure method to access this information."
+)
+
+
 class OccurrenceArrivalStatusNode(ObjectType):
     enrolment_count = graphene.Int(
         required=True,
         description="**DEPRECATED:** Total number of enrolments for this occurrence.",
-        deprecation_reason="This field exposes potentially sensitive data "
-        "and will be removed in a future release. "
-        "Consider using a more secure method to access this information.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
     )
     attended_enrolment_count = graphene.Int(
         required=True,
         description="**DEPRECATED:**  Number of enrolments marked as attended "
         "for this occurrence.",
-        deprecation_reason="This field exposes potentially sensitive data "
-        "and will be removed in a future release. "
-        "Consider using a more secure method to access this information.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    handled_enrolment_count = graphene.Int(
+        required=True,
+        description="**DEPRECATED:** Number of enrolments whose attendance has been "
+        "processed (arrived or absent) for this occurrence.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    attended_seats = graphene.Int(
+        required=True,
+        description="**DEPRECATED:** Effective count of arrived physical seats "
+        "(using the arrival count override when set) for this occurrence.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    reserved_seats = graphene.Int(
+        required=True,
+        description="**DEPRECATED:** Total reserved physical seats "
+        "for this occurrence.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    capacity = graphene.Int(
+        description="**DEPRECATED:** Total physical seat capacity for this occurrence.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    pending_arrival_seats = graphene.Int(
+        required=True,
+        description="**DEPRECATED:** Booked physical seats belonging to enrolled "
+        "tickets whose attendance has not been processed yet.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
+    )
+    remaining_empty_seats = graphene.Int(
+        description="**DEPRECATED:** Total physical seats currently unoccupied in "
+        "this occurrence (capacity minus arrived seats), or null if capacity is unset.",
+        deprecation_reason=OCCURRENCE_ARRIVAL_STATUS_FIELD_DEPRECATION_REASON,
     )
 
 
@@ -915,9 +1100,26 @@ class TicketVerificationNode(ObjectType):
     validity = graphene.Boolean(required=True)
     attended = graphene.Boolean(
         description=(
-            "Indicates whether the ticket holder has arrived. "
-            "If null, the status is unset."
+            "Indicates whether the ticket has been handled and someone with the ticket "
+            "has attended: true if handled and at least one participant attended, "
+            "false if handled and no one attended, or null if not yet handled."
         )
+    )
+    booked_children_count = graphene.Int(
+        required=True,
+        description="Read-only number of children booked on this ticket.",
+    )
+    booked_guardians_count = graphene.Int(
+        required=True,
+        description="Read-only number of adults/guardians booked on this ticket.",
+    )
+    arrived_children_count = graphene.Int(
+        description="Number of arrived children recorded for this ticket, "
+        "or null if unset.",
+    )
+    arrived_guardians_count = graphene.Int(
+        description="Number of arrived adults/guardians recorded for this ticket, "
+        "or null if unset.",
     )
 
     # Occurrence arrival status should not be public information.
@@ -936,6 +1138,51 @@ class TicketVerificationNode(ObjectType):
         deprecation_reason="This field exposes potentially sensitive data "
         "and will be removed in a future release. "
         "The attendance information should not be publicly available.",
+    )
+
+
+def _build_ticket_verification_node(
+    enrolment: Enrolment, validity: bool
+) -> TicketVerificationNode:
+    """Build a TicketVerificationNode with arrival summary for a verified ticket."""
+    occurrence_qs = Occurrence.objects.select_related(
+        "event", "venue"
+    ).prefetch_related("event__translations", "venue__translations")
+    if validity:
+        occurrence_qs = (
+            occurrence_qs.with_enrolment_count()
+            .with_attended_enrolment_count()
+            .with_handled_enrolment_count()
+            .with_attended_seats()
+            .with_reserved_seats()
+            .with_pending_arrival_seats()
+        )
+    occurrence = occurrence_qs.get(pk=enrolment.occurrence_id)
+    occurrence_arrival_status = (
+        OccurrenceArrivalStatusNode(
+            enrolment_count=occurrence.get_enrolment_count(),
+            attended_enrolment_count=occurrence.get_attended_enrolment_count(),
+            handled_enrolment_count=occurrence.get_handled_enrolment_count(),
+            attended_seats=occurrence.get_attended_seats(),
+            reserved_seats=occurrence.get_reserved_seats(),
+            capacity=occurrence.get_capacity(),
+            pending_arrival_seats=occurrence.get_pending_arrival_seats(),
+            remaining_empty_seats=occurrence.get_remaining_empty_seats(),
+        )
+        if validity
+        else None
+    )
+    return TicketVerificationNode(
+        event_name=occurrence.event.name,
+        occurrence_time=occurrence.time,
+        venue_name=occurrence.venue.name,
+        validity=validity,
+        attended=enrolment.attended,
+        booked_children_count=enrolment.booked_children_count,
+        booked_guardians_count=enrolment.booked_guardians_count,
+        arrived_children_count=enrolment.arrived_children_count,
+        arrived_guardians_count=enrolment.arrived_guardians_count,
+        occurrence_arrival_status=occurrence_arrival_status,
     )
 
 
@@ -1314,7 +1561,19 @@ class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
     class Input:
         enrolment_id = graphene.GlobalID()
         attended = graphene.Boolean(
-            description="This field is required (but it can be null)."
+            description=(
+                "Indicates whether the ticket has been handled and someone with the "
+                "ticket has attended: true if handled and at least one participant "
+                "attended, false if handled and no one attended, or null if not yet "
+                "handled. Optional when arrived counts are given."
+            )
+        )
+        arrived_children_count = graphene.Int(
+            description="Number of arrived children (0 to bookedChildrenCount)."
+        )
+        arrived_guardians_count = graphene.Int(
+            description="Number of arrived adults/guardians "
+            "(0 to bookedGuardiansCount)."
         )
 
     enrolment = graphene.Field(EnrolmentNode)
@@ -1324,19 +1583,34 @@ class SetEnrolmentAttendanceMutation(graphene.relay.ClientIDMutation):
     @transaction.atomic
     @map_enums_to_values_in_kwargs
     def mutate_and_get_payload(cls, root, info, **kwargs):
-        if "attended" not in kwargs:
-            raise DataValidationError('"attended" is required.')
+        has_attended = "attended" in kwargs
+        arrived_children_count = kwargs.get("arrived_children_count")
+        arrived_guardians_count = kwargs.get("arrived_guardians_count")
+        if (
+            not has_attended
+            and arrived_children_count is None
+            and arrived_guardians_count is None
+        ):
+            raise DataValidationError(
+                '"attended" or arrived participant counts are required.'
+            )
 
         enrolment = get_obj_if_user_can_administer(
             info, kwargs["enrolment_id"], Enrolment
         )
 
-        enrolment.attended = kwargs["attended"]
-        enrolment.save()
+        EnrolmentAPIService.apply_arrival(
+            enrolment,
+            attended=kwargs["attended"] if has_attended else UNSET,
+            arrived_children_count=arrived_children_count,
+            arrived_guardians_count=arrived_guardians_count,
+        )
 
         logger.info(
-            f"user {info.context.user.uuid} set enrolment {enrolment} attendance to "
-            f"{kwargs['attended']}"
+            f"user {info.context.user.uuid} updated enrolment {enrolment} arrival to "
+            f"attended={enrolment.attended}, "
+            f"children={enrolment.arrived_children_count}, "
+            f"guardians={enrolment.arrived_guardians_count}"
         )
 
         return SetEnrolmentAttendanceMutation(enrolment=enrolment)
@@ -1387,6 +1661,8 @@ class UpdateOccurrenceMutation(graphene.relay.ClientIDMutation):
             "If given, replaces them. At least one is required.",
         )
         capacity_override = graphene.Int()
+        attended_children_count_override = graphene.Int()
+        attended_adults_count_override = graphene.Int()
         ticket_system = OccurrenceTicketSystemInput()
         accessibility_ids = graphene.List(
             graphene.NonNull(graphene.ID),
@@ -1633,7 +1909,8 @@ class PublishEventGroupMutation(graphene.relay.ClientIDMutation):
 class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
     class Input:
         reference_id = graphene.String(required=True)
-        attended = graphene.Boolean(required=True)
+        arrived_children_count = graphene.Int(required=True)
+        arrived_guardians_count = graphene.Int(required=True)
 
     ticket = graphene.Field(TicketVerificationNode)
 
@@ -1648,31 +1925,21 @@ class UpdateTicketAttendedMutation(graphene.relay.ClientIDMutation):
     # used to track how many person have arrived and how many are still left to come.
     def mutate_and_get_payload(cls, root, info, **kwargs):
         """With a reference id for a ticket,
-        this mutation can change the ticket attended status to True or False.
+        record arrived children and adults counts and update attended status.
         """
-        attended = kwargs.get("attended", True)
         enrolment_reference_id = kwargs.get("reference_id", None)
         enrolment, is_ticket_valid = check_ticket_validity(enrolment_reference_id)
         if not is_ticket_valid:
             raise TicketVerificationError("The ticket was invalid.")
 
-        enrolment.attended = attended
-        enrolment.save()
-
-        occurrence = enrolment.occurrence
+        EnrolmentAPIService.apply_arrival(
+            enrolment,
+            arrived_children_count=kwargs["arrived_children_count"],
+            arrived_guardians_count=kwargs["arrived_guardians_count"],
+        )
 
         return UpdateTicketAttendedMutation(
-            ticket=TicketVerificationNode(
-                event_name=occurrence.event.name,
-                occurrence_time=occurrence.time,
-                venue_name=occurrence.venue.name,
-                validity=is_ticket_valid,
-                attended=enrolment.attended,
-                occurrence_arrival_status=OccurrenceArrivalStatusNode(
-                    enrolment_count=occurrence.get_enrolment_count(),
-                    attended_enrolment_count=occurrence.get_attended_enrolment_count(),
-                ),
-            )
+            ticket=_build_ticket_verification_node(enrolment, is_ticket_valid)
         )
 
 
@@ -1720,18 +1987,7 @@ class Query:
     def resolve_verify_ticket(_parent, _info, **kwargs):
         enrolment_reference_id = kwargs.get("reference_id", None)
         enrolment, ticket_validity = check_ticket_validity(enrolment_reference_id)
-        occurrence = enrolment.occurrence
-        return TicketVerificationNode(
-            event_name=occurrence.event.name,
-            occurrence_time=occurrence.time,
-            venue_name=occurrence.venue.name,
-            validity=ticket_validity,
-            attended=enrolment.attended,
-            occurrence_arrival_status=OccurrenceArrivalStatusNode(
-                enrolment_count=occurrence.get_enrolment_count(),
-                attended_enrolment_count=occurrence.get_attended_enrolment_count(),
-            ),
-        )
+        return _build_ticket_verification_node(enrolment, ticket_validity)
 
 
 class Mutation:

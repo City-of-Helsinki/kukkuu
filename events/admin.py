@@ -329,6 +329,8 @@ class EnrolmentsInline(admin.TabularInline):
     fields = (
         "child",
         "attended",
+        "arrived_children_count",
+        "arrived_guardians_count",
         "created_at",
         "updated_at",
         "reminder_sent_at",
@@ -354,11 +356,21 @@ class FreeSpotNotificationSubscriptionInline(admin.TabularInline):
 @admin.register(Occurrence)
 class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     enable_list_view_audit_logging = False  # Not needed in list view
+    # Fields that are read-only for occurrences of external ticket system events:
+    # external occurrences always use the global system venue and do not track
+    # internal seat capacity or manual attendance count overrides.
+    EXTERNAL_EVENT_READONLY_FIELDS = (
+        "venue",
+        "capacity_override",
+        "attended_children_count_override",
+        "attended_adults_count_override",
+    )
     list_display = (
         "time",
         "event",
         "venue",
         "get_enrolments",
+        "get_attended_seats",
         "get_free_spot_notification_subscriptions",
         "get_languages",
         "ticket_system_url",
@@ -370,6 +382,8 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         "event",
         "venue",
         "capacity_override",
+        "attended_children_count_override",
+        "attended_adults_count_override",
         "ticket_system_url",
     )
     inlines = [
@@ -392,6 +406,14 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     def get_enrolments(self, obj):
         return f"{obj.get_reserved_seats()} / {obj.get_capacity()}"
 
+    @admin.display(description=_("attended seats"))
+    def get_attended_seats(self, obj):
+        effective = obj.get_attended_seats()
+        if obj.is_attended_count_overridden:
+            calculated = obj.get_calculated_attended_seats()
+            return f"{effective} ({_('calculated')}: {calculated})"
+        return str(effective)
+
     @admin.display(description=_("subscriptions"))
     def get_free_spot_notification_subscriptions(self, obj):
         return obj.free_spot_notification_subscriptions.count()
@@ -410,8 +432,9 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if obj and obj.event and obj.event.is_external_ticket_system_event:
-            if "venue" not in readonly:
-                readonly.append("venue")
+            for field in self.EXTERNAL_EVENT_READONLY_FIELDS:
+                if field not in readonly:
+                    readonly.append(field)
         return tuple(readonly)
 
     def has_delete_permission(self, request, obj=None):
@@ -428,6 +451,7 @@ class OccurrenceAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
             super()
             .get_queryset(request)
             .with_reserved_seats()
+            .with_attended_seats()
             .prefetch_related(
                 "event__translations",
                 "venue__translations",
@@ -642,6 +666,8 @@ class EnrolmentAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
                     "child",
                     "occurrence",
                     "attended",
+                    "arrived_children_count",
+                    "arrived_guardians_count",
                     "extra_children_count",
                     "extra_guardians_count",
                     "created_at",
