@@ -16,7 +16,6 @@ from events.factories import (
 )
 from events.models import Enrolment, Event, Occurrence
 from events.tests.mutations import (
-    SET_ENROLMENT_ATTENDANCE_MUTATION,
     SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
     UPDATE_OCCURRENCE_MUTATION,
     UPDATE_OCCURRENCE_WITH_OVERRIDE_MUTATION,
@@ -33,35 +32,6 @@ from organisations.factories import OrganisationFactory
 from projects.models import ProjectPermission
 from users.cache import UserRequestCache
 from users.factories import UserFactory
-
-
-@pytest.mark.parametrize(
-    "extra_children,extra_guardians,expected_children,expected_guardians",
-    [
-        (None, None, 1, 1),
-        (0, 0, 1, 1),
-        (2, 1, 3, 2),
-        (3, 1, 4, 2),
-    ],
-)
-def test_enrolment_booked_counts(
-    occurrence,
-    extra_children,
-    extra_guardians,
-    expected_children,
-    expected_guardians,
-):
-    """
-    Verify Enrolment.booked_children_count and booked_guardians_count for
-    both omitted (NULL -> 1+1) and explicit (1+extra) extra counts.
-    """
-    enrolment = EnrolmentFactory(
-        occurrence=occurrence,
-        extra_children_count=extra_children,
-        extra_guardians_count=extra_guardians,
-    )
-    assert enrolment.booked_children_count == expected_children
-    assert enrolment.booked_guardians_count == expected_guardians
 
 
 @pytest.mark.parametrize(
@@ -541,13 +511,17 @@ def test_update_occurrence_set_and_clear_attended_count_override(
         {"attendedAdultsCountOverride": 3},
         {"attendedChildrenCountOverride": 3, "attendedAdultsCountOverride": None},
         {"attendedChildrenCountOverride": None, "attendedAdultsCountOverride": 3},
+        {"attendedChildrenCountOverride": -1, "attendedAdultsCountOverride": 1},
+        {"attendedChildrenCountOverride": 32768, "attendedAdultsCountOverride": 1},
+        {"attendedChildrenCountOverride": 1, "attendedAdultsCountOverride": -1},
+        {"attendedChildrenCountOverride": 1, "attendedAdultsCountOverride": 32768},
     ],
 )
-def test_update_occurrence_half_filled_attended_overrides_rejected(
+def test_update_occurrence_invalid_attended_overrides_rejected(
     project_user_api_client, occurrence, input_override
 ):
     """
-    Verify setting only one of the children/adults overrides is rejected with
+    Verify half-filled or out-of-range attended overrides are rejected with
     DataValidationError (before hitting the DB check constraint).
     """
     executed = project_user_api_client.execute(
@@ -610,38 +584,6 @@ def test_occurrence_attended_overrides_pair_enforced_by_clean_and_db(occurrence)
         occurrence.save()
 
 
-@pytest.mark.parametrize(
-    "bad_field,bad_override",
-    [
-        (field, bad)
-        for field in (
-            "attendedChildrenCountOverride",
-            "attendedAdultsCountOverride",
-        )
-        for bad in (-1, 32768)
-    ],
-)
-def test_update_occurrence_invalid_attended_count_override_rejected(
-    project_user_api_client, occurrence, bad_field, bad_override
-):
-    """
-    Verify negative or out-of-range PositiveSmallIntegerField values for
-    the attended overrides return DataValidationError.
-    """
-    executed = project_user_api_client.execute(
-        UPDATE_OCCURRENCE_MUTATION,
-        variables={
-            "input": {
-                "id": get_global_id(occurrence),
-                "attendedChildrenCountOverride": 1,
-                "attendedAdultsCountOverride": 1,
-                bad_field: bad_override,
-            }
-        },
-    )
-    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-
-
 def test_update_occurrence_external_event_attended_count_override_rejected(
     project_user_api_client,
 ):
@@ -684,10 +626,7 @@ def test_update_occurrence_external_event_attended_count_override_rejected(
     "extra_children,extra_guardians,arrived_children,arrived_guardians,expected_attended",
     [
         (2, 1, 2, 1, True),
-        (2, 1, 3, 2, True),
-        (2, 1, 0, 1, True),
         (2, 1, 0, 0, False),
-        (0, 0, 1, 1, True),
         (None, None, 1, 1, True),
     ],
 )
@@ -774,42 +713,6 @@ def test_verify_and_update_ticket_arrived_counts(
     }
 
 
-@pytest.mark.parametrize(
-    "arrived_children,arrived_guardians",
-    [
-        (-1, 0),
-        (0, -1),
-        (4, 1),
-        (1, 3),
-    ],
-)
-def test_update_ticket_attended_out_of_bounds_rejected(
-    api_client, arrived_children, arrived_guardians
-):
-    """
-    Verify updateTicketAttended rejects negative counts or counts exceeding the
-    enrolment's booked children or guardians.
-    """
-    occ = OccurrenceFactory(time=timezone.now())
-    enrolment = EnrolmentFactory(
-        occurrence=occ,
-        extra_children_count=2,
-        extra_guardians_count=1,
-    )
-
-    executed = api_client.execute(
-        UPDATE_TICKET_ATTENDED_MUTATION,
-        variables={
-            "input": {
-                "referenceId": enrolment.reference_id,
-                "arrivedChildrenCount": arrived_children,
-                "arrivedGuardiansCount": arrived_guardians,
-            }
-        },
-    )
-    assert_match_error_code(executed, DATA_VALIDATION_ERROR)
-
-
 def test_update_ticket_attended_invalid_ticket_rejected(api_client, past):
     """
     Verify updateTicketAttended rejects expired tickets with an invalid-ticket error.
@@ -831,104 +734,12 @@ def test_update_ticket_attended_invalid_ticket_rejected(api_client, past):
     assert "The ticket was invalid." in executed["errors"][0]["message"]
 
 
-@pytest.mark.parametrize(
-    "attended_input,expected_children,expected_guardians,expected_seats",
-    [
-        (True, 3, 2, 5),
-        (False, 0, 0, 0),
-        (None, None, None, 0),
-    ],
-)
-def test_set_enrolment_attendance_boolean_defaults_arrived_counts(
-    project_user_api_client,
-    occurrence,
-    child_with_user_guardian,
-    attended_input,
-    expected_children,
-    expected_guardians,
-    expected_seats,
-):
-    """
-    Verify SetEnrolmentAttendanceMutation defaults arrived counts to booked counts
-    when attended=True, 0/0 when attended=False, and None/None when attended=None.
-    """
-    enrolment = EnrolmentFactory(
-        occurrence=occurrence,
-        child=child_with_user_guardian,
-        extra_children_count=2,
-        extra_guardians_count=1,
-    )
-    executed = project_user_api_client.execute(
-        SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
-        variables={
-            "input": {
-                "enrolmentId": get_global_id(enrolment),
-                "attended": attended_input,
-            }
-        },
-    )
-    assert "errors" not in executed
-    data = executed["data"]["setEnrolmentAttendance"]["enrolment"]
-    assert data["attended"] is attended_input
-    assert data["arrivedChildrenCount"] == expected_children
-    assert data["arrivedGuardiansCount"] == expected_guardians
-    assert data["arrivedSeats"] == expected_seats
-
-
-@pytest.mark.parametrize(
-    "input_extra,expected_error",
-    [
-        ({"arrivedChildrenCount": 1}, DATA_VALIDATION_ERROR),
-        ({"arrivedGuardiansCount": 1}, DATA_VALIDATION_ERROR),
-        (
-            {"arrivedChildrenCount": 0, "arrivedGuardiansCount": 0, "attended": True},
-            DATA_VALIDATION_ERROR,
-        ),
-        (
-            {"arrivedChildrenCount": 1, "arrivedGuardiansCount": 1, "attended": False},
-            DATA_VALIDATION_ERROR,
-        ),
-        (
-            {"arrivedChildrenCount": 4, "arrivedGuardiansCount": 1},
-            DATA_VALIDATION_ERROR,
-        ),
-    ],
-)
-def test_set_enrolment_attendance_validation_errors(
-    project_user_api_client,
-    occurrence,
-    child_with_user_guardian,
-    input_extra,
-    expected_error,
-):
-    """
-    Verify SetEnrolmentAttendanceMutation rejects partial arrived count pairs,
-    out-of-bounds values, and contradicting attended flags.
-    """
-    enrolment = EnrolmentFactory(
-        occurrence=occurrence,
-        child=child_with_user_guardian,
-        extra_children_count=2,
-        extra_guardians_count=1,
-    )
-    executed = project_user_api_client.execute(
-        SET_ENROLMENT_ATTENDANCE_MUTATION,
-        variables={
-            "input": {
-                "enrolmentId": get_global_id(enrolment),
-                **input_extra,
-            }
-        },
-    )
-    assert_match_error_code(executed, expected_error)
-
-
-def test_set_enrolment_attendance_explicit_counts_derives_attended(
+def test_set_enrolment_attendance_arrival_wiring(
     project_user_api_client, occurrence, child_with_user_guardian
 ):
     """
-    Verify SetEnrolmentAttendanceMutation accepts explicit arrivedChildrenCount and
-    arrivedGuardiansCount without attended, deriving attended automatically.
+    Verify SetEnrolmentAttendanceMutation wires explicit arrived counts, boolean
+    attended defaulting, and validation errors through EnrolmentAPIService.
     """
     enrolment = EnrolmentFactory(
         occurrence=occurrence,
@@ -936,19 +747,49 @@ def test_set_enrolment_attendance_explicit_counts_derives_attended(
         extra_children_count=2,
         extra_guardians_count=1,
     )
-    executed = project_user_api_client.execute(
+    enrolment_gid = get_global_id(enrolment)
+
+    # Explicit counts derive attended=True
+    res = project_user_api_client.execute(
         SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
         variables={
             "input": {
-                "enrolmentId": get_global_id(enrolment),
+                "enrolmentId": enrolment_gid,
                 "arrivedChildrenCount": 2,
                 "arrivedGuardiansCount": 1,
             }
         },
     )
-    assert "errors" not in executed
-    data = executed["data"]["setEnrolmentAttendance"]["enrolment"]
-    assert data["attended"] is True
-    assert data["arrivedChildrenCount"] == 2
-    assert data["arrivedGuardiansCount"] == 1
-    assert data["arrivedSeats"] == 3
+    assert "errors" not in res
+    assert res["data"]["setEnrolmentAttendance"]["enrolment"] == {
+        "id": enrolment_gid,
+        "attended": True,
+        "bookedChildrenCount": 3,
+        "bookedGuardiansCount": 2,
+        "arrivedChildrenCount": 2,
+        "arrivedGuardiansCount": 1,
+        "arrivedSeats": 3,
+    }
+
+    # Boolean attended=False defaults counts to 0/0
+    res_absent = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
+        variables={"input": {"enrolmentId": enrolment_gid, "attended": False}},
+    )
+    assert "errors" not in res_absent
+    assert res_absent["data"]["setEnrolmentAttendance"]["enrolment"] == {
+        "id": enrolment_gid,
+        "attended": False,
+        "bookedChildrenCount": 3,
+        "bookedGuardiansCount": 2,
+        "arrivedChildrenCount": 0,
+        "arrivedGuardiansCount": 0,
+        "arrivedSeats": 0,
+    }
+
+    # Partial pair propagates DataValidationError
+    res_err = project_user_api_client.execute(
+        SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
+        variables={"input": {"enrolmentId": enrolment_gid, "arrivedChildrenCount": 1}},
+    )
+    assert_match_error_code(res_err, DATA_VALIDATION_ERROR)

@@ -73,18 +73,7 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 def _reports_occurrence_queryset():
-    return (
-        Occurrence.objects.with_enrolment_count()
-        .with_enrolled_children_count()
-        .with_enrolled_adults_count()
-        .with_attended_enrolment_count()
-        .with_attended_children_count()
-        .with_attended_adults_count()
-        .with_attended_seats()
-        .with_reserved_seats()
-        .with_free_spot_notification_subscription_count()
-        .select_related("venue")
-    )
+    return Occurrence.objects.with_report_metrics().select_related("venue")
 
 
 @extend_schema_view(list=extend_schema(description="Get all events report data."))

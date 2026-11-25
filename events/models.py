@@ -1,26 +1,11 @@
 import logging
 from datetime import timedelta
-from typing import Optional
+from typing import Callable, Optional
 
-from django.apps import apps
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import (
-    Case,
-    Count,
-    Exists,
-    ExpressionWrapper,
-    F,
-    OuterRef,
-    Q,
-    Subquery,
-    Sum,
-    UniqueConstraint,
-    Value,
-    When,
-)
-from django.db.models.functions import Coalesce, ExtractYear, Greatest
+from django.db.models import Count, Q, Sum, UniqueConstraint, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from helsinki_gdpr.models import SerializableMixin
@@ -29,11 +14,18 @@ from parler.models import TranslatedFields
 import events.notification_service as notification_service
 from children.models import Child
 from common.decorators import execute_in_background
-from common.models import TimestampedModel, TranslatableModel, TranslatableQuerySet
+from common.models import TimestampedModel, TranslatableModel
 from common.utils import get_translations_dict, year_of
 from events.consts import MIN_SEATS_PER_ENROLMENT, NotificationType
 from events.enums import EnrolmentDeniedReason
-from events.exceptions import NoFreePasswordsError, PasswordAlreadyAssignedError
+from events.exceptions import PasswordAlreadyAssignedError
+from events.managers import (
+    EnrolmentQueryset,
+    EventGroupQueryset,
+    EventQueryset,
+    OccurrenceQueryset,
+    TicketSystemPasswordQueryset,
+)
 from kukkuu.consts import (
     DATA_VALIDATION_ERROR,
     EVENT_GROUP_ALREADY_PUBLISHED_ERROR,
@@ -46,65 +38,84 @@ from venues.models import Venue
 
 logger = logging.getLogger(__name__)
 
+_MISSING = object()
 
-class EventGroupQueryset(TranslatableQuerySet):
-    def user_can_view(self, user):
-        return self.filter(
-            Q(project__in=user.administered_projects) | Q(published_at__isnull=False)
-        ).distinct()
 
-    def published(self):
-        return self.filter(published_at__isnull=False)
+def _both_or_neither_constraint(
+    field_a: str, field_b: str, name: str
+) -> models.CheckConstraint:
+    """
+    Return a CheckConstraint requiring two nullable columns to be both NULL or
+    both non-NULL.
+    """
+    return models.CheckConstraint(
+        condition=(
+            Q(**{f"{field_a}__isnull": True, f"{field_b}__isnull": True})
+            | Q(**{f"{field_a}__isnull": False, f"{field_b}__isnull": False})
+        ),
+        name=name,
+    )
 
-    def upcoming(self):
-        return self.filter(events__occurrences__time__gte=timezone.now()).distinct()
 
-    def with_enrolment_check_data(self):
+class _SeatMetricsRollupMixin:
+    """Shared metric rollup methods summing across a model's child queryset."""
+
+    def _metric_children(self):
+        raise NotImplementedError
+
+    def _sum_children_metric(
+        self, method_name: str, *, external_zero: bool = False
+    ) -> int:
+        if external_zero and getattr(self, "is_external_ticket_system_event", False):
+            return 0
+        return sum(
+            getattr(child, method_name)() for child in self._metric_children().all()
+        )
+
+    def get_enrolment_count(self) -> int:
+        return self._sum_children_metric("get_enrolment_count")
+
+    def get_enrolled_children_count(self) -> int:
+        return self._sum_children_metric("get_enrolled_children_count")
+
+    def get_enrolled_adults_count(self) -> int:
+        return self._sum_children_metric("get_enrolled_adults_count")
+
+    def get_attended_enrolment_count(self) -> int:
+        return self._sum_children_metric("get_attended_enrolment_count")
+
+    def get_attended_children_count(self) -> int:
+        return self._sum_children_metric(
+            "get_attended_children_count", external_zero=True
+        )
+
+    def get_attended_adults_count(self) -> int:
+        return self._sum_children_metric(
+            "get_attended_adults_count", external_zero=True
+        )
+
+    def get_attended_seats(self) -> int:
         """
-        Pre-annotate event groups with enrolment check data.
-
-        Annotates:
-        - `_group_year`: The calendar year of the group derived from earliest
-          occurrence time or external event publish date.
-        - `_published_event_count`: Number of published events in the group.
-        - `_published_with_opening_time_count`: Count of published events with
-          an explicit registration opening time.
-        - `_earliest_opening_time`: Earliest registration opening time among
-          published events in the group.
+        Return the total effective arrived physical seats summed across all
+        children (0 for external ticket system events).
         """
-        group_occ_year_subq = Subquery(
-            Occurrence.objects.filter(
-                event__event_group=OuterRef("pk"),
-                event__ticket_system=Event.INTERNAL,
-            )
-            .order_by("time")
-            .values(year=ExtractYear("time"))[:1]
-        )
-        group_ext_year_subq = Subquery(
-            Event.objects.filter(event_group=OuterRef("pk"))
-            .exclude(published_at=None)
-            .exclude(ticket_system=Event.INTERNAL)
-            .order_by("published_at", "id")
-            .values(year=ExtractYear("published_at"))[:1]
-        )
-        published_events_q = Q(events__published_at__isnull=False)
-        return self.annotate(
-            _group_year=Coalesce(
-                group_occ_year_subq,
-                group_ext_year_subq,
-                output_field=models.IntegerField(),
-            ),
-            _published_event_count=Count("events", filter=published_events_q),
-            _published_with_opening_time_count=Count(
-                "events__registration_opens_at", filter=published_events_q
-            ),
-            _earliest_opening_time=models.Min(
-                "events__registration_opens_at", filter=published_events_q
-            ),
-        )
+        return self._sum_children_metric("get_attended_seats", external_zero=True)
+
+    def get_capacity(self) -> Optional[int]:
+        if getattr(self, "is_external_ticket_system_event", False):
+            return 0
+        try:
+            return self._sum_children_metric("get_capacity")
+        except TypeError:
+            return None
+
+    def get_reserved_seats(self) -> int:
+        return self._sum_children_metric("get_reserved_seats")
 
 
-class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
+class EventGroup(
+    _SeatMetricsRollupMixin, TimestampedModel, TranslatableModel, SerializableMixin
+):
     translations = TranslatedFields(
         name=models.CharField(verbose_name=_("name"), max_length=255, blank=True),
         short_description=models.TextField(
@@ -334,39 +345,8 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     def is_published(self):
         return bool(self.published_at)
 
-    def get_enrolment_count(self) -> int:
-        return sum(event.get_enrolment_count() for event in self.events.all())
-
-    def get_enrolled_children_count(self) -> int:
-        return sum(event.get_enrolled_children_count() for event in self.events.all())
-
-    def get_enrolled_adults_count(self) -> int:
-        return sum(event.get_enrolled_adults_count() for event in self.events.all())
-
-    def get_attended_enrolment_count(self) -> int:
-        return sum(event.get_attended_enrolment_count() for event in self.events.all())
-
-    def get_attended_children_count(self) -> int:
-        return sum(event.get_attended_children_count() for event in self.events.all())
-
-    def get_attended_adults_count(self) -> int:
-        return sum(event.get_attended_adults_count() for event in self.events.all())
-
-    def get_attended_seats(self) -> int:
-        """
-        Return the total effective arrived physical seats summed across all
-        events in this event group.
-        """
-        return sum(event.get_attended_seats() for event in self.events.all())
-
-    def get_capacity(self) -> Optional[int]:
-        try:
-            return sum(event.get_capacity() for event in self.events.all())
-        except TypeError:
-            return None
-
-    def get_reserved_seats(self) -> int:
-        return sum(event.get_reserved_seats() for event in self.events.all())
+    def _metric_children(self):
+        return self.events
 
     def clean(self):
         from events.services import validate_event_group_and_events_project_match
@@ -381,58 +361,9 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
         super().save(*args, **kwargs)
 
 
-# This need to be inherited from TranslatableQuerySet instead of default model.QuerySet
-class EventQueryset(TranslatableQuerySet):
-    def user_can_view(self, user):
-        # Published events are completely public (needed for public UI and
-        # event organisers)
-        published_q = Q(published_at__isnull=False)
-        if not user.is_authenticated:
-            return self.filter(published_q).distinct()
-
-        # Unpublished events are only visible to system admins or the event's
-        # organisation members
-        admin_q = Q(project__in=user.administered_projects)
-        if not user.is_system_administrator:
-            admin_q &= Q(organisation__in=user.organisations.all())
-
-        return self.filter(admin_q | published_q).distinct()
-
-    def published(self):
-        return self.filter(published_at__isnull=False)
-
-    def unpublished(self):
-        return self.filter(published_at__isnull=True)
-
-    def upcoming(self):
-        return self.filter(occurrences__time__gte=timezone.now()).distinct()
-
-    def available(self, child):
-        """
-        Child's available events without checking yearly enrolment limits
-
-        A child's available events must match all the following rules:
-            * the event must be published
-            * the event must have at least one occurrence in the future
-            * the child must not have enrolled to the event
-            * the child must not have enrolled to any event in the same event group
-              as the event
-
-        :note: Does NOT take yearly enrolment limits into account
-        """
-
-        child_enrolled_event_groups = EventGroup.objects.filter(
-            events__occurrences__in=child.occurrences.all()
-        )
-        return (
-            self.published()
-            .upcoming()
-            .exclude(occurrences__in=child.occurrences.all())
-            .exclude(event_group__in=child_enrolled_event_groups)
-        )
-
-
-class Event(TimestampedModel, TranslatableModel, SerializableMixin):
+class Event(
+    _SeatMetricsRollupMixin, TimestampedModel, TranslatableModel, SerializableMixin
+):
     CHILD_AND_GUARDIAN = "child_and_guardian"
     FAMILY = "family"
     PARTICIPANTS_PER_INVITE_CHOICES = (
@@ -780,70 +711,8 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             or timezone.now() >= self.registration_opens_at
         )
 
-    def get_enrolment_count(self) -> int:
-        return sum(
-            occurrence.get_enrolment_count() for occurrence in self.occurrences.all()
-        )
-
-    def get_enrolled_children_count(self) -> int:
-        return sum(
-            occurrence.get_enrolled_children_count()
-            for occurrence in self.occurrences.all()
-        )
-
-    def get_enrolled_adults_count(self) -> int:
-        return sum(
-            occurrence.get_enrolled_adults_count()
-            for occurrence in self.occurrences.all()
-        )
-
-    def get_attended_enrolment_count(self) -> int:
-        return sum(
-            occurrence.get_attended_enrolment_count()
-            for occurrence in self.occurrences.all()
-        )
-
-    def get_attended_children_count(self) -> int:
-        if self.is_external_ticket_system_event:
-            return 0
-        return sum(
-            occurrence.get_attended_children_count()
-            for occurrence in self.occurrences.all()
-        )
-
-    def get_attended_adults_count(self) -> int:
-        if self.is_external_ticket_system_event:
-            return 0
-        return sum(
-            occurrence.get_attended_adults_count()
-            for occurrence in self.occurrences.all()
-        )
-
-    def get_attended_seats(self) -> int:
-        """
-        Return the total effective arrived physical seats summed across all
-        occurrences of this event (0 for external ticket system events).
-        """
-        if self.is_external_ticket_system_event:
-            return 0
-        return sum(
-            occurrence.get_attended_seats() for occurrence in self.occurrences.all()
-        )
-
-    def get_capacity(self) -> Optional[int]:
-        if self.is_external_ticket_system_event:
-            return 0
-        try:
-            return sum(
-                occurrence.get_capacity() for occurrence in self.occurrences.all()
-            )
-        except TypeError:
-            return None
-
-    def get_reserved_seats(self) -> int:
-        return sum(
-            occurrence.get_reserved_seats() for occurrence in self.occurrences.all()
-        )
+    def _metric_children(self):
+        return self.occurrences
 
 
 class EventThemePath(models.Model):
@@ -861,267 +730,6 @@ class EventThemePath(models.Model):
 
     def __str__(self):
         return f"{self.event} – {self.theme_path}"
-
-
-class OccurrenceQueryset(models.QuerySet):
-    def user_can_view(self, user):
-        # Occurrence visibility mirrors Event visibility
-        published_q = Q(event__published_at__isnull=False)
-        if not user.is_authenticated:
-            return self.filter(published_q).distinct()
-
-        admin_q = Q(event__project__in=user.administered_projects)
-        if not user.is_system_administrator:
-            admin_q &= Q(event__organisation__in=user.organisations.all())
-
-        return self.filter(admin_q | published_q).distinct()
-
-    def delete(self, *args, **kwargs):
-        for obj in self:
-            obj.delete()
-
-    def send_free_spot_notifications_if_needed(self):
-        for obj in self:
-            obj.send_free_spot_notifications_if_needed()
-
-    def upcoming(self):
-        return self.filter(time__gte=timezone.now())
-
-    def upcoming_with_leeway(self):
-        return self.filter(
-            time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        )
-
-    def upcoming_with_ongoing(self):
-        """Return occurrences that are upcoming or still ongoing (with added leeway)."""
-        qs = self.with_end_time()
-        return qs.filter(
-            end_time__gte=timezone.now()
-            - timedelta(minutes=settings.KUKKUU_ENROLLED_OCCURRENCE_IN_PAST_LEEWAY)
-        )
-
-    def in_past(self):
-        return self.exclude(time__gt=timezone.now())
-
-    def in_any_language(self, alpha_3_codes):
-        """
-        Return occurrences that have at least one of the given languages.
-
-        :param alpha_3_codes: Lowercase ISO 639-3 (alpha-3) codes.
-        """
-        return self.filter(
-            Exists(
-                OccurrenceLanguage.objects.filter(
-                    occurrence=OuterRef("pk"),
-                    language__alpha_3_code__in=alpha_3_codes,
-                )
-            )
-        )
-
-    def with_end_time(self):
-        return self.annotate(
-            end_time=ExpressionWrapper(
-                F("time")
-                + Coalesce(
-                    F("event__duration"),
-                    settings.KUKKUU_DEFAULT_EVENT_DURATION,
-                )
-                * timedelta(minutes=1),
-                output_field=models.DateTimeField(),
-            ),
-        )
-
-    def with_enrolment_count(self):
-        return self.annotate(enrolment_count=Count("enrolments", distinct=True))
-
-    def with_attended_enrolment_count(self):
-        return self.annotate(
-            attended_enrolment_count=Count(
-                "enrolments", Q(enrolments__attended=True), distinct=True
-            )
-        )
-
-    def with_handled_enrolment_count(self):
-        """
-        Annotate occurrences with `handled_enrolment_count`: the number of
-        enrolments whose attendance has been processed (`attended` is True or False).
-        """
-        return self.annotate(
-            handled_enrolment_count=Count(
-                "enrolments", Q(enrolments__attended__isnull=False), distinct=True
-            )
-        )
-
-    def _with_enrolment_sum(self, annotation_name: str, expression):
-        Enrolment = apps.get_model("events", "Enrolment")
-        subquery = (
-            Enrolment.objects.filter(occurrence=OuterRef("pk"))
-            .order_by()
-            .values("occurrence")
-            .annotate(total=Sum(expression))
-            .values("total")
-        )
-        return self.annotate(
-            **{
-                annotation_name: Coalesce(
-                    Subquery(subquery, output_field=models.IntegerField()), Value(0)
-                )
-            }
-        )
-
-    def _with_attended_participant_count(
-        self, annotation_name: str, expression, override_field: str
-    ):
-        Enrolment = apps.get_model("events", "Enrolment")
-        arrived_subquery = (
-            Enrolment.objects.filter(occurrence=OuterRef("pk"))
-            .order_by()
-            .values("occurrence")
-            .annotate(total=Sum(expression))
-            .values("total")
-        )
-        calculated = Coalesce(
-            Subquery(arrived_subquery, output_field=models.IntegerField()), Value(0)
-        )
-        override_case = Case(
-            When(
-                attended_children_count_override__isnull=False,
-                attended_adults_count_override__isnull=False,
-                then=F(override_field),
-            ),
-            default=None,
-            output_field=models.IntegerField(),
-        )
-        return self.annotate(
-            **{
-                annotation_name: Coalesce(
-                    override_case, calculated, output_field=models.IntegerField()
-                )
-            }
-        )
-
-    def with_attended_children_count(self):
-        return self._with_attended_participant_count(
-            "attended_children_count",
-            EnrolmentQueryset.arrived_children_expression(),
-            "attended_children_count_override",
-        )
-
-    def with_attended_adults_count(self):
-        return self._with_attended_participant_count(
-            "attended_adults_count",
-            EnrolmentQueryset.arrived_adults_expression(),
-            "attended_adults_count_override",
-        )
-
-    def with_enrolled_children_count(self):
-        return self._with_enrolment_sum(
-            "enrolled_children_count", EnrolmentQueryset.children_expression()
-        )
-
-    def with_enrolled_adults_count(self):
-        return self._with_enrolment_sum(
-            "enrolled_adults_count", EnrolmentQueryset.adults_expression()
-        )
-
-    def with_attended_seats(self):
-        """
-        Annotate occurrences with arrived seat counts:
-        - `calculated_attended_seats`: sum of arrived physical seats across enrolments.
-        - `attended_seats`: the sum of the children and adults count overrides
-          when set, otherwise `calculated_attended_seats`.
-        """
-        Enrolment = apps.get_model("events", "Enrolment")
-        arrived_seats = (
-            Enrolment.objects.filter(occurrence=OuterRef("pk"))
-            .order_by()
-            .values("occurrence")
-            .annotate(total=Sum(EnrolmentQueryset.arrived_seats_expression()))
-            .values("total")
-        )
-        return self.annotate(
-            calculated_attended_seats=Coalesce(
-                Subquery(arrived_seats, output_field=models.IntegerField()), Value(0)
-            )
-        ).annotate(
-            attended_seats=Coalesce(
-                Case(
-                    When(
-                        attended_children_count_override__isnull=False,
-                        attended_adults_count_override__isnull=False,
-                        then=F("attended_children_count_override")
-                        + F("attended_adults_count_override"),
-                    ),
-                    default=None,
-                    output_field=models.IntegerField(),
-                ),
-                "calculated_attended_seats",
-                output_field=models.IntegerField(),
-            )
-        )
-
-    def with_pending_arrival_seats(self):
-        """
-        Annotate occurrences with `pending_arrival_seats`: the total booked
-        physical seats of enrolments not yet marked arrived or absent
-        (`attended` is NULL).
-        """
-        Enrolment = apps.get_model("events", "Enrolment")
-        pending_seats = (
-            Enrolment.objects.filter(occurrence=OuterRef("pk"), attended__isnull=True)
-            .order_by()
-            .values("occurrence")
-            .annotate(total=Sum(EnrolmentQueryset.seats_expression()))
-            .values("total")
-        )
-        return self.annotate(
-            pending_arrival_seats=Coalesce(
-                Subquery(pending_seats, output_field=models.IntegerField()), Value(0)
-            )
-        )
-
-    def with_reserved_seats(self):
-        Enrolment = apps.get_model("events", "Enrolment")
-        seats = (
-            Enrolment.objects.filter(occurrence=OuterRef("pk"))
-            .order_by()
-            .values("occurrence")
-            .annotate(total=Sum(EnrolmentQueryset.seats_expression()))
-            .values("total")
-        )
-        return self.annotate(
-            reserved_seats=Coalesce(
-                Subquery(seats, output_field=models.IntegerField()), Value(0)
-            )
-        )
-
-    def with_remaining_capacity(self):
-        """
-        Annotate occurrences with remaining seat capacity.
-
-        Calculates `remaining_capacity` as effective capacity minus reserved
-        seats, floored at 0.
-        """
-        return self.with_reserved_seats().annotate(
-            remaining_capacity=Greatest(
-                Coalesce(
-                    "capacity_override",
-                    "event__capacity_per_occurrence",
-                    Value(0),
-                )
-                - F("reserved_seats"),
-                Value(0),
-                output_field=models.IntegerField(),
-            )
-        )
-
-    def with_free_spot_notification_subscription_count(self):
-        return self.annotate(
-            free_spot_notification_subscription_count=Count(
-                "free_spot_notification_subscriptions", distinct=True
-            )
-        )
 
 
 class Occurrence(TimestampedModel, SerializableMixin):
@@ -1209,18 +817,10 @@ class Occurrence(TimestampedModel, SerializableMixin):
             # The manual arrival override is a (children, adults) pair: both NULL
             # (no override) or both non-NULL, so the combined total is never
             # computed from a half-specified pair.
-            models.CheckConstraint(
-                condition=(
-                    Q(
-                        attended_children_count_override__isnull=True,
-                        attended_adults_count_override__isnull=True,
-                    )
-                    | Q(
-                        attended_children_count_override__isnull=False,
-                        attended_adults_count_override__isnull=False,
-                    )
-                ),
-                name="occurrence_attended_overrides_both_or_neither",
+            _both_or_neither_constraint(
+                "attended_children_count_override",
+                "attended_adults_count_override",
+                "occurrence_attended_overrides_both_or_neither",
             ),
         ]
 
@@ -1355,79 +955,84 @@ class Occurrence(TimestampedModel, SerializableMixin):
         else:
             super().delete(*args, **kwargs)
 
+    def _get_annotated_or_compute(
+        self,
+        attr_name: str,
+        fallback: Callable[[], int],
+        *,
+        external_zero: bool = False,
+    ) -> int:
+        if external_zero and self.event.is_external_ticket_system_event:
+            return 0
+        value = getattr(self, attr_name, _MISSING)
+        if value is not _MISSING:
+            return value
+        return fallback()
+
+    def _aggregate_enrolment_sum(self, expression, **filters) -> int:
+        qs = self.enrolments.filter(**filters) if filters else self.enrolments
+        return qs.aggregate(total=Coalesce(Sum(expression), Value(0)))["total"]
+
     def get_enrolment_count(self):
-        try:
-            # try to use an annotated value
-            return self.enrolment_count
-        except AttributeError:
-            return self.enrolments.count()
+        return self._get_annotated_or_compute(
+            "enrolment_count", lambda: self.enrolments.count()
+        )
 
     def get_attended_enrolment_count(self):
-        try:
-            # try to use an annotated value
-            return self.attended_enrolment_count
-        except AttributeError:
-            return self.enrolments.filter(attended=True).count()
+        return self._get_annotated_or_compute(
+            "attended_enrolment_count",
+            lambda: self.enrolments.filter(attended=True).count(),
+        )
 
     def get_handled_enrolment_count(self) -> int:
         """
         Return the number of enrolments whose attendance has been processed
         (`attended` is True or False, not NULL), or 0 for external events.
         """
-        if self.event.is_external_ticket_system_event:
-            return 0
-        try:
-            return self.handled_enrolment_count
-        except AttributeError:
-            return self.enrolments.filter(attended__isnull=False).count()
+        return self._get_annotated_or_compute(
+            "handled_enrolment_count",
+            lambda: self.enrolments.filter(attended__isnull=False).count(),
+            external_zero=True,
+        )
 
     def get_calculated_attended_seats(self) -> int:
         """
         Return the sum of arrived physical seats calculated across all enrolments
         of this occurrence, ignoring `attended_count_override` (0 for external events).
         """
-        if self.event.is_external_ticket_system_event:
-            return 0
-        try:
-            return self.calculated_attended_seats
-        except AttributeError:
-            return self.enrolments.aggregate(
-                total=Coalesce(
-                    Sum(EnrolmentQueryset.arrived_seats_expression()), Value(0)
-                )
-            )["total"]
-
-    def _get_enrolled_participant_count(self, attr_name: str, expression) -> int:
-        try:
-            return getattr(self, attr_name)
-        except AttributeError:
-            return self.enrolments.aggregate(total=Coalesce(Sum(expression), Value(0)))[
-                "total"
-            ]
+        return self._get_annotated_or_compute(
+            "calculated_attended_seats",
+            lambda: self._aggregate_enrolment_sum(
+                EnrolmentQueryset.arrived_seats_expression()
+            ),
+            external_zero=True,
+        )
 
     def get_enrolled_children_count(self) -> int:
-        return self._get_enrolled_participant_count(
-            "enrolled_children_count", EnrolmentQueryset.children_expression()
+        return self._get_annotated_or_compute(
+            "enrolled_children_count",
+            lambda: self._aggregate_enrolment_sum(
+                EnrolmentQueryset.children_expression()
+            ),
         )
 
     def get_enrolled_adults_count(self) -> int:
-        return self._get_enrolled_participant_count(
-            "enrolled_adults_count", EnrolmentQueryset.adults_expression()
+        return self._get_annotated_or_compute(
+            "enrolled_adults_count",
+            lambda: self._aggregate_enrolment_sum(
+                EnrolmentQueryset.adults_expression()
+            ),
         )
 
     def _get_attended_participant_count(
         self, attr_name: str, override_attr: str, expression
     ) -> int:
-        if self.event.is_external_ticket_system_event:
-            return 0
-        try:
-            return getattr(self, attr_name)
-        except AttributeError:
+        def fallback():
             if self.attended_count_override is not None:
                 return getattr(self, override_attr)
-            return self.enrolments.aggregate(total=Coalesce(Sum(expression), Value(0)))[
-                "total"
-            ]
+            return self._aggregate_enrolment_sum(expression)
+
+        return self._get_annotated_or_compute(attr_name, fallback, external_zero=True)
 
     def get_attended_children_count(self) -> int:
         return self._get_attended_participant_count(
@@ -1449,14 +1054,19 @@ class Occurrence(TimestampedModel, SerializableMixin):
         `attended_count_override` when set, otherwise `get_calculated_attended_seats()`
         (0 for external events).
         """
-        if self.event.is_external_ticket_system_event:
-            return 0
-        try:
-            return self.attended_seats
-        except AttributeError:
+
+        def fallback():
+            children = getattr(self, "attended_children_count", _MISSING)
+            adults = getattr(self, "attended_adults_count", _MISSING)
+            if children is not _MISSING and adults is not _MISSING:
+                return children + adults
             if self.attended_count_override is not None:
                 return self.attended_count_override
             return self.get_calculated_attended_seats()
+
+        return self._get_annotated_or_compute(
+            "attended_seats", fallback, external_zero=True
+        )
 
     @property
     def attended_count_override(self) -> Optional[int]:
@@ -1491,14 +1101,13 @@ class Occurrence(TimestampedModel, SerializableMixin):
         whose attendance has not yet been handled (`attended` is NULL), or 0 for
         external events.
         """
-        if self.event.is_external_ticket_system_event:
-            return 0
-        try:
-            return self.pending_arrival_seats
-        except AttributeError:
-            return self.enrolments.filter(attended__isnull=True).aggregate(
-                total=Coalesce(Sum(EnrolmentQueryset.seats_expression()), Value(0))
-            )["total"]
+        return self._get_annotated_or_compute(
+            "pending_arrival_seats",
+            lambda: self._aggregate_enrolment_sum(
+                EnrolmentQueryset.seats_expression(), attended__isnull=True
+            ),
+            external_zero=True,
+        )
 
     def get_remaining_empty_seats(self) -> Optional[int]:
         """
@@ -1513,11 +1122,10 @@ class Occurrence(TimestampedModel, SerializableMixin):
         return max(capacity - self.get_attended_seats(), 0)
 
     def get_free_spot_notification_subscription_count(self):
-        try:
-            # try to use an annotated value
-            return self.free_spot_notification_subscription_count
-        except AttributeError:
-            return self.free_spot_notification_subscriptions.count()
+        return self._get_annotated_or_compute(
+            "free_spot_notification_subscription_count",
+            lambda: self.free_spot_notification_subscriptions.count(),
+        )
 
     def get_capacity(self) -> Optional[int]:
         if self.event.is_external_ticket_system_event:
@@ -1528,19 +1136,20 @@ class Occurrence(TimestampedModel, SerializableMixin):
             return self.event.capacity_per_occurrence
 
     def get_reserved_seats(self) -> int:
-        try:
-            return self.reserved_seats
-        except AttributeError:
-            return self.enrolments.aggregate(
-                total=Coalesce(Sum(EnrolmentQueryset.seats_expression()), Value(0))
-            )["total"]
+        def fallback():
+            children = getattr(self, "enrolled_children_count", _MISSING)
+            adults = getattr(self, "enrolled_adults_count", _MISSING)
+            if children is not _MISSING and adults is not _MISSING:
+                return children + adults
+            return self._aggregate_enrolment_sum(EnrolmentQueryset.seats_expression())
+
+        return self._get_annotated_or_compute("reserved_seats", fallback)
 
     def get_remaining_capacity(self) -> int:
-        try:
-            return self.remaining_capacity
-        except AttributeError:
-            capacity = self.get_capacity() or 0
-            return max(capacity - self.get_reserved_seats(), 0)
+        return self._get_annotated_or_compute(
+            "remaining_capacity",
+            lambda: max((self.get_capacity() or 0) - self.get_reserved_seats(), 0),
+        )
 
     def has_free_seats(self, requested_seats: int = MIN_SEATS_PER_ENROLMENT) -> bool:
         return self.get_remaining_capacity() >= requested_seats
@@ -1631,160 +1240,6 @@ class OccurrenceLanguage(models.Model):
         return f"{self.occurrence} – {self.language}"
 
 
-class EnrolmentQueryset(models.QuerySet):
-    @staticmethod
-    def _booked_participant_expression(extra_field: str):
-        return Value(1, output_field=models.IntegerField()) + Coalesce(
-            extra_field, Value(0), output_field=models.IntegerField()
-        )
-
-    @staticmethod
-    def children_expression():
-        return EnrolmentQueryset._booked_participant_expression("extra_children_count")
-
-    @staticmethod
-    def adults_expression():
-        return EnrolmentQueryset._booked_participant_expression("extra_guardians_count")
-
-    @staticmethod
-    def seats_expression():
-        """
-        Return a SQL expression calculating the total booked physical seats for an
-        enrolment: `MIN_SEATS_PER_ENROLMENT` (1 default child + 1 default guardian = 2)
-        plus `extra_children_count` and `extra_guardians_count` (treating NULL as 0).
-        """
-        return (
-            Value(MIN_SEATS_PER_ENROLMENT, output_field=models.IntegerField())
-            + Coalesce(
-                "extra_children_count",
-                Value(0),
-                output_field=models.IntegerField(),
-            )
-            + Coalesce(
-                "extra_guardians_count",
-                Value(0),
-                output_field=models.IntegerField(),
-            )
-        )
-
-    @staticmethod
-    def _arrived_participant_expression(arrived_field: str, fallback_expr):
-        return Case(
-            When(
-                arrived_children_count__isnull=False,
-                arrived_guardians_count__isnull=False,
-                then=F(arrived_field),
-            ),
-            When(attended=True, then=fallback_expr),
-            default=Value(0),
-            output_field=models.IntegerField(),
-        )
-
-    @staticmethod
-    def arrived_children_expression():
-        return EnrolmentQueryset._arrived_participant_expression(
-            "arrived_children_count", EnrolmentQueryset.children_expression()
-        )
-
-    @staticmethod
-    def arrived_adults_expression():
-        return EnrolmentQueryset._arrived_participant_expression(
-            "arrived_guardians_count", EnrolmentQueryset.adults_expression()
-        )
-
-    @staticmethod
-    def arrived_seats_expression():
-        """
-        Return a SQL expression calculating the arrived physical seats for an
-        enrolment: `arrived_children_count + arrived_guardians_count` when both are
-        present, falling back to booked `seats_expression()` when `attended=True`
-        without explicit arrived counts (legacy rows), or 0 otherwise.
-        """
-        return Case(
-            When(
-                arrived_children_count__isnull=False,
-                arrived_guardians_count__isnull=False,
-                then=F("arrived_children_count") + F("arrived_guardians_count"),
-            ),
-            When(attended=True, then=EnrolmentQueryset.seats_expression()),
-            default=Value(0),
-            output_field=models.IntegerField(),
-        )
-
-    def user_can_view(self, user):
-        if not user.is_authenticated:
-            return self.none()
-
-        # Enrolments (and attendee lists) are strictly restricted.
-        # They are NEVER globally visible, regardless of the event's published status.
-        guardian_q = Q(child__guardians__user=user)
-        admin_q = Q(child__project__in=user.administered_projects)
-        if not user.is_system_administrator:
-            admin_q &= Q(occurrence__event__organisation__in=user.organisations.all())
-
-        return self.filter(guardian_q | admin_q).distinct()
-
-    @transaction.atomic()
-    def delete(self):
-        for enrolment in self:
-            enrolment.delete()
-
-    def upcoming(self):
-        return self.filter(occurrence__time__gte=timezone.now())
-
-    def with_end_time(self):
-        return self.annotate(
-            end_time=ExpressionWrapper(
-                F("occurrence__time")
-                + Coalesce(
-                    F("occurrence__event__duration"),
-                    settings.KUKKUU_DEFAULT_EVENT_DURATION,
-                )
-                * timedelta(minutes=1),
-                output_field=models.DateTimeField(),
-            ),
-        )
-
-    def send_reminder_notifications(self):
-        today = timezone.localtime().date()
-        close_enough = today + timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE)
-        tomorrow = today + timedelta(days=1)
-
-        enrolments = self.filter(
-            reminder_sent_at=None,
-            created_at__date__lt=F("occurrence__time__date")
-            - timedelta(days=settings.KUKKUU_REMINDER_DAYS_IN_ADVANCE),
-            occurrence__time__date__lte=close_enough,
-            occurrence__time__date__gte=tomorrow,
-            child__guardians__isnull=False,
-        ).select_related("occurrence")
-        for enrolment in enrolments:
-            enrolment.send_reminder_notification()
-
-        return len(enrolments)
-
-    def send_feedback_notifications(self):
-        now = timezone.now()
-        delay = timedelta(minutes=settings.KUKKUU_FEEDBACK_NOTIFICATION_DELAY)
-
-        enrolments = (
-            self.with_end_time()
-            .filter(
-                feedback_notification_sent_at=None,
-                child__guardians__isnull=False,
-                end_time__lte=now - delay,
-                # we never want to send feedback notifications related to occurrences
-                # that took place over a week ago
-                occurrence__time__range=(now - timedelta(days=7), now),
-            )
-            .select_related("occurrence")
-        )
-        for enrolment in enrolments:
-            enrolment.send_feedback_notification()
-
-        return len(enrolments)
-
-
 class Enrolment(TimestampedModel, SerializableMixin):
     child = models.ForeignKey(
         Child,
@@ -1856,18 +1311,10 @@ class Enrolment(TimestampedModel, SerializableMixin):
             # Extra participant counts must be recorded as a pair (both NULL when not
             # used, or both non-NULL integers) so seat calculations and admin/API state
             # never see a half-specified extra participant pair.
-            models.CheckConstraint(
-                condition=(
-                    Q(
-                        extra_children_count__isnull=True,
-                        extra_guardians_count__isnull=True,
-                    )
-                    | Q(
-                        extra_children_count__isnull=False,
-                        extra_guardians_count__isnull=False,
-                    )
-                ),
-                name="enrolment_extra_counts_both_or_neither",
+            _both_or_neither_constraint(
+                "extra_children_count",
+                "extra_guardians_count",
+                "enrolment_extra_counts_both_or_neither",
             ),
             # Arrived participant counts must also be recorded as a pair: either both
             # NULL (when attendance has not been handled yet, or on legacy rows that
@@ -1875,18 +1322,10 @@ class Enrolment(TimestampedModel, SerializableMixin):
             # This prevents half-populated arrival state and guarantees SQL addition
             # (`arrived_children_count + arrived_guardians_count`) never yields NULL
             # due to a single missing column.
-            models.CheckConstraint(
-                condition=(
-                    Q(
-                        arrived_children_count__isnull=True,
-                        arrived_guardians_count__isnull=True,
-                    )
-                    | Q(
-                        arrived_children_count__isnull=False,
-                        arrived_guardians_count__isnull=False,
-                    )
-                ),
-                name="enrolment_arrived_counts_both_or_neither",
+            _both_or_neither_constraint(
+                "arrived_children_count",
+                "arrived_guardians_count",
+                "enrolment_arrived_counts_both_or_neither",
             ),
         ]
         ordering = ("id",)
@@ -2083,38 +1522,6 @@ class Enrolment(TimestampedModel, SerializableMixin):
         if not enrolment_id:
             raise IllegalEnrolmentReferenceId("Could not decode the enrolment id")
         return enrolment_id[0]
-
-
-class TicketSystemPasswordQueryset(models.QuerySet):
-    def free(self):
-        return self.filter(assigned_at=None)
-
-    def used(self):
-        return self.exclude(assigned_at=None)
-
-    @transaction.atomic
-    def assign(self, event: Event, child: Child) -> "TicketSystemPassword":
-        obj: Optional[TicketSystemPassword] = (
-            self.select_for_update(skip_locked=True).filter(event=event).free().first()
-        )
-        if not obj:
-            logger.error(
-                f"No free ticket system passwords left to event {event}, "
-                f"one was requested for child {child.pk}."
-            )
-            raise NoFreePasswordsError(
-                f"No free ticket system passwords left to event {event}."
-            )
-
-        obj.assign(child)
-
-        return obj
-
-    def event_upcoming_or_ongoing(self):
-        return self.exclude(event__published_at__isnull=True).filter(
-            Q(event__ticket_system_end_time__isnull=True)
-            | Q(event__ticket_system_end_time__gte=timezone.now())
-        )
 
 
 class TicketSystemPassword(SerializableMixin, models.Model):
