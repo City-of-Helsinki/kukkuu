@@ -872,6 +872,7 @@ class Occurrence(TimestampedModel, SerializableMixin):
     # so updates to fields like `capacity_override` or `attended_count_override`
     # recalculate fresh values instead of returning stale pre-save annotations.
     _CACHED_ANNOTATION_ATTRS = (
+        "reserved_seats",
         "remaining_capacity",
         "attended_seats",
         "attended_children_count",

@@ -1426,3 +1426,27 @@ def test_external_event_attended_participant_counts_return_zero():
     assert occ.get_attended_adults_count() == 0
     assert event.get_attended_children_count() == 0
     assert event.get_attended_adults_count() == 0
+
+
+@pytest.mark.django_db
+def test_occurrence_save_invalidates_reserved_seats_annotation():
+    occ = OccurrenceFactory(capacity_override=10)
+    EnrolmentFactory(
+        occurrence=occ,
+        extra_children_count=0,
+        extra_guardians_count=0,
+    )
+
+    annotated_occ = Occurrence.objects.with_reserved_seats().get(pk=occ.pk)
+    assert annotated_occ.get_reserved_seats() == 2
+
+    EnrolmentFactory(
+        occurrence=occ,
+        extra_children_count=1,
+        extra_guardians_count=0,
+    )
+    # Pre-save annotation is still cached on the instance
+    assert annotated_occ.get_reserved_seats() == 2
+
+    annotated_occ.save()
+    assert annotated_occ.get_reserved_seats() == 5
