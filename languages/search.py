@@ -1,4 +1,4 @@
-from collections import namedtuple
+from dataclasses import astuple, dataclass
 from functools import cache
 
 import pycountry
@@ -6,13 +6,17 @@ import pycountry
 from .enums import LanguageType
 from .models import get_cldr_language_name
 
-LivingLanguage = namedtuple(
-    "LivingLanguage", ("alpha_3", "name_fi", "name_sv", "name_en")
-)
+
+@dataclass(frozen=True)
+class LivingLanguage:
+    alpha_3: str
+    name_fi: str
+    name_sv: str
+    name_en: str
 
 
 @cache
-def get_living_languages():
+def get_living_languages() -> tuple[LivingLanguage, ...]:
     """
     Get the living ISO 639-3 languages, ordered by their alpha-3 codes. The English
     name is used where Unicode CLDR has no Finnish or Swedish name.
@@ -43,5 +47,5 @@ def search_living_languages(search_term):
     return [
         language
         for language in get_living_languages()
-        if any(search_term in value.casefold() for value in language)
+        if any(search_term in value.casefold() for value in astuple(language))
     ]
