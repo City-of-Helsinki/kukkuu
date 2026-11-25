@@ -337,8 +337,20 @@ class EventGroup(TimestampedModel, TranslatableModel, SerializableMixin):
     def get_enrolment_count(self) -> int:
         return sum(event.get_enrolment_count() for event in self.events.all())
 
+    def get_enrolled_children_count(self) -> int:
+        return sum(event.get_enrolled_children_count() for event in self.events.all())
+
+    def get_enrolled_adults_count(self) -> int:
+        return sum(event.get_enrolled_adults_count() for event in self.events.all())
+
     def get_attended_enrolment_count(self) -> int:
         return sum(event.get_attended_enrolment_count() for event in self.events.all())
+
+    def get_attended_children_count(self) -> int:
+        return sum(event.get_attended_children_count() for event in self.events.all())
+
+    def get_attended_adults_count(self) -> int:
+        return sum(event.get_attended_adults_count() for event in self.events.all())
 
     def get_attended_seats(self) -> int:
         """
@@ -773,9 +785,37 @@ class Event(TimestampedModel, TranslatableModel, SerializableMixin):
             occurrence.get_enrolment_count() for occurrence in self.occurrences.all()
         )
 
+    def get_enrolled_children_count(self) -> int:
+        return sum(
+            occurrence.get_enrolled_children_count()
+            for occurrence in self.occurrences.all()
+        )
+
+    def get_enrolled_adults_count(self) -> int:
+        return sum(
+            occurrence.get_enrolled_adults_count()
+            for occurrence in self.occurrences.all()
+        )
+
     def get_attended_enrolment_count(self) -> int:
         return sum(
             occurrence.get_attended_enrolment_count()
+            for occurrence in self.occurrences.all()
+        )
+
+    def get_attended_children_count(self) -> int:
+        if self.is_external_ticket_system_event:
+            return 0
+        return sum(
+            occurrence.get_attended_children_count()
+            for occurrence in self.occurrences.all()
+        )
+
+    def get_attended_adults_count(self) -> int:
+        if self.is_external_ticket_system_event:
+            return 0
+        return sum(
+            occurrence.get_attended_adults_count()
             for occurrence in self.occurrences.all()
         )
 
@@ -911,6 +951,78 @@ class OccurrenceQueryset(models.QuerySet):
             handled_enrolment_count=Count(
                 "enrolments", Q(enrolments__attended__isnull=False), distinct=True
             )
+        )
+
+    def _with_enrolment_sum(self, annotation_name: str, expression):
+        Enrolment = apps.get_model("events", "Enrolment")
+        subquery = (
+            Enrolment.objects.filter(occurrence=OuterRef("pk"))
+            .order_by()
+            .values("occurrence")
+            .annotate(total=Sum(expression))
+            .values("total")
+        )
+        return self.annotate(
+            **{
+                annotation_name: Coalesce(
+                    Subquery(subquery, output_field=models.IntegerField()), Value(0)
+                )
+            }
+        )
+
+    def _with_attended_participant_count(
+        self, annotation_name: str, expression, override_field: str
+    ):
+        Enrolment = apps.get_model("events", "Enrolment")
+        arrived_subquery = (
+            Enrolment.objects.filter(occurrence=OuterRef("pk"))
+            .order_by()
+            .values("occurrence")
+            .annotate(total=Sum(expression))
+            .values("total")
+        )
+        calculated = Coalesce(
+            Subquery(arrived_subquery, output_field=models.IntegerField()), Value(0)
+        )
+        override_case = Case(
+            When(
+                attended_children_count_override__isnull=False,
+                attended_adults_count_override__isnull=False,
+                then=F(override_field),
+            ),
+            default=None,
+            output_field=models.IntegerField(),
+        )
+        return self.annotate(
+            **{
+                annotation_name: Coalesce(
+                    override_case, calculated, output_field=models.IntegerField()
+                )
+            }
+        )
+
+    def with_attended_children_count(self):
+        return self._with_attended_participant_count(
+            "attended_children_count",
+            EnrolmentQueryset.arrived_children_expression(),
+            "attended_children_count_override",
+        )
+
+    def with_attended_adults_count(self):
+        return self._with_attended_participant_count(
+            "attended_adults_count",
+            EnrolmentQueryset.arrived_adults_expression(),
+            "attended_adults_count_override",
+        )
+
+    def with_enrolled_children_count(self):
+        return self._with_enrolment_sum(
+            "enrolled_children_count", EnrolmentQueryset.children_expression()
+        )
+
+    def with_enrolled_adults_count(self):
+        return self._with_enrolment_sum(
+            "enrolled_adults_count", EnrolmentQueryset.adults_expression()
         )
 
     def with_attended_seats(self):
@@ -1162,9 +1274,13 @@ class Occurrence(TimestampedModel, SerializableMixin):
     _CACHED_ANNOTATION_ATTRS = (
         "remaining_capacity",
         "attended_seats",
+        "attended_children_count",
+        "attended_adults_count",
         "calculated_attended_seats",
         "handled_enrolment_count",
         "pending_arrival_seats",
+        "enrolled_children_count",
+        "enrolled_adults_count",
     )
 
     def _clean_attended_count_overrides_pair(self):
@@ -1280,6 +1396,52 @@ class Occurrence(TimestampedModel, SerializableMixin):
                     Sum(EnrolmentQueryset.arrived_seats_expression()), Value(0)
                 )
             )["total"]
+
+    def _get_enrolled_participant_count(self, attr_name: str, expression) -> int:
+        try:
+            return getattr(self, attr_name)
+        except AttributeError:
+            return self.enrolments.aggregate(total=Coalesce(Sum(expression), Value(0)))[
+                "total"
+            ]
+
+    def get_enrolled_children_count(self) -> int:
+        return self._get_enrolled_participant_count(
+            "enrolled_children_count", EnrolmentQueryset.children_expression()
+        )
+
+    def get_enrolled_adults_count(self) -> int:
+        return self._get_enrolled_participant_count(
+            "enrolled_adults_count", EnrolmentQueryset.adults_expression()
+        )
+
+    def _get_attended_participant_count(
+        self, attr_name: str, override_attr: str, expression
+    ) -> int:
+        if self.event.is_external_ticket_system_event:
+            return 0
+        try:
+            return getattr(self, attr_name)
+        except AttributeError:
+            if self.attended_count_override is not None:
+                return getattr(self, override_attr)
+            return self.enrolments.aggregate(total=Coalesce(Sum(expression), Value(0)))[
+                "total"
+            ]
+
+    def get_attended_children_count(self) -> int:
+        return self._get_attended_participant_count(
+            "attended_children_count",
+            "attended_children_count_override",
+            EnrolmentQueryset.arrived_children_expression(),
+        )
+
+    def get_attended_adults_count(self) -> int:
+        return self._get_attended_participant_count(
+            "attended_adults_count",
+            "attended_adults_count_override",
+            EnrolmentQueryset.arrived_adults_expression(),
+        )
 
     def get_attended_seats(self) -> int:
         """
@@ -1471,6 +1633,20 @@ class OccurrenceLanguage(models.Model):
 
 class EnrolmentQueryset(models.QuerySet):
     @staticmethod
+    def _booked_participant_expression(extra_field: str):
+        return Value(1, output_field=models.IntegerField()) + Coalesce(
+            extra_field, Value(0), output_field=models.IntegerField()
+        )
+
+    @staticmethod
+    def children_expression():
+        return EnrolmentQueryset._booked_participant_expression("extra_children_count")
+
+    @staticmethod
+    def adults_expression():
+        return EnrolmentQueryset._booked_participant_expression("extra_guardians_count")
+
+    @staticmethod
     def seats_expression():
         """
         Return a SQL expression calculating the total booked physical seats for an
@@ -1489,6 +1665,31 @@ class EnrolmentQueryset(models.QuerySet):
                 Value(0),
                 output_field=models.IntegerField(),
             )
+        )
+
+    @staticmethod
+    def _arrived_participant_expression(arrived_field: str, fallback_expr):
+        return Case(
+            When(
+                arrived_children_count__isnull=False,
+                arrived_guardians_count__isnull=False,
+                then=F(arrived_field),
+            ),
+            When(attended=True, then=fallback_expr),
+            default=Value(0),
+            output_field=models.IntegerField(),
+        )
+
+    @staticmethod
+    def arrived_children_expression():
+        return EnrolmentQueryset._arrived_participant_expression(
+            "arrived_children_count", EnrolmentQueryset.children_expression()
+        )
+
+    @staticmethod
+    def arrived_adults_expression():
+        return EnrolmentQueryset._arrived_participant_expression(
+            "arrived_guardians_count", EnrolmentQueryset.adults_expression()
         )
 
     @staticmethod
