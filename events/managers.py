@@ -20,7 +20,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce, ExtractYear, Greatest
+from django.db.models.functions import Cast, Coalesce, ExtractYear, Greatest
 from django.utils import timezone
 
 from common.models import TranslatableQuerySet
@@ -322,7 +322,7 @@ class OccurrenceQueryset(models.QuerySet):
             )
         ).annotate(
             attended_seats=self._override_or_calculated(
-                F("attended_children_count_override")
+                Cast(F("attended_children_count_override"), models.IntegerField())
                 + F("attended_adults_count_override"),
                 "calculated_attended_seats",
             )

@@ -679,11 +679,12 @@ def test_verify_and_update_ticket_arrived_counts(
     assert ticket["arrivedChildrenCount"] is None
     assert ticket["arrivedGuardiansCount"] is None
 
-    # 11 queries for updateTicketAttended (including savepoint + UPDATE + auditlog):
+    # 14 queries for updateTicketAttended (including savepoints + row lock + UPDATE + auditlog):
     # 1-2. SAVEPOINT + Fetch Enrolment with end_time and select_related("occurrence")
-    # 3-7. Auditlog pre-save state lookup + UPDATE events_enrolment + INSERT auditlog_logentry
-    # 8-11. Fetch annotated Occurrence + prefetch event/venue translations + RELEASE SAVEPOINT
-    with django_assert_num_queries(11):
+    # 3-4. Inner SAVEPOINT + SELECT ... FOR UPDATE on Enrolment in apply_arrival
+    # 5-10. Auditlog pre-save state lookup + INSERT auditlog_logentry + UPDATE events_enrolment + inner savepoints
+    # 11-14. Fetch annotated Occurrence + prefetch event/venue translations + RELEASE SAVEPOINT
+    with django_assert_num_queries(14):
         update_res = api_client.execute(
             UPDATE_TICKET_ATTENDED_MUTATION,
             variables={
