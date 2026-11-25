@@ -699,13 +699,7 @@ class OccurrenceNode(DjangoObjectType):
         return (
             queryset.user_can_view(info.context.user)
             .with_end_time()
-            .with_enrolment_count()
-            .with_attended_enrolment_count()
-            .with_handled_enrolment_count()
-            .with_attended_seats()
-            .with_pending_arrival_seats()
-            .with_reserved_seats()
-            .with_remaining_capacity()
+            .with_doorway_metrics()
             .with_free_spot_notification_subscription_count()
             .order_by("time")
             .select_related("event", "event__project", "venue", "venue__project")
@@ -747,23 +741,27 @@ class OccurrenceNode(DjangoObjectType):
         OccurrenceAPIService.check_can_user_administer(self, info)
         return self.get_handled_enrolment_count()
 
-    def resolve_attended_count_override(self, info, **kwargs):
-        OccurrenceAPIService.check_can_user_administer(self, info)
-        if self.event.is_external_ticket_system_event:
+    @staticmethod
+    def _resolve_override_field(occurrence, info, field_name: str):
+        OccurrenceAPIService.check_can_user_administer(occurrence, info)
+        if occurrence.event.is_external_ticket_system_event:
             return None
-        return self.attended_count_override
+        return getattr(occurrence, field_name)
+
+    def resolve_attended_count_override(self, info, **kwargs):
+        return OccurrenceNode._resolve_override_field(
+            self, info, "attended_count_override"
+        )
 
     def resolve_attended_children_count_override(self, info, **kwargs):
-        OccurrenceAPIService.check_can_user_administer(self, info)
-        if self.event.is_external_ticket_system_event:
-            return None
-        return self.attended_children_count_override
+        return OccurrenceNode._resolve_override_field(
+            self, info, "attended_children_count_override"
+        )
 
     def resolve_attended_adults_count_override(self, info, **kwargs):
-        OccurrenceAPIService.check_can_user_administer(self, info)
-        if self.event.is_external_ticket_system_event:
-            return None
-        return self.attended_adults_count_override
+        return OccurrenceNode._resolve_override_field(
+            self, info, "attended_adults_count_override"
+        )
 
     def resolve_attended_seats(self, info, **kwargs):
         OccurrenceAPIService.check_can_user_administer(self, info)
@@ -1149,13 +1147,8 @@ def _build_ticket_verification_node(
         "event", "venue"
     ).prefetch_related("event__translations", "venue__translations")
     if validity:
-        occurrence_qs = (
-            occurrence_qs.with_enrolment_count()
-            .with_attended_enrolment_count()
-            .with_handled_enrolment_count()
-            .with_attended_seats()
-            .with_reserved_seats()
-            .with_pending_arrival_seats()
+        occurrence_qs = occurrence_qs.with_doorway_metrics(
+            include_remaining_capacity=False
         )
     occurrence = occurrence_qs.get(pk=enrolment.occurrence_id)
     occurrence_arrival_status = (

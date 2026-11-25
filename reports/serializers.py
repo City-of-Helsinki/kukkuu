@@ -177,70 +177,99 @@ class VenueSerializer(
         return obj.address_with_translations
 
 
-def _attended_seats_help_text(scope: str) -> str:
-    return (
-        f"Total arrived physical seats (children + adults) {scope}. "
-        "Uses occurrence attended_count_override when set. "
-        "attended_count and attended_seats are aliases for the same value."
-    )
+_ATTENDED_SEATS_HELP_TEXT = (
+    "Total arrived physical seats (children + adults). "
+    "Uses occurrence attended_count_override when set. "
+    "attended_count and attended_seats are aliases for the same value."
+)
 
 
-class OccurrenceSerializer(serializers.ModelSerializer):
+SEAT_METRIC_FIELDS = (
+    "enrolment_count",
+    "enrolled_children_count",
+    "enrolled_adults_count",
+    "attended_enrolment_count",
+    "attended_count",
+    "attended_children_count",
+    "attended_adults_count",
+    "attended_seats",
+    "capacity",
+    "reserved_seats",
+)
+
+
+class SeatMetricsMixin(serializers.Serializer):
+    """Shared seat and attendance metric fields and getters for report serializers."""
+
     enrolment_count = serializers.SerializerMethodField(
-        help_text="Count of how many children have enrolled "
-        "in this occurrence of an event."
+        help_text="Total count of how many children have enrolled."
     )
-
     enrolled_children_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked children (enrolled children + extra children) "
-            "in this occurrence of an event."
-        )
+        help_text="Total booked children (enrolled children + extra children)."
     )
-
     enrolled_adults_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked adults (accompanying guardians + extra guardians) "
-            "in this occurrence of an event."
-        )
+        help_text="Total booked adults (accompanying guardians + extra guardians)."
     )
-
     attended_enrolment_count = serializers.SerializerMethodField(
-        help_text=(
-            "Count of enrolments marked as attended in this occurrence of an event."
-        )
+        help_text="Count of enrolments marked as attended."
     )
-
-    _attended_help_text = _attended_seats_help_text("in this occurrence of an event")
-
-    attended_count = serializers.SerializerMethodField(help_text=_attended_help_text)
-
+    attended_count = serializers.SerializerMethodField(
+        help_text=_ATTENDED_SEATS_HELP_TEXT
+    )
     attended_children_count = serializers.SerializerMethodField(
         help_text=(
-            "Total arrived children in this occurrence of an event. "
-            "Uses attended_children_count_override when set."
+            "Total arrived children. "
+            "Uses occurrence attended_children_count_override when set."
         )
     )
-
     attended_adults_count = serializers.SerializerMethodField(
         help_text=(
-            "Total arrived adults in this occurrence of an event. "
-            "Uses attended_adults_count_override when set."
+            "Total arrived adults. "
+            "Uses occurrence attended_adults_count_override when set."
         )
     )
-
-    attended_seats = serializers.SerializerMethodField(help_text=_attended_help_text)
-
+    attended_seats = serializers.SerializerMethodField(
+        help_text=_ATTENDED_SEATS_HELP_TEXT
+    )
     capacity = serializers.SerializerMethodField(
-        help_text="The total physical seat capacity of this occurrence of an event."
+        help_text="The total physical seat capacity."
     )
-
     reserved_seats = serializers.SerializerMethodField(
-        help_text=(
-            "Total count of reserved physical seats in this occurrence of an event."
-        )
+        help_text="Total count of reserved physical seats."
     )
 
+    def get_enrolment_count(self, obj) -> int:
+        return obj.get_enrolment_count()
+
+    def get_enrolled_children_count(self, obj) -> int:
+        return obj.get_enrolled_children_count()
+
+    def get_enrolled_adults_count(self, obj) -> int:
+        return obj.get_enrolled_adults_count()
+
+    def get_attended_enrolment_count(self, obj) -> int:
+        return obj.get_attended_enrolment_count()
+
+    def get_attended_count(self, obj) -> int:
+        return obj.get_attended_seats()
+
+    def get_attended_children_count(self, obj) -> int:
+        return obj.get_attended_children_count()
+
+    def get_attended_adults_count(self, obj) -> int:
+        return obj.get_attended_adults_count()
+
+    def get_attended_seats(self, obj) -> int:
+        return obj.get_attended_seats()
+
+    def get_capacity(self, obj) -> Optional[int]:
+        return obj.get_capacity()
+
+    def get_reserved_seats(self, obj) -> int:
+        return obj.get_reserved_seats()
+
+
+class OccurrenceSerializer(SeatMetricsMixin, serializers.ModelSerializer):
     venue = VenueSerializer(
         read_only=True,
         # To optimize the query, exclude django-parler translated fields and
@@ -257,51 +286,14 @@ class OccurrenceSerializer(serializers.ModelSerializer):
             "id",
             "time",
             "venue",
-            "enrolment_count",
-            "enrolled_children_count",
-            "enrolled_adults_count",
-            "attended_enrolment_count",
-            "attended_count",
-            "attended_children_count",
-            "attended_adults_count",
-            "attended_seats",
-            "capacity",
-            "reserved_seats",
+            *SEAT_METRIC_FIELDS,
         ]
-
-    def get_enrolment_count(self, obj: Occurrence) -> int:
-        return obj.get_enrolment_count()
-
-    def get_enrolled_children_count(self, obj: Occurrence) -> int:
-        return obj.get_enrolled_children_count()
-
-    def get_enrolled_adults_count(self, obj: Occurrence) -> int:
-        return obj.get_enrolled_adults_count()
-
-    def get_attended_enrolment_count(self, obj: Occurrence) -> int:
-        return obj.get_attended_enrolment_count()
-
-    def get_attended_count(self, obj: Occurrence) -> int:
-        return obj.get_attended_seats()
-
-    def get_attended_children_count(self, obj: Occurrence) -> int:
-        return obj.get_attended_children_count()
-
-    def get_attended_adults_count(self, obj: Occurrence) -> int:
-        return obj.get_attended_adults_count()
-
-    def get_attended_seats(self, obj: Occurrence) -> int:
-        return obj.get_attended_seats()
-
-    def get_capacity(self, obj: Occurrence) -> Optional[int]:
-        return obj.get_capacity()
-
-    def get_reserved_seats(self, obj: Occurrence) -> int:
-        return obj.get_reserved_seats()
 
 
 class EventGroupSerializer(
-    DynamicFieldsModelSerializer, serializers.HyperlinkedModelSerializer
+    SeatMetricsMixin,
+    DynamicFieldsModelSerializer,
+    serializers.HyperlinkedModelSerializer,
 ):
     name = serializers.SerializerMethodField()
     project = ProjectSerializer(
@@ -318,56 +310,6 @@ class EventGroupSerializer(
     events_count = serializers.SerializerMethodField(
         help_text="Total count of events in this event group."
     )
-    enrolment_count = serializers.SerializerMethodField(
-        help_text="Total count of how many children have enrolled "
-        "in this event group's event occurrences."
-    )
-    enrolled_children_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked children (enrolled children + extra children) "
-            "in this event group's event occurrences."
-        )
-    )
-    enrolled_adults_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked adults (accompanying guardians + extra guardians) "
-            "in this event group's event occurrences."
-        )
-    )
-    attended_enrolment_count = serializers.SerializerMethodField(
-        help_text=(
-            "Count of enrolments marked as attended "
-            "in this event group's event occurrences."
-        )
-    )
-    _attended_help_text = _attended_seats_help_text(
-        "across this event group's occurrences"
-    )
-
-    attended_count = serializers.SerializerMethodField(help_text=_attended_help_text)
-    attended_children_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total arrived children across this event group's occurrences. "
-            "Uses occurrence attended_children_count_override when set."
-        )
-    )
-    attended_adults_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total arrived adults across this event group's occurrences. "
-            "Uses occurrence attended_adults_count_override when set."
-        )
-    )
-    attended_seats = serializers.SerializerMethodField(help_text=_attended_help_text)
-    capacity = serializers.SerializerMethodField(
-        help_text="The total capacity of how many children can there participate "
-        "in this event group's event occurrences."
-    )
-    reserved_seats = serializers.SerializerMethodField(
-        help_text=(
-            "Total count of reserved physical seats in this event group's "
-            "event occurrences."
-        )
-    )
 
     class Meta:
         model = EventGroup
@@ -377,50 +319,11 @@ class EventGroupSerializer(
             "name",
             "project",
             "events_count",
-            "enrolment_count",
-            "enrolled_children_count",
-            "enrolled_adults_count",
-            "attended_enrolment_count",
-            "attended_count",
-            "attended_children_count",
-            "attended_adults_count",
-            "attended_seats",
-            "capacity",
-            "reserved_seats",
+            *SEAT_METRIC_FIELDS,
         ]
 
     def get_events_count(self, obj: EventGroup) -> int:
         return obj.events.count()
-
-    def get_enrolment_count(self, obj: EventGroup) -> int:
-        return obj.get_enrolment_count()
-
-    def get_enrolled_children_count(self, obj: EventGroup) -> int:
-        return obj.get_enrolled_children_count()
-
-    def get_enrolled_adults_count(self, obj: EventGroup) -> int:
-        return obj.get_enrolled_adults_count()
-
-    def get_attended_enrolment_count(self, obj: EventGroup) -> int:
-        return obj.get_attended_enrolment_count()
-
-    def get_attended_count(self, obj: EventGroup) -> int:
-        return obj.get_attended_seats()
-
-    def get_attended_children_count(self, obj: EventGroup) -> int:
-        return obj.get_attended_children_count()
-
-    def get_attended_adults_count(self, obj: EventGroup) -> int:
-        return obj.get_attended_adults_count()
-
-    def get_attended_seats(self, obj: EventGroup) -> int:
-        return obj.get_attended_seats()
-
-    def get_capacity(self, obj: EventGroup) -> Optional[int]:
-        return obj.get_capacity()
-
-    def get_reserved_seats(self, obj: EventGroup) -> int:
-        return obj.get_reserved_seats()
 
     # NOTE: Fetching the translations from django-parler table
     # can cause lots of sub queries.
@@ -428,7 +331,7 @@ class EventGroupSerializer(
         return obj.name_with_translations
 
 
-class EventSerializer(serializers.ModelSerializer):
+class EventSerializer(SeatMetricsMixin, serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     project = ProjectSerializer(
         # To optimize the query, exclude django-parler translated fields and
@@ -461,52 +364,6 @@ class EventSerializer(serializers.ModelSerializer):
     occurrences_count = serializers.SerializerMethodField(
         help_text="Total count of occurrences in this event."
     )
-    enrolment_count = serializers.SerializerMethodField(
-        help_text="Total count of how many children have enrolled "
-        "in this event's occurrences."
-    )
-    enrolled_children_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked children (enrolled children + extra children) "
-            "in this event's occurrences."
-        )
-    )
-    enrolled_adults_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total booked adults (accompanying guardians + extra guardians) "
-            "in this event's occurrences."
-        )
-    )
-    attended_enrolment_count = serializers.SerializerMethodField(
-        help_text=(
-            "Count of enrolments marked as attended in this event's occurrences."
-        )
-    )
-    _attended_help_text = _attended_seats_help_text("across this event's occurrences")
-
-    attended_count = serializers.SerializerMethodField(help_text=_attended_help_text)
-    attended_children_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total arrived children across this event's occurrences. "
-            "Uses occurrence attended_children_count_override when set."
-        )
-    )
-    attended_adults_count = serializers.SerializerMethodField(
-        help_text=(
-            "Total arrived adults across this event's occurrences. "
-            "Uses occurrence attended_adults_count_override when set."
-        )
-    )
-    attended_seats = serializers.SerializerMethodField(help_text=_attended_help_text)
-    capacity = serializers.SerializerMethodField(
-        help_text="The total capacity of how many children can there participate "
-        "in this event's occurrences."
-    )
-    reserved_seats = serializers.SerializerMethodField(
-        help_text=(
-            "Total count of reserved physical seats in this event's occurrences."
-        )
-    )
 
     class Meta:
         model = Event
@@ -518,50 +375,11 @@ class EventSerializer(serializers.ModelSerializer):
             "occurrences",
             "ticket_system",
             "occurrences_count",
-            "enrolment_count",
-            "enrolled_children_count",
-            "enrolled_adults_count",
-            "attended_enrolment_count",
-            "attended_count",
-            "attended_children_count",
-            "attended_adults_count",
-            "attended_seats",
-            "capacity",
-            "reserved_seats",
+            *SEAT_METRIC_FIELDS,
         ]
 
     def get_occurrences_count(self, obj: Event) -> int:
         return obj.occurrences.count()
-
-    def get_enrolment_count(self, obj: Event) -> int:
-        return obj.get_enrolment_count()
-
-    def get_enrolled_children_count(self, obj: Event) -> int:
-        return obj.get_enrolled_children_count()
-
-    def get_enrolled_adults_count(self, obj: Event) -> int:
-        return obj.get_enrolled_adults_count()
-
-    def get_attended_enrolment_count(self, obj: Event) -> int:
-        return obj.get_attended_enrolment_count()
-
-    def get_attended_count(self, obj: Event) -> int:
-        return obj.get_attended_seats()
-
-    def get_attended_children_count(self, obj: Event) -> int:
-        return obj.get_attended_children_count()
-
-    def get_attended_adults_count(self, obj: Event) -> int:
-        return obj.get_attended_adults_count()
-
-    def get_attended_seats(self, obj: Event) -> int:
-        return obj.get_attended_seats()
-
-    def get_capacity(self, obj: Event) -> Optional[int]:
-        return obj.get_capacity()
-
-    def get_reserved_seats(self, obj: Event) -> int:
-        return obj.get_reserved_seats()
 
     # NOTE: Fetching the translations from django-parler table
     # can cause lots of sub queries.
