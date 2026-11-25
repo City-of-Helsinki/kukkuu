@@ -1,7 +1,8 @@
 import pytest
 from django.core.exceptions import ValidationError
 
-from languages.models import Language, LanguageAlreadyExistsError
+from languages.exceptions import LanguageAlreadyExistsError
+from languages.models import Language
 
 
 @pytest.mark.parametrize("alpha_3_code", ["sme", "und"])
