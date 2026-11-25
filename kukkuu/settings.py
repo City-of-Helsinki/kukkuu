@@ -577,7 +577,11 @@ RESILIENT_LOGGER = {
     "clear_sent_entries": True,
 }
 
-SPECTACULAR_SETTINGS = {"TITLE": "Kukkuu report API", "VERSION": "1.0.0"}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Kukkuu report API",
+    "VERSION": "1.0.0",
+    "REDOC_DIST": "https://cdn.jsdelivr.net/npm/redoc@2",
+}
 
 LOGGING = {
     "version": 1,
