@@ -5,6 +5,7 @@ from django.db.models import Count
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.utils.context import switch_language
@@ -31,6 +32,23 @@ class AddLivingLanguageAdminViewMixin:
             ),
         ]
         return add_living_urls + super().get_urls()
+
+    def add_view(self, request, form_url="", extra_context=None):
+        """
+        Show a message recommending the "Add language from living languages list"
+        functionality, when the manual add language form is opened.
+        """
+        if request.method == "GET" and self.has_add_permission(request):
+            messages.warning(
+                request,
+                format_html(
+                    '{} <a href="{}">{}</a>',
+                    _("Please add languages using:"),
+                    reverse("admin:languages_language_add_living"),
+                    "🌐 " + str(_("Add language from living world languages list")),
+                ),
+            )
+        return super().add_view(request, form_url, extra_context)
 
     def add_living_view(self, request):
         """
