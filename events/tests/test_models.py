@@ -1339,3 +1339,90 @@ def test_external_event_max_one_occurrence():
     )
     with pytest.raises(ValidationError, match="at most one occurrence"):
         occ2.clean()
+
+
+@pytest.mark.django_db
+def test_enrolled_and_attended_participant_counts():
+    event_group = EventGroupFactory()
+    event = EventFactory(event_group=event_group, capacity_per_occurrence=30)
+    occ = OccurrenceFactory(event=event)
+    occ_override = OccurrenceFactory(
+        event=event,
+        attended_children_count_override=5,
+        attended_adults_count_override=4,
+    )
+
+    # 1) Explicit arrived counts: 2 children, 1 adult (booked: 3 children, 2 adults)
+    EnrolmentFactory(
+        occurrence=occ,
+        extra_children_count=2,
+        extra_guardians_count=1,
+        attended=True,
+        arrived_children_count=2,
+        arrived_guardians_count=1,
+    )
+    # 2) Unedited attended=True row without arrived_* counts: falls back to booked
+    #    (1 + 1 = 2 children, 1 + 0 = 1 adult)
+    EnrolmentFactory(
+        occurrence=occ,
+        extra_children_count=1,
+        extra_guardians_count=0,
+        attended=True,
+        arrived_children_count=None,
+        arrived_guardians_count=None,
+    )
+    # 3) Absent / unhandled row: 0 arrived (booked: 1 child, 1 adult)
+    EnrolmentFactory(occurrence=occ, attended=False)
+
+    # Enrolment on overridden occurrence (booked: 1 child, 1 adult; arrived: 1, 1)
+    EnrolmentFactory(
+        occurrence=occ_override,
+        attended=True,
+        arrived_children_count=1,
+        arrived_guardians_count=1,
+    )
+
+    assert occ.get_enrolled_children_count() == 6
+    assert occ.get_enrolled_adults_count() == 4
+    assert occ.get_attended_children_count() == 4
+    assert occ.get_attended_adults_count() == 2
+
+    assert occ_override.get_enrolled_children_count() == 1
+    assert occ_override.get_enrolled_adults_count() == 1
+    assert occ_override.get_attended_children_count() == 5
+    assert occ_override.get_attended_adults_count() == 4
+
+    annotated = (
+        Occurrence.objects.with_enrolled_children_count()
+        .with_enrolled_adults_count()
+        .with_attended_children_count()
+        .with_attended_adults_count()
+    )
+    ann_occ = annotated.get(pk=occ.pk)
+    ann_occ_override = annotated.get(pk=occ_override.pk)
+    assert ann_occ.enrolled_children_count == 6
+    assert ann_occ.enrolled_adults_count == 4
+    assert ann_occ.attended_children_count == 4
+    assert ann_occ.attended_adults_count == 2
+    assert ann_occ_override.attended_children_count == 5
+    assert ann_occ_override.attended_adults_count == 4
+
+    assert event.get_enrolled_children_count() == 7
+    assert event.get_enrolled_adults_count() == 5
+    assert event.get_attended_children_count() == 9
+    assert event.get_attended_adults_count() == 6
+
+    assert event_group.get_enrolled_children_count() == 7
+    assert event_group.get_enrolled_adults_count() == 5
+    assert event_group.get_attended_children_count() == 9
+    assert event_group.get_attended_adults_count() == 6
+
+
+@pytest.mark.django_db
+def test_external_event_attended_participant_counts_return_zero():
+    event = TicketmasterEventFactory()
+    occ = event.occurrences.first()
+    assert occ.get_attended_children_count() == 0
+    assert occ.get_attended_adults_count() == 0
+    assert event.get_attended_children_count() == 0
+    assert event.get_attended_adults_count() == 0

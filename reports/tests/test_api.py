@@ -320,8 +320,13 @@ def test_event_groups_retrieve_endpoint(
     json_data = response.json()
 
     assert json_data["enrolment_count"] == 2
+    assert json_data["enrolled_children_count"] == 2
+    assert json_data["enrolled_adults_count"] == 2
     assert json_data["reserved_seats"] == 4
-    assert json_data["attended_count"] == 1
+    assert json_data["attended_enrolment_count"] == 1
+    assert json_data["attended_count"] == 2
+    assert json_data["attended_children_count"] == 1
+    assert json_data["attended_adults_count"] == 1
     assert json_data["attended_seats"] == 2
     assert json_data["capacity"] == 20
     assert json_data["project"]["id"] == project.id
@@ -437,11 +442,11 @@ def test_venues_endpoint_no_permission(user_api_client):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "override,expected_occ_seats,expected_event_seats",
+    "override,expected_occ_children,expected_occ_adults",
     [
-        (None, 3, 5),
-        ((0, 0), 0, 2),
-        ((4, 6), 10, 12),
+        (None, 2, 1),
+        ((0, 0), 0, 0),
+        ((4, 6), 4, 6),
     ],
 )
 def test_reports_attended_seats_and_override(
@@ -449,20 +454,24 @@ def test_reports_attended_seats_and_override(
     user_api_client,
     django_assert_max_num_queries,
     override,
-    expected_occ_seats,
-    expected_event_seats,
+    expected_occ_children,
+    expected_occ_adults,
 ):
     """
-    Verify /reports/event/ and /reports/event-group/ return arrived physical seats
-    in attended_seats, use occurrence.attended_count_override when set, and preserve
-    attended_count as attended enrolments without increasing query count.
+    Verify /reports/event/ and /reports/event-group/ return effective arrived
+    participant counts (using occurrence overrides when set, without exposing
+    override fields), expose enrolled_children_count / enrolled_adults_count,
+    and expose attended_enrolment_count without increasing query count.
     """
     event_group = EventGroupFactory(project=project)
     event = EventFactory(
         project=project, event_group=event_group, capacity_per_occurrence=30
     )
     children_override, adults_override = override if override else (None, None)
-    total_override = None if override is None else sum(override)
+    expected_occ_seats = expected_occ_children + expected_occ_adults
+    expected_event_children = expected_occ_children + 1
+    expected_event_adults = expected_occ_adults + 1
+    expected_event_seats = expected_occ_seats + 2
     occ_overridable = OccurrenceFactory(
         event=event,
         time=timezone.now(),
@@ -488,31 +497,89 @@ def test_reports_attended_seats_and_override(
         arrived_guardians_count=1,
     )
 
+    occ_overridable_time = timezone.localtime(occ_overridable.time).isoformat()
+    occ_regular_time = timezone.localtime(occ_regular.time).isoformat()
+
     with django_assert_max_num_queries(7):
         event_res = user_api_client.get(EVENTS_ENDPOINT)
     assert event_res.status_code == 200
     event_data = event_res.json()[0]
-    assert event_data["attended_count"] == 2
-    assert event_data["attended_seats"] == expected_event_seats
-
-    occ_by_id = {o["id"]: o for o in event_data["occurrences"]}
-    assert occ_by_id[occ_overridable.id]["attended_count"] == 1
-    assert occ_by_id[occ_overridable.id]["attended_seats"] == expected_occ_seats
-    assert occ_by_id[occ_overridable.id]["attended_count_override"] == total_override
-    assert (
-        occ_by_id[occ_overridable.id]["attended_children_count_override"]
-        == children_override
-    )
-    assert (
-        occ_by_id[occ_overridable.id]["attended_adults_count_override"]
-        == adults_override
-    )
-    assert occ_by_id[occ_regular.id]["attended_seats"] == 2
-    assert occ_by_id[occ_regular.id]["attended_count_override"] is None
+    expected_occ_overridable = {
+        "id": occ_overridable.id,
+        "time": occ_overridable_time,
+        "venue": {
+            "url": f"http://testserver/reports/venue/{occ_overridable.venue_id}/",
+            "id": occ_overridable.venue_id,
+        },
+        "enrolment_count": 1,
+        "enrolled_children_count": 3,
+        "enrolled_adults_count": 2,
+        "attended_enrolment_count": 1,
+        "attended_count": expected_occ_seats,
+        "attended_children_count": expected_occ_children,
+        "attended_adults_count": expected_occ_adults,
+        "attended_seats": expected_occ_seats,
+        "capacity": 30,
+        "reserved_seats": 5,
+    }
+    expected_occ_regular = {
+        "id": occ_regular.id,
+        "time": occ_regular_time,
+        "venue": {
+            "url": f"http://testserver/reports/venue/{occ_regular.venue_id}/",
+            "id": occ_regular.venue_id,
+        },
+        "enrolment_count": 1,
+        "enrolled_children_count": 1,
+        "enrolled_adults_count": 1,
+        "attended_enrolment_count": 1,
+        "attended_count": 2,
+        "attended_children_count": 1,
+        "attended_adults_count": 1,
+        "attended_seats": 2,
+        "capacity": 30,
+        "reserved_seats": 2,
+    }
+    assert event_data == {
+        "id": event.id,
+        "name": event.name_with_translations,
+        "project": {"id": project.id, "year": project.year},
+        "event_group": {
+            "url": f"http://testserver/reports/event-group/{event_group.id}/",
+            "id": event_group.id,
+        },
+        "occurrences": [expected_occ_overridable, expected_occ_regular],
+        "ticket_system": "internal",
+        "occurrences_count": 2,
+        "enrolment_count": 2,
+        "enrolled_children_count": 4,
+        "enrolled_adults_count": 3,
+        "attended_enrolment_count": 2,
+        "attended_count": expected_event_seats,
+        "attended_children_count": expected_event_children,
+        "attended_adults_count": expected_event_adults,
+        "attended_seats": expected_event_seats,
+        "capacity": 60,
+        "reserved_seats": 7,
+    }
 
     with django_assert_max_num_queries(7):
         group_res = user_api_client.get(f"{EVENT_GROUPS_ENDPOINT}{event_group.id}/")
     assert group_res.status_code == 200
-    group_data = group_res.json()
-    assert group_data["attended_count"] == 2
-    assert group_data["attended_seats"] == expected_event_seats
+    assert group_res.json() == {
+        "url": f"http://testserver/reports/event-group/{event_group.id}/",
+        "id": event_group.id,
+        "name": event_group.name_with_translations,
+        "project": {"id": project.id, "year": project.year},
+        "events_count": 1,
+        "enrolment_count": 2,
+        "enrolled_children_count": 4,
+        "enrolled_adults_count": 3,
+        "attended_enrolment_count": 2,
+        "attended_count": expected_event_seats,
+        "attended_children_count": expected_event_children,
+        "attended_adults_count": expected_event_adults,
+        "attended_seats": expected_event_seats,
+        "capacity": 60,
+        "reserved_seats": 7,
+    }

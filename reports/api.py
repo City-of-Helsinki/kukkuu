@@ -72,18 +72,28 @@ class ChildViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return super().get_queryset().filter(**filters)
 
 
+def _reports_occurrence_queryset():
+    return (
+        Occurrence.objects.with_enrolment_count()
+        .with_enrolled_children_count()
+        .with_enrolled_adults_count()
+        .with_attended_enrolment_count()
+        .with_attended_children_count()
+        .with_attended_adults_count()
+        .with_attended_seats()
+        .with_reserved_seats()
+        .with_free_spot_notification_subscription_count()
+        .select_related("venue")
+    )
+
+
 @extend_schema_view(list=extend_schema(description="Get all events report data."))
 class EventViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = (
         Event.objects.prefetch_related(
             Prefetch(
                 "occurrences",
-                queryset=Occurrence.objects.with_enrolment_count()
-                .with_attended_enrolment_count()
-                .with_attended_seats()
-                .with_reserved_seats()
-                .with_free_spot_notification_subscription_count()
-                .select_related("venue"),
+                queryset=_reports_occurrence_queryset(),
             )
         )
         .select_related("event_group")
@@ -99,12 +109,7 @@ class EventGroupViewSet(viewsets.ReadOnlyModelViewSet):
         .prefetch_related(
             Prefetch(
                 "events__occurrences",
-                queryset=Occurrence.objects.with_enrolment_count()
-                .with_attended_enrolment_count()
-                .with_attended_seats()
-                .with_reserved_seats()
-                .with_free_spot_notification_subscription_count()
-                .select_related("venue"),
+                queryset=_reports_occurrence_queryset(),
             )
         )
         .select_related("project")
