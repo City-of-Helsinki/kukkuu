@@ -10,8 +10,9 @@ from django.utils.translation import gettext_lazy as _
 from parler.admin import TranslatableAdmin
 from parler.utils.context import switch_language
 
+from .exceptions import InvalidLanguageCodeError, LanguageAlreadyExistsError
 from .forms import LivingLanguageSearchForm
-from .models import InvalidLanguageCodeError, Language, LanguageAlreadyExistsError
+from .models import Language
 from .search import search_living_languages
 
 

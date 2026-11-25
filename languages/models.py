@@ -19,18 +19,11 @@ from .consts import (
     SPEECHLESS_LANGUAGE_ALPHA_3_CODE,
     SPEECHLESS_LANGUAGE_NAMES,
 )
-
-
-class InvalidLanguageCodeError(Exception):
-    pass
-
-
-class LanguageNameNotFoundError(Exception):
-    pass
-
-
-class LanguageAlreadyExistsError(Exception):
-    pass
+from .exceptions import (
+    InvalidLanguageCodeError,
+    LanguageAlreadyExistsError,
+    LanguageNameNotFoundError,
+)
 
 
 @dataclass(frozen=True)

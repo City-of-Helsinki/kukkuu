@@ -4,7 +4,8 @@ import pytest
 from django.core.management import call_command
 
 from kukkuu.settings import PARLER_SUPPORTED_LANGUAGE_CODES
-from languages.models import Language, LanguageNameNotFoundError
+from languages.exceptions import LanguageNameNotFoundError
+from languages.models import Language
 
 
 def call_command_and_assert_output(snapshot, *args, **kwargs):
