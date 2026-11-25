@@ -14,6 +14,7 @@ from .exceptions import InvalidLanguageCodeError, LanguageAlreadyExistsError
 from .forms import LivingLanguageSearchForm
 from .models import Language
 from .search import search_living_languages
+from .services import LanguageService
 
 
 class AddLivingLanguageAdminViewMixin:
@@ -89,7 +90,7 @@ class AddLivingLanguageAdminViewMixin:
 
     def _add_living_language(self, request, code):
         try:
-            created = Language.objects.create_from_language_code(
+            created = LanguageService.create_from_language_code(
                 code, use_english_fallback=True
             )
         except InvalidLanguageCodeError as error:

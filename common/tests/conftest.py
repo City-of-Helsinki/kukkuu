@@ -21,6 +21,7 @@ from events.factories import EventFactory, EventGroupFactory, OccurrenceFactory
 from kukkuu.schema import schema
 from kukkuu.views import SentryGraphQLView
 from languages.models import Language
+from languages.services import LanguageService
 from organisations.factories import DEFAULT_ORGANISATION_ID
 from organisations.models import Organisation
 from projects.factories import ProjectFactory
@@ -47,7 +48,7 @@ def occurrence_languages(db):
     """
     for alpha_3_code in ("fin", "swe", "eng"):
         if not Language.objects.filter(alpha_3_code=alpha_3_code).exists():
-            Language.objects.create_from_language_code(alpha_3_code)
+            LanguageService.create_from_language_code(alpha_3_code)
 
 
 @pytest.fixture(autouse=True)
@@ -88,11 +89,11 @@ def past():
 def languages():
     Language.objects.all().delete()
     return [
-        Language.objects.create_from_language_code(code).language
+        LanguageService.create_from_language_code(code).language
         for code in ("fin", "swe", "eng")
     ] + [
-        Language.objects.create_option_other(),
-        Language.objects.create_option_speechless(),
+        LanguageService.create_option_other(),
+        LanguageService.create_option_speechless(),
     ]
 
 

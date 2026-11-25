@@ -3,6 +3,7 @@ import pytest
 from common.utils import get_global_id
 from languages.consts import SPECIAL_LANGUAGE_ALPHA_3_CODES
 from languages.models import Language
+from languages.services import LanguageService
 
 
 @pytest.fixture(autouse=True)
@@ -14,9 +15,9 @@ def autouse_db(db):
 def languages():
     Language.objects.all().delete()
     for code in ("fin", "swe", "eng"):
-        Language.objects.create_from_language_code(code)
-    Language.objects.create_option_other()
-    Language.objects.create_option_speechless()
+        LanguageService.create_from_language_code(code)
+    LanguageService.create_option_other()
+    LanguageService.create_option_speechless()
 
 
 LANGUAGES_QUERY = """
@@ -115,7 +116,7 @@ def test_languages_query_filters_by_usage_flags(api_client, variables, expected_
 
 
 def test_languages_query_orders_special_languages_last(api_client):
-    Language.objects.create_from_language_code("ara")
+    LanguageService.create_from_language_code("ara")
 
     executed = api_client.execute(LANGUAGES_QUERY)
 
