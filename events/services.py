@@ -7,6 +7,7 @@ from copy import deepcopy
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -135,20 +136,42 @@ class EnrolmentAPIService:
         boolean/null alone (defaulting counts to booked counts when True, 0 when False,
         and None when None).
         """
-        if cls._should_use_explicit_counts(
+        use_explicit_counts = cls._should_use_explicit_counts(
             arrived_children_count, arrived_guardians_count
-        ):
-            cls._apply_explicit_arrived_counts(
-                enrolment,
-                arrived_children_count,
-                arrived_guardians_count,
-                attended=attended,
+        )
+        with transaction.atomic():
+            locked_enrolment = Enrolment.objects.select_for_update(of=("self",)).get(
+                pk=enrolment.pk
             )
-        else:
-            cls._apply_attended_flag(enrolment, attended)
+            if use_explicit_counts:
+                cls._apply_explicit_arrived_counts(
+                    locked_enrolment,
+                    arrived_children_count,
+                    arrived_guardians_count,
+                    attended=attended,
+                )
+            else:
+                cls._apply_attended_flag(locked_enrolment, attended)
 
-        enrolment.save()
-        return enrolment
+            locked_enrolment.save(
+                update_fields=[
+                    "attended",
+                    "arrived_children_count",
+                    "arrived_guardians_count",
+                    "updated_at",
+                ]
+            )
+
+        for field in (
+            "extra_children_count",
+            "extra_guardians_count",
+            "attended",
+            "arrived_children_count",
+            "arrived_guardians_count",
+            "updated_at",
+        ):
+            setattr(enrolment, field, getattr(locked_enrolment, field))
+        return locked_enrolment
 
 
 def validate_event_and_event_group_project_match(event):
@@ -1022,7 +1045,11 @@ class OccurrenceAPIService:
         # needed because enrolment_count is an annotated field
         occurrence.enrolment_count = 0
         occurrence.calculated_attended_seats = 0
-        occurrence.attended_seats = 0
+        occurrence.attended_seats = (
+            occurrence.attended_count_override
+            if occurrence.attended_count_override is not None
+            else 0
+        )
         occurrence.handled_enrolment_count = 0
         occurrence.pending_arrival_seats = 0
 

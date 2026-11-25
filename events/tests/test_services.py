@@ -1,23 +1,32 @@
 import re
 from datetime import timedelta
+from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
 from django.utils.timezone import now
+from graphql import GraphQLResolveInfo
 
+from common.utils import get_global_id
 from events.factories import (
     EnrolmentFactory,
     EventFactory,
     OccurrenceFactory,
     TicketmasterEventFactory,
 )
-from events.models import Event
+from events.models import Enrolment, Event
 from events.services import (
     EnrolmentAPIService,
+    OccurrenceAPIService,
     sync_external_event_occurrence,
     sync_external_occurrence_to_event,
 )
 from kukkuu.exceptions import DataValidationError
+from kukkuu.schema import schema
+from languages.models import Language
+from users.factories import UserFactory
+from venues.factories import VenueFactory
 
 
 @pytest.mark.django_db
@@ -405,3 +414,54 @@ def test_enrolment_api_service_apply_arrival_validation_errors(
             enrolment,
             **arrival_input,
         )
+
+
+@pytest.mark.django_db
+def test_enrolment_api_service_apply_arrival_reloads_and_saves_only_arrival_fields():
+    enrolment = EnrolmentFactory(extra_children_count=0, extra_guardians_count=0)
+    Enrolment.objects.filter(pk=enrolment.pk).update(extra_children_count=2)
+
+    enrolment.extra_guardians_count = 1  # unsaved stale/local change
+    updated = EnrolmentAPIService.apply_arrival(
+        enrolment,
+        arrived_children_count=3,
+        arrived_guardians_count=1,
+    )
+
+    updated.refresh_from_db()
+    assert updated.extra_children_count == 2
+    assert updated.extra_guardians_count == 0
+    assert updated.arrived_children_count == 3
+    assert updated.arrived_guardians_count == 1
+    assert enrolment.extra_children_count == 2
+
+
+@pytest.mark.django_db
+def test_occurrence_api_service_create_occurrence_with_attended_override():
+    event = EventFactory(ticket_system=Event.INTERNAL, capacity_per_occurrence=20)
+    venue = VenueFactory(project=event.project)
+    language, _ = Language.objects.get_or_create(
+        alpha_3_code="fin", defaults={"can_be_occurrence_language": True}
+    )
+    info = MagicMock(
+        spec=GraphQLResolveInfo,
+        context=SimpleNamespace(user=UserFactory(is_superuser=True)),
+        schema=schema.graphql_schema,
+    )
+
+    occurrence = OccurrenceAPIService.create_occurrence(
+        info,
+        {
+            "time": now() + timedelta(days=1),
+            "event_id": get_global_id(event),
+            "venue_id": get_global_id(venue),
+            "language_ids": [get_global_id(language)],
+            "attended_children_count_override": 4,
+            "attended_adults_count_override": 3,
+        },
+    )
+
+    assert occurrence.calculated_attended_seats == 0
+    assert occurrence.attended_seats == 7
+    assert occurrence.get_attended_seats() == 7
+    assert occurrence.get_remaining_empty_seats() == 13
