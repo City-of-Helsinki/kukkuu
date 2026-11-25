@@ -42,8 +42,12 @@ class LanguageNode(DjangoObjectType):
                 )
             )
             .translated()
-            .with_is_special()
-            .order_by("is_special", "translations__name", "id")  # special last
+            .with_is_special_language()
+            .order_by(
+                "is_special_language",  # special languages last
+                "translations__name",
+                "id",
+            )
         )
 
 

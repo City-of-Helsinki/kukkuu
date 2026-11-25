@@ -124,8 +124,8 @@ class LanguageAdmin(TranslatableAdmin):
             .prefetch_related("translations")
             .translated()
             .annotate(Count("guardians", distinct=True))
-            .with_is_special()
-            .order_by("-is_special", "alpha_3_code")  # special first
+            .with_is_special_language()
+            .order_by("-is_special_language", "alpha_3_code")  # special languages first
         )
 
     @admin.display(description=_("Finnish"))
