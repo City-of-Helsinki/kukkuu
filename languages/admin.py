@@ -13,32 +13,14 @@ from .forms import LivingLanguageSearchForm
 from .models import InvalidLanguageCodeError, Language, LanguageAlreadyExistsError
 from .search import search_living_languages
 
-LIVING_LANGUAGE_SEARCH_PAGE_SIZE = 50
 
+class AddLivingLanguageAdminViewMixin:
+    """
+    Django Admin view mixin for living ISO 639-3 languages search & add view
+    """
 
-@admin.register(Language)
-class LanguageAdmin(TranslatableAdmin):
     change_list_template = "admin/languages/language/change_list.html"
-    list_display = (
-        "alpha_3_code",
-        "get_name_fi",
-        "get_name_sv",
-        "get_name_en",
-        "can_be_spoken_at_home",
-        "can_be_occurrence_language",
-        "get_guardian_count",
-    )
-    list_display_links = ("alpha_3_code", "get_name_fi", "get_name_sv", "get_name_en")
-    list_filter = ("can_be_spoken_at_home", "can_be_occurrence_language")
-    search_fields = ("alpha_3_code", "translations__name")
-    fields = (
-        "alpha_3_code",
-        "name",
-        "can_be_spoken_at_home",
-        "can_be_occurrence_language",
-        "get_guardian_count",
-    )
-    readonly_fields = ("get_guardian_count",)
+    _living_language_search_page_size = 50
 
     def get_urls(self):
         add_living_urls = [
@@ -66,7 +48,7 @@ class LanguageAdmin(TranslatableAdmin):
         existing_codes = set()
         if form.is_valid():
             languages = search_living_languages(form.cleaned_data["search_term"])
-            paginator = Paginator(languages, LIVING_LANGUAGE_SEARCH_PAGE_SIZE)
+            paginator = Paginator(languages, self._living_language_search_page_size)
             page = paginator.get_page(request.GET.get("page"))
             existing_codes = set(
                 Language.objects.filter(
@@ -116,6 +98,30 @@ class LanguageAdmin(TranslatableAdmin):
                 "because no translation was found."
             ) % {"language_codes": ", ".join(created.fallback_language_codes)}
             self.message_user(request, message, messages.WARNING)
+
+
+@admin.register(Language)
+class LanguageAdmin(AddLivingLanguageAdminViewMixin, TranslatableAdmin):
+    list_display = (
+        "alpha_3_code",
+        "get_name_fi",
+        "get_name_sv",
+        "get_name_en",
+        "can_be_spoken_at_home",
+        "can_be_occurrence_language",
+        "get_guardian_count",
+    )
+    list_display_links = ("alpha_3_code", "get_name_fi", "get_name_sv", "get_name_en")
+    list_filter = ("can_be_spoken_at_home", "can_be_occurrence_language")
+    search_fields = ("alpha_3_code", "translations__name")
+    fields = (
+        "alpha_3_code",
+        "name",
+        "can_be_spoken_at_home",
+        "can_be_occurrence_language",
+        "get_guardian_count",
+    )
+    readonly_fields = ("get_guardian_count",)
 
     def get_queryset(self, request):
         return (
