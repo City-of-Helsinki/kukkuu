@@ -141,9 +141,20 @@ class LanguageQueryset(TranslatableQuerySet):
     def get_option_speechless(self):
         return self.get(alpha_3_code=SPEECHLESS_LANGUAGE_ALPHA_3_CODE)
 
-    def with_is_special(self):
+    def with_is_special_language(self):
+        """
+        Annotate the queryset with a boolean field `is_special_language`
+        that is True for all ISO 639-3 special type languages i.e. for:
+         - "mis" (Uncoded languages)
+         - "mul" (Multiple languages)
+         - "und" (Undetermined) i.e. "Other language"
+         - "zxx" (No linguistic content) i.e. "Speechless"
+        and otherwise False.
+
+        See https://iso639-3.sil.org/code_tables/639/data
+        """
         return self.annotate(
-            is_special=ExpressionWrapper(
+            is_special_language=ExpressionWrapper(
                 Q(alpha_3_code__in=SPECIAL_LANGUAGE_ALPHA_3_CODES),
                 output_field=models.BooleanField(),
             )
