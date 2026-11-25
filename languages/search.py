@@ -4,7 +4,7 @@ from functools import cache
 import pycountry
 
 from .enums import LanguageType
-from .models import get_cldr_language_name
+from .services import LanguageService
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ def get_living_languages() -> tuple[LivingLanguage, ...]:
     Get the living ISO 639-3 languages, ordered by their alpha-3 codes. The English
     name is used where Unicode CLDR has no Finnish or Swedish name.
     """
+    get_cldr_language_name = LanguageService.get_cldr_language_name
     return tuple(
         sorted(
             (

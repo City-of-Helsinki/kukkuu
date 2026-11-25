@@ -114,6 +114,7 @@ from kukkuu.consts import (
 from kukkuu.exceptions import EnrolmentReferenceIdDoesNotExist
 from kukkuu.views import SentryGraphQLView
 from languages.models import Language
+from languages.services import LanguageService
 from notification_importers.notification_importer import NotificationFileImporter
 from projects.factories import ProjectFactory
 from projects.models import Project, ProjectPermission
@@ -826,7 +827,7 @@ def test_add_occurrence_requires_at_least_one_language(
 def test_add_occurrence_rejects_language_that_can_not_be_occurrence_language(
     project_user_api_client, event, venue
 ):
-    language = Language.objects.create_from_language_code("deu").language
+    language = LanguageService.create_from_language_code("deu").language
     language.can_be_occurrence_language = False
     language.save()
     variables = deepcopy(ADD_OCCURRENCE_VARIABLES)

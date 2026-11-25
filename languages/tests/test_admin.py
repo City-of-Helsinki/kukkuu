@@ -164,7 +164,7 @@ def test_add_living_language_uses_english_name_when_translation_is_missing(
     admin_client, languages, monkeypatch
 ):
     monkeypatch.setattr(
-        "languages.models.get_cldr_language_name",
+        "languages.services.LanguageService.get_cldr_language_name",
         lambda language, parler_language: (
             None if parler_language == "fi" else "mocked Swedish name"
         ),

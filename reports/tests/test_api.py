@@ -21,6 +21,7 @@ from events.factories import (
 )
 from events.models import Enrolment, Occurrence
 from languages.models import Language
+from languages.services import LanguageService
 from reports.drf_permissions import ACCESS_REPORT_API_PERM
 from reports.serializers import get_primary_contact_language
 from venues.factories import SystemVenueFactory, VenueFactory
@@ -35,8 +36,8 @@ VENUES_ENDPOINT = "/reports/venue/"
 def languages():
     Language.objects.all().delete()
     for code in ("fin", "swe", "eng"):
-        Language.objects.create_from_language_code(code)
-    Language.objects.create_option_other()
+        LanguageService.create_from_language_code(code)
+    LanguageService.create_option_other()
 
 
 @pytest.fixture

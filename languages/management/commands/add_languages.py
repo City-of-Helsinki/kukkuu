@@ -4,6 +4,7 @@ from django.utils import translation
 
 from languages.exceptions import LanguageAlreadyExistsError
 from languages.models import Language
+from languages.services import LanguageService
 
 DEFAULT_LANGUAGES_FILE = "data/default_languages.csv"
 
@@ -64,7 +65,7 @@ class Command(BaseCommand):
         for code in codes:
             code = code.strip()
             try:
-                created = Language.objects.create_from_language_code(
+                created = LanguageService.create_from_language_code(
                     code, use_english_fallback=options["use_english_fallback"]
                 )
             except LanguageAlreadyExistsError:
@@ -87,8 +88,8 @@ class Command(BaseCommand):
 
     def _create_special_languages(self):
         for special_name, create_special_language in (
-            ("Other", Language.objects.create_option_other),
-            ("Speechless", Language.objects.create_option_speechless),
+            ("Other", LanguageService.create_option_other),
+            ("Speechless", LanguageService.create_option_speechless),
         ):
             try:
                 create_special_language()
