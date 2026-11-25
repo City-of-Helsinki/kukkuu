@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 
 from languages.models import Language
+from languages.search import LivingLanguage
 from users.factories import GuardianFactory
 
 CHANGELIST_URL_NAME = "admin:languages_language_changelist"
@@ -89,7 +90,12 @@ def test_search_living_languages_matches_code_and_names_case_insensitively(
 ):
     response = _search(admin_client, term)
 
-    assert ("dan", "tanska", "danska", "Danish") in response.context["page"].object_list
+    assert (
+        LivingLanguage(
+            alpha_3="dan", name_fi="tanska", name_sv="danska", name_en="Danish"
+        )
+        in response.context["page"].object_list
+    )
     assert 'value="dan"' in response.content.decode()
 
 
