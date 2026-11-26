@@ -473,12 +473,17 @@ class EnrolmentQueryset(models.QuerySet):
         enrolment: `arrived_children_count + arrived_guardians_count` when both are
         present, falling back to booked `seats_expression()` when `attended=True`
         without explicit arrived counts (legacy rows), or 0 otherwise.
+
+        The first operand is cast to IntegerField because both columns are
+        smallint and PostgreSQL would otherwise evaluate their sum as smallint,
+        which can overflow.
         """
         return Case(
             When(
                 arrived_children_count__isnull=False,
                 arrived_guardians_count__isnull=False,
-                then=F("arrived_children_count") + F("arrived_guardians_count"),
+                then=Cast(F("arrived_children_count"), models.IntegerField())
+                + F("arrived_guardians_count"),
             ),
             When(attended=True, then=EnrolmentQueryset.seats_expression()),
             default=Value(0),

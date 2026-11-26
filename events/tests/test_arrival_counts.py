@@ -45,6 +45,16 @@ from users.factories import UserFactory
         (2, 1, True, 1, 2, 3),
         (2, 1, False, 0, 0, 0),
         (None, None, True, 1, 1, 2),
+        # The sum of two smallint columns must not overflow in the database.
+        pytest.param(
+            20000,
+            20000,
+            True,
+            20000,
+            20000,
+            40000,
+            id="arrived_counts_sum_exceeds_smallint",
+        ),
     ],
 )
 def test_enrolment_arrived_seats_property_and_queryset(
