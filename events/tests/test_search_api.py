@@ -24,7 +24,7 @@ from events.tests.queries import (
 )
 from kukkuu.consts import API_USAGE_ERROR, OBJECT_DOES_NOT_EXIST_ERROR
 from languages.models import Language
-from tags.factories import ThemePathFactory
+from tags.factories import AccessibilityFactory, ThemePathFactory
 from users.factories import GuardianFactory
 
 
@@ -304,7 +304,7 @@ def test_events_search_unpublished_and_other_project_never_returned(
         {"startDate": "2026-11-10"},
         {"languages": ["fin"]},
         {"themePaths": ["music"]},
-        {"accessibility": ["wheelchair"]},
+        {"accessibilities": ["mobility"]},
         {"familyOnly": True},
     ],
 )
@@ -313,7 +313,7 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
     Ensure search-specific filter arguments require childId.
 
     Verifies that passing hasFreeSpots, startDate, languages, themePaths,
-    accessibility, or familyOnly without childId raises an API_USAGE_ERROR.
+    accessibilities, or familyOnly without childId raises an API_USAGE_ERROR.
     """
     query = """
     query EventsWithoutChild(
@@ -321,7 +321,7 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
       $startDate: Date
       $languages: [String]
       $themePaths: [String]
-      $accessibility: [String]
+      $accessibilities: [String]
       $familyOnly: Boolean
     ) {
       events(
@@ -329,7 +329,7 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
         startDate: $startDate
         languages: $languages
         themePaths: $themePaths
-        accessibility: $accessibility
+        accessibilities: $accessibilities
         familyOnly: $familyOnly
       ) {
         count
@@ -964,6 +964,7 @@ def test_events_search_query_count_is_constant(
         project=project,
     )
     tp = ThemePathFactory(slug="rhythm", name="Rytmi", description="")
+    acc = AccessibilityFactory(slug="acc_constant", name="Aistiherkkyys", sort_order=1)
 
     # Create initial 3 events with occurrences
     events_3 = EventFactory.create_batch(
@@ -974,14 +975,16 @@ def test_events_search_query_count_is_constant(
         theme_paths=[tp],
     )
     for i, ev in enumerate(events_3):
-        OccurrenceFactory(event=ev, time=future + timedelta(days=i))
+        OccurrenceFactory(
+            event=ev, time=future + timedelta(days=i), accessibilities=[acc]
+        )
 
     variables = {"childId": get_global_id(child), "first": 25}
     # Warm up caches
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    # Baseline: exactly 15 queries for 3 events
-    with django_assert_num_queries(15) as captured_3:
+    # Baseline: exactly 17 queries for 3 events (includes occurrence accessibilities + translations prefetch)
+    with django_assert_num_queries(17) as captured_3:
         res_3 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_3.get("errors") is None
     # Returns all 3 initial events
@@ -996,7 +999,9 @@ def test_events_search_query_count_is_constant(
         theme_paths=[tp],
     )
     for i, ev in enumerate(more_events):
-        OccurrenceFactory(event=ev, time=future + timedelta(days=i + 3))
+        OccurrenceFactory(
+            event=ev, time=future + timedelta(days=i + 3), accessibilities=[acc]
+        )
     ext_events = TicketmasterEventFactory.create_batch(
         2,
         project=project,
@@ -1006,7 +1011,7 @@ def test_events_search_query_count_is_constant(
     for ext in ext_events:
         TicketSystemPasswordFactory(event=ext, child=None)
 
-    # 25 events must produce the EXACT same query count (15 queries) as 3 events
+    # 25 events must produce the EXACT same query count (17 queries) as 3 events
     with django_assert_num_queries(len(captured_3)):
         res_25 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_25.get("errors") is None
@@ -1038,6 +1043,9 @@ def test_events_search_query_count_with_all_filters(
         project=project,
     )
     tp = ThemePathFactory(slug="rhythm", name="Rytmi", description="")
+    acc = AccessibilityFactory(
+        slug="acc_all_filters", name="Aistiherkkyys", sort_order=1
+    )
 
     # Existing enrolment on a past event for this child
     past_event = EventFactory(project=project, published_at=past, theme_paths=[tp])
@@ -1057,6 +1065,7 @@ def test_events_search_query_count_with_all_filters(
             event=ev,
             time=future + timedelta(days=i + 1),
             languages=get_languages("fin"),
+            accessibilities=[acc],
             capacity_override=10,
         )
 
@@ -1071,6 +1080,7 @@ def test_events_search_query_count_with_all_filters(
             event=ext,
             time=future + timedelta(days=i + 9),
             languages=get_languages("fin"),
+            accessibilities=[acc],
         )
         TicketSystemPasswordFactory(event=ext, child=None)
 
@@ -1080,6 +1090,7 @@ def test_events_search_query_count_with_all_filters(
         "hasFreeSpots": True,
         "themePaths": ["rhythm"],
         "languages": ["fin"],
+        "accessibilities": [acc.slug],
         "startDate": future.date().isoformat(),
         "familyOnly": False,
     }
@@ -1087,8 +1098,8 @@ def test_events_search_query_count_with_all_filters(
     # Warm up caches
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    # Exactly 16 queries when all filters are active (hasFreeSpots, themePaths, languages, startDate)
-    with django_assert_num_queries(16) as captured_10:
+    # Exactly 18 queries when all filters are active (hasFreeSpots, themePaths, languages, accessibilities, startDate)
+    with django_assert_num_queries(18) as captured_10:
         res_10 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
     assert res_10.get("errors") is None
@@ -1262,7 +1273,7 @@ def test_events_search_grouped_events_query_count_is_constant(
     variables = {"childId": get_global_id(child), "first": 25}
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    with django_assert_num_queries(16) as captured_3:
+    with django_assert_num_queries(17) as captured_3:
         res_3 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
     assert res_3.get("errors") is None
     assert len(res_3["data"]["events"]["edges"]) == 3
@@ -1293,42 +1304,175 @@ def test_events_search_grouped_events_query_count_is_constant(
 
 
 @pytest.mark.django_db
-def test_events_search_accessibility_filter_handling(
-    guardian_api_client, project, future
+@pytest.mark.parametrize(
+    ("accessibilities", "expected_indices"),
+    [
+        (["sensory_search"], [0, 2]),
+        (["SENSORY_SEARCH"], [0, 2]),
+        (["hearing_search"], [1]),
+        (["sensory_search", "hearing_search"], [0, 1, 2]),
+        (["sensory_search", "vision_search"], [0, 2]),
+        (["unknown_slug"], []),
+        ([], [0, 1, 2, 3]),
+        (["  "], [0, 1, 2, 3]),
+    ],
+)
+def test_events_search_accessibilities_filter(
+    guardian_api_client, project, past, future, accessibilities, expected_indices
 ):
     """
-    Ensure nonempty accessibility filter is rejected with API_USAGE_ERROR,
-    while empty or omitted values return events unmodified.
+    Verify event search filters by occurrence accessibilities using OR semantics,
+    case-insensitively, without duplicating events, and ignoring past occurrences.
     """
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
         project=project,
     )
-    event = EventFactory(
-        project=project, published_at=timezone.now(), capacity_per_occurrence=10
-    )
-    OccurrenceFactory(event=event, time=future)
+    sensory = AccessibilityFactory(slug="sensory_search", sort_order=1)
+    hearing = AccessibilityFactory(slug="hearing_search", sort_order=2)
+    vision = AccessibilityFactory(slug="vision_search", sort_order=3)
 
-    # Nonempty accessibility list raises API_USAGE_ERROR
+    events = [
+        EventFactory(project=project, published_at=past, capacity_per_occurrence=10)
+        for _ in range(4)
+    ]
+    # Event 0: upcoming occurrence with sensory + vision
+    OccurrenceFactory(
+        event=events[0],
+        time=future + timedelta(days=1),
+        accessibilities=[sensory, vision],
+    )
+    # Event 1: upcoming occurrence with hearing
+    OccurrenceFactory(
+        event=events[1],
+        time=future + timedelta(days=2),
+        accessibilities=[hearing],
+    )
+    # Event 2: two upcoming occurrences, both matching sensory (must not duplicate event)
+    OccurrenceFactory(
+        event=events[2],
+        time=future + timedelta(days=3),
+        accessibilities=[sensory],
+    )
+    OccurrenceFactory(
+        event=events[2],
+        time=future + timedelta(days=4),
+        accessibilities=[sensory, vision],
+    )
+    # Event 3: past occurrence has sensory, upcoming occurrence has none
+    OccurrenceFactory(
+        event=events[3],
+        time=past,
+        accessibilities=[sensory],
+    )
+    OccurrenceFactory(
+        event=events[3],
+        time=future + timedelta(days=5),
+        accessibilities=[],
+    )
+
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
-            "accessibility": ["wheelchair"],
+            "accessibilities": accessibilities,
         },
     )
-    assert_match_error_code(executed, API_USAGE_ERROR)
+    assert executed.get("errors") is None
+    returned_ids = [edge["node"]["id"] for edge in executed["data"]["events"]["edges"]]
+    expected_ids = [get_global_id(events[i]) for i in expected_indices]
+    assert returned_ids == expected_ids
 
-    # Empty accessibility list succeeds
-    executed_empty = guardian_api_client.execute(
+
+@pytest.mark.django_db
+def test_events_search_accessibilities_combined_with_occurrence_filters(
+    guardian_api_client, project, past, future
+):
+    """
+    Verify accessibilities combines with languages, startDate, and hasFreeSpots
+    on the same upcoming occurrence (both for internal and external events).
+    """
+    child = ChildWithGuardianFactory(
+        relationship__guardian=guardian_api_client.user.guardian,
+        project=project,
+    )
+    sensory = AccessibilityFactory(slug="sensory_combo", sort_order=1)
+
+    # Event A: same occurrence satisfies language, accessibility, startDate, and free spots
+    event_match = EventFactory(
+        project=project, published_at=past, capacity_per_occurrence=4
+    )
+    OccurrenceFactory(
+        event=event_match,
+        time=future + timedelta(days=3),
+        languages=get_languages("fin"),
+        accessibilities=[sensory],
+    )
+
+    # Event B: accessibility and language are split across two different occurrences
+    event_split = EventFactory(
+        project=project, published_at=past, capacity_per_occurrence=4
+    )
+    OccurrenceFactory(
+        event=event_split,
+        time=future + timedelta(days=3),
+        languages=get_languages("fin"),
+        accessibilities=[],
+    )
+    OccurrenceFactory(
+        event=event_split,
+        time=future + timedelta(days=4),
+        languages=get_languages("swe"),
+        accessibilities=[sensory],
+    )
+
+    # Event C: matching occurrence is full, other occurrence has free spots without accessibility
+    event_full = EventFactory(
+        project=project, published_at=past, capacity_per_occurrence=2
+    )
+    full_occ = OccurrenceFactory(
+        event=event_full,
+        time=future + timedelta(days=3),
+        languages=get_languages("fin"),
+        accessibilities=[sensory],
+    )
+    EnrolmentFactory(occurrence=full_occ)
+    OccurrenceFactory(
+        event=event_full,
+        time=future + timedelta(days=4),
+        languages=get_languages("fin"),
+        accessibilities=[],
+    )
+
+    # Event D: external ticketmaster event with free password and matching occurrence
+    ext_match = TicketmasterEventFactory(project=project, published_at=past)
+    OccurrenceFactory(
+        event=ext_match,
+        time=future + timedelta(days=5),
+        languages=get_languages("fin"),
+        accessibilities=[sensory],
+    )
+    TicketSystemPasswordFactory(event=ext_match, child=None)
+
+    executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
-            "accessibility": [],
+            "languages": ["fin"],
+            "accessibilities": [sensory.slug],
+            "startDate": (future + timedelta(days=2)).date().isoformat(),
+            "hasFreeSpots": True,
         },
     )
-    assert executed_empty.get("errors") is None
-    assert len(executed_empty["data"]["events"]["edges"]) == 1
+    assert executed.get("errors") is None
+    returned_ids = [edge["node"]["id"] for edge in executed["data"]["events"]["edges"]]
+    assert returned_ids == [get_global_id(event_match), get_global_id(ext_match)]
+    assert (
+        executed["data"]["events"]["edges"][0]["node"]["occurrences"]["edges"][0][
+            "node"
+        ]["accessibilities"][0]["slug"]
+        == sensory.slug
+    )
 
 
 @pytest.mark.django_db

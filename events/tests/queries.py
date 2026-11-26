@@ -245,10 +245,12 @@ query Occurrences {
 
 OCCURRENCES_FILTER_QUERY = """
 query Occurrences($date: Date, $time: Time, $upcoming: Boolean, $venueId: String,
-                  $eventId: String, $languages: [String], $projectId: String,
-                  $upcomingWithLeeway: Boolean, $upcomingWithOngoing: Boolean) {
+                  $eventId: String, $languages: [String], $accessibilities: [String],
+                  $projectId: String, $upcomingWithLeeway: Boolean,
+                  $upcomingWithOngoing: Boolean) {
   occurrences(date: $date, time: $time, upcoming: $upcoming, venueId: $venueId,
               eventId: $eventId, languages: $languages,
+              accessibilities: $accessibilities,
               projectId: $projectId, upcomingWithLeeway: $upcomingWithLeeway,
               upcomingWithOngoing: $upcomingWithOngoing) {
     edges {
@@ -522,7 +524,7 @@ query eventsSearchQuery(
   $startDate: Date
   $languages: [String]
   $themePaths: [String]
-  $accessibility: [String]
+  $accessibilities: [String]
   $familyOnly: Boolean
   $hasFreeSpots: Boolean
 ) {
@@ -538,7 +540,7 @@ query eventsSearchQuery(
     startDate: $startDate
     languages: $languages
     themePaths: $themePaths
-    accessibility: $accessibility
+    accessibilities: $accessibilities
     familyOnly: $familyOnly
     hasFreeSpots: $hasFreeSpots
   ) {
@@ -585,6 +587,12 @@ query eventsSearchQuery(
               remainingCapacity
               languages {
                 alpha3Code
+              }
+              accessibilities {
+                id
+                slug
+                name
+                sortOrder
               }
               venue {
                 id

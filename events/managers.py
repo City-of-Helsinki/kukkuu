@@ -201,6 +201,22 @@ class OccurrenceQueryset(models.QuerySet):
             )
         )
 
+    def with_any_accessibility(self, slugs):
+        """
+        Return occurrences that have at least one of the given accessibilities.
+
+        :param slugs: Lowercase Accessibility slugs.
+        """
+        OccurrenceAccessibility = apps.get_model("events", "OccurrenceAccessibility")
+        return self.filter(
+            Exists(
+                OccurrenceAccessibility.objects.filter(
+                    occurrence=OuterRef("pk"),
+                    accessibility_id__in=slugs,
+                )
+            )
+        )
+
     def with_end_time(self):
         return self.annotate(
             end_time=ExpressionWrapper(

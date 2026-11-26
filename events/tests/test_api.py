@@ -2180,6 +2180,45 @@ def test_occurrences_filter_by_languages(
     assert len(executed["data"]["occurrences"]["edges"]) == expected_count
 
 
+@pytest.mark.parametrize(
+    ("accessibility_slugs", "expected_count"),
+    [
+        pytest.param(["sensory_test"], 3, id="single-slug"),
+        pytest.param(["SENSORY_TEST"], 3, id="case-insensitive"),
+        pytest.param(["hearing_test"], 2, id="another-single-slug"),
+        pytest.param(
+            ["sensory_test", "vision_test"], 3, id="no-duplicates-when-several-match"
+        ),
+        pytest.param(
+            ["sensory_test", "hearing_test", "vision_test"], 5, id="all-accessibilities"
+        ),
+        pytest.param(["unknown_slug"], 0, id="unknown-slug"),
+        pytest.param([], 5, id="empty-list-applies-no-filter"),
+        pytest.param(["  "], 5, id="whitespace-only-applies-no-filter"),
+    ],
+)
+def test_occurrences_filter_by_accessibilities(
+    user_api_client, event, venue, accessibility_slugs, expected_count
+):
+    sensory = AccessibilityFactory(slug="sensory_test")
+    hearing = AccessibilityFactory(slug="hearing_test")
+    vision = AccessibilityFactory(slug="vision_test")
+    OccurrenceFactory.create_batch(
+        2, venue=venue, event=event, accessibilities=[sensory]
+    )
+    OccurrenceFactory.create_batch(
+        2, venue=venue, event=event, accessibilities=[hearing]
+    )
+    OccurrenceFactory(venue=venue, event=event, accessibilities=[sensory, vision])
+
+    executed = user_api_client.execute(
+        OCCURRENCES_FILTER_QUERY, variables={"accessibilities": accessibility_slugs}
+    )
+
+    assert executed.get("errors") is None
+    assert len(executed["data"]["occurrences"]["edges"]) == expected_count
+
+
 def test_occurrences_filter_by_project(
     two_project_user_api_client, snapshot, project, another_project
 ):

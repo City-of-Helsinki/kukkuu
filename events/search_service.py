@@ -13,6 +13,8 @@ from events.consts import MIN_SEATS_PER_ENROLMENT
 from events.models import Event, EventGroup, Occurrence, TicketSystemPassword
 from languages.models import Language
 from languages.schema import LanguageNode
+from tags.models import Accessibility
+from tags.schema import AccessibilityNode
 
 
 class EventSearchService:
@@ -85,6 +87,12 @@ class EventSearchService:
                             queryset=VenueTranslation.objects.order_by("language_code"),
                         ),
                         Prefetch(
+                            "accessibilities",
+                            queryset=AccessibilityNode.get_queryset(
+                                Accessibility.objects.all(), None
+                            ),
+                        ),
+                        Prefetch(
                             "languages",
                             queryset=LanguageNode.get_queryset(
                                 Language.objects.all(), None
@@ -124,14 +132,21 @@ class EventSearchService:
         )
 
     @staticmethod
-    def get_matching_occurrences_qs(now, *, start_date=None, languages=None):
-        """Build an upcoming occurrences subquery matching start date and languages."""
+    def get_matching_occurrences_qs(
+        now, *, start_date=None, languages=None, accessibilities=None
+    ):
+        """
+        Build an upcoming occurrences subquery matching start date, languages,
+        and accessibilities.
+        """
         occ_qs = Occurrence.objects.filter(event=OuterRef("pk"), time__gte=now)
         if start_date:
             start_dt = make_aware(datetime.combine(start_date, time.min))
             occ_qs = occ_qs.filter(time__gte=start_dt)
         if languages:
             occ_qs = occ_qs.in_any_language(languages)
+        if accessibilities:
+            occ_qs = occ_qs.with_any_accessibility(accessibilities)
         return occ_qs
 
     @staticmethod
@@ -159,6 +174,31 @@ class EventSearchService:
         )
 
     @classmethod
+    def filter_occurrences(
+        cls,
+        qs,
+        now,
+        *,
+        start_date=None,
+        languages: list[str] | None = None,
+        accessibilities: list[str] | None = None,
+        has_free_spots: bool = False,
+    ):
+        """Filter events by matching upcoming occurrences and optional free capacity."""
+        if not (start_date or languages or accessibilities or has_free_spots):
+            return qs
+
+        occ_qs = cls.get_matching_occurrences_qs(
+            now,
+            start_date=start_date,
+            languages=languages,
+            accessibilities=accessibilities,
+        )
+        if has_free_spots:
+            return cls.filter_has_free_spots(qs, occ_qs)
+        return qs.filter(Exists(occ_qs))
+
+    @classmethod
     def search(
         cls,
         qs,
@@ -169,6 +209,7 @@ class EventSearchService:
         theme_paths: list[str] | None = None,
         start_date=None,
         languages: list[str] | None = None,
+        accessibilities: list[str] | None = None,
         has_free_spots: bool = False,
         now=None,
     ):
@@ -179,18 +220,21 @@ class EventSearchService:
         if family_only:
             qs = cls.filter_family_only(qs)
 
-        cleaned_theme_paths = [slug for slug in (theme_paths or []) if slug]
+        cleaned_theme_paths = list(
+            filter(None, (v.strip().lower() for v in theme_paths or () if v))
+        )
         if cleaned_theme_paths:
             qs = cls.filter_theme_paths(qs, cleaned_theme_paths)
 
-        cleaned_languages = [lang.lower() for lang in (languages or []) if lang]
-        if start_date or cleaned_languages or has_free_spots:
-            occ_qs = cls.get_matching_occurrences_qs(
-                now, start_date=start_date, languages=cleaned_languages
-            )
-            if has_free_spots:
-                qs = cls.filter_has_free_spots(qs, occ_qs)
-            else:
-                qs = qs.filter(Exists(occ_qs))
-
-        return qs
+        return cls.filter_occurrences(
+            qs,
+            now,
+            start_date=start_date,
+            languages=list(
+                filter(None, (v.strip().lower() for v in languages or () if v))
+            ),
+            accessibilities=list(
+                filter(None, (v.strip().lower() for v in accessibilities or () if v))
+            ),
+            has_free_spots=has_free_spots,
+        )
