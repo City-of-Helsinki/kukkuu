@@ -293,6 +293,8 @@ API documentation of the report API can be viewed at http://localhost:8081/repor
 
 > **Historical Note on Report Comparability (Pre-2027 vs. 2027+ / Hekla Release):**
 > Before 2027 (prior to the Hekla release), reports counted only enrolments (`1 enrolment = 1 child`) without counting accompanying adults, and event organizers set occurrence capacities to half of the physical room seats. Starting from the Hekla release (2027+), every enrolment explicitly counts real physical attendees ($2 + \text{extra children} + \text{extra guardians}$, i.e., at least 1 child and 1 accompanying adult per enrolment). Reports exported before 2027 are therefore not directly comparable with reports exported from 2027 onward. See [enrolment decisions documentation](docs/enrolment-decisions.md).
+>
+> The Reports API field `attended_count` was also redefined: it used to be the number of attended enrolments and is now the number of arrived participants (children + adults), equal to `attended_seats`. The number of attended enrolments is available as `attended_enrolment_count`.
 
 ### GDPR API data export
 

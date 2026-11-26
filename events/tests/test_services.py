@@ -22,7 +22,7 @@ from events.services import (
     sync_external_event_occurrence,
     sync_external_occurrence_to_event,
 )
-from kukkuu.exceptions import DataValidationError
+from kukkuu.exceptions import DataValidationError, ObjectDoesNotExistError
 from kukkuu.schema import schema
 from languages.models import Language
 from users.factories import UserFactory
@@ -434,6 +434,20 @@ def test_enrolment_api_service_apply_arrival_reloads_and_saves_only_arrival_fiel
     assert updated.arrived_children_count == 3
     assert updated.arrived_guardians_count == 1
     assert enrolment.extra_children_count == 2
+
+
+@pytest.mark.django_db
+def test_enrolment_api_service_apply_arrival_deleted_enrolment():
+    """An enrolment deleted before the row lock is taken raises a typed API error."""
+    enrolment = EnrolmentFactory()
+    Enrolment.objects.filter(pk=enrolment.pk).delete()
+
+    with pytest.raises(ObjectDoesNotExistError):
+        EnrolmentAPIService.apply_arrival(
+            enrolment,
+            arrived_children_count=1,
+            arrived_guardians_count=1,
+        )
 
 
 @pytest.mark.django_db

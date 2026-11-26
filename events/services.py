@@ -140,9 +140,12 @@ class EnrolmentAPIService:
             arrived_children_count, arrived_guardians_count
         )
         with transaction.atomic():
-            locked_enrolment = Enrolment.objects.select_for_update(of=("self",)).get(
-                pk=enrolment.pk
-            )
+            try:
+                locked_enrolment = Enrolment.objects.select_for_update(
+                    of=("self",)
+                ).get(pk=enrolment.pk)
+            except Enrolment.DoesNotExist as e:
+                raise ObjectDoesNotExistError(e)
             if use_explicit_counts:
                 cls._apply_explicit_arrived_counts(
                     locked_enrolment,

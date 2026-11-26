@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -6,7 +8,7 @@ from guardian.shortcuts import assign_perm
 
 from common.tests.conftest import create_api_client_with_user
 from common.tests.utils import assert_match_error_code, assert_permission_denied
-from common.utils import get_global_id
+from common.utils import get_global_id, get_obj_if_user_can_administer
 from events.factories import (
     EnrolmentFactory,
     EventFactory,
@@ -27,7 +29,12 @@ from events.tests.queries import (
     OCCURRENCES_ARRIVAL_FIELDS_QUERY,
     VERIFY_TICKET_QUERY,
 )
-from kukkuu.consts import API_USAGE_ERROR, DATA_VALIDATION_ERROR, GENERAL_ERROR
+from kukkuu.consts import (
+    API_USAGE_ERROR,
+    DATA_VALIDATION_ERROR,
+    GENERAL_ERROR,
+    OBJECT_DOES_NOT_EXIST_ERROR,
+)
 from organisations.factories import OrganisationFactory
 from projects.models import ProjectPermission
 from users.cache import UserRequestCache
@@ -45,6 +52,16 @@ from users.factories import UserFactory
         (2, 1, True, 1, 2, 3),
         (2, 1, False, 0, 0, 0),
         (None, None, True, 1, 1, 2),
+        # The sum of two smallint columns must not overflow in the database.
+        pytest.param(
+            20000,
+            20000,
+            True,
+            20000,
+            20000,
+            40000,
+            id="arrived_counts_sum_exceeds_smallint",
+        ),
     ],
 )
 def test_enrolment_arrived_seats_property_and_queryset(
@@ -794,3 +811,30 @@ def test_set_enrolment_attendance_arrival_wiring(
         variables={"input": {"enrolmentId": enrolment_gid, "arrivedChildrenCount": 1}},
     )
     assert_match_error_code(res_err, DATA_VALIDATION_ERROR)
+
+
+def test_set_enrolment_attendance_enrolment_deleted_after_lookup(
+    project_user_api_client, occurrence, child_with_user_guardian
+):
+    """
+    Verify an enrolment deleted between the mutation's lookup and the arrival
+    row lock is reported as OBJECT_DOES_NOT_EXIST_ERROR, not GENERAL_ERROR.
+    """
+    enrolment = EnrolmentFactory(occurrence=occurrence, child=child_with_user_guardian)
+
+    def lookup_then_delete(info, global_id, model):
+        obj = get_obj_if_user_can_administer(info, global_id, model)
+        Enrolment.objects.filter(pk=obj.pk).delete()
+        return obj
+
+    with patch(
+        "events.schema.get_obj_if_user_can_administer", side_effect=lookup_then_delete
+    ):
+        res = project_user_api_client.execute(
+            SET_ENROLMENT_ATTENDANCE_WITH_COUNTS_MUTATION,
+            variables={
+                "input": {"enrolmentId": get_global_id(enrolment), "attended": True}
+            },
+        )
+
+    assert_match_error_code(res, OBJECT_DOES_NOT_EXIST_ERROR)
