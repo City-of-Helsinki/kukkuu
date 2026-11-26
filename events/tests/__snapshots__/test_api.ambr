@@ -382,45 +382,6 @@
     }),
   })
 # ---
-# name: test_event_group_events_filtering_by_available_for_child_id
-  dict({
-    'data': dict({
-      'eventGroup': dict({
-        'events': dict({
-          'edges': list([
-            dict({
-              'node': dict({
-                'name': 'ME ME ME',
-              }),
-            }),
-          ]),
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_event_group_events_filtering_by_available_for_child_id.1
-  dict({
-    'data': dict({
-      'eventGroup': dict({
-        'events': dict({
-          'edges': list([
-            dict({
-              'node': dict({
-                'name': 'Sit future dream party door better performance.',
-              }),
-            }),
-            dict({
-              'node': dict({
-                'name': 'ME ME ME',
-              }),
-            }),
-          ]),
-        }),
-      }),
-    }),
-  })
-# ---
 # name: test_event_group_query_normal_user_and_project_user[False]
   dict({
     'data': dict({

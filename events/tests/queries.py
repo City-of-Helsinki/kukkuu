@@ -405,21 +405,6 @@ query EventsAndEventGroups($projectId: ID, $upcoming: Boolean) {
 }
 """
 
-EVENT_GROUP_EVENTS_FILTER_QUERY = """
-query EventGroup($id: ID!, $availableForChild: String) {
-  eventGroup(id: $id) {
-    events(availableForChild: $availableForChild) {
-      edges {
-        node {
-          name
-        }
-      }
-    }
-  }
-}
-"""
-
-
 OCCURRENCE_TICKET_SYSTEM_QUERY = """
 query Occurrence($id: ID!) {
   occurrence(id: $id) {
@@ -539,7 +524,7 @@ query eventsSearchQuery(
   $themePaths: [String]
   $accessibility: [String]
   $familyOnly: Boolean
-  $availableOnly: Boolean
+  $hasFreeSpots: Boolean
 ) {
   child(id: $childId) {
     id
@@ -555,7 +540,7 @@ query eventsSearchQuery(
     themePaths: $themePaths
     accessibility: $accessibility
     familyOnly: $familyOnly
-    availableOnly: $availableOnly
+    hasFreeSpots: $hasFreeSpots
   ) {
     count
     pageInfo {

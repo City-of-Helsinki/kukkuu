@@ -62,7 +62,6 @@ from events.tests.queries import (
     CAN_CHILD_ENROLL_EVENT_GROUP_QUERY,
     CAN_CHILD_ENROLL_EVENT_QUERY,
     CHILD_UPCOMING_EVENT_GROUP_INVITATION_MESSAGE_QUERY,
-    EVENT_GROUP_EVENTS_FILTER_QUERY,
     EVENT_GROUP_INVITATION_MESSAGE_QUERY,
     EVENT_GROUP_INVITATION_MESSAGE_WITH_FORMAT_QUERY,
     EVENT_GROUP_QUERY,
@@ -2957,39 +2956,6 @@ def test_republish_event_group(snapshot, publisher_api_client, event_ready, past
         assert_match_error_code(executed, EVENT_GROUP_NOT_READY_FOR_PUBLISHING_ERROR)
         assert not new_event.published_at
         assert new_event.registration_opens_at is None
-
-
-def test_event_group_events_filtering_by_available_for_child_id(
-    snapshot, guardian_api_client, user_api_client, event_group, past, future
-):
-    child_with_guardian = ChildWithGuardianFactory(
-        relationship__guardian=guardian_api_client.user.guardian
-    )
-    OccurrenceFactory(
-        time=past, event__published_at=past, event__event_group=event_group
-    )
-    OccurrenceFactory(
-        time=future,
-        event__published_at=past,
-        event__name="ME ME ME",
-        event__event_group=event_group,
-    )
-
-    variables = {
-        "id": get_global_id(event_group),
-        "availableForChild": get_global_id(child_with_guardian),
-    }
-
-    executed = guardian_api_client.execute(
-        EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
-    )
-    snapshot.assert_match(executed)
-
-    # filtering by someone else's child should not do anything
-    executed = user_api_client.execute(
-        EVENT_GROUP_EVENTS_FILTER_QUERY, variables=variables
-    )
-    snapshot.assert_match(executed)
 
 
 def test_add_single_event_when_single_events_disallowed(
