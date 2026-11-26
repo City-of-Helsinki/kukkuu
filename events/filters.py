@@ -32,6 +32,11 @@ class OccurrenceFilter(django_filters.FilterSet):
         method="filter_by_languages",
         label="ISO 639-3 (alpha-3) codes. Matches occurrences with any of them.",
     )
+    accessibilities = ListFilter(
+        input_type=graphene.List(graphene.String),
+        method="filter_by_accessibilities",
+        label="Accessibility slugs. Matches occurrences with any of them.",
+    )
     project_id = django_filters.Filter(method="filter_by_project_global_id")
 
     class Meta:
@@ -44,6 +49,7 @@ class OccurrenceFilter(django_filters.FilterSet):
             "venue_id",
             "event_id",
             "languages",
+            "accessibilities",
         ]
 
     def filter_by_time(self, qs, name, value):
@@ -78,6 +84,14 @@ class OccurrenceFilter(django_filters.FilterSet):
             return qs
         return qs.in_any_language([code.lower() for code in value if code])
 
+    def filter_by_accessibilities(self, qs, name, value):
+        if not value:
+            return qs
+        slugs = [slug.strip().lower() for slug in value if slug and slug.strip()]
+        if not slugs:
+            return qs
+        return qs.with_any_accessibility(slugs)
+
     def filter_by_project_global_id(self, qs, name, value):
         node_id = get_node_id_from_global_id(value, "ProjectNode")
         return qs.filter(event__project_id=node_id) if node_id else qs.none()
@@ -97,9 +111,12 @@ class EventFilter(django_filters.FilterSet):
     theme_paths = ListFilter(
         input_type=graphene.List(graphene.String), method="noop_filter"
     )
-    # Accessibility placeholder until venue accessibility filtering is implemented.
-    accessibility = ListFilter(
-        input_type=graphene.List(graphene.String), method="filter_accessibility"
+    accessibilities = ListFilter(
+        input_type=graphene.List(graphene.String),
+        method="noop_filter",
+        label=(
+            "Accessibility slugs. Matches events with an occurrence having any of them."
+        ),
     )
     family_only = django_filters.BooleanFilter(method="noop_filter")
 
@@ -111,7 +128,7 @@ class EventFilter(django_filters.FilterSet):
         "start_date",
         "languages",
         "theme_paths",
-        "accessibility",
+        "accessibilities",
         "family_only",
     )
 
@@ -126,30 +143,12 @@ class EventFilter(django_filters.FilterSet):
             "start_date",
             "languages",
             "theme_paths",
-            "accessibility",
+            "accessibilities",
             "family_only",
         ]
 
     def noop_filter(self, qs, name, value):
         """No-op filter placeholder returning the queryset unmodified."""
-        return qs
-
-    def filter_accessibility(self, qs, name, value):
-        """
-        Validate and filter events by accessibility criteria.
-
-        Venue accessibility filtering is not yet implemented. Any request
-        specifying nonempty accessibility criteria is rejected via ApiUsageError,
-        while empty or omitted values return the queryset unmodified.
-
-        :param qs: Base Event QuerySet.
-        :param name: Filter field name ("accessibility").
-        :param value: List of requested accessibility filter values.
-        :return: Unmodified Event QuerySet if value is empty.
-        :raises ApiUsageError: If nonempty accessibility criteria are requested.
-        """
-        if value and any(v for v in value if str(v).strip()):
-            raise ApiUsageError("Accessibility filtering is not yet supported.")
         return qs
 
     def filter_by_upcoming(self, qs, name, value):
@@ -165,7 +164,7 @@ class EventFilter(django_filters.FilterSet):
         This method orchestrates the event search pipeline:
         1. Search Argument Guard:
            Ensures child-specific search arguments (hasFreeSpots, startDate,
-           languages, themePaths, accessibility, familyOnly) are only used
+           languages, themePaths, accessibilities, familyOnly) are only used
            when `childId` is provided. Raises ApiUsageError if search arguments
            are provided without childId.
         2. Backward Compatibility:
@@ -216,5 +215,6 @@ class EventFilter(django_filters.FilterSet):
             theme_paths=self.form.cleaned_data.get("theme_paths"),
             start_date=self.form.cleaned_data.get("start_date"),
             languages=self.form.cleaned_data.get("languages"),
+            accessibilities=self.form.cleaned_data.get("accessibilities"),
             has_free_spots=bool(self.form.cleaned_data.get("has_free_spots")),
         )
