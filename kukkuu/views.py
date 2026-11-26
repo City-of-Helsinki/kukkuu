@@ -5,7 +5,8 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from graphene.validation import depth_limit_validator
 from graphene_file_upload.django import FileUploadGraphQLView
-from graphql import ExecutionResult
+from graphql import ExecutionResult, GraphQLError
+from graphql.validation import specified_rules
 from graphql_jwt.exceptions import PermissionDenied as GraphQLJWTPermissionDenied
 from helusers.oidc import AuthenticationError
 
@@ -129,13 +130,14 @@ error_codes = {**error_codes_shared, **error_codes_kukkuu}
 
 class SentryGraphQLView(FileUploadGraphQLView):
     def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args,
-            **kwargs,
-            validation_rules=[
-                depth_limit_validator(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH)
-            ],
+        kwargs.setdefault(
+            "validation_rules",
+            (
+                *specified_rules,
+                depth_limit_validator(max_depth=settings.KUKKUU_QUERY_MAX_DEPTH),
+            ),
         )
+        super().__init__(*args, **kwargs)
 
     def execute_graphql_request(self, request, data, query, *args, **kwargs):
         """Extract any exceptions and send some of them to Sentry"""
@@ -144,22 +146,30 @@ class SentryGraphQLView(FileUploadGraphQLView):
         )
         if result and result.errors:
             errors_to_sentry = [
-                e
-                for e in result.errors
-                if not isinstance(
-                    getattr(e, "original_error", None),
-                    (KukkuuGraphQLError,) + sentry_ignored_errors,
-                )
+                e for e in result.errors if self._should_report_to_sentry(e)
             ]
             if errors_to_sentry:
                 self._capture_sentry_exceptions(errors_to_sentry, query)
         return result
 
+    @staticmethod
+    def _should_report_to_sentry(error: Exception) -> bool:
+        # Pre-execution GraphQLErrors (syntax, spec validation, depth-limit,
+        # missing operation, variable coercion) have no response path and
+        # return HTTP 400 Bad Request; do not report client query errors.
+        if isinstance(error, GraphQLError) and not error.path:
+            return False
+        unwrapped_error = getattr(error, "original_error", None) or error
+        return not isinstance(
+            unwrapped_error,
+            (KukkuuGraphQLError,) + sentry_ignored_errors,
+        )
+
     def _capture_sentry_exceptions(self, errors, query):
         scope = sentry_sdk.get_current_scope()
         scope.set_extra("graphql_query", query)
         for error in errors:
-            if hasattr(error, "original_error"):
+            if getattr(error, "original_error", None) is not None:
                 error = error.original_error
             sentry_sdk.capture_exception(error)
 
