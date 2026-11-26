@@ -1,9 +1,7 @@
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import timedelta
 
 import pytest
 from django.utils import timezone
-from freezegun import freeze_time
 from graphql_relay import offset_to_cursor, to_global_id
 
 from children.cache import ChildRequestCache
@@ -302,7 +300,7 @@ def test_events_search_unpublished_and_other_project_never_returned(
 @pytest.mark.parametrize(
     "extra_vars",
     [
-        {"availableOnly": True},
+        {"hasFreeSpots": True},
         {"startDate": "2026-11-10"},
         {"languages": ["fin"]},
         {"themePaths": ["music"]},
@@ -314,12 +312,12 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
     """
     Ensure search-specific filter arguments require childId.
 
-    Verifies that passing availableOnly, startDate, languages, themePaths,
+    Verifies that passing hasFreeSpots, startDate, languages, themePaths,
     accessibility, or familyOnly without childId raises an API_USAGE_ERROR.
     """
     query = """
     query EventsWithoutChild(
-      $availableOnly: Boolean
+      $hasFreeSpots: Boolean
       $startDate: Date
       $languages: [String]
       $themePaths: [String]
@@ -327,7 +325,7 @@ def test_events_search_args_without_child_id_raises_error(user_api_client, extra
       $familyOnly: Boolean
     ) {
       events(
-        availableOnly: $availableOnly
+        hasFreeSpots: $hasFreeSpots
         startDate: $startDate
         languages: $languages
         themePaths: $themePaths
@@ -549,14 +547,14 @@ def test_events_search_false_flags_without_child_id_allowed(user_api_client):
     Ensure boolean search arguments set to false without childId do not trigger API_USAGE_ERROR.
     """
     query = """
-    query EventsWithoutChild($availableOnly: Boolean, $familyOnly: Boolean) {
-      events(availableOnly: $availableOnly, familyOnly: $familyOnly) {
+    query EventsWithoutChild($hasFreeSpots: Boolean, $familyOnly: Boolean) {
+      events(hasFreeSpots: $hasFreeSpots, familyOnly: $familyOnly) {
         count
       }
     }
     """
     executed = user_api_client.execute(
-        query, variables={"availableOnly": False, "familyOnly": False}
+        query, variables={"hasFreeSpots": False, "familyOnly": False}
     )
     assert executed.get("errors") is None
     assert "count" in executed["data"]["events"]
@@ -568,7 +566,7 @@ def test_events_search_external_event_with_occurrence(
 ):
     """
     Verify external events with single occurrence:
-    - Included when availableOnly=True (requires free passwords, upcoming occurrence).
+    - Included when hasFreeSpots=True (requires free passwords, upcoming occurrence).
     - Matched when occurrence criteria (languages) match the occurrence language.
     - Excluded when occurrence criteria (languages) do not match.
     """
@@ -579,10 +577,10 @@ def test_events_search_external_event_with_occurrence(
     ext_event = TicketmasterEventFactory(project=project, published_at=past)
     TicketSystemPasswordFactory(event=ext_event, child=None)
 
-    # availableOnly=True returns the event with its upcoming occurrence
+    # hasFreeSpots=True returns the event with its upcoming occurrence
     res_avail = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert res_avail.get("errors") is None
     ids = [e["node"]["id"] for e in res_avail["data"]["events"]["edges"]]
@@ -593,7 +591,7 @@ def test_events_search_external_event_with_occurrence(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
-            "availableOnly": True,
+            "hasFreeSpots": True,
             "languages": ["fin"],
         },
     )
@@ -607,7 +605,7 @@ def test_events_search_external_event_with_occurrence(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
-            "availableOnly": True,
+            "hasFreeSpots": True,
             "languages": ["swe"],
         },
     )
@@ -616,7 +614,7 @@ def test_events_search_external_event_with_occurrence(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_internal_event_with_seats(
+def test_events_search_has_free_spots_internal_event_with_seats(
     guardian_api_client, project, past, future
 ):
     """Internal event with >= 2 remaining seats is included."""
@@ -629,7 +627,7 @@ def test_events_search_available_only_internal_event_with_seats(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
@@ -637,7 +635,7 @@ def test_events_search_available_only_internal_event_with_seats(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_internal_full_excluded(
+def test_events_search_has_free_spots_internal_full_excluded(
     guardian_api_client, project, past, future
 ):
     """Internal event with remaining capacity < 2 seats is excluded."""
@@ -658,7 +656,7 @@ def test_events_search_available_only_internal_full_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
@@ -666,10 +664,10 @@ def test_events_search_available_only_internal_full_excluded(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_already_enrolled_excluded(
+def test_events_search_has_free_spots_already_enrolled_included(
     guardian_api_client, project, past, future
 ):
-    """Event the child is already enrolled in is excluded."""
+    """Event with remaining seats is included even if the child is already enrolled."""
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
         project=project,
@@ -680,18 +678,18 @@ def test_events_search_available_only_already_enrolled_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
-    assert returned_ids == []
+    assert returned_ids == [get_global_id(event)]
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_event_group_sibling_enrolled_excluded(
+def test_events_search_has_free_spots_event_group_sibling_enrolled_included(
     guardian_api_client, project, past, future
 ):
-    """Sibling event in an event group where child is already enrolled is excluded."""
+    """Events with free seats are included even when child is enrolled in the same group."""
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
         project=project,
@@ -716,18 +714,18 @@ def test_events_search_available_only_event_group_sibling_enrolled_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
-    returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
-    assert returned_ids == []
+    returned_ids = {e["node"]["id"] for e in executed["data"]["events"]["edges"]}
+    assert returned_ids == {get_global_id(sibling), get_global_id(event)}
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_registration_opens_in_future_excluded(
+def test_events_search_has_free_spots_registration_opens_in_future_included(
     guardian_api_client, project, past, future
 ):
-    """Event whose registration opens in the future is excluded."""
+    """Event whose registration opens in the future is included if it has free seats."""
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
         project=project,
@@ -742,15 +740,15 @@ def test_events_search_available_only_registration_opens_in_future_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
-    assert returned_ids == []
+    assert returned_ids == [get_global_id(event)]
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_ticketmaster_with_passwords(
+def test_events_search_has_free_spots_ticketmaster_with_passwords(
     guardian_api_client, project, past
 ):
     """External ticket system event with unassigned passwords is included."""
@@ -763,7 +761,7 @@ def test_events_search_available_only_ticketmaster_with_passwords(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
@@ -771,7 +769,7 @@ def test_events_search_available_only_ticketmaster_with_passwords(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_ticketmaster_exhausted_excluded(
+def test_events_search_has_free_spots_ticketmaster_exhausted_excluded(
     guardian_api_client, project, past
 ):
     """External ticket system event with zero unassigned passwords left is excluded."""
@@ -785,7 +783,7 @@ def test_events_search_available_only_ticketmaster_exhausted_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
@@ -793,10 +791,10 @@ def test_events_search_available_only_ticketmaster_exhausted_excluded(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_ticketmaster_already_assigned_excluded(
+def test_events_search_has_free_spots_ticketmaster_already_assigned_included(
     guardian_api_client, project, past
 ):
-    """External ticket event where child already has a password is excluded."""
+    """External event with free passwords is included even if child already has one."""
     child = ChildWithGuardianFactory(
         relationship__guardian=guardian_api_client.user.guardian,
         project=project,
@@ -807,18 +805,18 @@ def test_events_search_available_only_ticketmaster_already_assigned_excluded(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
     returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
-    assert returned_ids == []
+    assert returned_ids == [get_global_id(event)]
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_yearly_limit(
+def test_events_search_has_free_spots_ignores_yearly_limit(
     guardian_api_client, project, past, future
 ):
-    """Verify that events in a year where the child reached the yearly limit are excluded."""
+    """Events with free seats are included even if the child reached the yearly limit."""
     project.enrolment_limit = 2
     project.save()
 
@@ -843,11 +841,15 @@ def test_events_search_available_only_yearly_limit(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
-    # Yearly limit of 2 reached: candidate event in future.year must be excluded
-    assert executed["data"]["events"]["edges"] == []
+    returned_ids = {e["node"]["id"] for e in executed["data"]["events"]["edges"]}
+    assert returned_ids == {
+        get_global_id(ev1),
+        get_global_id(ev2),
+        get_global_id(ev_candidate),
+    }
 
 
 @pytest.mark.django_db
@@ -1020,7 +1022,7 @@ def test_events_search_query_count_with_all_filters(
     Verify constant O(1) query count when all search filters are simultaneously active.
 
     Sets up a child with past enrolments, 8 internal events, and 2 ticketmaster events
-    matching all filters: availableOnly=True, themePaths=["rhythm"], languages=["fin"],
+    matching all filters: hasFreeSpots=True, themePaths=["rhythm"], languages=["fin"],
     startDate, familyOnly=False.
 
     Proves:
@@ -1075,7 +1077,7 @@ def test_events_search_query_count_with_all_filters(
     variables = {
         "childId": get_global_id(child),
         "first": 10,
-        "availableOnly": True,
+        "hasFreeSpots": True,
         "themePaths": ["rhythm"],
         "languages": ["fin"],
         "startDate": future.date().isoformat(),
@@ -1085,7 +1087,7 @@ def test_events_search_query_count_with_all_filters(
     # Warm up caches
     guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
-    # Exactly 16 queries when all filters are active (availableOnly, themePaths, languages, startDate)
+    # Exactly 16 queries when all filters are active (hasFreeSpots, themePaths, languages, startDate)
     with django_assert_num_queries(16) as captured_10:
         res_10 = guardian_api_client.execute(EVENTS_SEARCH_QUERY, variables=variables)
 
@@ -1108,11 +1110,11 @@ def test_events_search_query_count_with_all_filters(
 
 
 @pytest.mark.django_db
-def test_events_search_available_only_external_event_with_occurrence_filters(
+def test_events_search_has_free_spots_external_event_with_occurrence_filters(
     guardian_api_client, project, past, future
 ):
     """
-    Verify that external ticket system events with `availableOnly=True` and
+    Verify that external ticket system events with `hasFreeSpots=True` and
     `languages` / `startDate` filters check free passwords (not `remaining_capacity`).
 
     External ticket system events have `capacity_per_occurrence=None` and no
@@ -1151,7 +1153,7 @@ def test_events_search_available_only_external_event_with_occurrence_filters(
         EVENTS_SEARCH_QUERY,
         variables={
             "childId": get_global_id(child),
-            "availableOnly": True,
+            "hasFreeSpots": True,
             "languages": ["swe"],
             "startDate": future.date().isoformat(),
         },
@@ -1162,64 +1164,10 @@ def test_events_search_available_only_external_event_with_occurrence_filters(
 
 
 @pytest.mark.django_db
-@freeze_time("2025-12-15T10:00:00Z")
-def test_events_search_helsinki_new_year_boundary(guardian_api_client, project):
-    """
-    Verify that year boundaries use Helsinki local time (`Europe/Helsinki`)
-    consistently across SQL `ExtractYear` and Python `year_of`.
-
-    - `2025-12-31T23:30:00+02:00` (`2025-12-31T21:30:00Z`) belongs to 2025.
-    - `2026-01-01T00:30:00+02:00` (`2025-12-31T22:30:00Z`) belongs to 2026 in
-      Helsinki time (even though its UTC timestamp is in 2025).
-    """
-    helsinki = ZoneInfo("Europe/Helsinki")
-    project.enrolment_limit = 1
-    project.save()
-
-    child = ChildWithGuardianFactory(
-        relationship__guardian=guardian_api_client.user.guardian,
-        project=project,
-    )
-    published = datetime(2025, 12, 1, 12, 0, tzinfo=helsinki)
-    nye_2025 = datetime(2025, 12, 31, 23, 30, tzinfo=helsinki)
-    nyd_2026 = datetime(2026, 1, 1, 0, 30, tzinfo=helsinki)
-
-    # Child enrolls in an occurrence at 2026-01-01 00:30+02:00 (2025-12-31 22:30 UTC)
-    ev_enrolled_2026 = EventFactory(
-        project=project, published_at=published, capacity_per_occurrence=10
-    )
-    occ_enrolled_2026 = OccurrenceFactory(event=ev_enrolled_2026, time=nyd_2026)
-    EnrolmentFactory(child=child, occurrence=occ_enrolled_2026)
-
-    assert child.get_enrolment_count(year=2025) == 0
-    assert child.get_enrolment_count(year=2026) == 1
-
-    # Candidate event in 2025 (2025-12-31 23:30+02:00) is still available
-    ev_candidate_2025 = EventFactory(
-        project=project, published_at=published, capacity_per_occurrence=10
-    )
-    OccurrenceFactory(event=ev_candidate_2025, time=nye_2025)
-
-    # Candidate event in 2026 (2026-01-01 00:30+02:00) is excluded because 2026 limit (1) is full
-    ev_candidate_2026 = EventFactory(
-        project=project, published_at=published, capacity_per_occurrence=10
-    )
-    OccurrenceFactory(event=ev_candidate_2026, time=nyd_2026 + timedelta(minutes=15))
-
-    executed = guardian_api_client.execute(
-        EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
-    )
-    assert executed.get("errors") is None
-    returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
-    assert returned_ids == [get_global_id(ev_candidate_2025)]
-
-
-@pytest.mark.django_db
-def test_events_search_available_only_zero_enrolment_limit_returns_empty(
+def test_events_search_has_free_spots_ignores_zero_enrolment_limit(
     guardian_api_client, project, past, future
 ):
-    """When `project.enrolment_limit == 0`, `availableOnly=True` returns no events."""
+    """Events with free seats are included even when `project.enrolment_limit == 0`."""
     project.enrolment_limit = 0
     project.save()
 
@@ -1232,11 +1180,12 @@ def test_events_search_available_only_zero_enrolment_limit_returns_empty(
 
     executed = guardian_api_client.execute(
         EVENTS_SEARCH_QUERY,
-        variables={"childId": get_global_id(child), "availableOnly": True},
+        variables={"childId": get_global_id(child), "hasFreeSpots": True},
     )
     assert executed.get("errors") is None
-    assert executed["data"]["events"]["count"] == 0
-    assert executed["data"]["events"]["edges"] == []
+    assert executed["data"]["events"]["count"] == 1
+    returned_ids = [e["node"]["id"] for e in executed["data"]["events"]["edges"]]
+    assert returned_ids == [get_global_id(event)]
 
 
 @pytest.mark.django_db
@@ -1341,110 +1290,6 @@ def test_events_search_grouped_events_query_count_is_constant(
         edge["node"]["enrolmentDeniedReason"] is None
         for edge in res_25["data"]["events"]["edges"]
     )
-
-
-@pytest.mark.django_db
-def test_available_for_child_filter_exception_handling(
-    guardian_api_client, user_api_client, project, past, future
-):
-    """
-    Verify availableForChild preserves queryset for Child.DoesNotExist and returns
-    empty queryset for ValidationError / ValueError.
-    """
-    from events.tests.queries import EVENT_GROUP_EVENTS_FILTER_QUERY
-
-    child = ChildWithGuardianFactory(
-        relationship__guardian=guardian_api_client.user.guardian,
-        project=project,
-    )
-    event_group = EventGroupFactory(project=project, published_at=past)
-    ev = EventFactory(
-        project=project,
-        event_group=event_group,
-        published_at=past,
-        name="Available Event",
-    )
-    OccurrenceFactory(event=ev, time=future)
-
-    # Child.DoesNotExist (unviewable child for user_api_client) preserves qs
-    res_does_not_exist = user_api_client.execute(
-        EVENT_GROUP_EVENTS_FILTER_QUERY,
-        variables={
-            "id": get_global_id(event_group),
-            "availableForChild": get_global_id(child),
-        },
-    )
-    assert res_does_not_exist.get("errors") is None
-    assert len(res_does_not_exist["data"]["eventGroup"]["events"]["edges"]) == 1
-
-    # ValidationError (malformed UUID inside ChildNode global ID) returns empty qs
-    res_invalid_uuid = guardian_api_client.execute(
-        EVENT_GROUP_EVENTS_FILTER_QUERY,
-        variables={
-            "id": get_global_id(event_group),
-            "availableForChild": to_global_id("ChildNode", "not-a-uuid"),
-        },
-    )
-    assert res_invalid_uuid.get("errors") is None
-    assert res_invalid_uuid["data"]["eventGroup"]["events"]["edges"] == []
-
-
-@pytest.mark.django_db
-@freeze_time("2025-12-15T10:00:00Z")
-def test_events_search_available_only_checks_matching_occurrence_year_quota(
-    guardian_api_client, project
-):
-    """
-    Verify availableOnly checks the yearly quota against the matching upcoming
-    available occurrence, even if the event's first occurrence is in an earlier
-    year where the quota is not full.
-    """
-    helsinki = ZoneInfo("Europe/Helsinki")
-    project.enrolment_limit = 1
-    project.save()
-
-    child = ChildWithGuardianFactory(
-        relationship__guardian=guardian_api_client.user.guardian,
-        project=project,
-    )
-    published = datetime(2025, 12, 1, 12, 0, tzinfo=helsinki)
-
-    # Exhaust child's 2026 quota (limit = 1)
-    ev_enrolled_2026 = EventFactory(
-        project=project, published_at=published, capacity_per_occurrence=10
-    )
-    occ_enrolled_2026 = OccurrenceFactory(
-        event=ev_enrolled_2026,
-        time=datetime(2026, 1, 5, 12, 0, tzinfo=helsinki),
-    )
-    EnrolmentFactory(child=child, occurrence=occ_enrolled_2026)
-
-    # Candidate event has a past/Finnish occurrence in 2025 (first occurrence year = 2025, not full)
-    # and an upcoming Swedish occurrence in 2026 (where 2026 quota is full).
-    ev_cross_year = EventFactory(
-        project=project, published_at=published, capacity_per_occurrence=10
-    )
-    OccurrenceFactory(
-        event=ev_cross_year,
-        time=datetime(2025, 12, 20, 12, 0, tzinfo=helsinki),
-        languages=get_languages("fin"),
-    )
-    OccurrenceFactory(
-        event=ev_cross_year,
-        time=datetime(2026, 1, 10, 12, 0, tzinfo=helsinki),
-        languages=get_languages("swe"),
-    )
-
-    executed = guardian_api_client.execute(
-        EVENTS_SEARCH_QUERY,
-        variables={
-            "childId": get_global_id(child),
-            "availableOnly": True,
-            "languages": ["swe"],
-        },
-    )
-    assert executed.get("errors") is None
-    assert executed["data"]["events"]["edges"] == []
 
 
 @pytest.mark.django_db

@@ -116,8 +116,8 @@ class EventQueryset(TranslatableQuerySet):
     def unpublished(self):
         return self.filter(published_at__isnull=True)
 
-    def upcoming(self):
-        return self.filter(occurrences__time__gte=timezone.now()).distinct()
+    def upcoming(self, now=None):
+        return self.filter(occurrences__time__gte=now or timezone.now()).distinct()
 
     def available(self, child):
         """
@@ -165,8 +165,8 @@ class OccurrenceQueryset(models.QuerySet):
         for obj in self:
             obj.send_free_spot_notifications_if_needed()
 
-    def upcoming(self):
-        return self.filter(time__gte=timezone.now())
+    def upcoming(self, now=None):
+        return self.filter(time__gte=now or timezone.now())
 
     def upcoming_with_leeway(self):
         return self.filter(
@@ -375,7 +375,7 @@ class OccurrenceQueryset(models.QuerySet):
     def with_doorway_metrics(self, *, include_remaining_capacity: bool = True):
         """
         Annotate occurrences with doorway arrival and capacity metrics used by
-        GraphQL resolvers (`OccurrenceNode`, `EventFilter`, and ticket verification).
+        GraphQL resolvers (`OccurrenceNode` and ticket verification).
         """
         qs = (
             self.with_enrolment_count()
@@ -561,7 +561,7 @@ class EnrolmentQueryset(models.QuerySet):
 
 class TicketSystemPasswordQueryset(models.QuerySet):
     def free(self):
-        return self.filter(assigned_at=None)
+        return self.filter(assigned_at=None, child=None)
 
     def used(self):
         return self.exclude(assigned_at=None)

@@ -307,7 +307,7 @@ class PrefetchableFilterConnectionField(DjangoFilterConnectionField):
     When `EventNode.resolve_occurrences` detects that `_prefetched_upcoming_occurrences`
     is populated and only `upcoming=True` (plus standard Relay pagination args) was
     requested, it returns the prefetched list directly. Returning that list here
-    is safe because the `Prefetch` queryset in `EventFilter._get_common_search_query`
+    is safe because the `Prefetch` queryset in `EventSearchService.get_base_queryset`
     already applied `Occurrence.objects.user_can_view(user).upcoming()`, capacity
     annotations, and chronological ordering.
     """
