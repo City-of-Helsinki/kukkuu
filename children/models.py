@@ -1,10 +1,11 @@
 from hashlib import sha256
 from typing import Iterable, Optional
 
+from django.apps import apps
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from helsinki_gdpr.models import SerializableMixin
@@ -43,6 +44,15 @@ class ChildQuerySet(models.QuerySet):
         if is_obsolete:
             return self.filter(~Q(guardians__user__is_active=True) | Q(guardians=None))
         return self.filter(guardians__user__is_active=True)
+
+    def with_theme_path(self):
+        ThemePathTranslation = apps.get_model("tags", "ThemePathTranslation")
+        return self.select_related("theme_path").prefetch_related(
+            Prefetch(
+                "theme_path__translations",
+                queryset=ThemePathTranslation.objects.order_by("language_code"),
+            )
+        )
 
     @transaction.atomic()
     def delete(self):
@@ -87,6 +97,14 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         blank=True,
         default="",
     )
+    theme_path = models.ForeignKey(
+        "tags.ThemePath",
+        verbose_name=_("theme path"),
+        related_name="children",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     objects = SerializableMixin.SerializableManager.from_queryset(ChildQuerySet)()
 
@@ -98,6 +116,14 @@ class Child(UUIDPrimaryKeyModel, TimestampedModel, GDPRModel, SerializableMixin)
         {"name": "ticket_system_passwords"},
         {"name": "free_spot_notification_subscriptions"},
         {"name": "notes"},
+        {
+            "name": "languages_spoken_at_home",
+            "accessor": lambda langs: sorted(lang.alpha_3_code for lang in langs.all()),
+        },
+        {
+            "name": "theme_path",
+            "accessor": lambda tp: tp.slug if tp else None,
+        },
     )
 
     gdpr_sensitive_data_fields = [

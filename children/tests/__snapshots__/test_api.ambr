@@ -66,6 +66,10 @@
           'birthyear': 2020,
           'name': 'Pekka',
           'postalCode': '00820',
+          'themePath': dict({
+            'name': 'Teatteri',
+            'slug': 'theatre',
+          }),
         }),
       }),
     }),
@@ -111,23 +115,27 @@
   dict({
     'data': dict({
       'child': dict({
-        'birthyear': 2019,
-        'name': 'Richard Hayes',
-        'postalCode': '57776',
+        'birthyear': 2020,
+        'name': 'Patricia Hall',
+        'postalCode': '44673',
         'relationships': dict({
           'edges': list([
             dict({
               'node': dict({
                 'guardian': dict({
                   'email': 'michellewalker@example.net',
-                  'firstName': 'Denise',
-                  'lastName': 'Thompson',
-                  'phoneNumber': '001-206-575-0649x7638',
+                  'firstName': 'Frank',
+                  'lastName': 'Robertson',
+                  'phoneNumber': '555.368.1066x95836',
                 }),
-                'type': 'OTHER_RELATION',
+                'type': 'ADVOCATE',
               }),
             }),
           ]),
+        }),
+        'themePath': dict({
+          'name': 'Musiikki',
+          'slug': 'music',
         }),
       }),
     }),
@@ -155,6 +163,7 @@
             }),
           ]),
         }),
+        'themePath': None,
       }),
     }),
   })
@@ -367,6 +376,7 @@
                   }),
                 ]),
               }),
+              'themePath': None,
             }),
           }),
         ]),
@@ -555,6 +565,10 @@
                 }),
               ]),
             }),
+            'themePath': dict({
+              'name': 'Musiikki',
+              'slug': 'music',
+            }),
           }),
           dict({
             'birthyear': 2020,
@@ -575,6 +589,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
         ]),
         'guardian': dict({
@@ -625,6 +640,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
           dict({
             'birthyear': 2020,
@@ -645,6 +661,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
         ]),
         'guardian': dict({
@@ -685,6 +702,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
           dict({
             'birthyear': 2020,
@@ -705,6 +723,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
         ]),
         'guardian': dict({
@@ -745,6 +764,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
           dict({
             'birthyear': 2020,
@@ -765,6 +785,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
         ]),
         'guardian': dict({
@@ -805,6 +826,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
           dict({
             'birthyear': 2020,
@@ -825,6 +847,7 @@
                 }),
               ]),
             }),
+            'themePath': None,
           }),
         ]),
         'guardian': dict({
@@ -925,6 +948,10 @@
           'birthyear': 2023,
           'name': 'Matti',
           'postalCode': '00840',
+          'themePath': dict({
+            'name': 'Tanssi',
+            'slug': 'dance',
+          }),
         }),
       }),
     }),
@@ -938,6 +965,7 @@
           'birthyear': 2023,
           'name': 'Katherine Gomez',
           'postalCode': '49763',
+          'themePath': None,
         }),
       }),
     }),

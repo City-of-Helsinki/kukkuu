@@ -5,6 +5,10 @@ mutation SubmitChildrenAndGuardian($input: SubmitChildrenAndGuardianMutationInpu
       name
       birthyear
       postalCode
+      themePath {
+        slug
+        name
+      }
       relationships {
         edges {
           node {
@@ -43,6 +47,10 @@ mutation AddChild($input: AddChildMutationInput!) {
       name
       birthyear
       postalCode
+      themePath {
+        slug
+        name
+      }
     }
   }
 }
@@ -56,6 +64,10 @@ mutation UpdateChild($input: UpdateChildMutationInput!) {
       name
       birthyear
       postalCode
+      themePath {
+        slug
+        name
+      }
     }
   }
 }

@@ -71,7 +71,8 @@ class ChildAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    fields = ("project", "name", "birthyear", "postal_code", "notes")
+    fields = ("project", "name", "birthyear", "postal_code", "theme_path", "notes")
+    autocomplete_fields = ("theme_path",)
     search_fields = (
         "name",
         "birthyear",
@@ -86,13 +87,14 @@ class ChildAdmin(AuditlogAdminViewAccessLogMixin, admin.ModelAdmin):
         SubscriptionInline,
         TicketSystemPasswordInline,
     )
-    list_filter = ("project",)
+    list_filter = ("project", "theme_path")
 
     def get_queryset(self, request):
         return (
             super()
             .get_queryset(request)
             .select_related("project")
+            .with_theme_path()
             .prefetch_related("guardians")
         )
 
