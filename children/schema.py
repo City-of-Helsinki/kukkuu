@@ -17,6 +17,7 @@ from graphene_django.types import DjangoObjectType
 from graphql_relay import from_global_id
 
 from children.notifications import NotificationType
+from children.services import ChildAPIService
 from common.schema import (
     ViewFamiliesPermissionRequiredFilterOffsetConnectionField,
     set_obj_languages_spoken_at_home,
@@ -35,6 +36,7 @@ from kukkuu.exceptions import (
 )
 from languages.schema import LanguageNode
 from projects.models import Project
+from tags.schema import ThemePathNode
 from users.models import Guardian
 from users.schema import GuardianNode, LanguageEnum, validate_guardian_data
 from users.utils import get_communication_unsubscribe_ui_url
@@ -116,6 +118,7 @@ class ChildNode(DjangoObjectType):
         description="All upcoming and ongoing (with leeway) internal and ticket system "
         "enrolments sorted by time.",
     )
+    theme_path = graphene.Field(ThemePathNode)
 
     class Meta:
         model = Child
@@ -131,6 +134,7 @@ class ChildNode(DjangoObjectType):
             "guardians",
             "project",
             "languages_spoken_at_home",
+            "theme_path",
             "relationships",
             "occurrences",
             "enrolments",
@@ -148,6 +152,7 @@ class ChildNode(DjangoObjectType):
         # resolving enrolmentCount / pastEnrolmentCount across child lists.
         return (
             queryset.user_can_view(info.context.user)
+            .with_theme_path()
             .prefetch_related("occurrences", "ticket_system_passwords__event")
             .order_by("name", "created_at")
         )
@@ -156,7 +161,11 @@ class ChildNode(DjangoObjectType):
     @login_required
     def get_node(cls, info, id):
         try:
-            return cls._meta.model.objects.user_can_view(info.context.user).get(id=id)
+            return (
+                cls._meta.model.objects.user_can_view(info.context.user)
+                .with_theme_path()
+                .get(id=id)
+            )
         except cls._meta.model.DoesNotExist:
             return None
 
@@ -369,6 +378,7 @@ class BaseChildInput:
     name = graphene.String()
     relationship = RelationshipInput()
     languages_spoken_at_home = graphene.List(graphene.NonNull(graphene.ID))
+    theme_path_id = graphene.ID(required=False)
 
 
 class BaseNewChildInput(BaseChildInput):
@@ -468,6 +478,7 @@ class SubmitChildrenAndGuardianMutation(graphene.relay.ClientIDMutation):
         children = []
         for child_data in children_data:
             validate_child_data(child_data)
+            ChildAPIService.Cleaner.theme_path_id(info, child_data)
 
             relationship_data = child_data.pop("relationship", {})
             child_data["project_id"] = Project.objects.get(
@@ -529,6 +540,7 @@ class AddChildMutation(graphene.relay.ClientIDMutation):
             raise MaxNumberOfChildrenPerGuardianError("Too many children.")
 
         validate_child_data(kwargs)
+        ChildAPIService.Cleaner.theme_path_id(info, kwargs)
 
         kwargs["project_id"] = Project.objects.get(year=kwargs["birthyear"]).pk
         user = info.context.user
@@ -584,6 +596,8 @@ class UpdateChildMutation(graphene.relay.ClientIDMutation):
             set_obj_languages_spoken_at_home(
                 info, child, kwargs.pop("languages_spoken_at_home")
             )
+
+        ChildAPIService.Cleaner.theme_path_id(info, kwargs)
 
         update_object(child, kwargs)
 

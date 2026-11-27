@@ -64,6 +64,7 @@ from kukkuu.consts import (
 from languages.models import Language
 from projects.factories import ProjectFactory
 from projects.models import ProjectPermission
+from tags.factories import ThemePathFactory
 from users.factories import GuardianFactory
 from users.models import Guardian
 
@@ -181,7 +182,12 @@ def test_submit_children_and_guardian_unauthenticated(api_client):
 
 
 def test_submit_children_and_guardian(snapshot, user_api_client, languages, project):
+    theme_path = ThemePathFactory(
+        slug="music",
+        translations={"fi": {"name": "Musiikki", "description": ""}},
+    )
     variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"][0]["themePathId"] = get_global_id(theme_path)
     variables["input"]["guardian"]["languagesSpokenAtHome"] = [
         get_global_id(language) for language in languages[0:2]
     ]  # fin, swe
@@ -202,6 +208,8 @@ def test_submit_children_and_guardian(snapshot, user_api_client, languages, proj
         relationship = Relationship.objects.get(guardian=guardian, child=child)
         assert_relationship_matches_data(relationship, child_data.get("relationship"))
         assert child.notes == ""
+    assert Child.objects.get(name="Matti").theme_path == theme_path
+    assert Child.objects.get(name="Jussi").theme_path is None
 
 
 def test_submit_children_and_guardian_without_email(snapshot, user_api_client, project):
@@ -445,8 +453,14 @@ def test_child_query_unauthenticated(snapshot, api_client, child_with_random_gua
 
 
 def test_child_query(snapshot, user_api_client, project):
+    theme_path = ThemePathFactory(
+        slug="music",
+        translations={"fi": {"name": "Musiikki", "description": ""}},
+    )
     child = ChildWithGuardianFactory(
-        relationship__guardian__user=user_api_client.user, project=project
+        relationship__guardian__user=user_api_client.user,
+        project=project,
+        theme_path=theme_path,
     )
     variables = {"id": to_global_id("ChildNode", child.id)}
 
@@ -506,6 +520,7 @@ def test_child_query_not_own_child_project_user_no_view_families_perm(
                 "name": "Test child name",
                 "birthyear": 2020,
                 "postalCode": "00100",
+                "themePath": None,
                 "relationships": {
                     "edges": [
                         {
@@ -562,6 +577,7 @@ def test_child_query_own_child_project_user_no_view_families_perm(
                 "name": "Test child name",
                 "birthyear": 2020,
                 "postalCode": "00100",
+                "themePath": None,
                 "relationships": {
                     "edges": [
                         {
@@ -594,21 +610,25 @@ ADD_CHILD_VARIABLES = {
 
 
 def test_add_child_mutation(snapshot, guardian_api_client, project):
-    executed = guardian_api_client.execute(
-        ADD_CHILD_MUTATION, variables=ADD_CHILD_VARIABLES
+    theme_path = ThemePathFactory(
+        slug="theatre",
+        translations={"fi": {"name": "Teatteri", "description": ""}},
     )
+    variables = deepcopy(ADD_CHILD_VARIABLES)
+    variables["input"]["themePathId"] = get_global_id(theme_path)
+
+    executed = guardian_api_client.execute(ADD_CHILD_MUTATION, variables=variables)
 
     snapshot.assert_match(executed)
 
     child = Child.objects.last()
-    assert_child_matches_data(child, ADD_CHILD_VARIABLES["input"])
+    assert_child_matches_data(child, variables["input"])
+    assert child.theme_path == theme_path
 
     relationship = Relationship.objects.get(
         guardian=guardian_api_client.user.guardian, child=child
     )
-    assert_relationship_matches_data(
-        relationship, ADD_CHILD_VARIABLES["input"]["relationship"]
-    )
+    assert_relationship_matches_data(relationship, variables["input"]["relationship"])
     assert child.notes == ""
 
 
@@ -685,8 +705,13 @@ UPDATE_CHILD_VARIABLES = {
 def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_guardian):
     original_notes = child_with_user_guardian.notes
     original_birthyear = child_with_user_guardian.birthyear
+    theme_path = ThemePathFactory(
+        slug="dance",
+        translations={"fi": {"name": "Tanssi", "description": ""}},
+    )
     variables = deepcopy(UPDATE_CHILD_VARIABLES)
     variables["input"]["id"] = to_global_id("ChildNode", child_with_user_guardian.id)
+    variables["input"]["themePathId"] = get_global_id(theme_path)
 
     executed = guardian_api_client.execute(UPDATE_CHILD_MUTATION, variables=variables)
 
@@ -694,6 +719,7 @@ def test_update_child_mutation(snapshot, guardian_api_client, child_with_user_gu
 
     child_with_user_guardian.refresh_from_db()
     assert_child_matches_data(child_with_user_guardian, variables["input"])
+    assert child_with_user_guardian.theme_path == theme_path
 
     relationship = Relationship.objects.get(
         guardian=guardian_api_client.user.guardian, child=child_with_user_guardian
@@ -2290,3 +2316,168 @@ def test_children_list_enrolment_counts_query_count_is_constant(
     for edge in res_7["data"]["children"]["edges"]:
         assert edge["node"]["enrolmentCount"] == 3
         assert edge["node"]["pastEnrolmentCount"] == 2
+
+
+def test_children_list_theme_path_query_count_is_constant(
+    project_user_api_client, project, django_assert_num_queries
+):
+    """
+    Verify that resolving `themePath { slug name }` across a list of children
+    runs in a constant number of SQL queries without N+1 regressions.
+    """
+    assign_perm(
+        ProjectPermission.VIEW_FAMILIES.permission_name, project_user_api_client.user
+    )
+    query = """
+    query ChildrenThemePaths {
+      children {
+        edges {
+          node {
+            id
+            themePath {
+              slug
+              name
+            }
+          }
+        }
+      }
+    }
+    """
+
+    for i in range(2):
+        tp = ThemePathFactory(
+            slug=f"path_{i}",
+            translations={"fi": {"name": f"Polku {i}", "description": ""}},
+        )
+        ChildWithGuardianFactory(project=project, theme_path=tp)
+
+    # Warm up caches
+    project_user_api_client.execute(query)
+
+    with django_assert_num_queries(5) as captured_2:
+        res_2 = project_user_api_client.execute(query)
+    assert res_2.get("errors") is None
+    assert len(res_2["data"]["children"]["edges"]) == 2
+
+    for i in range(2, 7):
+        tp = ThemePathFactory(
+            slug=f"path_{i}",
+            translations={"fi": {"name": f"Polku {i}", "description": ""}},
+        )
+        ChildWithGuardianFactory(project=project, theme_path=tp)
+
+    with django_assert_num_queries(len(captured_2)):
+        res_7 = project_user_api_client.execute(query)
+    assert res_7.get("errors") is None
+    assert len(res_7["data"]["children"]["edges"]) == 7
+
+
+def test_submit_children_and_guardian_invalid_theme_path_id(user_api_client, project):
+    """
+    Verify that `submitChildrenAndGuardian` rejects a non-existent `themePathId`
+    with OBJECT_DOES_NOT_EXIST_ERROR and rolls back the transaction so neither
+    guardian nor child is created.
+    """
+    variables = deepcopy(SUBMIT_CHILDREN_AND_GUARDIAN_VARIABLES)
+    variables["input"]["children"] = [
+        {
+            "name": "Matti",
+            "birthyear": project.year,
+            "postalCode": "00100",
+            "themePathId": to_global_id("ThemePathNode", "nonexistent_slug"),
+        }
+    ]
+
+    executed = user_api_client.execute(
+        SUBMIT_CHILDREN_AND_GUARDIAN_MUTATION, variables=variables
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+    assert Child.objects.count() == 0
+    assert Guardian.objects.count() == 0
+
+
+def test_update_child_theme_path_partial_and_clear(
+    guardian_api_client, child_with_user_guardian
+):
+    """
+    Verify `updateChild` partial-update semantics for `themePathId`: omitting
+    `themePathId` preserves the existing theme path, while passing `null` or
+    an empty string clears `child.theme_path` to None.
+    """
+    child = child_with_user_guardian
+    child_global_id = get_global_id(child)
+    theme_path = ThemePathFactory(
+        slug="music",
+        translations={"fi": {"name": "Musiikki", "description": ""}},
+    )
+    child.theme_path = theme_path
+    child.save(update_fields=["theme_path"])
+
+    # Omitting themePathId leaves it unchanged
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_MUTATION,
+        variables={"input": {"id": child_global_id, "name": "Updated Name"}},
+    )
+    assert executed["data"]["updateChild"]["child"]["name"] == "Updated Name"
+    assert executed["data"]["updateChild"]["child"]["themePath"]["slug"] == "music"
+    child.refresh_from_db()
+    assert child.theme_path == theme_path
+
+    # Passing null clears theme_path
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_MUTATION,
+        variables={"input": {"id": child_global_id, "themePathId": None}},
+    )
+    assert executed["data"]["updateChild"]["child"]["themePath"] is None
+    child.refresh_from_db()
+    assert child.theme_path is None
+
+    # Passing empty string also clears theme_path
+    child.theme_path = theme_path
+    child.save(update_fields=["theme_path"])
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_MUTATION,
+        variables={"input": {"id": child_global_id, "themePathId": ""}},
+    )
+    assert executed["data"]["updateChild"]["child"]["themePath"] is None
+    child.refresh_from_db()
+    assert child.theme_path is None
+
+
+@pytest.mark.parametrize(
+    "invalid_theme_path_id_factory",
+    [
+        lambda project: "not-a-valid-id",
+        lambda project: to_global_id("ThemePathNode", "nonexistent_slug"),
+        lambda project: get_global_id(project),
+    ],
+)
+def test_update_child_invalid_theme_path_id(
+    guardian_api_client,
+    child_with_user_guardian,
+    project,
+    invalid_theme_path_id_factory,
+):
+    """
+    Verify that `updateChild` rejects malformed, non-existent, or wrong-type
+    `themePathId` values with OBJECT_DOES_NOT_EXIST_ERROR and leaves the
+    existing `child.theme_path` unchanged.
+    """
+    theme_path = ThemePathFactory(slug="existing_path")
+    child_with_user_guardian.theme_path = theme_path
+    child_with_user_guardian.save(update_fields=["theme_path"])
+
+    executed = guardian_api_client.execute(
+        UPDATE_CHILD_MUTATION,
+        variables={
+            "input": {
+                "id": get_global_id(child_with_user_guardian),
+                "themePathId": invalid_theme_path_id_factory(project),
+            }
+        },
+    )
+
+    assert_match_error_code(executed, OBJECT_DOES_NOT_EXIST_ERROR)
+    child_with_user_guardian.refresh_from_db()
+    assert child_with_user_guardian.theme_path == theme_path

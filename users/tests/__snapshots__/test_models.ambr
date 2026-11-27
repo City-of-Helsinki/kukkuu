@@ -142,6 +142,15 @@
                       with multiple lines.
                     ''',
                   }),
+                  dict({
+                    'key': 'LANGUAGES_SPOKEN_AT_HOME',
+                    'value': list([
+                    ]),
+                  }),
+                  dict({
+                    'key': 'THEME_PATH',
+                    'value': None,
+                  }),
                 ]),
                 'key': 'CHILD',
               }),
@@ -379,6 +388,15 @@
                   dict({
                     'key': 'NOTES',
                     'value': 'Alternative test notes',
+                  }),
+                  dict({
+                    'key': 'LANGUAGES_SPOKEN_AT_HOME',
+                    'value': list([
+                    ]),
+                  }),
+                  dict({
+                    'key': 'THEME_PATH',
+                    'value': None,
                   }),
                 ]),
                 'key': 'CHILD',
@@ -1340,6 +1358,15 @@
                   dict({
                     'key': 'NOTES',
                     'value': '',
+                  }),
+                  dict({
+                    'key': 'LANGUAGES_SPOKEN_AT_HOME',
+                    'value': list([
+                    ]),
+                  }),
+                  dict({
+                    'key': 'THEME_PATH',
+                    'value': None,
                   }),
                 ]),
                 'key': 'CHILD',

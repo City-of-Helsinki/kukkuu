@@ -6,6 +6,10 @@ query Children {
         name
         birthyear
         postalCode
+        themePath {
+          slug
+          name
+        }
         relationships {
           edges {
             node {
@@ -45,6 +49,10 @@ query Child($id: ID!) {
     name
     birthyear
     postalCode
+    themePath {
+      slug
+      name
+    }
     relationships {
       edges {
         node {

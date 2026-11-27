@@ -15,8 +15,10 @@ from events.factories import EnrolmentFactory, TicketSystemPasswordFactory
 from gdpr.consts import CLEARED_VALUE
 from gdpr.service import clear_data
 from gdpr.tests.conftest import get_api_token_for_user_with_scopes
+from languages.models import Language
 from subscriptions.factories import FreeSpotNotificationSubscriptionFactory
 from subscriptions.models import FreeSpotNotificationSubscription
+from tags.factories import ThemePathFactory
 from users.factories import GuardianFactory, UserFactory
 from users.models import Guardian
 
@@ -144,9 +146,15 @@ def test_get_profile_data_from_gdpr_api(
         id=uuid.UUID("8dff3da4-a329-4b81-971a-bc509df679b1"),
         user__uuid=uuid.UUID("fa354000-3c0c-11eb-86c5-acde48001122"),
     )
+    theme_path = ThemePathFactory(slug="music")
     child = ChildWithGuardianFactory(
-        relationship__guardian=guardian, notes="GDPR sensitive test notes for child"
+        relationship__guardian=guardian,
+        notes="GDPR sensitive test notes for child",
+        theme_path=theme_path,
     )
+    lang_fin, _ = Language.objects.get_or_create(alpha_3_code="fin")
+    lang_swe, _ = Language.objects.get_or_create(alpha_3_code="swe")
+    child.languages_spoken_at_home.set([lang_swe, lang_fin])
     EnrolmentFactory.create_batch(5, child=child)
     TicketSystemPasswordFactory.create_batch(5, child=child)
     guardian = child.guardians.first()
